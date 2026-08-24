@@ -1,0 +1,9 @@
+{
+	"name": "AuroraPrime Office",
+	"packageName": "com.yaochn.auroraprimeoffice",
+	"vendor": "yaochn",
+	"versionCode": 10000,
+	"versionName": "0.1.0",
+	"icon": "icon.png",
+	"urlScheme": "auroraprime"
+}

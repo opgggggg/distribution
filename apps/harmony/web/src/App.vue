@@ -30,7 +30,8 @@ import type {
 	CliControlStatus,
 } from "../../../../als-office/apps/desktop/src/activity-types";
 import appLogoUrl from "../../../../als-office/apps/desktop/src/assets/office-editor-mark.svg";
-import appMarkUrl from "../../AppScope/resources/base/media/app_icon_foreground.svg";
+import appMarkUrl from "../../AppScope/resources/base/media/app_icon.png";
+import { APP_PROFILE } from "./app-profile.generated";
 import {
 	applyDesktopPreferences,
 	loadDesktopPreferences,
@@ -246,7 +247,7 @@ const aboutCopy = {
 } as const;
 const settingsCopy = {
 	title: "系统设置",
-	subtitle: "选择 AuroraPrime Office 在这台移动设备上的工作方式。",
+	subtitle: `选择 ${APP_PROFILE.name} 在这台移动设备上的工作方式。`,
 	close: "关闭系统设置",
 	general: "通用",
 	language: "语言",
@@ -2418,10 +2419,10 @@ onBeforeUnmount(() => {
 					ref="appMenuTrigger"
 					type="button"
 					class="harmony-app-menu__trigger"
-					aria-label="AuroraPrime Office 菜单"
+					:aria-label="`${APP_PROFILE.name} 菜单`"
 					aria-haspopup="menu"
 					:aria-expanded="appMenuOpen"
-					title="AuroraPrime Office 菜单"
+					:title="`${APP_PROFILE.name} 菜单`"
 					@click="appMenuOpen ? closeAppMenu() : openAppMenu()"
 					@keydown.down.prevent="openAppMenu(true)"
 				>
@@ -2432,10 +2433,10 @@ onBeforeUnmount(() => {
 					ref="appMenu"
 					class="harmony-app-menu__menu"
 					role="menu"
-					aria-label="AuroraPrime Office"
+					:aria-label="APP_PROFILE.name"
 				>
 					<button type="button" role="menuitem" @click="showAbout">
-						关于 AuroraPrime Office
+						关于 {{ APP_PROFILE.name }}
 					</button>
 					<button type="button" role="menuitem" @click="showSettings">
 						<span>系统设置…</span>
@@ -2443,7 +2444,7 @@ onBeforeUnmount(() => {
 					</button>
 				</span>
 			</span>
-			<strong class="harmony-chrome__brand">AuroraPrime Office</strong>
+			<strong class="harmony-chrome__brand">{{ APP_PROFILE.name }}</strong>
 			<nav class="harmony-tabs" aria-label="打开的文档">
 				<button
 					type="button"
@@ -3555,14 +3556,14 @@ onBeforeUnmount(() => {
 
 		<AboutDialog
 			v-if="aboutDialogOpen"
-			app-name="AuroraPrime Office"
+			:app-name="APP_PROFILE.name"
 			:about-title="`Office for ${nativeHostLabel()}`"
 			:logo-url="appMarkUrl"
 			:copy="aboutCopy"
 			:is-checking-for-updates="false"
 			:auto-update-enabled="false"
 			:format-labels="welcomePanelFormats.map((format) => format.label)"
-			version="0.1.0"
+			:version="APP_PROFILE.versionName"
 			@close="aboutDialogOpen = false"
 		/>
 

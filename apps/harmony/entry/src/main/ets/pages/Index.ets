@@ -101,7 +101,7 @@ struct Index {
             .width(40)
             .height(40)
             .color('#0A987F')
-          Text('正在载入 AuroraPrime Office…')
+			Text($r('app.string.app_loading'))
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
             .fontColor('#174139')

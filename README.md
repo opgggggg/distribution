@@ -31,7 +31,31 @@ git submodule update --init --recursive
 Access to the upstream `als-office` GitLab repository is required to initialize
 the pinned submodule.
 
-## Build
+## App profiles
+
+Application identity is defined once in `profiles/<profile>/app.json`. The profile contains
+the display name, HarmonyOS bundle name / Android application ID, vendor, version, URL
+scheme, and icon path. The default values and icon live in `profiles/default/`.
+
+The normal npm builds synchronize the selected profile automatically. To prepare the
+HarmonyOS project before opening or building it directly in DevEco Studio, run:
+
+```sh
+npm run profile:sync
+```
+
+To build another distribution, copy `profiles/default`, edit its `app.json` and `icon.png`,
+then select it with `APP_PROFILE`:
+
+```sh
+APP_PROFILE=customer npm run profile:sync
+APP_PROFILE=customer npm run build:android
+```
+
+The sync step generates the HarmonyOS application metadata/resources and the Web-shell
+profile. Android Gradle reads the selected profile directly and generates its icon resource.
+
+## Build targets
 
 Build the shared HarmonyOS/mobile Web payload:
 

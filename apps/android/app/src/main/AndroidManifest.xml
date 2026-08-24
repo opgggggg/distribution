@@ -26,14 +26,14 @@
 				android:name="android.app.shortcuts"
 				android:resource="@xml/shortcuts" />
 			<intent-filter>
-				<action android:name="com.yaochn.auroraprimeoffice.action.ASSISTANT" />
+				<action android:name="${applicationId}.action.ASSISTANT" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
 				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="auroraprime" android:host="assistant" />
+				<data android:scheme="${appUrlScheme}" android:host="assistant" />
 			</intent-filter>
 			<!-- This is a MIME document association, not an HTTP Android App Link. -->
 			<intent-filter tools:ignore="AppLinkUrlError">

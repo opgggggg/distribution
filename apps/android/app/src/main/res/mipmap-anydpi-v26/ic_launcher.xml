@@ -3,7 +3,7 @@
 	<background android:drawable="@color/aurora_icon_background" />
 	<foreground>
 		<inset
-			android:drawable="@drawable/auroraprime_app_icon"
+			android:drawable="@drawable/app_icon"
 			android:inset="14%" />
 	</foreground>
 </adaptive-icon>

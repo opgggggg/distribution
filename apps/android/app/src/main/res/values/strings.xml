@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">AuroraPrime Office</string>
 	<string name="save_complete">文档已保存</string>
 	<string name="save_failed">文档保存失败</string>
 	<string name="shortcut_open_document">打开文件</string>
-	<string name="shortcut_open_document_long">用 AuroraPrime Office 选择并打开文件</string>
+	<string name="shortcut_open_document_long">使用此应用选择并打开文件</string>
 	<string name="shortcut_new_docx">新建 Word</string>
 	<string name="shortcut_new_docx_long">新建 Word 文档</string>
 	<string name="shortcut_new_pptx">新建演示</string>

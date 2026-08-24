@@ -7,12 +7,12 @@
 		android:shortcutShortLabel="@string/shortcut_open_document"
 		android:shortcutLongLabel="@string/shortcut_open_document_long">
 		<intent
-			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
-			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:action="@string/assistant_action"
+			android:targetPackage="@string/app_package"
 			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
 			<extra android:name="command" android:value="open" />
 		</intent>
-		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+		<categories android:name="@string/assistant_category" />
 	</shortcut>
 	<shortcut
 		android:shortcutId="new_docx"
@@ -21,13 +21,13 @@
 		android:shortcutShortLabel="@string/shortcut_new_docx"
 		android:shortcutLongLabel="@string/shortcut_new_docx_long">
 		<intent
-			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
-			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:action="@string/assistant_action"
+			android:targetPackage="@string/app_package"
 			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
 			<extra android:name="command" android:value="new" />
 			<extra android:name="format" android:value="docx" />
 		</intent>
-		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+		<categories android:name="@string/assistant_category" />
 	</shortcut>
 	<shortcut
 		android:shortcutId="new_pptx"
@@ -36,13 +36,13 @@
 		android:shortcutShortLabel="@string/shortcut_new_pptx"
 		android:shortcutLongLabel="@string/shortcut_new_pptx_long">
 		<intent
-			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
-			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:action="@string/assistant_action"
+			android:targetPackage="@string/app_package"
 			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
 			<extra android:name="command" android:value="new" />
 			<extra android:name="format" android:value="pptx" />
 		</intent>
-		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+		<categories android:name="@string/assistant_category" />
 	</shortcut>
 	<shortcut
 		android:shortcutId="open_recent"
@@ -51,11 +51,11 @@
 		android:shortcutShortLabel="@string/shortcut_recent"
 		android:shortcutLongLabel="@string/shortcut_recent_long">
 		<intent
-			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
-			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:action="@string/assistant_action"
+			android:targetPackage="@string/app_package"
 			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
 			<extra android:name="command" android:value="open-recent" />
 		</intent>
-		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+		<categories android:name="@string/assistant_category" />
 	</shortcut>
 </shortcuts>
