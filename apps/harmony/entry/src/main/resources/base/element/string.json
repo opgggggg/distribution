@@ -15,6 +15,10 @@
 		{
 			"name": "EntryAbility_label",
 			"value": "AuroraPrime Office"
+		},
+		{
+			"name": "app_loading",
+			"value": "正在载入 AuroraPrime Office…"
 		}
 	]
 }

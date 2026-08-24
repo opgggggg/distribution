@@ -50,7 +50,7 @@ public final class MainActivity extends Activity {
   private static final int REQUEST_OPEN_DOCUMENT = 4101;
   private static final int REQUEST_SAVE_DOCUMENT = 4102;
   private static final int REQUEST_ASSISTANT_OPEN_DOCUMENT = 4103;
-  private static final String ACTION_ASSISTANT = "com.yaochn.auroraprimeoffice.action.ASSISTANT";
+  private static final String ACTION_ASSISTANT_SUFFIX = ".action.ASSISTANT";
   private static final String LOCAL_APP_URL = "file:///android_asset/web/index.html";
   private static final String[] OFFICE_MIME_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -530,7 +530,8 @@ public final class MainActivity extends Activity {
     }
 
     private synchronized boolean receiveIntent(Intent intent) {
-      AssistantCommand assistantCommand = AssistantCommand.fromIntent(intent);
+      AssistantCommand assistantCommand =
+          AssistantCommand.fromIntent(intent, getPackageName(), getString(R.string.app_url_scheme));
       if (assistantCommand != null) {
         if ("open-document-picker".equals(assistantCommand.command)) {
           runOnUiThread(MainActivity.this::launchAssistantDocumentPicker);
@@ -605,26 +606,27 @@ public final class MainActivity extends Activity {
       this.mode = mode;
     }
 
-    static AssistantCommand fromIntent(Intent intent) {
+    static AssistantCommand fromIntent(Intent intent, String packageName, String urlScheme) {
       if (intent == null) return null;
       Uri uri = intent.getData();
       boolean deepLink =
           Intent.ACTION_VIEW.equals(intent.getAction())
               && uri != null
-              && "auroraprime".equalsIgnoreCase(uri.getScheme())
+              && urlScheme.equalsIgnoreCase(uri.getScheme())
               && "assistant".equalsIgnoreCase(uri.getHost());
-      if (!ACTION_ASSISTANT.equals(intent.getAction()) && !deepLink) return null;
+      String assistantAction = packageName + ACTION_ASSISTANT_SUFFIX;
+      if (!assistantAction.equals(intent.getAction()) && !deepLink) return null;
 
       String command =
-          ACTION_ASSISTANT.equals(intent.getAction())
+          assistantAction.equals(intent.getAction())
               ? intent.getStringExtra("command")
               : firstPathSegment(uri);
       String format =
-          ACTION_ASSISTANT.equals(intent.getAction())
+          assistantAction.equals(intent.getAction())
               ? intent.getStringExtra("format")
               : uri.getQueryParameter("format");
       String mode =
-          ACTION_ASSISTANT.equals(intent.getAction())
+          assistantAction.equals(intent.getAction())
               ? intent.getStringExtra("mode")
               : uri.getQueryParameter("mode");
       return normalize(command, format, mode);

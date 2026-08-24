@@ -13,6 +13,7 @@
 	],
 	"scripts": {
 		"build": "npm run build:web",
+		"profile:sync": "node scripts/sync-app-profile.mjs",
 		"prepare:upstream": "node scripts/link-upstream-node-modules.mjs",
 		"build:packages": "npm run prepare:upstream && npm --prefix als-office run build:packages",
 		"build:web": "npm run build:packages && npm run build:web -w @yaochn/als-office-harmony",
