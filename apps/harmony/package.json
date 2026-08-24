@@ -1,0 +1,26 @@
+{
+	"name": "@yaochn/als-office-harmony",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "npm run build:web",
+		"build:web": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts && node scripts/inline-web-assets.mjs"
+	},
+	"dependencies": {
+		"@yaochn/als-office-docx": "*",
+		"@yaochn/als-office-editor-ui": "*",
+		"@yaochn/als-office-markdown": "*",
+		"@yaochn/als-office-pdf": "*",
+		"@yaochn/als-office-pptx": "*",
+		"@yaochn/als-office-vsdx": "*",
+		"@yaochn/als-office-xlsx": "*",
+		"vue": "3.5.32"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^5.2.0",
+		"typescript": "^5.0.3",
+		"vite": "^6.4.3",
+		"vue-tsc": "^3.3.8"
+	}
+}

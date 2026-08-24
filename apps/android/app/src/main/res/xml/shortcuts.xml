@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+	<shortcut
+		android:shortcutId="open_document"
+		android:enabled="true"
+		android:icon="@mipmap/ic_launcher"
+		android:shortcutShortLabel="@string/shortcut_open_document"
+		android:shortcutLongLabel="@string/shortcut_open_document_long">
+		<intent
+			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
+			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
+			<extra android:name="command" android:value="open" />
+		</intent>
+		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+	</shortcut>
+	<shortcut
+		android:shortcutId="new_docx"
+		android:enabled="true"
+		android:icon="@mipmap/ic_launcher"
+		android:shortcutShortLabel="@string/shortcut_new_docx"
+		android:shortcutLongLabel="@string/shortcut_new_docx_long">
+		<intent
+			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
+			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
+			<extra android:name="command" android:value="new" />
+			<extra android:name="format" android:value="docx" />
+		</intent>
+		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+	</shortcut>
+	<shortcut
+		android:shortcutId="new_pptx"
+		android:enabled="true"
+		android:icon="@mipmap/ic_launcher"
+		android:shortcutShortLabel="@string/shortcut_new_pptx"
+		android:shortcutLongLabel="@string/shortcut_new_pptx_long">
+		<intent
+			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
+			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
+			<extra android:name="command" android:value="new" />
+			<extra android:name="format" android:value="pptx" />
+		</intent>
+		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+	</shortcut>
+	<shortcut
+		android:shortcutId="open_recent"
+		android:enabled="true"
+		android:icon="@mipmap/ic_launcher"
+		android:shortcutShortLabel="@string/shortcut_recent"
+		android:shortcutLongLabel="@string/shortcut_recent_long">
+		<intent
+			android:action="com.yaochn.auroraprimeoffice.action.ASSISTANT"
+			android:targetPackage="com.yaochn.auroraprimeoffice"
+			android:targetClass="com.yaochn.auroraprimeoffice.MainActivity">
+			<extra android:name="command" android:value="open-recent" />
+		</intent>
+		<categories android:name="com.yaochn.auroraprimeoffice.category.ASSISTANT" />
+	</shortcut>
+</shortcuts>

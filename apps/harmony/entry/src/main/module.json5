@@ -1,0 +1,57 @@
+{
+	module: {
+		name: "entry",
+		type: "entry",
+		description: "$string:module_desc",
+		mainElement: "EntryAbility",
+		deviceTypes: ["phone", "tablet", "2in1"],
+		deliveryWithInstall: true,
+		installationFree: false,
+		pages: "$profile:main_pages",
+		abilities: [
+			{
+				name: "EntryAbility",
+				srcEntry: "./ets/entryability/EntryAbility.ets",
+				description: "$string:EntryAbility_desc",
+				icon: "$media:auroraprime_app_icon",
+				label: "$string:EntryAbility_label",
+				startWindowIcon: "$media:auroraprime_app_icon",
+				startWindowBackground: "$color:start_window_background",
+				exported: true,
+				skills: [
+					{
+						entities: ["entity.system.home"],
+						actions: ["action.system.home"],
+					},
+					{
+						actions: [
+							"ohos.want.action.viewData",
+							"ohos.want.action.sendData",
+							"ohos.want.action.sendMultipleData",
+						],
+						uris: [
+							{ scheme: "file", type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/vnd.openxmlformats-officedocument.presentationml.presentation", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/vnd.ms-visio.drawing", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/vnd.ms-visio.drawing.main+xml", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/vnd.sas.jmp", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/x-jmp", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/x-jmp-data-table", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/vnd.jgraph.mxfile", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/x-drawio", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/xml", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "text/xml", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/pdf", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "text/markdown", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "text/x-markdown", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/x-markdown", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "text/plain", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/octet-stream", linkFeature: "FileOpen" },
+						],
+					},
+				],
+			},
+		],
+	},
+}

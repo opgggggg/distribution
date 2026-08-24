@@ -1,0 +1,3 @@
+[submodule "als-office"]
+	path = als-office
+	url = git@gitlab.yaochn.com:infra/als-office.git

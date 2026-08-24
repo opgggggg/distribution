@@ -1,0 +1,10 @@
+{
+	"name": "@yaochn/als-office-android",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"sync:web": "node scripts/sync-web.mjs",
+		"build": "./gradlew assembleDebug",
+		"build:release": "./gradlew assembleRelease"
+	}
+}

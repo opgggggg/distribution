@@ -1,0 +1,22 @@
+{
+	"name": "@yaochn/als-office-distribution",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"packageManager": "npm@10.9.8",
+	"engines": {
+		"node": ">=20"
+	},
+	"workspaces": [
+		"apps/*",
+		"als-office/packages/*"
+	],
+	"scripts": {
+		"build": "npm run build:web",
+		"prepare:upstream": "node scripts/link-upstream-node-modules.mjs",
+		"build:packages": "npm run prepare:upstream && npm --prefix als-office run build:packages",
+		"build:web": "npm run build:packages && npm run build:web -w @yaochn/als-office-harmony",
+		"build:android": "npm run build:packages && npm run build -w @yaochn/als-office-android",
+		"build:android:release": "npm run build:packages && npm run build:release -w @yaochn/als-office-android"
+	}
+}

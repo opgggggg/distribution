@@ -1,0 +1,2990 @@
+:root {
+	font-family: Inter, "HarmonyOS Sans SC", "PingFang SC", system-ui, sans-serif;
+	color: #202124;
+	background: #eef2f1;
+	--format-color: #08705f;
+}
+
+html,
+body,
+#app,
+.harmony-app {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	overflow: hidden;
+	box-sizing: border-box;
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+		env(safe-area-inset-left);
+}
+
+button,
+input {
+	font: inherit;
+}
+
+button,
+label,
+input {
+	touch-action: manipulation;
+}
+
+button:focus-visible,
+.harmony-open:focus-within {
+	outline: 3px solid rgb(10 152 127 / 30%);
+	outline-offset: 2px;
+}
+
+[data-format="docx"] {
+	--format-color: #1469c9;
+}
+
+[data-format="pptx"] {
+	--format-color: #c24d28;
+}
+
+[data-format="xlsx"] {
+	--format-color: #16834f;
+}
+
+[data-format="vsdx"] {
+	--format-color: #5551b8;
+}
+
+[data-format="markdown"] {
+	--format-color: #48515c;
+}
+
+[data-format="pdf"] {
+	--format-color: #bf3341;
+}
+
+[data-format="jmp"] {
+	--format-color: #7c4eab;
+}
+
+.harmony-app {
+	display: grid;
+	grid-template-rows: auto auto minmax(0, 1fr);
+	background: radial-gradient(circle at 86% 8%, rgb(14 181 153 / 10%), transparent 28%), #f5f7f6;
+}
+
+.harmony-chrome {
+	grid-row: 1;
+}
+
+.harmony-feedback {
+	grid-row: 2;
+}
+
+.harmony-body {
+	position: relative;
+	display: grid;
+	min-width: 0;
+	min-height: 0;
+	grid-row: 3;
+	grid-template-columns: minmax(0, 1fr);
+	overflow: hidden;
+}
+
+.harmony-body.has-activity {
+	grid-template-columns: minmax(0, 1fr) 384px;
+}
+
+.harmony-workspace {
+	display: grid;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.harmony-workspace > .harmony-home,
+.harmony-workspace > .harmony-documents {
+	min-width: 0;
+	min-height: 0;
+	grid-area: 1 / 1;
+}
+
+.harmony-chrome {
+	position: relative;
+	z-index: 50;
+	display: flex;
+	min-width: 0;
+	min-height: 52px;
+	align-items: stretch;
+	box-sizing: border-box;
+	gap: 10px;
+	padding: 0 10px;
+	border-bottom: 1px solid #d8dddb;
+	background: rgb(236 240 239 / 96%);
+	box-shadow: 0 2px 10px rgb(14 68 58 / 5%);
+	overflow: visible;
+}
+
+.harmony-chrome__brand {
+	display: flex;
+	align-items: center;
+	color: #174139;
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.harmony-chrome__mark {
+	display: block;
+	width: 20px;
+	height: 20px;
+	border-radius: 6px;
+	filter: drop-shadow(0 2px 5px rgb(8 123 105 / 24%));
+	flex: 0 0 auto;
+}
+
+.harmony-app-menu {
+	position: relative;
+	display: grid;
+	align-self: center;
+	flex: 0 0 auto;
+}
+
+.harmony-app-menu__trigger {
+	display: grid;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: 7px;
+	place-items: center;
+	background: transparent;
+	cursor: pointer;
+}
+
+.harmony-app-menu__trigger:hover,
+.harmony-app-menu__trigger[aria-expanded="true"] {
+	background: rgb(255 255 255 / 72%);
+}
+
+.harmony-app-menu__trigger:focus-visible {
+	outline: 2px solid #078873;
+	outline-offset: 1px;
+}
+
+.harmony-app-menu__menu {
+	position: absolute;
+	z-index: 260;
+	top: calc(100% + 5px);
+	left: 0;
+	display: grid;
+	width: max-content;
+	min-width: 224px;
+	gap: 2px;
+	padding: 5px;
+	border: 1px solid rgb(0 0 0 / 14%);
+	border-radius: 9px;
+	background: #fff;
+	box-shadow: 0 14px 36px rgb(22 27 38 / 22%);
+}
+
+.harmony-app-menu__menu button {
+	display: flex;
+	min-height: 34px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 0 10px;
+	border: 0;
+	border-radius: 6px;
+	color: #25272c;
+	background: transparent;
+	cursor: pointer;
+	font-size: 12px;
+	text-align: left;
+}
+
+.harmony-app-menu__menu button:hover,
+.harmony-app-menu__menu button:focus-visible {
+	outline: none;
+	background: #eafaf6;
+}
+
+.harmony-app-menu__menu button:focus-visible {
+	box-shadow: inset 0 0 0 2px rgb(7 136 115 / 32%);
+}
+
+.harmony-app-menu__shortcut {
+	color: #7a8188;
+	font-family: inherit;
+	font-size: 11px;
+	font-weight: 450;
+}
+
+.harmony-tabs {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 auto;
+	align-items: flex-end;
+	gap: 2px;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+}
+
+.harmony-tabs::-webkit-scrollbar {
+	display: none;
+}
+
+.harmony-tabs__tab,
+.harmony-tabs__home {
+	display: flex;
+	min-width: 0;
+	max-width: 210px;
+	height: 44px;
+	align-items: center;
+	border: 1px solid transparent;
+	border-bottom: 0;
+	border-radius: 8px 8px 0 0;
+	color: #666b69;
+	background: transparent;
+	flex: 0 1 180px;
+}
+
+.harmony-tabs__tab:hover,
+.harmony-tabs__home:hover {
+	background: rgb(255 255 255 / 52%);
+}
+
+.harmony-tabs__tab[data-active="true"],
+.harmony-tabs__home[data-active="true"] {
+	color: #202124;
+	background: #fff;
+}
+
+.harmony-tabs__home {
+	min-width: 76px;
+	max-width: 76px;
+	justify-content: center;
+	gap: 6px;
+	padding: 0 8px;
+	cursor: pointer;
+	flex-basis: 76px;
+}
+
+.harmony-tabs__select {
+	display: flex;
+	min-width: 0;
+	height: 100%;
+	align-items: center;
+	gap: 6px;
+	padding: 0 0 0 9px;
+	border: 0;
+	color: inherit;
+	background: transparent;
+	cursor: pointer;
+	flex: 1 1 auto;
+}
+
+.harmony-tabs__home svg {
+	width: 14px;
+	height: 14px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.harmony-tabs__kind {
+	color: var(--format-color);
+	font-size: 8px;
+	font-weight: 800;
+	letter-spacing: 0.05em;
+}
+
+.harmony-tabs__name {
+	overflow: hidden;
+	font-size: 12px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.harmony-tabs__close {
+	display: grid;
+	width: 36px;
+	height: 44px;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	border-radius: 5px;
+	color: #7a807e;
+	background: transparent;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1;
+	flex: 0 0 auto;
+}
+
+.harmony-tabs__close:hover {
+	color: #202124;
+	background: rgb(0 0 0 / 8%);
+}
+
+.harmony-chrome__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+
+.harmony-chrome__actions button,
+.harmony-open {
+	display: inline-flex;
+	min-height: 44px;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	padding: 0 10px;
+	border: 1px solid #b7cbc6;
+	border-radius: 7px;
+	color: #075e52;
+	background: #f8fffd;
+	cursor: pointer;
+	font-weight: 650;
+}
+
+.harmony-open input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	opacity: 0;
+}
+
+.harmony-chrome__actions button:disabled {
+	cursor: not-allowed;
+	opacity: 0.48;
+}
+
+.harmony-open[aria-disabled="true"] {
+	cursor: not-allowed;
+	opacity: 0.48;
+}
+
+.harmony-new {
+	position: relative;
+}
+
+.harmony-new__trigger {
+	gap: 4px;
+}
+
+.harmony-new__trigger .harmony-new__chevron {
+	display: block;
+	width: 10px;
+	height: 10px;
+	fill: none;
+	stroke: currentcolor;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.5;
+	flex: 0 0 auto;
+}
+
+.harmony-action-icon {
+	display: none;
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentcolor;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.55;
+	flex: 0 0 auto;
+}
+
+.harmony-new__menu {
+	position: absolute;
+	z-index: 40;
+	top: calc(100% + 7px);
+	right: 0;
+	display: grid;
+	width: 220px;
+	gap: 3px;
+	box-sizing: border-box;
+	padding: 7px;
+	border: 1px solid #d9e1de;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 16px 44px rgb(21 48 42 / 18%);
+}
+
+.harmony-chrome__actions .harmony-new__menu > button {
+	display: grid;
+	min-height: 44px;
+	grid-template-columns: 30px minmax(0, 1fr) auto;
+	justify-content: stretch;
+	gap: 9px;
+	padding: 5px 8px;
+	border-color: transparent;
+	color: #2d3331;
+	background: transparent;
+	text-align: left;
+}
+
+.harmony-chrome__actions .harmony-new__menu > button:hover {
+	background: #edf7f4;
+}
+
+.harmony-new__menu > button > span {
+	display: grid;
+	width: 28px;
+	height: 28px;
+	place-items: center;
+	border-radius: 7px;
+	color: #fff;
+	background: var(--format-color);
+	font-size: 10px;
+	font-weight: 800;
+}
+
+.harmony-new__menu > button b {
+	align-self: center;
+	font-size: 12px;
+}
+
+.harmony-new__menu > button small {
+	align-self: center;
+	color: #7b817f;
+	font-size: 9px;
+}
+
+.harmony-chrome__badge {
+	padding: 4px 8px;
+	border-radius: 999px;
+	color: #08705f;
+	background: #dff4ee;
+	font-size: 10px;
+}
+
+.harmony-ai-toggle__status {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	margin-right: 6px;
+	border-radius: 50%;
+	background: #1f9254;
+	box-shadow: 0 0 0 3px rgb(31 146 84 / 12%);
+}
+
+.harmony-chrome__actions .harmony-ai-toggle[data-active="true"] {
+	border-color: #0a987f;
+	background: #e7f8f3;
+}
+
+.harmony-body > .cli-activity {
+	min-height: 0;
+	overflow: hidden;
+}
+
+.harmony-ai-connect {
+	display: grid;
+	min-height: 0;
+	grid-row: 1 / -1;
+	align-content: start;
+	gap: 12px;
+	padding: 18px 16px;
+	overflow-y: auto;
+}
+
+@media (min-width: 901px) {
+	.harmony-chrome {
+		height: 38px;
+		min-height: 38px;
+		gap: 10px;
+		padding: 6px 0 0 12px;
+		background: rgb(222 226 233 / 88%);
+		backdrop-filter: blur(18px);
+		box-shadow: none;
+		user-select: none;
+	}
+
+	.harmony-chrome.is-harmony-host {
+		padding-right: 132px;
+	}
+
+	.harmony-chrome__brand {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+
+	.harmony-tabs {
+		align-items: stretch;
+	}
+
+	.harmony-tabs__tab,
+	.harmony-tabs__home {
+		height: 32px;
+		border-radius: 7px 7px 0 0;
+	}
+
+	.harmony-tabs__home {
+		min-width: 78px;
+		max-width: 78px;
+		padding: 0 8px;
+		flex-basis: 78px;
+	}
+
+	.harmony-tabs__select {
+		gap: 6px;
+		padding-left: 8px;
+	}
+
+	.harmony-tabs__kind {
+		font-size: 8.5px;
+	}
+
+	.harmony-tabs__name {
+		font-size: 11.5px;
+	}
+
+	.harmony-tabs__close {
+		width: 22px;
+		height: 22px;
+		margin-right: 3px;
+		font-size: 13px;
+	}
+
+	.harmony-chrome__actions {
+		gap: 6px;
+		align-self: center;
+	}
+
+	.harmony-chrome__actions button,
+	.harmony-chrome__actions .harmony-open {
+		min-height: 24px;
+		padding: 0 9px;
+		border-color: #c9cbd1;
+		border-radius: 6px;
+		color: #24262b;
+		background: #fff;
+		font-size: 11.5px;
+		font-weight: 500;
+	}
+
+	.harmony-chrome__actions .harmony-ai-toggle[data-active="true"] {
+		border-color: #0bad94;
+		background: #eafaf6;
+	}
+
+	.harmony-chrome__badge {
+		display: none;
+	}
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+	scroll-behavior: auto !important;
+	transition-duration: 0.01ms !important;
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+}
+
+.harmony-ai-connect__badge {
+	justify-self: start;
+	padding: 5px 9px;
+	border-radius: 999px;
+	color: #08705f;
+	background: #dff4ee;
+	font-size: 10px;
+	font-weight: 750;
+}
+
+.harmony-ai-connect h3,
+.harmony-ai-connect p,
+.harmony-ai-connect ul {
+	margin: 0;
+}
+
+.harmony-ai-connect h3 {
+	font-size: 15px;
+}
+
+.harmony-ai-connect p,
+.harmony-ai-connect small {
+	color: #5f6368;
+	line-height: 1.55;
+}
+
+.harmony-ai-connect ul {
+	display: grid;
+	gap: 1px;
+	padding: 0;
+	border: 1px solid #e0e6e4;
+	border-radius: 10px;
+	overflow: hidden;
+	list-style: none;
+}
+
+.harmony-ai-connect li {
+	display: flex;
+	min-height: 44px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 0 11px;
+	background: #fafcfc;
+}
+
+.harmony-ai-connect li + li {
+	border-top: 1px solid #e9edec;
+}
+
+.harmony-ai-connect li span {
+	color: #08705f;
+	font-size: 10px;
+}
+
+.harmony-feedback {
+	z-index: 10;
+	max-width: 100%;
+	margin: 0;
+	overflow: hidden;
+	padding: 7px 14px;
+	color: #8b2024;
+	background: #fff0f0;
+	font-size: 12px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.harmony-home {
+	position: relative;
+	display: grid;
+	min-height: 0;
+	grid-template-columns: minmax(340px, 0.95fr) minmax(400px, 1.05fr);
+	gap: clamp(22px, 2.6vw, 36px) clamp(24px, 3vw, 44px);
+	align-items: start;
+	align-content: start;
+	padding: clamp(22px, 3vw, 44px) clamp(24px, 4vw, 60px);
+	overflow: auto;
+}
+
+.harmony-home__hero {
+	display: grid;
+	justify-items: start;
+	gap: 15px;
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.harmony-home__eyebrow {
+	color: #07806c;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.14em;
+}
+
+.harmony-home h1 {
+	max-width: 590px;
+	margin: 0;
+	font-size: clamp(36px, 5vw, 62px);
+	font-weight: 730;
+	letter-spacing: -0.045em;
+	line-height: 0.98;
+}
+
+.harmony-home p {
+	max-width: 560px;
+	margin: 0;
+	color: #5d616a;
+	font-size: 16px;
+	line-height: 1.55;
+}
+
+.harmony-home__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.harmony-home__actions button,
+.harmony-home__actions .harmony-open {
+	min-height: 44px;
+	padding: 0 18px;
+	border-radius: 10px;
+}
+
+.harmony-home__actions .is-primary {
+	border: 1px solid #08705f;
+	color: #fff;
+	background: linear-gradient(180deg, #12bfa2, #0a987f);
+	box-shadow: 0 8px 22px rgb(6 103 94 / 25%);
+}
+
+.harmony-home__actions .is-secondary {
+	background: #fff;
+}
+
+.harmony-home__hint,
+.harmony-home__documents small {
+	color: #777d7a;
+	font-size: 11px;
+}
+
+.harmony-home__documents {
+	display: grid;
+	min-width: 0;
+	min-height: 330px;
+	align-content: start;
+	gap: 7px;
+	grid-column: 1;
+	grid-row: 2;
+	padding: 14px;
+	border: 1px solid rgb(20 75 65 / 12%);
+	border-radius: 18px;
+	background: rgb(255 255 255 / 82%);
+	box-shadow: 0 20px 60px rgb(22 60 52 / 10%);
+}
+
+.harmony-home__panels {
+	display: grid;
+	min-width: 0;
+	max-width: 760px;
+	grid-column: 2;
+	grid-row: 1 / span 2;
+}
+
+.harmony-home__documents > header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 3px 4px 10px;
+	border-bottom: 1px solid #e5e9e7;
+}
+
+.harmony-home__documents > header span,
+.harmony-home__documents > button > span:not(.harmony-home__file-icon) {
+	display: grid;
+	gap: 2px;
+	text-align: left;
+}
+
+.harmony-home__documents > header strong {
+	display: grid;
+	width: 28px;
+	height: 28px;
+	place-items: center;
+	border-radius: 999px;
+	color: #08705f;
+	background: #e4f6f1;
+	font-size: 12px;
+}
+
+.harmony-home__documents > button {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 10px;
+	padding: 10px;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	cursor: pointer;
+}
+
+.harmony-home__documents > button:hover {
+	background: #edf9f5;
+}
+
+.harmony-home__documents > button > span:nth-child(2) {
+	min-width: 0;
+	flex: 1;
+}
+
+.harmony-home__documents > button b {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.harmony-home__documents > button i {
+	color: #07806c;
+	font-size: 11px;
+	font-style: normal;
+}
+
+.harmony-home__history {
+	display: grid;
+	min-width: 0;
+	gap: 4px;
+	margin-top: 4px;
+	padding-top: 10px;
+	border-top: 1px solid #e5e9e7;
+}
+
+.harmony-home__history > header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 2px 4px 7px;
+}
+
+.harmony-home__history > header > span,
+.harmony-home__history > button > span:not(.harmony-home__file-icon) {
+	display: grid;
+	min-width: 0;
+	gap: 2px;
+	text-align: left;
+}
+
+.harmony-home__history > header strong {
+	display: grid;
+	width: 28px;
+	height: 28px;
+	place-items: center;
+	border-radius: 999px;
+	color: #08705f;
+	background: #e4f6f1;
+	font-size: 12px;
+}
+
+.harmony-home__history > button {
+	display: flex;
+	min-width: 0;
+	min-height: 52px;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 10px;
+	border: 0;
+	border-radius: 10px;
+	color: inherit;
+	background: transparent;
+	cursor: pointer;
+}
+
+.harmony-home__history > button:hover,
+.harmony-home__history > button:focus-visible {
+	background: #edf9f5;
+}
+
+.harmony-home__history > button:disabled {
+	cursor: wait;
+	opacity: 0.58;
+}
+
+.harmony-home__history > button > span:nth-child(2) {
+	flex: 1;
+}
+
+.harmony-home__history > button b {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.harmony-home__history > button i {
+	color: #07806c;
+	font-size: 11px;
+	font-style: normal;
+}
+
+.harmony-home__file-icon {
+	display: grid;
+	width: 34px;
+	height: 34px;
+	place-items: center;
+	border-radius: 8px;
+	color: #fff;
+	background: var(--format-color);
+	font-weight: 800;
+	font-size: 10px;
+}
+
+.harmony-home__empty {
+	display: grid;
+	min-height: 220px;
+	place-content: center;
+	justify-items: center;
+	gap: 8px;
+	color: #5f6562;
+	text-align: center;
+}
+
+.harmony-home__empty svg {
+	width: 42px;
+	height: 42px;
+	fill: none;
+	stroke: #268e7d;
+	stroke-width: 1.7;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.harmony-documents,
+.harmony-documents__surface,
+.harmony-documents__surface > * {
+	min-width: 0;
+	min-height: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.harmony-documents {
+	overflow: hidden;
+}
+
+.harmony-mobile-document-header,
+.harmony-mobile-toolbar,
+.harmony-mobile-sheet-backdrop,
+.harmony-mobile-insert-backdrop,
+.harmony-mobile-image-input,
+.harmony-mobile-ribbon-scrim,
+.harmony-mobile-ribbon-done {
+	display: none;
+}
+
+@media (max-width: 900px) {
+	.harmony-chrome__brand,
+	.harmony-chrome__badge {
+		display: none;
+	}
+
+	.harmony-app-menu__trigger {
+		width: 44px;
+		height: 44px;
+	}
+
+	.harmony-app-menu__trigger .harmony-chrome__mark {
+		width: 24px;
+		height: 24px;
+	}
+
+	.harmony-home {
+		grid-template-columns: 1fr;
+		gap: 26px;
+		padding: 28px;
+	}
+
+	.harmony-home__hero,
+	.harmony-home__documents {
+		grid-column: 1;
+		grid-row: auto;
+	}
+
+	.harmony-home__panels {
+		display: none;
+	}
+
+	.harmony-home__documents {
+		min-height: 260px;
+	}
+
+	.harmony-app .cli-activity__header button,
+	.harmony-app .cli-activity__tabs button,
+	.harmony-app .cli-activity__controls button {
+		min-width: 44px;
+		min-height: 44px;
+	}
+}
+
+@media (max-width: 1100px) {
+	.harmony-body.has-activity {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.harmony-body > .cli-activity {
+		position: fixed;
+		z-index: 30;
+		inset: 0 0 0 auto;
+		width: min(384px, 100%);
+		height: 100dvh;
+		box-sizing: border-box;
+		padding-bottom: env(safe-area-inset-bottom);
+		box-shadow: -16px 0 42px rgb(17 52 45 / 18%);
+	}
+}
+
+@media (max-width: 900px) {
+	.harmony-body > .cli-activity {
+		z-index: 1000;
+		width: 100%;
+		border-left: 0;
+		box-shadow: none;
+	}
+}
+
+@media (max-width: 600px) {
+	html,
+	body {
+		height: 100dvh;
+	}
+
+	#app,
+	.harmony-app {
+		height: 100%;
+	}
+
+	body {
+		overscroll-behavior: none;
+	}
+
+	.harmony-chrome {
+		display: grid;
+		min-height: 96px;
+		grid-template-columns: 44px minmax(0, 1fr) auto;
+		grid-template-rows: 52px 44px;
+		align-items: center;
+		gap: 0 8px;
+		padding: 0 8px;
+		border-bottom: 0;
+		background: #eef1f4;
+		box-shadow: 0 1px 0 #d8dddb;
+	}
+
+	.harmony-chrome__brand {
+		display: block;
+		align-self: center;
+		overflow: hidden;
+		color: #174139;
+		font-size: 14px;
+		font-weight: 700;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-app-menu {
+		align-self: center;
+	}
+
+	.harmony-app-menu__trigger {
+		width: 44px;
+		height: 44px;
+		border-radius: 12px;
+	}
+
+	.harmony-app-menu__trigger .harmony-chrome__mark {
+		width: 28px;
+		height: 28px;
+		border-radius: 8px;
+	}
+
+	.harmony-app-menu__menu {
+		position: fixed;
+		top: calc(52px + env(safe-area-inset-top));
+		right: 8px;
+		left: 8px;
+		width: auto;
+		min-width: 0;
+		padding: 6px;
+		border-radius: 14px;
+	}
+
+	.harmony-app-menu__menu button {
+		min-height: 48px;
+		padding: 0 12px;
+		font-size: 14px;
+	}
+
+	.harmony-tabs {
+		width: calc(100% + 16px);
+		height: 44px;
+		align-items: stretch;
+		grid-column: 1 / -1;
+		grid-row: 2;
+		margin-left: -8px;
+		padding: 0 8px;
+		box-sizing: border-box;
+		border-top: 1px solid rgb(0 0 0 / 7%);
+		background: #f7f8fa;
+		overscroll-behavior-inline: contain;
+		scroll-snap-type: x proximity;
+	}
+
+	.harmony-tabs__tab {
+		min-width: 132px;
+		max-width: 164px;
+		height: 44px;
+		border-radius: 8px 8px 0 0;
+		flex: 0 0 148px;
+		scroll-snap-align: start;
+	}
+
+	.harmony-tabs__home {
+		min-width: 52px;
+		max-width: 52px;
+		height: 44px;
+		border-radius: 8px 8px 0 0;
+		flex-basis: 52px;
+		justify-content: center;
+	}
+
+	.harmony-tabs__home span {
+		display: none;
+	}
+
+	.harmony-tabs__kind {
+		display: inline;
+	}
+
+	.harmony-tabs__close {
+		width: 44px;
+		height: 44px;
+		margin: 0;
+	}
+
+	.harmony-chrome__actions {
+		align-self: center;
+		grid-column: 3;
+		grid-row: 1;
+		gap: 8px;
+	}
+
+	.harmony-chrome__actions button,
+	.harmony-chrome__actions .harmony-open {
+		width: 44px;
+		min-width: 44px;
+		height: 44px;
+		min-height: 44px;
+		padding: 0;
+		border-color: transparent;
+		border-radius: 12px;
+		background: transparent;
+		font-size: 13px;
+	}
+
+	.harmony-chrome__actions button:active,
+	.harmony-chrome__actions .harmony-open:active,
+	.harmony-app-menu__trigger:active {
+		background: rgb(7 136 115 / 12%);
+	}
+
+	.harmony-action-icon {
+		display: block;
+		width: 22px;
+		height: 22px;
+	}
+
+	.harmony-action-label,
+	.harmony-ai-toggle__status {
+		display: none;
+	}
+
+	.harmony-new__trigger .harmony-new__chevron {
+		display: none;
+	}
+
+	.harmony-new__menu {
+		position: fixed;
+		top: calc(52px + env(safe-area-inset-top));
+		right: 8px;
+		left: 8px;
+		width: auto;
+		max-height: calc(100dvh - 68px - env(safe-area-inset-top));
+		overflow-y: auto;
+		padding: 8px;
+		border-radius: 16px;
+	}
+
+	.harmony-chrome__actions .harmony-new__menu > button {
+		width: 100%;
+		min-height: 52px;
+		grid-template-columns: 36px minmax(0, 1fr) auto;
+		padding: 6px 10px;
+		border-radius: 10px;
+	}
+
+	.harmony-new__menu > button > span {
+		width: 34px;
+		height: 34px;
+		border-radius: 9px;
+		font-size: 11px;
+	}
+
+	.harmony-new__menu > button b {
+		font-size: 14px;
+	}
+
+	.harmony-new__menu > button small {
+		font-size: 11px;
+	}
+
+	.harmony-home {
+		gap: 24px;
+		padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+		overscroll-behavior-y: contain;
+	}
+
+	.harmony-home h1 {
+		font-size: clamp(34px, 10.5vw, 44px);
+		line-height: 1.02;
+	}
+
+	.harmony-home p {
+		font-size: 15px;
+		line-height: 1.6;
+	}
+
+	.harmony-home__hero {
+		gap: 16px;
+	}
+
+	.harmony-home__actions {
+		width: 100%;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 8px;
+	}
+
+	.harmony-home__actions button,
+	.harmony-home__actions .harmony-open {
+		width: 100%;
+		min-height: 48px;
+		box-sizing: border-box;
+	}
+
+	.harmony-home__hint,
+	.harmony-home__documents small {
+		font-size: 12px;
+		line-height: 1.45;
+	}
+
+	.harmony-home__documents {
+		min-height: 220px;
+		padding: 12px;
+		border-radius: 16px;
+		box-shadow: none;
+	}
+
+	.harmony-home__documents > button {
+		min-height: 56px;
+		padding: 9px 8px;
+	}
+
+	.harmony-home__empty {
+		min-height: 160px;
+		padding: 12px;
+	}
+
+	.harmony-documents__surface {
+		overflow: auto;
+		overscroll-behavior: contain;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.harmony-feedback {
+		padding: 10px 12px;
+		font-size: 13px;
+		white-space: normal;
+	}
+
+	.harmony-app > .about-dialog__backdrop {
+		padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+	}
+
+	.harmony-app .about-dialog {
+		max-height: calc(100dvh - 24px);
+		overflow-y: auto;
+		box-sizing: border-box;
+		padding: 28px 20px 20px;
+		border-radius: 20px;
+	}
+
+	.harmony-app .about-dialog h2 {
+		font-size: 26px;
+		text-align: center;
+	}
+
+	.harmony-app .about-dialog__logo {
+		width: 68px;
+		height: 68px;
+		margin-bottom: 14px;
+	}
+
+	.harmony-app > .settings-dialog__backdrop {
+		padding: 0;
+		place-items: stretch;
+	}
+
+	.harmony-app .settings-dialog {
+		width: 100%;
+		height: 100dvh;
+		max-height: none;
+		box-sizing: border-box;
+		padding-bottom: env(safe-area-inset-bottom);
+		border: 0;
+		border-radius: 0;
+	}
+
+	.harmony-app .settings-dialog__header {
+		padding: max(16px, env(safe-area-inset-top)) 16px 14px;
+	}
+
+	.harmony-app .settings-dialog__content {
+		padding: 16px 12px 4px;
+	}
+
+	.harmony-app .settings-dialog__row {
+		min-height: 76px;
+		padding: 12px;
+	}
+
+	.harmony-app .settings-dialog footer {
+		padding: 16px 12px max(16px, env(safe-area-inset-bottom));
+	}
+}
+
+@media (max-width: 380px) {
+	.harmony-chrome {
+		grid-template-columns: 44px minmax(0, 1fr) auto;
+		gap: 0 4px;
+		padding-inline: 4px;
+	}
+
+	.harmony-chrome__brand {
+		font-size: 13px;
+	}
+
+	.harmony-tabs {
+		width: calc(100% + 8px);
+		margin-left: -4px;
+		padding-inline: 4px;
+	}
+
+	.harmony-chrome__actions {
+		gap: 4px;
+	}
+
+	.harmony-home {
+		padding-inline: 12px;
+	}
+}
+
+/*
+ * Phone document mode is a purpose-built shell around the shared editors.
+ * Their rendering and commands stay intact; desktop chrome is progressively
+ * disclosed from the Edit sheet instead of permanently consuming the canvas.
+ */
+@media (max-width: 600px), (max-height: 600px) and (pointer: coarse) {
+	.harmony-app.has-document {
+		--harmony-mobile-header-height: 52px;
+		--harmony-mobile-ribbon-height: min(52dvh, 480px);
+		grid-template-rows: var(--harmony-mobile-header-height) auto minmax(0, 1fr) auto;
+		background: #dfe4e2;
+	}
+
+	.harmony-app.has-document > .harmony-chrome {
+		display: block;
+		min-height: var(--harmony-mobile-header-height);
+		height: var(--harmony-mobile-header-height);
+		padding: 0;
+		border-bottom: 1px solid #d9dedd;
+		background: rgb(252 253 253 / 98%);
+		box-shadow: none;
+	}
+
+	.harmony-app.has-document > .harmony-chrome > .harmony-app-menu,
+	.harmony-app.has-document > .harmony-chrome > .harmony-chrome__brand,
+	.harmony-app.has-document > .harmony-chrome > .harmony-tabs,
+	.harmony-app.has-document > .harmony-chrome > .harmony-chrome__actions {
+		display: none;
+	}
+
+	.harmony-mobile-document-header {
+		display: grid;
+		height: var(--harmony-mobile-header-height);
+		grid-template-columns: 48px minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 4px;
+		padding: 0 6px;
+		box-sizing: border-box;
+	}
+
+	.harmony-mobile-document-header > button {
+		display: grid;
+		width: 48px;
+		height: 48px;
+		place-items: center;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		color: #075e52;
+		background: transparent;
+	}
+
+	.harmony-mobile-document-header > button:active,
+	.harmony-mobile-toolbar > button:active:not(:disabled),
+	.harmony-mobile-sheet button:active,
+	.harmony-mobile-sheet label:active,
+	.harmony-mobile-insert-sheet button:active {
+		background: rgb(7 136 115 / 12%);
+	}
+
+	.harmony-mobile-document-header > button > svg {
+		width: 24px;
+		height: 24px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-document-header__actions {
+		display: flex;
+		align-items: center;
+		gap: 0;
+	}
+
+	.harmony-mobile-document-header__actions > button {
+		display: grid;
+		width: 48px;
+		height: 48px;
+		place-items: center;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		color: #075e52;
+		background: transparent;
+	}
+
+	.harmony-mobile-document-header__actions > button:active,
+	.harmony-mobile-document-header__actions > button[aria-pressed="true"] {
+		background: rgb(7 136 115 / 12%);
+	}
+
+	.harmony-mobile-document-header__actions > button.is-edit-action {
+		display: flex;
+		width: 64px;
+		min-width: 64px;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		color: #08705f;
+		font-size: 12px;
+		font-weight: 700;
+	}
+
+	.harmony-mobile-document-header__actions > button.is-edit-action svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.harmony-mobile-document-header__actions > button.is-view-action {
+		display: flex;
+		width: 58px;
+		min-width: 58px;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		color: #9a3b20;
+		font-size: 12px;
+		font-weight: 700;
+	}
+
+	.harmony-mobile-document-header__actions > button.is-view-action svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.harmony-mobile-document-header.is-reading .harmony-mobile-document-header__title small {
+		color: #68716e;
+		font-weight: 550;
+	}
+
+	.harmony-mobile-document-header__actions svg {
+		width: 23px;
+		height: 23px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-document-header.is-editing {
+		grid-template-columns: 44px minmax(64px, 1fr) auto;
+		gap: 0;
+		padding-inline: 4px;
+	}
+
+	.harmony-mobile-document-header.is-editing > button {
+		width: 44px;
+		height: 44px;
+	}
+
+	.harmony-mobile-edit-header__status {
+		display: grid;
+		overflow: hidden;
+		padding-inline: 5px;
+		align-content: center;
+		gap: 1px;
+		color: #59615f;
+		font-size: 13px;
+		font-weight: 600;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-mobile-edit-header__status > strong,
+	.harmony-mobile-edit-header__status > small {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-mobile-edit-header__status > strong {
+		color: #202926;
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.harmony-mobile-edit-header__status > small {
+		color: #68716e;
+		font-size: 10px;
+		font-weight: 500;
+	}
+
+	.harmony-mobile-edit-header__status[data-autosave-state="saved"] {
+		color: #08705f;
+	}
+
+	.harmony-mobile-edit-header__status[data-autosave-state="error"] {
+		color: #b42318;
+	}
+
+	.harmony-mobile-edit-header__actions {
+		display: flex;
+		align-items: center;
+	}
+
+	.harmony-mobile-edit-header__actions > button {
+		display: grid;
+		width: 44px;
+		height: 44px;
+		place-items: center;
+		padding: 0;
+		border: 0;
+		border-radius: 10px;
+		color: #34403d;
+		background: transparent;
+		touch-action: manipulation;
+	}
+
+	.harmony-mobile-edit-header__actions > button:active {
+		background: rgb(7 136 115 / 12%);
+	}
+
+	.harmony-mobile-edit-header__actions > button.is-done {
+		color: #08705f;
+	}
+
+	.harmony-mobile-edit-header__actions svg {
+		width: 24px;
+		height: 24px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.9;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-edit-header__actions circle {
+		fill: currentcolor;
+		stroke: none;
+	}
+
+	.harmony-mobile-document-header > .harmony-mobile-document-header__title {
+		display: grid;
+		width: 100%;
+		min-width: 0;
+		height: 48px;
+		grid-template-columns: auto minmax(0, 1fr) 20px;
+		place-items: center stretch;
+		gap: 9px;
+		padding: 0 6px;
+		color: #1f2927;
+		text-align: left;
+	}
+
+	.harmony-mobile-document-header__title > span:nth-child(2) {
+		display: grid;
+		min-width: 0;
+		gap: 1px;
+	}
+
+	.harmony-mobile-document-header__title strong,
+	.harmony-mobile-document-header__title small {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-mobile-document-header__title strong {
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.harmony-mobile-document-header__title small {
+		color: #6f7774;
+		font-size: 11px;
+		font-weight: 450;
+	}
+
+	.harmony-mobile-document-header__title small[data-autosave-state="saved"] {
+		color: #087564;
+	}
+
+	.harmony-mobile-document-header__title small[data-autosave-state="error"] {
+		color: #b42318;
+	}
+
+	.harmony-mobile-document-header__title > svg {
+		width: 18px;
+		height: 18px;
+		fill: none;
+		stroke: #68716e;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-document-header__format {
+		display: grid;
+		min-width: 34px;
+		height: 28px;
+		place-items: center;
+		padding: 0 5px;
+		box-sizing: border-box;
+		border-radius: 8px;
+		color: #fff;
+		background: var(--format-color);
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.03em;
+	}
+
+	.harmony-app.has-document > .harmony-feedback {
+		grid-row: 2;
+	}
+
+	.harmony-app.has-document > .harmony-body {
+		grid-row: 3;
+	}
+
+	.harmony-app.has-document .harmony-workspace,
+	.harmony-app.has-document .harmony-documents,
+	.harmony-app.has-document .harmony-documents__surface {
+		height: 100%;
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	.harmony-app.has-document .harmony-workspace,
+	.harmony-app.has-document .harmony-documents {
+		background: #dfe4e2;
+	}
+
+	.harmony-app.has-document .harmony-documents__surface > *,
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-ui-editor-shell,
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-docx-office-editor,
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-pptx-office-editor,
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-xlsx-office-editor,
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-vsdx-editor {
+		height: 100% !important;
+		min-height: 0 !important;
+		border: 0 !important;
+		border-radius: 0 !important;
+	}
+
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-ui-editor-shell {
+		--als-ofs-ui-titlebar-height: 0px;
+		--als-ofs-ui-ribbon-height: 0px;
+		--als-ofs-ui-ribbon-tabs-height: 44px;
+		--als-ofs-ui-ribbon-commands-height: 144px;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface
+		.als-ofs-ui-editor-shell
+		> .als-ofs-ui-editor-titlebar,
+	.harmony-app.has-document
+		.harmony-documents__surface
+		.als-ofs-ui-editor-shell
+		> .als-ofs-ui-ribbon-surface,
+	.harmony-app.has-document
+		.harmony-documents__surface
+		.als-ofs-ui-editor-shell
+		> .als-ofs-ui-status-bar {
+		display: none !important;
+	}
+
+	.harmony-app.has-document .harmony-documents__surface .als-ofs-ui-editor-workspace {
+		width: 100% !important;
+		grid-template-columns: minmax(0, 1fr) !important;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface
+		.als-ofs-ui-editor-workspace__region[data-workspace-region="stage"] {
+		width: 100%;
+		grid-column: 1 !important;
+		grid-row: 1 !important;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface
+		.als-ofs-ui-editor-workspace__region[data-workspace-region="left-dock"],
+	.harmony-app.has-document
+		.harmony-documents__surface
+		.als-ofs-ui-editor-workspace__region[data-workspace-region="right-dock"] {
+		display: none !important;
+	}
+
+	.harmony-app.has-document .als-ofs-docx-word-canvas__viewport {
+		padding: 0 0 28px;
+		scrollbar-gutter: auto;
+		background: #fff;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-canvas[data-view="web"] {
+		font-size: 12pt;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-canvas[data-view="web"]
+		.als-ofs-docx-word-canvas__viewport {
+		min-height: 100%;
+		padding: 0;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-canvas[data-view="web"]
+		.als-ofs-docx-word-canvas__document,
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-canvas[data-view="web"]
+		.als-ofs-docx-word-page {
+		width: 100% !important;
+		min-width: 0;
+		min-height: 100%;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-canvas[data-view="web"]
+		.als-ofs-docx-word-page__content {
+		min-height: 100%;
+		/* Keep the compact mobile gutters without discarding the live header and
+		   footer measurements published by WordCanvas. A fixed vertical shorthand
+		   lets the editable body slide underneath the absolutely positioned bands. */
+		padding: max(22px, var(--als-ofs-docx-word-header-inset, 0px)) 18px
+			max(40px, var(--als-ofs-docx-word-footer-inset, 0px)) !important;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		:is(
+			.als-ofs-ui-editor-shell,
+			.als-ofs-ui-editor-workspace,
+			.als-ofs-ui-editor-workspace__region,
+			.als-ofs-docx-office-editor,
+			.als-ofs-docx-word-canvas
+		) {
+		background: #fff !important;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-ruler {
+		display: none !important;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		.als-ofs-ui-markdown-editor__stage,
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		.als-ofs-ui-markdown-editor__source-pane,
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		.als-ofs-ui-markdown-editor__source {
+		height: 100%;
+		min-height: 0;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		.als-ofs-ui-markdown-editor__source {
+		display: block;
+		width: 100%;
+		padding: 0;
+		overflow: hidden;
+		background: #fff;
+		font-size: 16px;
+		line-height: 1.6;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		.als-ofs-ui-markdown-editor__line-numbers {
+		display: none;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		:is(
+			.als-ofs-ui-markdown-editor__source-input,
+			.als-ofs-ui-markdown-editor__source-highlight,
+			.als-ofs-ui-markdown-editor__line-measure
+		) {
+		position: absolute;
+		top: 14px;
+		right: 16px;
+		bottom: 14px;
+		left: 16px;
+		width: auto !important;
+		height: auto;
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="markdown"]
+		.als-ofs-ui-markdown-editor__source-input {
+		display: block;
+		overflow: auto;
+		font-size: 16px;
+		line-height: 1.6;
+	}
+
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		.als-ofs-docx-word-page {
+		border: 0 !important;
+		box-shadow: none !important;
+	}
+
+	/* Empty header/footer bands stay in the document model, but the phone web
+	   canvas uses compact body padding instead of reserving a desktop-sized band. */
+	.harmony-app.has-document
+		.harmony-documents__surface[data-format="docx"]
+		[data-word-header-footer-empty="true"] {
+		height: 0 !important;
+		min-height: 0 !important;
+		pointer-events: none;
+	}
+
+	.harmony-mobile-toolbar {
+		position: relative;
+		z-index: 600;
+		display: grid;
+		min-height: 64px;
+		grid-row: 4;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		align-items: stretch;
+		padding: 4px max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom))
+			max(4px, env(safe-area-inset-left));
+		box-sizing: border-box;
+		border-top: 1px solid #d9dedd;
+		background: rgb(252 253 253 / 98%);
+		box-shadow: 0 -8px 24px rgb(17 52 45 / 6%);
+		transform: translateY(calc(-1 * var(--harmony-mobile-ime-inset, 0px)));
+	}
+
+	.harmony-mobile-toolbar > button {
+		display: grid;
+		min-width: 0;
+		min-height: 56px;
+		align-content: center;
+		justify-items: center;
+		gap: 2px;
+		padding: 3px 1px;
+		border: 0;
+		border-radius: 12px;
+		color: #47504d;
+		background: transparent;
+	}
+
+	.harmony-mobile-toolbar > button[aria-pressed="true"] {
+		color: #08705f;
+		background: #e4f6f1;
+	}
+
+	.harmony-mobile-toolbar > button:focus {
+		outline: 0;
+	}
+
+	.harmony-mobile-toolbar > button:focus-visible {
+		box-shadow: inset 0 0 0 2px rgb(8 112 95 / 44%);
+	}
+
+	.harmony-mobile-toolbar > button:disabled {
+		color: #a7aeac;
+		opacity: 0.62;
+	}
+
+	.harmony-mobile-toolbar svg {
+		width: 23px;
+		height: 23px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-toolbar span {
+		font-size: 10px;
+		font-weight: 600;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar {
+		min-height: 52px;
+		grid-template-columns: repeat(8, minmax(0, 1fr));
+		padding: 2px max(4px, env(safe-area-inset-right)) max(2px, env(safe-area-inset-bottom))
+			max(4px, env(safe-area-inset-left));
+		background: #fff;
+		box-shadow: 0 -2px 10px rgb(17 52 45 / 7%);
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar > button {
+		min-width: 0;
+		min-height: 48px;
+		padding: 0;
+		border-radius: 8px;
+		touch-action: manipulation;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar > button > strong {
+		display: grid;
+		width: 26px;
+		height: 26px;
+		place-items: center;
+		color: inherit;
+		font:
+			650 21px/1 system-ui,
+			sans-serif;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar > button > strong.is-italic {
+		font-style: italic;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar > button > strong.is-underline {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar svg {
+		width: 26px;
+		height: 26px;
+		stroke-width: 1.8;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar > button.has-divider-after {
+		box-shadow: inset -1px 0 #dfe3e2;
+	}
+
+	.harmony-mobile-toolbar.is-input-toolbar > button.has-divider-before {
+		box-shadow: inset 1px 0 #dfe3e2;
+	}
+
+	.harmony-mobile-toolbar.is-pptx-toolbar {
+		min-height: 62px;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		padding: 3px max(4px, env(safe-area-inset-right)) max(3px, env(safe-area-inset-bottom))
+			max(4px, env(safe-area-inset-left));
+		background: #fff;
+		box-shadow: 0 -2px 10px rgb(17 52 45 / 7%);
+	}
+
+	.harmony-mobile-toolbar.is-pptx-toolbar > button {
+		min-height: 54px;
+		gap: 1px;
+		padding: 2px 0;
+		border-radius: 8px;
+		touch-action: manipulation;
+	}
+
+	.harmony-mobile-toolbar.is-pptx-toolbar svg {
+		width: 24px;
+		height: 24px;
+		stroke-width: 1.8;
+	}
+
+	.harmony-mobile-toolbar.is-pptx-toolbar strong {
+		display: grid;
+		width: 24px;
+		height: 24px;
+		place-items: center;
+		font:
+			650 21px/1 system-ui,
+			sans-serif;
+	}
+
+	.harmony-mobile-toolbar.is-pptx-toolbar span {
+		font-size: 9.5px;
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	/* The host toolbar owns slide creation. Keep the in-canvas control focused on
+	   navigation and avoid presenting the same add command twice. */
+	.harmony-documents__surface[data-format="pptx"] .als-ofs-pptx-mobile-slide-controls__add {
+		display: none !important;
+	}
+
+	.harmony-documents__surface[data-format="pptx"] .als-ofs-pptx-mobile-slide-controls {
+		right: auto !important;
+		left: 50% !important;
+		width: max-content;
+		max-width: calc(100% - 24px);
+		padding-inline: 6px;
+		transform: translateX(-50%);
+	}
+
+	.harmony-pptx-viewer-controls {
+		position: fixed;
+		z-index: 1120;
+		top: max(8px, env(safe-area-inset-top));
+		right: max(12px, env(safe-area-inset-right));
+		display: flex;
+		height: 48px;
+		align-items: center;
+		gap: 2px;
+		padding: 2px;
+		box-sizing: border-box;
+		border: 1px solid rgb(255 255 255 / 18%);
+		border-radius: 999px;
+		color: #fff;
+		background: rgb(18 23 22 / 78%);
+		box-shadow: 0 8px 28px rgb(0 0 0 / 28%);
+		backdrop-filter: blur(12px);
+	}
+
+	.harmony-pptx-viewer-controls > button {
+		display: grid;
+		width: 44px;
+		height: 44px;
+		place-items: center;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		color: inherit;
+		background: transparent;
+		touch-action: manipulation;
+	}
+
+	.harmony-pptx-viewer-controls > button:active {
+		background: rgb(255 255 255 / 18%);
+	}
+
+	.harmony-pptx-viewer-controls > button.is-exit {
+		background: rgb(255 255 255 / 13%);
+	}
+
+	.harmony-pptx-viewer-controls > button.is-zoom-value {
+		width: 54px;
+		border-radius: 10px;
+		font-size: 12px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.harmony-pptx-viewer-controls > i {
+		width: 1px;
+		height: 24px;
+		margin: 0 2px;
+		background: rgb(255 255 255 / 18%);
+	}
+
+	.harmony-pptx-viewer-controls svg {
+		width: 22px;
+		height: 22px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.9;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-pptx-gesture-hint {
+		position: fixed;
+		z-index: 640;
+		bottom: max(14px, env(safe-area-inset-bottom));
+		left: 50%;
+		max-width: calc(100vw - 32px);
+		margin: 0;
+		padding: 8px 12px;
+		box-sizing: border-box;
+		border: 1px solid rgb(255 255 255 / 18%);
+		border-radius: 999px;
+		color: #fff;
+		background: rgb(28 34 32 / 72%);
+		box-shadow: 0 5px 18px rgb(0 0 0 / 20%);
+		font-size: 11px;
+		font-weight: 600;
+		line-height: 1.3;
+		text-align: center;
+		white-space: nowrap;
+		pointer-events: none;
+		backdrop-filter: blur(10px);
+		transform: translateX(-50%);
+	}
+
+	.harmony-documents__surface[data-format="pptx"][data-mobile-mode="reading"]
+		[data-stage-region="viewer"] {
+		touch-action: pan-y;
+		overscroll-behavior-x: none;
+		overscroll-behavior-y: contain;
+	}
+
+	.harmony-documents__surface[data-format="pptx"][data-mobile-mode="reading"]
+		#dropzone[data-editor-view="all"]
+		#viewer
+		.als-ofs-pptx-slide {
+		touch-action: pan-y !important;
+	}
+
+	.harmony-documents__surface[data-format="pptx"][data-mobile-mode="reading"]
+		#dropzone[data-editor-view="all"]
+		.als-ofs-pptx-slide-frame[data-editor-active-slide="true"] {
+		outline: 0;
+	}
+
+	.harmony-app.is-pptx-viewing {
+		position: fixed;
+		z-index: 1000;
+		inset: 0;
+		width: 100dvw;
+		height: 100dvh;
+		grid-template-rows: minmax(0, 1fr);
+		background: #111514;
+	}
+
+	.harmony-app.is-pptx-viewing > :is(.harmony-chrome, .harmony-feedback),
+	.harmony-app.is-pptx-viewing > .harmony-mobile-toolbar,
+	.harmony-app.is-pptx-viewing > .harmony-mobile-ribbon-scrim,
+	.harmony-app.is-pptx-viewing > .harmony-mobile-ribbon-done {
+		display: none !important;
+	}
+
+	.harmony-app.is-pptx-viewing > .harmony-pptx-gesture-hint {
+		display: none !important;
+	}
+
+	/* The immersive host toolbar mirrors these commands in one compact group. */
+	.harmony-app.is-pptx-viewing .als-ofs-pptx-mobile-zoom-controls {
+		display: none !important;
+	}
+
+	.harmony-app.is-pptx-viewing .als-ofs-pptx-slide-frame.harmony-pptx-slide-enter-from-right {
+		animation: harmony-pptx-slide-enter-from-right 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.harmony-app.is-pptx-viewing .als-ofs-pptx-slide-frame.harmony-pptx-slide-enter-from-left {
+		animation: harmony-pptx-slide-enter-from-left 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.harmony-app.is-pptx-viewing > .harmony-body {
+		grid-row: 1;
+		height: 100dvh;
+		background: #111514;
+	}
+
+	.harmony-app.is-pptx-viewing
+		:is(
+			.harmony-workspace,
+			.harmony-documents,
+			.harmony-documents__surface[data-format="pptx"]
+		) {
+		width: 100%;
+		height: 100%;
+		background: #111514;
+	}
+
+	.harmony-app.is-pptx-viewing .harmony-documents__surface[data-format="pptx"] {
+		touch-action: none;
+		user-select: none;
+	}
+
+	.harmony-app.is-pptx-viewing
+		.harmony-documents__surface[data-format="pptx"]
+		[data-stage-region="viewer"] {
+		/* The mobile editor normally reserves 72px below the canvas for its slide
+		   toolbar. Immersive viewing hides that toolbar, so keeping the reservation
+		   shifts a fitted slide above the true landscape center. Preserve only the
+		   horizontal cutout insets and center against the full visible height. */
+		padding: 0 max(0px, env(safe-area-inset-right)) 0 max(0px, env(safe-area-inset-left)) !important;
+		box-sizing: border-box;
+		touch-action: none;
+		overscroll-behavior: none;
+	}
+
+	.harmony-app.is-pptx-viewing .als-ofs-pptx-slide-frame.harmony-pptx-slide-drag-current {
+		position: relative;
+		z-index: 2;
+		transform: translate3d(var(--harmony-pptx-drag-x, 0), 0, 0);
+		will-change: transform;
+	}
+
+	.harmony-app.is-pptx-viewing .als-ofs-pptx-slide-frame.harmony-pptx-slide-drag-adjacent {
+		position: fixed !important;
+		z-index: 1;
+		top: var(--harmony-pptx-drag-top) !important;
+		left: var(--harmony-pptx-drag-left) !important;
+		width: var(--harmony-pptx-drag-width) !important;
+		height: var(--harmony-pptx-drag-height) !important;
+		margin: 0 !important;
+		transform: translate3d(
+			calc(var(--harmony-pptx-drag-origin) + var(--harmony-pptx-drag-x, 0px)),
+			0,
+			0
+		);
+		pointer-events: none;
+		will-change: transform;
+	}
+
+	.harmony-app.is-pptx-viewing
+		.als-ofs-pptx-slide-frame:is(
+			.harmony-pptx-slide-drag-current,
+			.harmony-pptx-slide-drag-adjacent
+		).is-settling {
+		transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.harmony-app.is-pptx-viewing
+		.harmony-documents__surface[data-format="pptx"]
+		.als-ofs-ui-editor-workspace__region[data-workspace-region="stage"] {
+		display: grid;
+		place-items: center;
+		padding: 0;
+		box-sizing: border-box;
+		background: #111514 !important;
+	}
+
+	.harmony-app.is-pptx-viewing
+		.harmony-documents__surface[data-format="pptx"]
+		.als-ofs-pptx-mobile-slide-controls {
+		display: none !important;
+	}
+
+	@keyframes harmony-pptx-slide-enter-from-right {
+		from {
+			opacity: 0.42;
+			transform: translate3d(14vw, 0, 0) scale(0.985);
+		}
+
+		to {
+			opacity: 1;
+			transform: translate3d(0, 0, 0) scale(1);
+		}
+	}
+
+	@keyframes harmony-pptx-slide-enter-from-left {
+		from {
+			opacity: 0.42;
+			transform: translate3d(-14vw, 0, 0) scale(0.985);
+		}
+
+		to {
+			opacity: 1;
+			transform: translate3d(0, 0, 0) scale(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.harmony-app.is-pptx-viewing
+			.als-ofs-pptx-slide-frame:is(
+				.harmony-pptx-slide-enter-from-left,
+				.harmony-pptx-slide-enter-from-right
+			) {
+			animation: none;
+		}
+
+		.harmony-app.is-pptx-viewing
+			.als-ofs-pptx-slide-frame:is(
+				.harmony-pptx-slide-drag-current,
+				.harmony-pptx-slide-drag-adjacent
+			).is-settling {
+			transition: none;
+		}
+	}
+
+	.harmony-mobile-ribbon-scrim {
+		position: fixed;
+		z-index: 520;
+		inset: var(--harmony-mobile-header-height) 0 0;
+		display: block;
+		background: rgb(16 27 24 / 42%);
+	}
+
+	.harmony-mobile-ribbon-done {
+		position: fixed;
+		z-index: 570;
+		right: 12px;
+		bottom: calc(var(--harmony-mobile-ribbon-height) - 48px);
+		display: block;
+		min-width: 64px;
+		height: 44px;
+		padding: 0 16px;
+		box-sizing: border-box;
+		border: 0;
+		border-radius: 999px;
+		color: #fff;
+		background: #08705f;
+		font-size: 13px;
+		font-weight: 700;
+		box-shadow: 0 4px 14px rgb(5 72 61 / 22%);
+	}
+
+	.harmony-app.is-mobile-ribbon-open .harmony-mobile-toolbar {
+		display: none;
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-editor-shell
+		> .als-ofs-ui-ribbon-surface {
+		position: fixed !important;
+		z-index: 550;
+		top: auto !important;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		display: flex !important;
+		width: 100%;
+		height: var(--harmony-mobile-ribbon-height) !important;
+		min-height: var(--harmony-mobile-ribbon-height) !important;
+		box-sizing: border-box;
+		border: 0;
+		border-radius: 18px 18px 0 0;
+		background: #f8faf9;
+		box-shadow: 0 -14px 40px rgb(16 39 34 / 20%);
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-surface__tabs {
+		height: 48px;
+		min-height: 48px;
+		padding-right: 0;
+		box-sizing: border-box;
+		border-radius: 18px 18px 0 0;
+		overflow: hidden;
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tabs {
+		width: calc(100% - 96px);
+		max-width: calc(100% - 96px);
+		flex: 0 1 calc(100% - 96px);
+		padding: 4px 8px;
+		gap: 2px;
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tab-actions {
+		display: none;
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tabs__tab {
+		min-height: 44px;
+		padding-inline: 12px;
+		font-size: 14px;
+		white-space: nowrap;
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		:is(.als-ofs-ui-ribbon-surface__file, .als-ofs-ui-ribbon-surface__commands) {
+		height: auto !important;
+		min-height: 0 !important;
+		flex: 1 1 auto;
+		padding-bottom: max(16px, env(safe-area-inset-bottom));
+		overflow-x: hidden;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-width: none;
+	}
+
+	.harmony-app.is-mobile-ribbon-open
+		.harmony-documents__surface[data-active="true"]
+		:is(
+			.als-ofs-ui-ribbon-surface__file,
+			.als-ofs-ui-ribbon-surface__commands
+		)::-webkit-scrollbar {
+		display: none;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-editor-shell
+		> .als-ofs-ui-ribbon-surface {
+		position: fixed !important;
+		z-index: 1;
+		top: 10px !important;
+		right: 68px;
+		bottom: auto;
+		left: auto;
+		display: block !important;
+		width: 44px;
+		height: 44px !important;
+		min-height: 44px !important;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		:is(
+			.als-ofs-ui-ribbon-tabs,
+			.als-ofs-ui-ribbon-surface__file,
+			.als-ofs-ui-ribbon-surface__commands
+		) {
+		display: none !important;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-surface__tabs {
+		display: block;
+		width: 44px;
+		height: 44px;
+		min-height: 44px;
+		padding: 0;
+		border: 0;
+		background: #fff;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tab-actions {
+		width: 44px;
+		max-width: 44px;
+		height: 44px;
+		min-height: 44px;
+		padding: 0;
+		box-sizing: border-box;
+		border: 0;
+		background: #fff;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tab-actions
+		> :not(.als-ofs-ui-search-box):not(.als-ofs-ui-ribbon-tab-actions__search-host) {
+		display: none !important;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tab-actions
+		> .als-ofs-ui-search-box {
+		width: 44px;
+		max-width: 44px;
+		flex-basis: 44px;
+	}
+
+	.harmony-app.is-mobile-search-open
+		.harmony-documents__surface[data-active="true"]
+		.als-ofs-ui-ribbon-tab-actions
+		.als-ofs-ui-search-box__compact-trigger {
+		width: 44px;
+		height: 44px;
+	}
+
+	.als-ofs-ui-search-box__results {
+		width: calc(100vw - 24px) !important;
+		max-width: none !important;
+		max-height: min(52dvh, 460px);
+		border-radius: 14px;
+		box-shadow: 0 16px 40px rgb(16 39 34 / 22%);
+	}
+
+	.als-ofs-ui-search-box__compact-query {
+		padding: 12px;
+	}
+
+	.als-ofs-ui-search-box__compact-query
+		:is(.als-ofs-ui-search-box__field, .als-ofs-ui-search-box__input) {
+		height: 44px;
+	}
+
+	.harmony-mobile-sheet-backdrop {
+		position: fixed;
+		z-index: 700;
+		inset: 0;
+		display: grid;
+		align-items: end;
+		background: rgb(16 27 24 / 52%);
+	}
+
+	.harmony-mobile-sheet {
+		display: grid;
+		max-height: min(74dvh, 620px);
+		gap: 16px;
+		padding: 8px 16px max(20px, env(safe-area-inset-bottom));
+		box-sizing: border-box;
+		overflow-y: auto;
+		border-radius: 22px 22px 0 0;
+		background: #fff;
+		box-shadow: 0 -18px 60px rgb(11 31 27 / 28%);
+		animation: harmony-mobile-sheet-in 200ms ease-out;
+	}
+
+	.harmony-mobile-sheet::before {
+		width: 40px;
+		height: 4px;
+		margin: 0 auto;
+		border-radius: 999px;
+		background: #cbd2d0;
+		content: "";
+	}
+
+	.harmony-mobile-sheet > header {
+		display: flex;
+		min-height: 48px;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.harmony-mobile-sheet > header > span {
+		display: grid;
+		min-width: 0;
+		gap: 2px;
+	}
+
+	.harmony-mobile-sheet > header strong {
+		font-size: 18px;
+	}
+
+	.harmony-mobile-sheet > header small {
+		overflow: hidden;
+		color: #6a7370;
+		font-size: 12px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-mobile-sheet > header > button {
+		width: 48px;
+		height: 48px;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		color: #39413f;
+		background: #f0f3f2;
+		font-size: 28px;
+		line-height: 1;
+	}
+
+	.harmony-mobile-sheet__actions {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	.harmony-mobile-sheet__actions > button,
+	.harmony-mobile-sheet__actions > label {
+		display: grid;
+		min-width: 0;
+		min-height: 72px;
+		align-content: center;
+		justify-items: center;
+		gap: 6px;
+		padding: 8px 2px;
+		border: 1px solid #e1e7e5;
+		border-radius: 14px;
+		color: #2f3a37;
+		background: #f8faf9;
+		font-size: 12px;
+		font-weight: 650;
+	}
+
+	.harmony-mobile-sheet__actions > button:disabled {
+		opacity: 0.42;
+	}
+
+	.harmony-mobile-sheet__actions .is-danger {
+		color: #b3262e;
+	}
+
+	.harmony-mobile-sheet svg {
+		width: 24px;
+		height: 24px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-sheet__open input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		opacity: 0;
+	}
+
+	.harmony-mobile-sheet__new,
+	.harmony-mobile-sheet__documents {
+		display: grid;
+		gap: 8px;
+	}
+
+	.harmony-mobile-sheet__new > strong,
+	.harmony-mobile-sheet__documents > strong {
+		color: #4f5956;
+		font-size: 12px;
+		letter-spacing: 0.02em;
+	}
+
+	.harmony-mobile-sheet__new > div {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 6px;
+	}
+
+	.harmony-mobile-sheet__new button {
+		display: grid;
+		min-width: 0;
+		min-height: 64px;
+		place-content: center;
+		justify-items: center;
+		gap: 5px;
+		padding: 5px 2px;
+		border: 0;
+		border-radius: 12px;
+		color: #53605c;
+		background: #f3f6f5;
+	}
+
+	.harmony-mobile-sheet__new button > span {
+		display: grid;
+		width: 30px;
+		height: 30px;
+		place-items: center;
+		border-radius: 8px;
+		color: #fff;
+		background: var(--format-color);
+		font-size: 9px;
+		font-weight: 800;
+	}
+
+	.harmony-mobile-sheet__new button > small {
+		font-size: 9px;
+		font-weight: 700;
+	}
+
+	.harmony-mobile-sheet__documents > button {
+		display: grid;
+		min-height: 52px;
+		grid-template-columns: 44px minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 10px;
+		padding: 4px 8px;
+		border: 0;
+		border-radius: 12px;
+		color: #28312f;
+		background: #f7f9f8;
+		text-align: left;
+	}
+
+	.harmony-mobile-sheet__documents > button[data-active="true"] {
+		background: #e4f6f1;
+	}
+
+	.harmony-mobile-sheet__documents > button > span {
+		display: grid;
+		width: 36px;
+		height: 36px;
+		place-items: center;
+		border-radius: 9px;
+		color: #fff;
+		background: var(--format-color);
+		font-size: 9px;
+		font-weight: 800;
+	}
+
+	.harmony-mobile-sheet__documents > button > b {
+		overflow: hidden;
+		font-size: 14px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-mobile-sheet__documents > button > small {
+		color: #08705f;
+		font-size: 11px;
+	}
+
+	.harmony-mobile-image-input {
+		position: fixed;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.harmony-mobile-insert-backdrop {
+		position: fixed;
+		z-index: 720;
+		inset: 0;
+		display: grid;
+		align-items: end;
+		background: rgb(16 27 24 / 54%);
+	}
+
+	.harmony-mobile-insert-sheet {
+		display: grid;
+		max-height: min(72dvh, 660px);
+		grid-template-rows: auto minmax(0, 1fr);
+		box-sizing: border-box;
+		overflow: hidden;
+		border-radius: 22px 22px 0 0;
+		background: #fff;
+		box-shadow: 0 -18px 60px rgb(11 31 27 / 28%);
+		animation: harmony-mobile-sheet-in 200ms ease-out;
+	}
+
+	.harmony-mobile-insert-sheet > header {
+		display: grid;
+		min-height: 58px;
+		grid-template-columns: 52px minmax(0, 1fr) 52px;
+		align-items: center;
+		padding: 4px 8px;
+		box-sizing: border-box;
+		border-bottom: 1px solid #e5e9e8;
+	}
+
+	.harmony-mobile-insert-sheet > header > button {
+		display: grid;
+		width: 48px;
+		height: 48px;
+		place-items: center;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		color: #27312f;
+		background: transparent;
+	}
+
+	.harmony-mobile-insert-sheet > header > strong {
+		font-size: 18px;
+		font-weight: 700;
+		text-align: center;
+	}
+
+	.harmony-mobile-insert-sheet > header svg,
+	.harmony-mobile-insert-icon svg {
+		width: 25px;
+		height: 25px;
+		fill: none;
+		stroke: currentcolor;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.harmony-mobile-insert-sheet__body {
+		display: grid;
+		gap: 20px;
+		padding: 18px 16px max(22px, env(safe-area-inset-bottom));
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.harmony-mobile-insert-section {
+		display: grid;
+		gap: 12px;
+	}
+
+	.harmony-mobile-insert-section > h3 {
+		margin: 0;
+		color: #27312f;
+		font-size: 15px;
+		font-weight: 750;
+	}
+
+	.harmony-mobile-insert-headings {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	.harmony-mobile-insert-headings > button,
+	.harmony-mobile-insert-grid > button {
+		display: grid;
+		min-width: 0;
+		min-height: 74px;
+		align-content: center;
+		justify-items: center;
+		gap: 7px;
+		padding: 8px 4px;
+		border: 0;
+		border-radius: 14px;
+		color: #2d3734;
+		background: transparent;
+		font: inherit;
+		touch-action: manipulation;
+	}
+
+	.harmony-mobile-insert-headings > button {
+		background: #f4f6f5;
+	}
+
+	.harmony-mobile-insert-headings b {
+		font-size: 23px;
+		font-weight: 520;
+		line-height: 1;
+	}
+
+	.harmony-mobile-insert-headings span,
+	.harmony-mobile-insert-grid > button > span:last-child {
+		max-width: 100%;
+		overflow: hidden;
+		font-size: 12px;
+		font-weight: 600;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.harmony-mobile-insert-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 6px;
+	}
+
+	.harmony-mobile-insert-grid.is-common {
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+	}
+
+	.harmony-mobile-insert-icon {
+		display: grid;
+		width: 46px;
+		height: 46px;
+		place-items: center;
+		border-radius: 12px;
+		color: #394441;
+		background: #f3f5f4;
+	}
+
+	.harmony-mobile-insert-icon.is-text {
+		font:
+			700 32px/1 Georgia,
+			serif;
+	}
+
+	.harmony-mobile-insert-icon.is-image {
+		color: #b47900;
+		background: #fff5d9;
+	}
+
+	.harmony-mobile-insert-icon.is-table {
+		color: #08796a;
+		background: #dff7f1;
+	}
+
+	.harmony-mobile-insert-icon.is-page {
+		color: #c25a12;
+		background: #fff0e2;
+	}
+
+	.harmony-mobile-insert-icon.is-line {
+		color: #4269c7;
+		background: #eaf0ff;
+	}
+
+	.harmony-mobile-insert-icon.is-more {
+		color: #50605c;
+		background: #edf1f0;
+	}
+
+	.harmony-mobile-insert-link {
+		display: grid;
+		gap: 7px;
+		padding: 12px;
+		border: 1px solid #dce4e1;
+		border-radius: 14px;
+		background: #f8faf9;
+	}
+
+	.harmony-mobile-insert-link > label {
+		color: #46514e;
+		font-size: 12px;
+		font-weight: 700;
+	}
+
+	.harmony-mobile-insert-link > div {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 8px;
+	}
+
+	.harmony-mobile-insert-link input,
+	.harmony-mobile-insert-link button {
+		height: 44px;
+		box-sizing: border-box;
+		border-radius: 10px;
+		font: inherit;
+	}
+
+	.harmony-mobile-insert-link input {
+		min-width: 0;
+		padding: 0 12px;
+		border: 1px solid #bac7c3;
+		background: #fff;
+		font-size: 14px;
+	}
+
+	.harmony-mobile-insert-link button {
+		padding: 0 16px;
+		border: 0;
+		color: #fff;
+		background: #08705f;
+		font-size: 14px;
+		font-weight: 700;
+	}
+}
+
+@keyframes harmony-mobile-sheet-in {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
+}
