@@ -5,7 +5,6 @@ const sharedText = {
 	下载: "Download",
 	隐私政策: "Privacy",
 	打开导航: "Open navigation",
-	镇江酷猫网络科技有限公司: "Zhenjiang Kumao Network Technology Co., Ltd.",
 	"CubeOffice 首页": "CubeOffice home",
 };
 
@@ -13,7 +12,7 @@ const pageCopy = {
 	home: {
 		title: "CubeOffice | Cross-platform document workspace",
 		description:
-			"CubeOffice is a cross-platform AI document app for HarmonyOS, macOS, Windows, and Linux, built to work with the AI assistant you already use.",
+			"CubeOffice is a cross-platform AI document app for macOS, Windows, and Linux, built to work with the AI assistant you already use.",
 		text: {
 			...sharedText,
 			支持平台: "Platforms",
@@ -26,8 +25,8 @@ const pageCopy = {
 				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
 			下载桌面版: "Download desktop app",
 			查看产品界面: "Explore the interface",
-			"CubeOffice 1.1.0 · HarmonyOS 版本预审中":
-				"CubeOffice 1.1.0 · HarmonyOS version in review",
+			"CubeOffice 1.1.0 · macOS、Windows 与 Linux":
+				"CubeOffice 1.1.0 · macOS, Windows, and Linux",
 			"AI 已连接": "AI connected",
 			文件: "File",
 			插入: "Insert",
@@ -43,11 +42,9 @@ const pageCopy = {
 				"Illustration of the CubeOffice document workspace connected to an AI app",
 			"一次熟悉，处处顺手": "Familiar everywhere",
 			"一套体验，": "One experience,",
-			覆盖四个平台: "across four platforms",
-			"围绕同一套文档能力与交互逻辑构建，在平板、PC 和桌面系统之间保持一致的工作节奏。":
-				"The same document capabilities and interaction model keep your workflow consistent across tablets, PCs, and desktop operating systems.",
-			"首发版本 · 预审中": "Initial release · In review",
-			"平板与 PC/2in1": "Tablets and PC/2-in-1",
+			覆盖三大桌面平台: "across three desktop platforms",
+			"围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux 之间保持一致的工作节奏。":
+				"The same document capabilities and interaction model keep your workflow consistent across macOS, Windows, and Linux.",
 			"桌面版本 · 1.1.0": "Desktop release · 1.1.0",
 			"AppImage 与 DEB": "AppImage and DEB",
 			选择你的桌面平台: "Choose your desktop platform",
@@ -69,8 +66,8 @@ const pageCopy = {
 			"熟悉的格式，都在这里": "Your familiar formats, all in one place",
 			专注文档本身: "Focused on your documents",
 			"从打开文件，到继续编辑": "From opening a file to finishing the work",
-			"为平板和桌面工作而设计，在不同操作系统上保留清晰、熟悉且高效的体验。":
-				"Designed for tablet and desktop work, with a clear, familiar, and efficient experience on every operating system.",
+			"为桌面工作而设计，在不同操作系统上保留清晰、熟悉且高效的体验。":
+				"Designed for desktop work, with a clear, familiar, and efficient experience on every operating system.",
 			多格式文档工作台: "A multi-format document workspace",
 			"在同一个应用中打开、查看和编辑常见办公文档，并导入 PDF、JMP 与 draw.io 文件。":
 				"Open, view, and edit common Office documents in one app, with imports for PDF, JMP, and draw.io files.",
@@ -97,8 +94,8 @@ const pageCopy = {
 			多格式统一文档工作区界面示意:
 				"Illustration of the unified multi-format document workspace",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
-			"macOS、Windows 与 Linux 桌面版现已开放下载；HarmonyOS 版本已进入预审。":
-				"CubeOffice 1.1.0 is available for macOS, Windows, and Linux; the HarmonyOS version is in review.",
+			"macOS、Windows 与 Linux 桌面版现已开放下载。":
+				"CubeOffice 1.1.0 is available for macOS, Windows, and Linux.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",
@@ -118,8 +115,8 @@ const pageCopy = {
 			运营者: "Operator",
 			隐私与数据保护: "Privacy and data protection",
 			"CubeOffice 隐私政策": "CubeOffice Privacy Policy",
-			"我们重视您的隐私。本政策适用于 CubeOffice 的 HarmonyOS、macOS、Windows 与 Linux 版本，并说明应用如何处理数据。CubeOffice 当前无需注册或登录，文档主要在您的设备本地处理。":
-				"We value your privacy. This policy applies to the HarmonyOS, macOS, Windows, and Linux versions of CubeOffice and explains how the app handles data. CubeOffice currently requires no registration or sign-in, and documents are primarily processed on your device.",
+			"我们重视您的隐私。本政策适用于 CubeOffice 的 macOS、Windows 与 Linux 版本，并说明应用如何处理数据。CubeOffice 当前无需注册或登录，文档主要在您的设备本地处理。":
+				"We value your privacy. This policy applies to the macOS, Windows, and Linux versions of CubeOffice and explains how the app handles data. CubeOffice currently requires no registration or sign-in, and documents are primarily processed on your device.",
 			"1. 我们处理的信息": "1. Information we process",
 			"当您主动选择打开、导入、创建或编辑文档时，应用会在您的设备上处理相应文件及其内容，以提供文档查看、编辑、保存、撤销和多标签工作区等功能。":
 				"When you choose to open, import, create, or edit a document, the app processes that file and its contents on your device to provide viewing, editing, saving, undo, and multi-tab workspace features.",
@@ -149,8 +146,8 @@ const pageCopy = {
 			"应用功能或法律要求发生变化时，我们可能更新本政策。重要变更会通过应用市场页面、应用内提示或本页面进行说明。":
 				"We may update this policy when app features or legal requirements change. Material changes will be communicated through the app marketplace listing, an in-app notice, or this page.",
 			"9. 联系我们": "9. Contact us",
-			"如对本政策或数据处理有疑问，请通过华为应用市场中 CubeOffice 的开发者联系方式联系镇江酷猫网络科技有限公司。":
-				"If you have questions about this policy or our data practices, contact Zhenjiang Kumao Network Technology Co., Ltd. using the developer contact details on the CubeOffice listing in Huawei AppGallery.",
+			"如对本政策或数据处理有疑问，请通过 cubexp.com 联系我们。":
+				"If you have questions about this policy or our data practices, contact us through cubexp.com.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",

@@ -16,7 +16,7 @@
 	--radius-lg: 30px;
 	font-family:
 		Inter,
-		"HarmonyOS Sans SC",
+		"Noto Sans SC",
 		"PingFang SC",
 		"Microsoft YaHei",
 		system-ui,
@@ -693,7 +693,7 @@ a {
 
 .platform-grid {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 16px;
 }
 
@@ -706,11 +706,6 @@ a {
 	border: 1px solid var(--border);
 	border-radius: var(--radius-md);
 	background: var(--surface);
-}
-
-.platform-card-primary {
-	border-color: #c7d2fe;
-	background: linear-gradient(145deg, #fff, var(--brand-soft));
 }
 
 .platform-icon {
