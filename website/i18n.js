@@ -26,8 +26,8 @@ const pageCopy = {
 				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
 			下载桌面版: "Download desktop app",
 			查看产品界面: "Explore the interface",
-			"CubeOffice 1.0.0 · HarmonyOS 版本预审中":
-				"CubeOffice 1.0.0 · HarmonyOS version in review",
+			"CubeOffice 1.1.0 · HarmonyOS 版本预审中":
+				"CubeOffice 1.1.0 · HarmonyOS version in review",
 			"AI 已连接": "AI connected",
 			文件: "File",
 			插入: "Insert",
@@ -48,7 +48,7 @@ const pageCopy = {
 				"The same document capabilities and interaction model keep your workflow consistent across tablets, PCs, and desktop operating systems.",
 			"首发版本 · 预审中": "Initial release · In review",
 			"平板与 PC/2in1": "Tablets and PC/2-in-1",
-			"桌面版本 · 1.0.0": "Desktop release · 1.0.0",
+			"桌面版本 · 1.1.0": "Desktop release · 1.1.0",
 			"AppImage 与 DEB": "AppImage and DEB",
 			选择你的桌面平台: "Choose your desktop platform",
 			"安装包直接从 cubexp.com 下载。应用内更新使用同一域名上的签名更新服务。":
@@ -98,7 +98,7 @@ const pageCopy = {
 				"Illustration of the unified multi-format document workspace",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
 			"macOS、Windows 与 Linux 桌面版现已开放下载；HarmonyOS 版本已进入预审。":
-				"CubeOffice 1.0.0 is available for macOS, Windows, and Linux; the HarmonyOS version is in review.",
+				"CubeOffice 1.1.0 is available for macOS, Windows, and Linux; the HarmonyOS version is in review.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",
@@ -114,7 +114,7 @@ const pageCopy = {
 			...sharedText,
 			返回首页: "Back to home",
 			生效日期: "Effective date",
-			"2026 年 9 月 3 日": "September 3, 2026",
+			"2026 年 9 月 4 日": "September 4, 2026",
 			运营者: "Operator",
 			隐私与数据保护: "Privacy and data protection",
 			"CubeOffice 隐私政策": "CubeOffice Privacy Policy",
@@ -131,19 +131,24 @@ const pageCopy = {
 			"3. 本地保存与删除": "3. Local storage and deletion",
 			"文档、编辑状态和自动恢复数据保存在您的设备本地，保存期限由您对文件和应用数据的管理决定。您可以删除文档、清除应用数据或卸载应用来移除本地数据。":
 				"Documents, editing state, and recovery data are stored locally on your device. Their retention depends on how you manage files and app data. You can remove local data by deleting documents, clearing app data, or uninstalling the app.",
-			"4. AI 应用连接与平台能力": "4. AI app connections and platform capabilities",
+			"4. 匿名使用数据、诊断与反馈": "4. Anonymous usage data, diagnostics, and feedback",
+			"应用首次启动时会随机生成一个匿名安装 ID（不读取硬件序列号），并让您选择是否自动检查更新和上传错误诊断，这两个选项默认开启且可随时在设置中关闭。每次检查更新会发送该匿名 ID、应用版本、平台、架构和语言，用于按日去重统计活跃设备；我们不保存原始 IP 地址。":
+				"On first launch, the app generates a random anonymous installation ID without reading a hardware serial number. You can choose whether to check for updates and send error diagnostics automatically; both options are enabled by default and can be disabled in Settings at any time. Each update check sends the anonymous ID, app version, platform, architecture, and language to count daily active installations. We do not store raw IP addresses.",
+			"开启错误诊断后，应用可能上传已脱敏的错误消息、调用栈和基础系统信息，绝不附带文档或文档内容，诊断日志保存 30 天。您也可主动提交问题、建议或咨询，并自行选择是否提供联系方式、系统信息和截图；反馈记录会保留至完成处理或按您的请求删除。":
+				"When diagnostics are enabled, the app may upload redacted error messages, stack traces, and basic system information. Documents and document contents are never attached. Diagnostic logs are retained for 30 days. You may also submit a problem, suggestion, or question and choose whether to include contact details, system information, and a screenshot. Feedback is retained until it is handled or deleted at your request.",
+			"5. AI 应用连接与平台能力": "5. AI app connections and platform capabilities",
 			"CubeOffice 可以连接兼容的 AI 应用。当您主动发起 AI 操作时，相关指令及您选择提供的文档上下文可能由所连接的 AI 应用处理，以生成或执行您请求的结果。该 AI 应用对数据的处理受其自身隐私政策约束。不同平台版本也可能调用操作系统提供的标准文件、自动化与桌面能力。":
 				"CubeOffice can connect to compatible AI apps. When you initiate an AI action, the connected AI app may process the instruction and the document context you choose to provide in order to generate or perform the requested result. That app’s handling of data is governed by its own privacy policy. Platform versions may also use standard file, automation, and desktop capabilities provided by the operating system.",
-			"5. 第三方共享与商业用途": "5. Third-party sharing and commercial use",
+			"6. 第三方共享与商业用途": "6. Third-party sharing and commercial use",
 			"除您主动连接并调用的 AI 应用外，我们不会主动向第三方共享您的文档内容。我们不会出售您的个人信息，也不会将文档内容用于广告或个性化推荐。法律法规另有要求的除外。":
 				"Except for an AI app that you choose to connect and invoke, we do not proactively share document contents with third parties. We do not sell your personal information or use document contents for advertising or personalized recommendations, except where required by law.",
-			"6. 未成年人保护": "6. Protection of minors",
+			"7. 未成年人保护": "7. Protection of minors",
 			"CubeOffice 面向一般用户，不专门面向儿童。监护人应指导未成年人合理使用应用并妥善管理文档内容。":
 				"CubeOffice is intended for a general audience and is not specifically directed at children. Guardians should guide minors in using the app appropriately and managing document contents safely.",
-			"7. 政策更新": "7. Policy updates",
+			"8. 政策更新": "8. Policy updates",
 			"应用功能或法律要求发生变化时，我们可能更新本政策。重要变更会通过应用市场页面、应用内提示或本页面进行说明。":
 				"We may update this policy when app features or legal requirements change. Material changes will be communicated through the app marketplace listing, an in-app notice, or this page.",
-			"8. 联系我们": "8. Contact us",
+			"9. 联系我们": "9. Contact us",
 			"如对本政策或数据处理有疑问，请通过华为应用市场中 CubeOffice 的开发者联系方式联系镇江酷猫网络科技有限公司。":
 				"If you have questions about this policy or our data practices, contact Zhenjiang Kumao Network Technology Co., Ltd. using the developer contact details on the CubeOffice listing in Huawei AppGallery.",
 		},
