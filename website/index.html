@@ -10,10 +10,11 @@
 		<meta name="theme-color" content="#4f46e5" />
 		<title>CubeOffice｜跨平台文档工作台</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
-		<link rel="stylesheet" href="/styles.css?v=20260904-2" />
-		<script src="/app.js" defer></script>
+		<link rel="stylesheet" href="/styles.css?v=20260904-3" />
+		<script src="/i18n.js?v=20260904-1" defer></script>
+		<script src="/app.js?v=20260904-1" defer></script>
 	</head>
-	<body>
+	<body data-page="home">
 		<a class="skip-link" href="#main">跳到主要内容</a>
 		<header class="site-header">
 			<div class="container header-inner">
@@ -21,31 +22,36 @@
 					<img src="/assets/cubeoffice-mark.svg" alt="" width="36" height="36" />
 					<span>CubeOffice</span>
 				</a>
-				<button
-					class="nav-toggle"
-					type="button"
-					aria-expanded="false"
-					aria-controls="site-nav"
-				>
-					<span class="sr-only">打开导航</span>
-					<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">
-						<path
-							d="M4 7h16M4 12h16M4 17h16"
-							fill="none"
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-width="2"
-						/>
-					</svg>
-				</button>
-				<nav id="site-nav" class="site-nav" aria-label="主要导航">
-					<a href="#download">下载</a>
-					<a href="#platforms">支持平台</a>
-					<a href="#features">产品能力</a>
-					<a href="#formats">支持格式</a>
-					<a href="#gallery">界面预览</a>
-					<a href="/privacy">隐私政策</a>
-				</nav>
+				<div class="header-actions">
+					<nav id="site-nav" class="site-nav" aria-label="主要导航">
+						<a href="#download">下载</a>
+						<a href="#platforms">支持平台</a>
+						<a href="#features">产品能力</a>
+						<a href="#formats">支持格式</a>
+						<a href="#gallery">界面预览</a>
+						<a href="/privacy">隐私政策</a>
+					</nav>
+					<button class="language-toggle" type="button" data-language-toggle>
+						<span data-language-label>EN</span>
+					</button>
+					<button
+						class="nav-toggle"
+						type="button"
+						aria-expanded="false"
+						aria-controls="site-nav"
+					>
+						<span class="sr-only">打开导航</span>
+						<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">
+							<path
+								d="M4 7h16M4 12h16M4 17h16"
+								fill="none"
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-width="2"
+							/>
+						</svg>
+					</button>
+				</div>
 			</div>
 		</header>
 
@@ -66,7 +72,7 @@
 						</div>
 						<div class="availability" aria-label="产品状态">
 							<span class="status-dot"></span>
-							<span>桌面版 0.1.32 已开放下载 · HarmonyOS 0.1.0 预审中</span>
+							<span>CubeOffice 1.0.0 · HarmonyOS 版本预审中</span>
 						</div>
 					</div>
 					<figure class="hero-visual ai-workspace-visual">
@@ -163,7 +169,7 @@
 							</div>
 							<div>
 								<h3>macOS</h3>
-								<p>桌面版本 · 0.1.32</p>
+								<p>桌面版本 · 1.0.0</p>
 								<span>Apple Silicon</span>
 							</div>
 						</article>
@@ -177,7 +183,7 @@
 							</div>
 							<div>
 								<h3>Windows</h3>
-								<p>桌面版本 · 0.1.32</p>
+								<p>桌面版本 · 1.0.0</p>
 								<span>Windows x64</span>
 							</div>
 						</article>
@@ -190,7 +196,7 @@
 							</div>
 							<div>
 								<h3>Linux</h3>
-								<p>桌面版本 · 0.1.32</p>
+								<p>桌面版本 · 1.0.0</p>
 								<span>AppImage 与 DEB</span>
 							</div>
 						</article>
@@ -201,7 +207,7 @@
 			<section id="download" class="download-section" aria-labelledby="download-title">
 				<div class="container">
 					<div class="section-heading download-heading">
-						<p class="section-kicker">CubeOffice 0.1.32</p>
+						<p class="section-kicker">CubeOffice 1.0.0</p>
 						<h2 id="download-title">选择你的桌面平台</h2>
 						<p>
 							安装包直接从 cubexp.com 下载。应用内更新使用同一域名上的签名更新服务。
@@ -223,7 +229,7 @@
 							</div>
 							<a
 								class="button button-primary download-button"
-								href="/downloads/CubeOffice-0.1.32-macOS-arm64.dmg"
+								href="/downloads/CubeOffice-1.0.0-macOS-arm64.dmg"
 								>下载 DMG <span>约 15 MB</span></a
 							>
 						</article>
@@ -242,7 +248,7 @@
 							</div>
 							<a
 								class="button button-primary download-button"
-								href="/downloads/CubeOffice-0.1.32-Windows-x64-setup.exe"
+								href="/downloads/CubeOffice-1.0.0-Windows-x64-setup.exe"
 								>下载安装器 <span>Windows x64</span></a
 							>
 						</article>
@@ -261,12 +267,12 @@
 							<div class="download-card__actions">
 								<a
 									class="button button-primary download-button"
-									href="/downloads/CubeOffice-0.1.32-Linux-x86_64.AppImage"
+									href="/downloads/CubeOffice-1.0.0-Linux-x86_64.AppImage"
 									>AppImage</a
 								>
 								<a
 									class="button button-secondary download-button"
-									href="/downloads/CubeOffice-0.1.32-Linux-x86_64.deb"
+									href="/downloads/CubeOffice-1.0.0-Linux-x86_64.deb"
 									>DEB</a
 								>
 							</div>
@@ -403,10 +409,10 @@
 				<div class="container closing-card">
 					<img src="/assets/cubeoffice-mark.svg" alt="" width="64" height="64" />
 					<div>
-						<p class="section-kicker">CubeOffice 桌面版 0.1.32</p>
+						<p class="section-kicker">CubeOffice 1.0.0</p>
 						<h2>让熟悉的 AI，真正参与文档工作</h2>
 						<p>
-							macOS、Windows 与 Linux 桌面版现已开放下载；HarmonyOS 0.1.0 已进入预审。
+							macOS、Windows 与 Linux 桌面版现已开放下载；HarmonyOS 版本已进入预审。
 						</p>
 					</div>
 					<a class="button button-light" href="#download">下载桌面版</a>

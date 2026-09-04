@@ -63,6 +63,7 @@ const cubeOfficeProfile = {
 	},
 	tauriConfig: {
 		...officeProfile.tauriConfig,
+		version: "1.0.0",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
 			shortDescription: "Open, edit, and read Office documents with AI",

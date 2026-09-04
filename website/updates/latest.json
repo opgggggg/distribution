@@ -1,19 +1,19 @@
 {
-	"version": "0.1.32",
-	"notes": "CubeOffice 首个跨平台桌面发行：支持 macOS（Apple Silicon）、Windows x64 与 Linux x86_64，并启用来自 cubexp.com 的签名自动更新。",
-	"pub_date": "2026-09-04T00:15:40Z",
+	"version": "1.0.0",
+	"notes": "CubeOffice 1.0.0：统一品牌主题，优化 Home 最近文件布局，并提供中英文官网。CubeOffice 1.0.0 unifies the product theme, improves the Home recent-files layout, and adds a bilingual website.",
+	"pub_date": "2026-09-04T02:03:54Z",
 	"platforms": {
 		"darwin-aarch64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSlBGc0pMR1lTWTdoaXZZSWFBb0JEMUhaZlB4Rm1qc0VITU1JZDh6Nk5ibFJaMEJMbmdmZXFNdEJzWUk2ZnQ4QWQ0bjBHYTlZU2Q1bmRlLy82aVlzbEFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDc4MjMxCWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6ClY4TWg0MExKUGg1MGRtRHZQRnRZUm9wSVQxV0RMTjRCRzgydTZod3FCVnV6R1JaQnBUSHVOblhuMWgvN2pRZWVKNm5HZmpKVUh6MmZiOTAxZTcrb0FRPT0K",
-			"url": "https://cubexp.com/updates/0.1.32/CubeOffice-0.1.32-macOS-arm64.app.tar.gz"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkgvWkF2MGlxQjkyeXkxekZwbnlkdktGaU9QTmUzSFBRbUZ0V3VuSHNDWDlSS3BiWnVaV0FQQkE3MnFkdnVtZ0JRaGJnaVlnV2FzYlhCVGNQQkZXTGcwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDg2OTc2CWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6Ci9KbFpHUmQrdFV3WFVGZzFDcDVzZGc4ejI4QXhNSjQzYjRwMG44dW05MDVWTFM4ajdoQXpXejNkdkhLR1MrVlp0WXFSUmMzUVlIY1diOUdGOTk4ZkJnPT0K",
+			"url": "https://cubexp.com/updates/1.0.0/CubeOffice-1.0.0-macOS-arm64.app.tar.gz"
 		},
 		"windows-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkx5azhMVWRqYk9EUlJnZXdVQUdUSUMydmVuODArNFU0QU0rMUI2WXBjZndnWjkzd0s3MWVRUEhkUnBWc0lrYjVjck9ScTdpbCtVR1FWYnI2dDBLSndNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDgwOTE3CWZpbGU6Q3ViZU9mZmljZS0wLjEuMzItV2luZG93cy14NjQtc2V0dXAuZXhlCkFGZUNRMnVqOTdQSEVsMWtYLzhySEtFeHB1b2FPNVVUVU9rQ2lJUUNrVUVweG1tZnNNdTd5ZC93eGUrMnBZOW9BOEt6QlM2cUlLajRsOTJDWG11ZEJRPT0K",
-			"url": "https://cubexp.com/updates/0.1.32/CubeOffice-0.1.32-Windows-x64-setup.exe"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkt2ZzkvU05wcWhLa0JIZk11UDVRMldBTXNQWkZSZnlLdmxWRE9aUDFMZG1BamxSV0RZSmNtbCtNSS8xNE94L21lZjYvSEVaUzFVNTFDUDhEaU1NRUE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDg3NDA5CWZpbGU6Q3ViZU9mZmljZS0xLjAuMC1XaW5kb3dzLXg2NC1zZXR1cC5leGUKTFBuc3pMTExibE1ra0VHRkZLOHBGSC84U2VvSnM5YTNmK2d6eWllM1lxdUZ4SmNLcHk2YSthcUJUQ1RpRTZWNXhuNTdUdmtiWlZFNm9JYWZVajJ5RHc9PQo=",
+			"url": "https://cubexp.com/updates/1.0.0/CubeOffice-1.0.0-Windows-x64-setup.exe"
 		},
 		"linux-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkR5NksxVGd3dXptZTZXWXNKbzRKbU96akg2Q21zMDJxQU5Sb3lYdWVwT1RkekQvYyt6Ykc0cGJFbE9sdHFsYmNTTTArbXZUdUJPSC8vYUZiaTZ0d2cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDc5NjY5CWZpbGU6Q3ViZU9mZmljZS0wLjEuMzItTGludXgteDg2XzY0LkFwcEltYWdlCjJjVHlIVU9SR0Uva1ZtY3VhODVjQ1M2MnR4YnNveFBnN1gxRUpSL0xVbGVPcE9mZnhXWEx6dU1wMmhkenFBNzFQMVdHOXNJdk0xdG9oWDF6dGFOMkJnPT0K",
-			"url": "https://cubexp.com/updates/0.1.32/CubeOffice-0.1.32-Linux-x86_64.AppImage"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkZITTBkS3ZGcGxhWmduVTBZM3JSZE94Rk1icXpQTEgvUyt0c2xsb25uOG9qNWRTdnJXT2xPQzRkaHF1S3Yrb3d3S0gvZDB2ekxjOTI5Q1phOU5vTkFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDg3MTc3CWZpbGU6Q3ViZU9mZmljZS0xLjAuMC1MaW51eC14ODZfNjQuQXBwSW1hZ2UKb2VZb0ZxaGt3ZnBIbU5SbzMzVmIwUER6TTN6V3c5UXNTaWZzdWNyamVacUhTaktiR2QyZjV2cStpK3hpOURqd0tNdTVVT01ReDZ5dWF2MkR5WW82Qmc9PQo=",
+			"url": "https://cubexp.com/updates/1.0.0/CubeOffice-1.0.0-Linux-x86_64.AppImage"
 		}
 	}
 }

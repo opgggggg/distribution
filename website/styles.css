@@ -101,11 +101,43 @@ a {
 }
 
 .header-inner {
+	position: relative;
 	display: flex;
 	min-height: 76px;
 	align-items: center;
 	justify-content: space-between;
 	gap: 24px;
+}
+
+.header-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.language-toggle {
+	display: inline-flex;
+	min-width: 48px;
+	height: 44px;
+	align-items: center;
+	justify-content: center;
+	padding: 0 12px;
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	color: var(--brand-deep);
+	background: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 760;
+	transition:
+		border-color 180ms ease,
+		background-color 180ms ease;
+}
+
+.language-toggle:hover {
+	border-color: var(--focus);
+	background: var(--brand-soft);
 }
 
 .brand {
