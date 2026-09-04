@@ -18,13 +18,13 @@ const pageCopy = {
 			支持平台: "Platforms",
 			产品能力: "Features",
 			支持格式: "Formats",
-			界面预览: "Preview",
+			"AI 协作": "AI collaboration",
 			"通用 AI 的": "A document workspace",
 			文档工作台: "for any AI assistant",
 			"连接你常用的 AI 应用，在同一个工作区中处理 Word、PowerPoint、Excel、Visio 与 Markdown。让 AI 理解当前文档，并协助生成、改写、整理与编辑内容。":
 				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
 			下载桌面版: "Download desktop app",
-			查看产品界面: "Explore the interface",
+			"了解 AI 协作": "See how AI collaboration works",
 			"CubeOffice 1.1.0 · macOS、Windows 与 Linux":
 				"CubeOffice 1.1.0 · macOS, Windows, and Linux",
 			"AI 已连接": "AI connected",
@@ -64,35 +64,62 @@ const pageCopy = {
 				". The current macOS build is not yet notarized, and the Windows installer is not yet code-signed.",
 			一个工作区: "One workspace",
 			"熟悉的格式，都在这里": "Your familiar formats, all in one place",
-			专注文档本身: "Focused on your documents",
-			"从打开文件，到继续编辑": "From opening a file to finishing the work",
-			"为桌面工作而设计，在不同操作系统上保留清晰、熟悉且高效的体验。":
-				"Designed for desktop work, with a clear, familiar, and efficient experience on every operating system.",
-			多格式文档工作台: "A multi-format document workspace",
-			"在同一个应用中打开、查看和编辑常见办公文档，并导入 PDF、JMP 与 draw.io 文件。":
-				"Open, view, and edit common Office documents in one app, with imports for PDF, JMP, and draw.io files.",
-			"通用 AI 文档助手": "Works with your AI assistant",
-			"连接兼容的 AI 应用，让 AI 围绕当前文档生成、改写、总结内容，并直接协助完成编辑操作。":
-				"Connect a compatible AI app to create, rewrite, summarize, and make edits using the document you have open.",
-			"本地、多标签、可撤销": "Local, multi-tab, and undoable",
-			"文档主要在设备本地处理。跨平台一致的多标签工作区让任务保持上下文，并支持继续编辑、自动保存与撤销。":
-				"Documents are primarily processed on your device. A consistent multi-tab workspace preserves context across platforms, with continued editing, autosave, and undo.",
+			完整的桌面工作区: "A complete desktop workspace",
+			"从内容编辑，到跨格式协作": "From document editing to cross-format workflows",
+			"CubeOffice 把文档解析、编辑、保存与 AI 操作放在同一个工作区，让不同格式沿用一致的工作方式。":
+				"CubeOffice brings document parsing, editing, saving, and AI actions into one workspace, with a consistent workflow across formats.",
+			原生格式编辑: "Native-format editing",
+			"直接编辑 Word 段落与表格、Excel 单元格、PowerPoint 幻灯片与图形、Visio 图表和 Markdown 源文档。":
+				"Edit Word paragraphs and tables, Excel cells, PowerPoint slides and shapes, Visio diagrams, and Markdown source documents directly.",
+			跨格式打开与导入: "Open and import across formats",
+			"除常见办公格式外，还可读取 PDF，并导入 JMP 和 draw.io 内容，减少在工具之间反复转换。":
+				"Alongside common office formats, read PDFs and import JMP and draw.io content with fewer conversions between tools.",
+			多标签工作区: "Multi-tab workspace",
+			"多个文档保留在同一个工作区，随时切换文字、表格、演示文稿与图表，不打断当前任务。":
+				"Keep multiple documents in one workspace and move between text, spreadsheets, presentations, and diagrams without interrupting the task.",
+			本地文件优先: "Local files first",
+			"文档主要在设备本地打开、编辑和保存；只有在你主动使用 AI 时，才向所连接的应用提供你选择的上下文。":
+				"Documents are opened, edited, and saved primarily on your device. Context is provided to a connected AI app only when you choose to use it.",
+			自动保存与恢复: "Autosave and recovery",
+			"编辑状态与恢复数据保存在本地，减少意外中断带来的损失，也方便回到未完成的工作。":
+				"Editing state and recovery data stay local, reducing loss after an interruption and making it easier to resume unfinished work.",
+			"可追踪、可撤销": "Traceable and undoable",
+			"AI 执行的文档操作会显示在活动记录中；结果仍可继续手动编辑、保存或撤销。":
+				"Document actions performed by AI appear in the activity log, and every result remains available for manual editing, saving, or undo.",
 			"AI 与文档协同": "AI and documents, together",
-			"说出目标，继续编辑": "Describe the goal, then keep editing",
-			"AI 读取你主动提供的文档上下文，完成操作后仍可继续手动修改或撤销。":
-				"AI uses only the document context you choose to provide. After it finishes, you can keep editing manually or undo the result.",
-			用自然语言处理文档: "Work with documents in natural language",
-			无需离开当前工作区: "Without leaving your workspace",
-			"“整理这份会议记录，提取决定事项和负责人。”":
-				"“Organize these meeting notes and extract decisions and owners.”",
-			已整理文档结构: "Document structure organized",
+			"四步，把想法变成文档修改": "Four steps from intent to document edits",
+			"你继续在熟悉的 AI 应用中对话，CubeOffice 负责提供文档能力、执行操作，并把结果留在可编辑的文件中。":
+				"Keep talking in the AI app you already use. CubeOffice provides document capabilities, performs the actions, and leaves the result in an editable file.",
+			打开需要处理的文档: "Open the document you want to work on",
+			"CubeOffice 建立当前文件、页面或选区的结构化上下文。":
+				"CubeOffice builds structured context for the current file, page, or selection.",
+			"连接兼容的 AI 应用": "Connect a compatible AI app",
+			"连接后，AI 可以发现当前文档支持的读取与编辑能力。":
+				"Once connected, the AI can discover the reading and editing capabilities available for the current document.",
+			用自然语言描述结果: "Describe the outcome in natural language",
+			"让 AI 重写摘要、更新单元格、统一幻灯片标题或整理流程图。":
+				"Ask AI to rewrite a summary, update cells, standardize slide titles, or organize a flowchart.",
+			检查并决定是否保留: "Review and decide what to keep",
+			"结果直接回到文档；你可以继续手动编辑、保存或撤销。":
+				"The result goes straight back into the document, where you can keep editing, save it, or undo the change.",
+			"一次请求，多步完成": "One request, completed in multiple steps",
+			"AI 调用 CubeOffice 的文档操作": "AI calls CubeOffice document actions",
+			"“整理这份会议记录，提取决定事项和负责人，再生成一个行动表格。”":
+				"“Organize these meeting notes, extract the decisions and owners, then create an action table.”",
+			"读取标题、段落与现有表格": "Read headings, paragraphs, and existing tables",
 			完成: "Done",
-			"已提取 4 项待办": "4 action items extracted",
+			"重组会议记录并提取 4 项待办": "Restructure the notes and extract 4 action items",
+			"插入负责人、截止时间与状态表格": "Insert a table with owners, deadlines, and status",
 			"通用 AI 应用连接与文档协作界面示意":
 				"Illustration of document collaboration through a connected AI app",
-			"一个入口，处理多种文档": "One place for every document",
-			多格式统一文档工作区界面示意:
-				"Illustration of the unified multi-format document workspace",
+			"不同文档，同一种协作方式": "One collaboration model across document types",
+			"改写段落、整理标题与表格": "Rewrite paragraphs and organize headings and tables",
+			"读取区域、更新单元格与公式": "Read ranges and update cells and formulas",
+			"统一文案、调整幻灯片与图形": "Standardize copy and adjust slides and shapes",
+			读取与编辑图表结构: "Read and edit diagram structure",
+			"重组 Markdown 内容与层级": "Restructure Markdown content and hierarchy",
+			"不同文档格式的 AI 协作任务示意":
+				"Examples of AI collaboration tasks across document formats",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
 			"macOS、Windows 与 Linux 桌面版现已开放下载。":
 				"CubeOffice 1.1.0 is available for macOS, Windows, and Linux.",
@@ -102,6 +129,7 @@ const pageCopy = {
 			主要导航: "Main navigation",
 			产品状态: "Product availability",
 			支持的文档格式: "Supported document formats",
+			"AI 协作流程": "AI collaboration workflow",
 		},
 	},
 	privacy: {

@@ -10,8 +10,8 @@
 		<meta name="theme-color" content="#4f46e5" />
 		<title>CubeOffice｜跨平台文档工作台</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
-		<link rel="stylesheet" href="/styles.css?v=20260904-4" />
-		<script src="/i18n.js?v=20260904-4" defer></script>
+		<link rel="stylesheet" href="/styles.css?v=20260904-5" />
+		<script src="/i18n.js?v=20260904-5" defer></script>
 		<script src="/app.js?v=20260904-1" defer></script>
 	</head>
 	<body data-page="home">
@@ -28,7 +28,7 @@
 						<a href="#platforms">支持平台</a>
 						<a href="#features">产品能力</a>
 						<a href="#formats">支持格式</a>
-						<a href="#gallery">界面预览</a>
+						<a href="#gallery">AI 协作</a>
 						<a href="/privacy">隐私政策</a>
 					</nav>
 					<button class="language-toggle" type="button" data-language-toggle>
@@ -68,7 +68,7 @@
 						</p>
 						<div class="hero-actions">
 							<a class="button button-primary" href="#download">下载桌面版</a>
-							<a class="button button-secondary" href="#gallery">查看产品界面</a>
+							<a class="button button-secondary" href="#gallery">了解 AI 协作</a>
 						</div>
 						<div class="availability" aria-label="产品状态">
 							<span class="status-dot"></span>
@@ -295,9 +295,12 @@
 			<section id="features" class="section">
 				<div class="container">
 					<div class="section-heading">
-						<p class="section-kicker">专注文档本身</p>
-						<h2>从打开文件，到继续编辑</h2>
-						<p>为桌面工作而设计，在不同操作系统上保留清晰、熟悉且高效的体验。</p>
+						<p class="section-kicker">完整的桌面工作区</p>
+						<h2>从内容编辑，到跨格式协作</h2>
+						<p>
+							CubeOffice 把文档解析、编辑、保存与 AI
+							操作放在同一个工作区，让不同格式沿用一致的工作方式。
+						</p>
 					</div>
 					<div class="feature-grid">
 						<article class="feature-card feature-card-accent">
@@ -307,10 +310,10 @@
 								</svg>
 							</div>
 							<p class="feature-index">01</p>
-							<h3>多格式文档工作台</h3>
+							<h3>原生格式编辑</h3>
 							<p>
-								在同一个应用中打开、查看和编辑常见办公文档，并导入 PDF、JMP 与
-								draw.io 文件。
+								直接编辑 Word 段落与表格、Excel 单元格、PowerPoint
+								幻灯片与图形、Visio 图表和 Markdown 源文档。
 							</p>
 						</article>
 						<article class="feature-card">
@@ -322,10 +325,10 @@
 								</svg>
 							</div>
 							<p class="feature-index">02</p>
-							<h3>通用 AI 文档助手</h3>
+							<h3>跨格式打开与导入</h3>
 							<p>
-								连接兼容的 AI 应用，让 AI
-								围绕当前文档生成、改写、总结内容，并直接协助完成编辑操作。
+								除常见办公格式外，还可读取 PDF，并导入 JMP 和 draw.io
+								内容，减少在工具之间反复转换。
 							</p>
 						</article>
 						<article class="feature-card">
@@ -335,9 +338,52 @@
 								</svg>
 							</div>
 							<p class="feature-index">03</p>
-							<h3>本地、多标签、可撤销</h3>
+							<h3>多标签工作区</h3>
 							<p>
-								文档主要在设备本地处理。跨平台一致的多标签工作区让任务保持上下文，并支持继续编辑、自动保存与撤销。
+								多个文档保留在同一个工作区，随时切换文字、表格、演示文稿与图表，不打断当前任务。
+							</p>
+						</article>
+						<article class="feature-card">
+							<div class="feature-icon">
+								<svg aria-hidden="true" viewBox="0 0 24 24">
+									<path
+										d="M12 3 5 6v5c0 4.5 2.8 8.3 7 10 4.2-1.7 7-5.5 7-10V6z"
+									/>
+									<path d="m9 12 2 2 4-4" />
+								</svg>
+							</div>
+							<p class="feature-index">04</p>
+							<h3>本地文件优先</h3>
+							<p>
+								文档主要在设备本地打开、编辑和保存；只有在你主动使用 AI
+								时，才向所连接的应用提供你选择的上下文。
+							</p>
+						</article>
+						<article class="feature-card">
+							<div class="feature-icon">
+								<svg aria-hidden="true" viewBox="0 0 24 24">
+									<path d="M5 4h12l2 2v14H5z" />
+									<path d="M8 4v6h8V4M8 17h8" />
+								</svg>
+							</div>
+							<p class="feature-index">05</p>
+							<h3>自动保存与恢复</h3>
+							<p>
+								编辑状态与恢复数据保存在本地，减少意外中断带来的损失，也方便回到未完成的工作。
+							</p>
+						</article>
+						<article class="feature-card">
+							<div class="feature-icon">
+								<svg aria-hidden="true" viewBox="0 0 24 24">
+									<path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6" />
+									<path d="M4 4v4.6h4.6M12 8v4l3 2" />
+								</svg>
+							</div>
+							<p class="feature-index">06</p>
+							<h3>可追踪、可撤销</h3>
+							<p>
+								AI
+								执行的文档操作会显示在活动记录中；结果仍可继续手动编辑、保存或撤销。
 							</p>
 						</article>
 					</div>
@@ -349,44 +395,84 @@
 					<div class="section-heading section-heading-row">
 						<div>
 							<p class="section-kicker">AI 与文档协同</p>
-							<h2>说出目标，继续编辑</h2>
+							<h2>四步，把想法变成文档修改</h2>
 						</div>
-						<p>AI 读取你主动提供的文档上下文，完成操作后仍可继续手动修改或撤销。</p>
+						<p>
+							你继续在熟悉的 AI 应用中对话，CubeOffice
+							负责提供文档能力、执行操作，并把结果留在可编辑的文件中。
+						</p>
 					</div>
+					<ol class="collaboration-steps" aria-label="AI 协作流程">
+						<li class="collaboration-step">
+							<span class="collaboration-step__index">01</span>
+							<div>
+								<h3>打开需要处理的文档</h3>
+								<p>CubeOffice 建立当前文件、页面或选区的结构化上下文。</p>
+							</div>
+						</li>
+						<li class="collaboration-step">
+							<span class="collaboration-step__index">02</span>
+							<div>
+								<h3>连接兼容的 AI 应用</h3>
+								<p>连接后，AI 可以发现当前文档支持的读取与编辑能力。</p>
+							</div>
+						</li>
+						<li class="collaboration-step">
+							<span class="collaboration-step__index">03</span>
+							<div>
+								<h3>用自然语言描述结果</h3>
+								<p>让 AI 重写摘要、更新单元格、统一幻灯片标题或整理流程图。</p>
+							</div>
+						</li>
+						<li class="collaboration-step">
+							<span class="collaboration-step__index">04</span>
+							<div>
+								<h3>检查并决定是否保留</h3>
+								<p>结果直接回到文档；你可以继续手动编辑、保存或撤销。</p>
+							</div>
+						</li>
+					</ol>
 					<div class="gallery-grid">
 						<figure class="gallery-main demo-card ai-command-demo">
 							<div class="demo-label">
 								<span class="ai-mark">AI</span>
 								<div>
-									<strong>用自然语言处理文档</strong
-									><small>无需离开当前工作区</small>
+									<strong>一次请求，多步完成</strong
+									><small>AI 调用 CubeOffice 的文档操作</small>
 								</div>
 							</div>
 							<div class="demo-command">
-								“整理这份会议记录，提取决定事项和负责人。”
+								“整理这份会议记录，提取决定事项和负责人，再生成一个行动表格。”
 							</div>
 							<div class="demo-progress"><span></span><span></span><span></span></div>
 							<div class="demo-result-row">
-								<i></i><span>已整理文档结构</span><b>完成</b>
+								<i></i><span>读取标题、段落与现有表格</span><b>完成</b>
 							</div>
 							<div class="demo-result-row">
-								<i></i><span>已提取 4 项待办</span><b>完成</b>
+								<i></i><span>重组会议记录并提取 4 项待办</span><b>完成</b>
+							</div>
+							<div class="demo-result-row">
+								<i></i><span>插入负责人、截止时间与状态表格</span><b>完成</b>
 							</div>
 							<figcaption>通用 AI 应用连接与文档协作界面示意</figcaption>
 						</figure>
 						<figure class="demo-card format-demo">
 							<div>
-								<p class="demo-overline">OPEN IN ONE WORKSPACE</p>
-								<h3>一个入口，处理多种文档</h3>
+								<p class="demo-overline">DOCUMENT-AWARE ACTIONS</p>
+								<h3>不同文档，同一种协作方式</h3>
 							</div>
 							<ul>
-								<li><span class="format-docx">W</span>Word</li>
-								<li><span class="format-pptx">P</span>PowerPoint</li>
-								<li><span class="format-xlsx">X</span>Excel</li>
-								<li><span class="format-vsdx">V</span>Visio</li>
-								<li><span class="format-md">M</span>Markdown</li>
+								<li><span class="format-docx">W</span>改写段落、整理标题与表格</li>
+								<li>
+									<span class="format-xlsx">X</span>读取区域、更新单元格与公式
+								</li>
+								<li>
+									<span class="format-pptx">P</span>统一文案、调整幻灯片与图形
+								</li>
+								<li><span class="format-vsdx">V</span>读取与编辑图表结构</li>
+								<li><span class="format-md">M</span>重组 Markdown 内容与层级</li>
 							</ul>
-							<figcaption>多格式统一文档工作区界面示意</figcaption>
+							<figcaption>不同文档格式的 AI 协作任务示意</figcaption>
 						</figure>
 					</div>
 				</div>
