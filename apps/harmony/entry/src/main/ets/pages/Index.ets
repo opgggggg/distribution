@@ -42,7 +42,6 @@ struct Index {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.bridge.initialize(context);
     emitter.on('aurora-native-document', this.documentEventCallback);
-    webview.WebviewController.setWebDebuggingAccess(true);
   }
 
   aboutToDisappear(): void {
@@ -97,19 +96,19 @@ struct Index {
 
       if (!this.webReady) {
         Column({ space: 18 }) {
-          LoadingProgress()
-            .width(40)
-            .height(40)
-            .color('#0A987F')
-			Text($r('app.string.app_loading'))
+		  LoadingProgress()
+			.width(40)
+			.height(40)
+			.color('#4F46E5')
+		  Text($r('app.string.app_loading'))
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#174139')
+            .fontColor('#312E81')
         }
         .width('100%')
         .height('100%')
         .justifyContent(FlexAlign.Center)
-        .backgroundColor('#F5F7F6')
+        .backgroundColor('#F8FAFC')
       }
     }
     .width('100%')

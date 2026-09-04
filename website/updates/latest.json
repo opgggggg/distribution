@@ -1,0 +1,19 @@
+{
+	"version": "0.1.32",
+	"notes": "CubeOffice 首个跨平台桌面发行：支持 macOS（Apple Silicon）、Windows x64 与 Linux x86_64，并启用来自 cubexp.com 的签名自动更新。",
+	"pub_date": "2026-09-04T00:15:40Z",
+	"platforms": {
+		"darwin-aarch64": {
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSlBGc0pMR1lTWTdoaXZZSWFBb0JEMUhaZlB4Rm1qc0VITU1JZDh6Nk5ibFJaMEJMbmdmZXFNdEJzWUk2ZnQ4QWQ0bjBHYTlZU2Q1bmRlLy82aVlzbEFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDc4MjMxCWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6ClY4TWg0MExKUGg1MGRtRHZQRnRZUm9wSVQxV0RMTjRCRzgydTZod3FCVnV6R1JaQnBUSHVOblhuMWgvN2pRZWVKNm5HZmpKVUh6MmZiOTAxZTcrb0FRPT0K",
+			"url": "https://cubexp.com/updates/0.1.32/CubeOffice-0.1.32-macOS-arm64.app.tar.gz"
+		},
+		"windows-x86_64": {
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkx5azhMVWRqYk9EUlJnZXdVQUdUSUMydmVuODArNFU0QU0rMUI2WXBjZndnWjkzd0s3MWVRUEhkUnBWc0lrYjVjck9ScTdpbCtVR1FWYnI2dDBLSndNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDgwOTE3CWZpbGU6Q3ViZU9mZmljZS0wLjEuMzItV2luZG93cy14NjQtc2V0dXAuZXhlCkFGZUNRMnVqOTdQSEVsMWtYLzhySEtFeHB1b2FPNVVUVU9rQ2lJUUNrVUVweG1tZnNNdTd5ZC93eGUrMnBZOW9BOEt6QlM2cUlLajRsOTJDWG11ZEJRPT0K",
+			"url": "https://cubexp.com/updates/0.1.32/CubeOffice-0.1.32-Windows-x64-setup.exe"
+		},
+		"linux-x86_64": {
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkR5NksxVGd3dXptZTZXWXNKbzRKbU96akg2Q21zMDJxQU5Sb3lYdWVwT1RkekQvYyt6Ykc0cGJFbE9sdHFsYmNTTTArbXZUdUJPSC8vYUZiaTZ0d2cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NDc5NjY5CWZpbGU6Q3ViZU9mZmljZS0wLjEuMzItTGludXgteDg2XzY0LkFwcEltYWdlCjJjVHlIVU9SR0Uva1ZtY3VhODVjQ1M2MnR4YnNveFBnN1gxRUpSL0xVbGVPcE9mZnhXWEx6dU1wMmhkenFBNzFQMVdHOXNJdk0xdG9oWDF6dGFOMkJnPT0K",
+			"url": "https://cubexp.com/updates/0.1.32/CubeOffice-0.1.32-Linux-x86_64.AppImage"
+		}
+	}
+}

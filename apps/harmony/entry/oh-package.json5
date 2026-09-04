@@ -1,7 +1,7 @@
 {
 	name: "entry",
 	version: "0.1.0",
-	description: "AuroraPrime Office HarmonyOS entry module",
+	description: "CubeOffice HarmonyOS entry module",
 	main: "",
 	author: "yaochn",
 	license: "MIT",

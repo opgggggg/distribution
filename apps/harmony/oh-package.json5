@@ -1,6 +1,6 @@
 {
 	modelVersion: "5.0.5",
-	description: "AuroraPrime Office HarmonyOS application",
+	description: "CubeOffice HarmonyOS application",
 	dependencies: {},
 	devDependencies: {},
 }

@@ -227,20 +227,20 @@ const formatOptions = new Map(FORMAT_OPTIONS.map((option) => [option.format, opt
 const editableFormats = FORMAT_OPTIONS.filter((option) => option.editable);
 const welcomePanelFormats = FORMAT_OPTIONS.map((option) => ({ label: option.shortLabel }));
 const welcomePanelCopy = {
-	title: "一句指令，直接修改文档",
-	subtitle: "助手会直接处理你当前打开的文件。",
+	title: "一句话交给小艺，直接修改文档",
+	subtitle: "小艺会直接处理你当前打开的文件。",
 	undoable: "可撤销",
 	overviewLabel: "AI 辅助编辑概览",
 	supportedFilesLabel: "支持的文件类型",
 	connectedWorkspaceLabel: "{count} 种格式 · 一个互联工作区",
-	askInAppLabel: "在 AI 应用中提问",
+	askInAppLabel: "在小艺中提问",
 	askPrompt: "“优化摘要、更新预算并对齐幻灯片内容。”",
 } as const;
 const aboutCopy = {
 	checkForUpdates: "检查更新…",
 	done: "完成",
 	checkingForUpdates: "正在检查更新…",
-	description: "在移动设备上打开、编辑和查看文档，并通过 AI 助手协同处理内容。",
+	description: "打开、编辑和查看文档，并通过小艺协同处理内容。",
 	close: "关闭“关于 {app}”",
 	version: "版本 {version}",
 	formatsLabel: "支持的文档格式",
@@ -258,9 +258,9 @@ const settingsCopy = {
 	updates: "更新",
 	autoUpdates: "自动检查更新",
 	autoUpdatesHelp: "应用启动后自动检查经过签名验证的新版本。",
-	ai: "AI 连接",
-	autoActivity: "收到 AI 请求时显示活动面板",
-	autoActivityHelp: "小艺或其他 AI 工具调用当前工作区时自动展开活动侧边栏。",
+	ai: "小艺连接",
+	autoActivity: "收到小艺请求时显示活动面板",
+	autoActivityHelp: "小艺调用当前工作区时自动展开活动侧边栏。",
 	accessibility: "辅助功能",
 	reduceMotion: "减弱界面动态效果",
 	reduceMotionHelp: "尽量减少应用中的脉冲和过渡动画。",
@@ -2426,7 +2426,7 @@ onBeforeUnmount(() => {
 					@click="appMenuOpen ? closeAppMenu() : openAppMenu()"
 					@keydown.down.prevent="openAppMenu(true)"
 				>
-					<img class="harmony-chrome__mark" :src="appLogoUrl" alt="" draggable="false" />
+					<img class="harmony-chrome__mark" :src="appMarkUrl" alt="" draggable="false" />
 				</button>
 				<span
 					v-if="appMenuOpen"
@@ -2713,12 +2713,11 @@ onBeforeUnmount(() => {
 			<div class="harmony-workspace">
 				<section v-show="homeActive" class="harmony-home">
 					<div class="harmony-home__hero">
-						<span class="harmony-home__eyebrow">与你的 AI 应用协同工作</span>
-						<h1>让 AI 助手直接处理你的文档</h1>
+						<span class="harmony-home__eyebrow">与小艺协同工作</span>
+						<h1>小艺的文档好助手</h1>
 						<p>
-							连接豆包、Claude、ChatGPT 或其他 AI
-							助手，即可处理当前文档中的标题、表格、
-							单元格、幻灯片与图形。文件会保留在多标签工作区中。
+							连接小艺，即可处理当前文档中的标题、表格、单元格、幻灯片与图形。
+							文件会保留在多标签工作区中，所有修改都可继续编辑或撤销。
 						</p>
 						<div class="harmony-home__actions">
 							<button
@@ -2863,6 +2862,7 @@ onBeforeUnmount(() => {
 							: '浏览器预览模式'
 				"
 				:connection-tone="isHarmonyHost() ? 'live' : 'warn'"
+				:show-connect-tab="false"
 				:connection-detail="
 					isHarmonyHost()
 						? '通过 HarmonyOS Intents Kit 调用'
@@ -2872,36 +2872,7 @@ onBeforeUnmount(() => {
 				"
 				@clear="activityEntries = []"
 				@close="activityOpen = false"
-			>
-				<template #connect>
-					<div v-if="isHarmonyHost()" class="harmony-ai-connect">
-						<span class="harmony-ai-connect__badge">小艺 · Intents Kit</span>
-						<h3>已接入功能一步达</h3>
-						<p>
-							小艺可直接打开工作区、AI 活动，并新建 Word、PowerPoint、Excel、 Visio 与
-							Markdown 文档。
-						</p>
-						<ul>
-							<li><b>端侧执行器</b><span>已配置</span></li>
-							<li><b>JumpFunctionPage</b><span>前台模式</span></li>
-							<li><b>小艺开放平台</b><span>上架前注册与审核</span></li>
-						</ul>
-						<small>
-							自然语言修改正文需要在开放平台继续注册带文档参数的自定义意图。
-						</small>
-					</div>
-					<div v-else class="harmony-ai-connect">
-						<span class="harmony-ai-connect__badge">Android · Native Bridge</span>
-						<h3>本地文档能力已连接</h3>
-						<p>可以从系统文件中打开文档、另存编辑结果，并自动恢复尚未导出的修改。</p>
-						<ul>
-							<li><b>系统文件选择器</b><span>已配置</span></li>
-							<li><b>分块保存</b><span>已配置</span></li>
-							<li><b>第三方 AI 调用</b><span>待接入 Android Intent</span></li>
-						</ul>
-					</div>
-				</template>
-			</CliActivityPanel>
+			/>
 		</div>
 
 		<div

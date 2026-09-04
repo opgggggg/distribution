@@ -2,7 +2,7 @@
 	"string": [
 		{
 			"name": "app_name",
-			"value": "AuroraPrime Office"
+			"value": "CubeOffice"
 		},
 		{
 			"name": "module_desc",
@@ -10,15 +10,15 @@
 		},
 		{
 			"name": "EntryAbility_desc",
-			"value": "AuroraPrime Office workspace"
+			"value": "CubeOffice workspace"
 		},
 		{
 			"name": "EntryAbility_label",
-			"value": "AuroraPrime Office"
+			"value": "CubeOffice"
 		},
 		{
 			"name": "app_loading",
-			"value": "正在载入 AuroraPrime Office…"
+			"value": "正在载入 CubeOffice…"
 		}
 	]
 }
