@@ -54,10 +54,12 @@ const cubeOfficeProfile = {
 		copy: {
 			en: {
 				firstRunTitle: "Welcome to {app}",
-				firstRunSubtitle: "Choose your privacy and update preferences. You can change them later in Settings.",
+				firstRunSubtitle:
+					"Choose your privacy and update preferences. You can change them later in Settings.",
 				privacy: "Privacy",
 				diagnostics: "Automatically send error diagnostics",
-				diagnosticsHelp: "Sends redacted error details and basic system information. Documents and document contents are never included.",
+				diagnosticsHelp:
+					"Sends redacted error details and basic system information. Documents and document contents are never included.",
 				privacyPolicy: "View privacy policy",
 				anonymousId: "Anonymous installation ID",
 				feedbackLabel: "Feedback",
@@ -69,7 +71,8 @@ const cubeOfficeProfile = {
 				categoryQuestion: "Question",
 				categoryOther: "Other",
 				message: "Details",
-				messagePlaceholder: "Describe what you expected and what happened (at least 10 characters).",
+				messagePlaceholder:
+					"Describe what you expected and what happened (at least 10 characters).",
 				contact: "Contact (optional)",
 				contactHelp: "Email or another way to reach you",
 				screenshot: "Screenshot (optional, up to 5 MB)",
@@ -77,7 +80,8 @@ const cubeOfficeProfile = {
 				changeScreenshot: "Change screenshot",
 				removeScreenshot: "Remove",
 				includeSystemInfo: "Include system information",
-				includeSystemInfoHelp: "Includes the CubeOffice version, operating system, architecture, language, screen size and WebView user agent.",
+				includeSystemInfoHelp:
+					"Includes the CubeOffice version, operating system, architecture, language, screen size and WebView user agent.",
 				submit: "Send feedback",
 				submitting: "Sending…",
 				submittedTitle: "Thank you",
@@ -110,7 +114,8 @@ const cubeOfficeProfile = {
 				changeScreenshot: "更换截图",
 				removeScreenshot: "移除",
 				includeSystemInfo: "附带系统信息",
-				includeSystemInfoHelp: "包含 CubeOffice 版本、操作系统、架构、语言、屏幕尺寸和 WebView 标识。",
+				includeSystemInfoHelp:
+					"包含 CubeOffice 版本、操作系统、架构、语言、屏幕尺寸和 WebView 标识。",
 				submit: "提交反馈",
 				submitting: "正在提交…",
 				submittedTitle: "感谢反馈",
@@ -135,7 +140,7 @@ const cubeOfficeProfile = {
 	},
 	tauriConfig: {
 		...officeProfile.tauriConfig,
-		version: "1.1.0",
+		version: "1.1.1",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
 			shortDescription: "Open, edit, and read Office documents with AI",
