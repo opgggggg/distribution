@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow" />
+		<meta name="theme-color" content="#4f46e5" />
+		<title>CubeOffice Admin</title>
+		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/admin/controls.css?v=ec57b504de42" />
+		<link rel="stylesheet" href="/admin/styles.css?v=64e83aa1b1a8" />
+		<script type="module" src="/admin/app.js?v=eec1d6d40859" defer></script>
+	</head>
+	<body>
+		<header class="admin-header">
+			<a class="brand" href="/" aria-label="返回 CubeOffice 官网">
+				<img src="/assets/cubeoffice-mark.svg" alt="" width="32" height="32" />
+				<span>CubeOffice <b>Admin</b></span>
+			</a>
+			<div class="header-actions" data-auth-actions hidden>
+				<button type="button" class="button secondary" data-refresh>刷新</button>
+				<button type="button" class="button ghost" data-logout>退出</button>
+			</div>
+		</header>
+
+		<main>
+			<section class="login-card" data-login>
+				<img src="/assets/cubeoffice-mark.svg" alt="" width="48" height="48" />
+				<p class="eyebrow">OPERATIONS CONSOLE</p>
+				<h1>登录管理后台</h1>
+				<p>查看匿名活跃数据、用户反馈和客户端错误日志。</p>
+				<form data-login-form>
+					<label for="password">管理员密码</label>
+					<input
+						id="password"
+						name="password"
+						type="password"
+						autocomplete="current-password"
+						required
+					/>
+					<p class="form-error" role="alert" data-login-error hidden></p>
+					<button class="button primary" type="submit">登录</button>
+				</form>
+			</section>
+
+			<section class="dashboard" data-dashboard hidden>
+				<div class="page-heading">
+					<div>
+						<p class="eyebrow">PRODUCT HEALTH</p>
+						<h1>运行概览</h1>
+						<p>所有活跃数据均以匿名安装 ID 去重，不保存原始 IP。</p>
+					</div>
+					<time data-updated></time>
+				</div>
+
+				<div class="metric-grid" data-metrics></div>
+
+				<div class="insight-grid">
+					<section class="panel chart-panel">
+						<header>
+							<div>
+								<p class="eyebrow">LAST 30 DAYS</p>
+								<h2>每日活跃</h2>
+							</div>
+						</header>
+						<div
+							class="activity-chart"
+							data-chart
+							aria-label="最近 30 天每日活跃趋势"
+						></div>
+					</section>
+					<section class="panel versions-panel">
+						<header>
+							<div>
+								<p class="eyebrow">INSTALL BASE</p>
+								<h2>版本分布</h2>
+							</div>
+						</header>
+						<div data-versions></div>
+					</section>
+				</div>
+
+				<section class="panel platforms-panel" aria-labelledby="platforms-title">
+					<header>
+						<div>
+							<p class="eyebrow">PLATFORMS</p>
+							<h2 id="platforms-title">平台分布</h2>
+						</div>
+						<cube-select
+							data-platform-period
+							aria-label="平台分布统计范围"
+							value="clients"
+							options='[{"value":"clients","label":"累计客户端"},{"value":"active_30d","label":"近 30 天活跃"}]'
+						></cube-select>
+					</header>
+					<p class="platform-summary" data-platform-summary aria-live="polite"></p>
+					<div data-platforms></div>
+					<p class="platform-help">
+						按匿名安装 ID 去重，归入客户端最近上报的平台。近 30
+						天活跃来自更新检查记录；尚未上报的安装不计入。
+					</p>
+				</section>
+
+				<section class="panel records-panel">
+					<header class="records-header">
+						<div class="record-tabs" role="tablist" aria-label="数据类型">
+							<button
+								type="button"
+								role="tab"
+								aria-selected="true"
+								data-tab="feedback"
+							>
+								用户反馈
+							</button>
+							<button type="button" role="tab" aria-selected="false" data-tab="logs">
+								错误日志
+							</button>
+						</div>
+						<cube-select data-filter aria-label="筛选状态" value=""></cube-select>
+					</header>
+					<div class="records" data-records></div>
+					<p class="empty" data-empty hidden>暂无记录</p>
+				</section>
+			</section>
+		</main>
+
+		<dialog class="detail-dialog" data-detail>
+			<header>
+				<div>
+					<p class="eyebrow" data-detail-kicker></p>
+					<h2 data-detail-title></h2>
+				</div>
+				<button type="button" class="icon-button" data-detail-close aria-label="关闭">
+					×
+				</button>
+			</header>
+			<div class="detail-content" data-detail-content></div>
+		</dialog>
+	</body>
+</html>

@@ -12,6 +12,7 @@ const androidWeb = fileURLToPath(new URL("../app/src/main/assets/web/", import.m
 const build = spawnSync("npm", ["run", "build:web", "-w", "@yaochn/als-office-harmony"], {
 	cwd: repositoryRoot,
 	stdio: "inherit",
+	env: { ...process.env, APP_PROFILE: process.env.APP_PROFILE || "cubeoffice" },
 	shell: process.platform === "win32",
 });
 if (build.status !== 0) {

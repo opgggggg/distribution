@@ -1,0 +1,20 @@
+const fs = require('fs');
+const ts = require(process.cwd()+'/node_modules/typescript');
+const assert = require('node:assert/strict');
+(async () => {
+ const source=fs.readFileSync('apps/harmony/web/src/android/services.ts','utf8');
+ const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+ const m=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+ const good={versionCode:1002001,versionName:'1.2.0',minSdk:26,url:'https://cubexp.com/downloads/CubeOffice-1.2.0-Android.apk',sha256:'a'.repeat(64)};
+ assert.equal(m.validateRelease(good).versionCode,1002001);
+ for(const patch of [{url:'http://cubexp.com/a.apk'},{url:'https://evil.com/a.apk'},{url:'https://cubexp.com@evil.com/a.apk'},{sha256:'bad'},{minSdk:0},{versionCode:1.2},{versionName:'bad'}]) assert.throws(()=>m.validateRelease({...good,...patch}));
+ global.window={cubeofficeServices:{request:()=> 'id',takeResult:()=> JSON.stringify({ok:true,data:good})}};
+ assert.deepEqual(await m.requestService('updates'),good);
+ window.cubeofficeServices.takeResult=()=> JSON.stringify({ok:false,error:'offline'});
+ await assert.rejects(m.requestService('feedback'),/offline/);
+ window.cubeofficeServices.request=()=>'';
+ await assert.rejects(m.requestService('updates'),/正在进行/);
+ delete window.cubeofficeServices;
+ await assert.rejects(m.requestService('updates'),/新版 Android/);
+ console.log('12 release validation and async bridge checks passed');
+})();

@@ -1,0 +1,8 @@
+{
+  "versionCode": 1002002,
+  "versionName": "1.2.0",
+  "minSdk": 26,
+  "url": "https://cubexp.com/downloads/CubeOffice-1.2.0-Android-b1002002.apk",
+  "sha256": "4879f4784641207503fdc8cbdb0c730d209c8c83014cd01d453abcfcf79005e3",
+  "notes": "统一移动开关与桌面复选框、统一下拉组件，更新 Android 隐私政策。"
+}

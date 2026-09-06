@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
-const profileName = process.env.APP_PROFILE || "default";
+const profileName =
+	process.env.APP_PROFILE || (process.argv.includes("--android") ? "cubeoffice" : "default");
 
 if (!/^[a-zA-Z0-9._-]+$/.test(profileName)) {
 	throw new Error(`Invalid APP_PROFILE: ${profileName}`);

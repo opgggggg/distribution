@@ -35,7 +35,9 @@ the pinned submodule.
 
 Application identity is defined once in `profiles/<profile>/app.json`. The profile contains
 the display name, HarmonyOS bundle name / Android application ID, vendor, version, URL
-scheme, and icon path. The default values and icon live in `profiles/default/`.
+scheme, and icon path. HarmonyOS defaults to `profiles/default/`; Android defaults to
+the CubeOffice desktop identity and icon in `profiles/cubeoffice/`. An explicit
+`APP_PROFILE` overrides either default.
 
 The normal npm builds synchronize the selected profile automatically. To prepare the
 HarmonyOS project before opening or building it directly in DevEco Studio, run:

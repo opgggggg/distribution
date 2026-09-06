@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, toRaw, watch } from "vue";
 
 import { DOCX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-docx/vue";
 import {
@@ -20,6 +20,8 @@ import {
 	JMP_VUE_FORMAT_CONTRIBUTION,
 	XLSX_VUE_FORMAT_CONTRIBUTION,
 } from "@yaochn/als-office-xlsx/vue";
+
+import AndroidWorkspace from "./android/AndroidWorkspace.vue";
 
 import DesktopWelcomePanel from "../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue";
 import CliActivityPanel from "../../../../als-office/apps/desktop/src/CliActivityPanel.vue";
@@ -140,6 +142,10 @@ interface MobileMarkdownEditor {
 	focus(): void;
 }
 
+const androidLayout =
+	isAndroidHost() ||
+	(import.meta.env.DEV && new URLSearchParams(location.search).get("platform") === "android");
+const androidWorkspace = ref<InstanceType<typeof AndroidWorkspace> | null>(null);
 const HOME_TAB_ID = "home";
 const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 	{
@@ -283,9 +289,16 @@ const mobileRibbonSection = ref<"format" | "insert">("format");
 const mobileSearchOpen = ref(false);
 const mobileMoreOpen = ref(false);
 const mobileInsertMenuOpen = ref(false);
+const mobileInsertDialog = ref<HTMLDialogElement | null>(null);
+watch(mobileInsertMenuOpen, async (open) => {
+	if (open) {
+		await nextTick();
+		mobileInsertDialog.value?.showModal();
+	} else mobileInsertDialog.value?.close();
+});
 const mobileInsertLinkOpen = ref(false);
 const mobileInsertLinkUrl = ref("");
-const mobileLayout = ref(false);
+const mobileLayout = ref(androidLayout);
 const mobileTextEditing = ref(false);
 const mobilePptxViewing = ref(false);
 const mobilePptxSingleView = ref(false);
@@ -412,6 +425,48 @@ const mobileReadingStatusLabel = computed(() => {
 	return "查看模式";
 });
 
+const androidDocumentStatus = computed(() => {
+	if (saving.value) return "正在另存到文件…";
+	if (!activeTab.value?.editor) return "正在载入文档…";
+	if (!activeEditable.value) return "只读 · " + activeTab.value.format.toUpperCase();
+	const status = activeTab.value.autosaveStatus;
+	if (status === "saving" || status === "pending") return "正在保存本地草稿…";
+	if (status === "error") return "草稿保存失败，请另存到文件";
+	if (status === "saved") return "草稿已保存在本机";
+	return activeMobileEditing.value ? "编辑中 · 自动保存草稿" : "阅读模式";
+});
+
+function restoreAndroidDocument(id: string): void {
+	const record = autosaveHistory.value.find((record) => record.id === id);
+	if (record) void restoreHistoricalDocument(record);
+}
+
+async function closeAndroidDocument(): Promise<void> {
+	const tab = activeTab.value;
+	if (!tab?.editor || saving.value) return;
+	if (optionFor(tab.format).editable) {
+		clearAutosaveTimer(tab.id);
+		await runAutosave(tab);
+		if (!autosaveIsCurrent(tab)) {
+			error.value = "草稿尚未保存。请先另存到文件，再关闭文档。";
+			return;
+		}
+	}
+	closeTab(tab.id);
+	showMobileHome();
+}
+
+function androidTextCommand(command: string): void {
+	if (activeTab.value?.format === "markdown") {
+		if (command === "bold" || command === "italic") runMobileMarkdownTextFormat(command);
+		else insertMobileMarkdownBlock(command === "heading" ? "heading" : "bullet-list");
+	} else {
+		if (command === "bold" || command === "italic") runMobileDocxTextFormat(command);
+		else if (command === "heading") applyMobileDocxStyle("Heading2");
+		else toggleMobileDocxBulletList();
+	}
+}
+
 const AUTOSAVE_DELAY_MS = 5_000;
 const AUTOSAVE_RETRY_MS = 15_000;
 const autosaveTimers = new Map<string, number>();
@@ -490,7 +545,7 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 				...binding.props,
 				// Source mode is the keyboard-native editing surface on phones. The
 				// richer visual and preview modes remain unchanged on larger screens.
-				viewMode: "source",
+				viewMode: androidLayout && tab.mobileMode === "reading" ? "preview" : "source",
 				leftPanel: false,
 				rightPanel: false,
 				statusBar: false,
@@ -608,7 +663,7 @@ function scheduleAutosave(tab: HarmonyDocumentTab, delay = AUTOSAVE_DELAY_MS): v
 		autosaveQueued.add(tab.id);
 		return;
 	}
-	tab.autosaveStatus = "pending";
+	if (tab.autosaveStatus !== "error") tab.autosaveStatus = "pending";
 	autosaveTimers.set(
 		tab.id,
 		window.setTimeout(() => {
@@ -987,8 +1042,9 @@ function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 		tab.editor = null;
 		return;
 	}
-	if (tab.editor?.exposed === instance) return;
-	tab.editor = formats.mount(tab.format, surfaceInput(tab), instance);
+	if (toRaw(tab.editor?.exposed) === toRaw(instance)) return;
+	const mounted = formats.mount(tab.format, surfaceInput(tab), instance);
+	tab.editor = mounted ? markRaw(mounted) : null;
 	bindAutosave(tab);
 	if (tab.mobileAutofocusPending && tab.id === activeId.value) {
 		tab.mobileAutofocusPending = false;
@@ -1002,7 +1058,8 @@ function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 function refreshTabSurface(tab: HarmonyDocumentTab): void {
 	const exposed = tab.editor?.exposed;
 	if (!exposed) return;
-	tab.editor = formats.mount(tab.format, surfaceInput(tab), exposed);
+	const mounted = formats.mount(tab.format, surfaceInput(tab), exposed);
+	tab.editor = mounted ? markRaw(mounted) : null;
 	bindAutosave(tab);
 }
 
@@ -1015,7 +1072,14 @@ function setMobileDocumentMode(tab: HarmonyDocumentTab, mode: "reading" | "editi
 function surfaceRef(tab: HarmonyDocumentTab): (instance: unknown) => void {
 	let reference = surfaceRefs.get(tab.id);
 	if (!reference) {
-		reference = (instance) => setTabSurface(tab, instance);
+		reference = (instance) => {
+			// Editor getState() may refresh its reactive snapshot. Do not invoke it
+			// from a Vue render/ref effect, or spreadsheet mounting can recurse.
+			void nextTick(() => {
+				if (tabs.value.some((candidate) => candidate.id === tab.id))
+					setTabSurface(tab, instance);
+			});
+		};
 		surfaceRefs.set(tab.id, reference);
 	}
 	return reference;
@@ -1080,8 +1144,9 @@ async function saveActive(): Promise<void> {
 	try {
 		clearAutosaveTimer(tab.id);
 		await autosaveOperations.get(tab.id);
-		const blob = await tab.editor.save();
-		await persistAutosave(tab, blob, revisionToken(tab.editor.getState().revision));
+		const revision = revisionToken(tab.editor.getState().revision);
+		const blob = await tab.editor.export({ format: tab.format });
+		await persistAutosave(tab, blob, revision);
 		await saveBlobWithHost(blob, tab.fileName);
 		mobileMoreOpen.value = false;
 	} catch (cause) {
@@ -2092,6 +2157,7 @@ function handleMobileFocusOut(): void {
 
 function handleMobileDocumentAreaClick(event: MouseEvent, tab: HarmonyDocumentTab): void {
 	if (!mobileLayout.value || tab.id !== activeId.value) return;
+	if (androidLayout && tab.mobileMode === "reading" && tab.format !== "pptx") return;
 	const target = event.target;
 	if (!(target instanceof Element)) return;
 	if (tab.mobileMode === "reading" && tab.format === "pptx" && mobilePptxViewing.value) {
@@ -2178,6 +2244,7 @@ function handleEditorKeepIme(): void {
 }
 
 function showMobileHome(): void {
+	void flushAutosaves();
 	dismissMobileKeyboard();
 	closeMobileRibbon();
 	mobileSearchOpen.value = false;
@@ -2188,6 +2255,20 @@ function showMobileHome(): void {
 
 /** Android delegates the system Back action here before it closes the Activity. */
 function handleNativeBack(): boolean {
+	if (androidWorkspace.value?.handleBack()) return true;
+	if (aboutDialogOpen.value) {
+		aboutDialogOpen.value = false;
+		return true;
+	}
+	if (settingsDialogOpen.value) {
+		settingsDialogOpen.value = false;
+		return true;
+	}
+	if (newMenuOpen.value || appMenuOpen.value) {
+		newMenuOpen.value = false;
+		closeAppMenu();
+		return true;
+	}
 	if (mobilePptxViewing.value) {
 		stopMobilePptxViewing();
 		return true;
@@ -2232,11 +2313,22 @@ function handleNativeBack(): boolean {
 		showMobileHome();
 		return true;
 	}
+	if (androidLayout) {
+		const unsaved = tabs.value.find(
+			(tab) => tab.editor?.getState().dirty && !autosaveIsCurrent(tab),
+		);
+		if (unsaved) {
+			selectTab(unsaved.id);
+			error.value = "文档仍有未保存的更改，请先保存草稿或另存到文件。";
+			void flushAutosaves();
+			return true;
+		}
+	}
 	return false;
 }
 
 function syncMobileLayout(event?: MediaQueryListEvent): void {
-	mobileLayout.value = event?.matches ?? phoneMediaQuery?.matches ?? false;
+	mobileLayout.value = androidLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false);
 	mobilePortrait.value = window.innerHeight >= window.innerWidth;
 	for (const tab of tabs.value) refreshTabSurface(tab);
 	if (mobileLayout.value) void restoreAutosaves();
@@ -2318,7 +2410,18 @@ function cancelHarmonyWindowMove(event: PointerEvent): void {
 	if (header.hasPointerCapture(event.pointerId)) header.releasePointerCapture(event.pointerId);
 }
 
+function handleAndroidEscape(event: KeyboardEvent): void {
+	if (
+		event.defaultPrevented ||
+		(event.target as Element | null)?.closest?.(".als-ofs-ui-dropdown__menu")
+	)
+		return;
+	if (!androidLayout || event.key !== "Escape" || document.querySelector("dialog[open]")) return;
+	if (handleNativeBack()) event.preventDefault();
+}
+
 onMounted(() => {
+	document.addEventListener("keydown", handleAndroidEscape);
 	document.addEventListener("pointerdown", closeMenus);
 	document.addEventListener("focusin", handleMobileFocusIn);
 	document.addEventListener("focusout", handleMobileFocusOut);
@@ -2356,6 +2459,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+	document.removeEventListener("keydown", handleAndroidEscape);
 	mobilePptxZoomObserver?.disconnect();
 	mobilePptxZoomObserver = undefined;
 	if (mobilePptxGesture?.slideDrag) clearMobilePptxSlideDrag(mobilePptxGesture.slideDrag);
@@ -2393,6 +2497,8 @@ onBeforeUnmount(() => {
 		class="harmony-app"
 		:class="{
 			'has-document': !homeActive,
+			'android-app': androidLayout,
+			'is-mobile-layout': mobileLayout,
 			'is-mobile-ribbon-open': mobileRibbonOpen,
 			'is-mobile-ribbon-insert': mobileRibbonOpen && mobileRibbonSection === 'insert',
 			'is-mobile-search-open': mobileSearchOpen,
@@ -2401,7 +2507,46 @@ onBeforeUnmount(() => {
 			'is-pptx-viewing': mobilePptxViewing,
 		}"
 	>
+		<AndroidWorkspace
+			v-if="androidLayout"
+			ref="androidWorkspace"
+			:documents="tabs"
+			:history="restorableAutosaves"
+			:active="activeTab"
+			:editing="activeMobileEditing"
+			:opening="opening"
+			:saving="saving"
+			:ready="Boolean(activeTab?.editor)"
+			:status="androidDocumentStatus"
+			:editable="activeEditable"
+			:reduce-motion="preferences.reduceMotion"
+			:immersive="mobilePptxViewing"
+			@open="open"
+			@select="selectTab"
+			@restore="restoreAndroidDocument"
+			@create="createDocument"
+			@back="handleNativeBack"
+			@edit="activeTab && enterMobileEditing(activeTab)"
+			@finish="finishMobileEditing"
+			@save="saveActive"
+			@close="closeAndroidDocument"
+			@undo="undoActive"
+			@redo="redoActive"
+			@search="openActiveSearch"
+			@format="openMobileRibbonTab('home')"
+			@insert="
+				activeTab?.format === 'docx'
+					? openMobileInsertMenu()
+					: openMobileRibbonTab('insert')
+			"
+			@keyboard="dismissMobileKeyboard"
+			@new-slide="addMobilePptxSlide"
+			@present="startMobilePptxViewing"
+			@text="androidTextCommand"
+			@motion="preferences.reduceMotion = $event"
+		/>
 		<header
+			v-if="!androidLayout"
 			class="harmony-chrome"
 			:class="{ 'is-harmony-host': isHarmonyHost() }"
 			@pointerdown="prepareHarmonyWindowMove"
@@ -2709,9 +2854,13 @@ onBeforeUnmount(() => {
 
 		<p v-if="error" class="harmony-feedback" role="alert">{{ error }}</p>
 
-		<div class="harmony-body" :class="{ 'has-activity': activityOpen }">
+		<div
+			v-show="!androidLayout || !homeActive"
+			class="harmony-body"
+			:class="{ 'has-activity': activityOpen }"
+		>
 			<div class="harmony-workspace">
-				<section v-show="homeActive" class="harmony-home">
+				<section v-if="!androidLayout" v-show="homeActive" class="harmony-home">
 					<div class="harmony-home__hero">
 						<span class="harmony-home__eyebrow">与你的 AI 应用协同工作</span>
 						<h1>让 AI 助手直接处理你的文档</h1>
@@ -2920,7 +3069,7 @@ onBeforeUnmount(() => {
 		</button>
 
 		<nav
-			v-if="activeTab && activeMobileEditing"
+			v-if="!androidLayout && activeTab && activeMobileEditing"
 			class="harmony-mobile-toolbar"
 			:class="{
 				'is-input-toolbar': activeTab.format === 'docx' || activeTab.format === 'markdown',
@@ -3302,7 +3451,9 @@ onBeforeUnmount(() => {
 			@change="insertSelectedMobileDocxImages"
 		/>
 
-		<div
+		<dialog
+			ref="mobileInsertDialog"
+			@cancel.prevent="closeMobileInsertMenu"
 			v-if="mobileInsertMenuOpen && activeTab?.format === 'docx'"
 			class="harmony-mobile-insert-backdrop"
 			@click.self="closeMobileInsertMenu"
@@ -3437,7 +3588,7 @@ onBeforeUnmount(() => {
 					</section>
 				</div>
 			</section>
-		</div>
+		</dialog>
 
 		<div
 			v-if="mobileMoreOpen && activeTab"

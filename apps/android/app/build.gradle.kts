@@ -4,7 +4,7 @@ plugins {
 	id("com.android.application")
 }
 
-val appProfileName = providers.environmentVariable("APP_PROFILE").orElse("default").get()
+val appProfileName = providers.environmentVariable("APP_PROFILE").orElse("cubeoffice").get()
 require(appProfileName.matches(Regex("[A-Za-z0-9._-]+"))) {
 	"Invalid APP_PROFILE: $appProfileName"
 }

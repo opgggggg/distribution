@@ -4,9 +4,9 @@
 	"private": true,
 	"scripts": {
 		"sync:web": "node scripts/sync-web.mjs",
-		"prebuild": "npm --prefix ../.. run profile:sync",
+		"prebuild": "npm --prefix ../.. run profile:sync -- --android",
 		"build": "./gradlew assembleDebug",
-		"prebuild:release": "npm --prefix ../.. run profile:sync",
+		"prebuild:release": "npm --prefix ../.. run profile:sync -- --android",
 		"build:release": "./gradlew assembleRelease"
 	}
 }

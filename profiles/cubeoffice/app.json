@@ -1,0 +1,9 @@
+{
+	"name": "CubeOffice",
+	"packageName": "com.cubexp.office",
+	"vendor": "cubexp",
+	"versionCode": 1002002,
+	"versionName": "1.2.0",
+	"icon": "icon.png",
+	"urlScheme": "cubeoffice"
+}

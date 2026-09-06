@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +29,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -69,10 +72,12 @@ public final class MainActivity extends Activity {
   };
 
   private WebView webView;
+  private CubeOfficeServices cubeOfficeServices;
   private ValueCallback<Uri[]> pendingFileSelection;
   private AuroraDocumentBridge documentBridge;
   private boolean backDispatchPending;
   private boolean presentationImmersive;
+  private OnBackInvokedCallback backCallback;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +89,12 @@ public final class MainActivity extends Activity {
     documentBridge = new AuroraDocumentBridge();
     configureWebView(webView);
     setContentView(webView);
+    configureWindowInsets();
+    if (Build.VERSION.SDK_INT >= 33) {
+      backCallback = this::onBackPressed;
+      getOnBackInvokedDispatcher()
+          .registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCallback);
+    }
     documentBridge.receiveIntent(getIntent());
     webView.loadUrl(LOCAL_APP_URL);
   }
@@ -99,6 +110,33 @@ public final class MainActivity extends Activity {
   private void notifyWebOfPendingIntent() {
     if (webView == null) return;
     webView.evaluateJavascript("window.dispatchEvent(new Event('aurora-native-document'))", null);
+  }
+
+  private void configureWindowInsets() {
+    // Android 15 enforces edge-to-edge. Inset the WebView itself, including
+    // the IME, so fixed Web controls and modal dialogs share a safe viewport.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      getWindow().setDecorFitsSystemWindows(false);
+      getWindow()
+          .getDecorView()
+          .setOnApplyWindowInsetsListener(
+              (view, insets) -> {
+                Insets bars =
+                    insets.getInsets(
+                        WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                Insets ime = insets.getInsets(WindowInsets.Type.ime());
+                android.view.ViewGroup.MarginLayoutParams layout =
+                    (android.view.ViewGroup.MarginLayoutParams) webView.getLayoutParams();
+                layout.setMargins(
+                    bars.left,
+                    presentationImmersive ? 0 : bars.top,
+                    bars.right,
+                    Math.max(presentationImmersive ? 0 : bars.bottom, ime.bottom));
+                webView.setLayoutParams(layout);
+                return WindowInsets.CONSUMED;
+              });
+      getWindow().getDecorView().requestApplyInsets();
+    }
   }
 
   private void configureSystemBars() {
@@ -126,7 +164,7 @@ public final class MainActivity extends Activity {
     presentationImmersive = enabled;
     Window window = getWindow();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      window.setDecorFitsSystemWindows(!enabled);
+      window.setDecorFitsSystemWindows(false);
       WindowInsetsController controller = window.getInsetsController();
       if (controller != null) {
         int systemBars = WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars();
@@ -150,6 +188,7 @@ public final class MainActivity extends Activity {
                   | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
     }
     if (!enabled) configureSystemBars();
+    window.getDecorView().requestApplyInsets();
   }
 
   @SuppressLint("SetJavaScriptEnabled")
@@ -165,10 +204,17 @@ public final class MainActivity extends Activity {
     settings.setMediaPlaybackRequiresUserGesture(false);
     settings.setBuiltInZoomControls(false);
     settings.setDisplayZoomControls(false);
-    settings.setTextZoom(100);
+    settings.setTextZoom(Math.round(getResources().getConfiguration().fontScale * 100));
     settings.setUserAgentString(settings.getUserAgentString() + " AuroraPrimeOfficeAndroid/0.1");
 
     view.addJavascriptInterface(documentBridge, "auroraHarmonyHost");
+    try {
+      cubeOfficeServices = new CubeOfficeServices(this);
+      view.addJavascriptInterface(cubeOfficeServices, "cubeofficeServices");
+    } catch (IllegalStateException unavailable) {
+      // A full or unavailable private store must not prevent local document editing.
+      cubeOfficeServices = null;
+    }
     view.setWebViewClient(new LocalContentWebViewClient());
     view.setWebChromeClient(new OfficeWebChromeClient());
   }
@@ -248,11 +294,16 @@ public final class MainActivity extends Activity {
 
   @Override
   protected void onDestroy() {
+    if (Build.VERSION.SDK_INT >= 33 && backCallback != null) {
+      getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCallback);
+    }
     if (pendingFileSelection != null) pendingFileSelection.onReceiveValue(null);
     pendingFileSelection = null;
     if (documentBridge != null) documentBridge.dispose();
     if (webView != null) {
       webView.removeJavascriptInterface("auroraHarmonyHost");
+      webView.removeJavascriptInterface("cubeofficeServices");
+      if (cubeOfficeServices != null) cubeOfficeServices.close();
       webView.destroy();
     }
     super.onDestroy();
