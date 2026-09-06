@@ -88,3 +88,8 @@ npm run desktop:build
 Use `npm run desktop:build:linux-x64` or `npm run desktop:build:win-x64` on the
 corresponding build host. `npm run desktop:config` prints the resolved Tauri
 configuration for inspection without building an installer.
+
+CubeOffice packages its main executable as `cubeoffice-app` and its CLI as
+`cubeoffice` (`.exe` on Windows). The upstream Cargo target names remain unchanged.
+Run `node --test scripts/tests/desktop-binary-name.test.mjs` to check the desktop
+binary configuration and sidecar staging for all three targets.

@@ -29,6 +29,7 @@ const icon = (fileName) => path.join(fromHere("./icons/"), fileName);
 const cubeOfficeProfile = {
 	...officeProfile,
 	id: "cubeoffice",
+	cliBinaryName: "cubeoffice",
 	name: "CubeOffice",
 	identifier: "com.cubexp.office",
 	logoAsset: "https://cubexp.com/assets/cubeoffice-mark.svg",
@@ -141,9 +142,11 @@ const cubeOfficeProfile = {
 	tauriConfig: {
 		...officeProfile.tauriConfig,
 		version: "1.2.0",
+		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
 			shortDescription: "Open, edit, and read Office documents with AI",
+			externalBin: ["binaries/cubeoffice"],
 			icon: [
 				icon("32x32.png"),
 				icon("128x128.png"),
