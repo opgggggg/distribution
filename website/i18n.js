@@ -25,8 +25,8 @@ const pageCopy = {
 				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
 			下载桌面版: "Download desktop app",
 			"了解 AI 协作": "See how AI collaboration works",
-			"CubeOffice 1.2.0 · macOS、Windows 与 Linux":
-				"CubeOffice 1.2.0 · macOS, Windows, and Linux",
+			"CubeOffice 1.2.1 · macOS、Windows 与 Linux":
+				"CubeOffice 1.2.1 · macOS, Windows, and Linux",
 			"AI 已连接": "AI connected",
 			文件: "File",
 			插入: "Insert",
@@ -45,7 +45,7 @@ const pageCopy = {
 			覆盖三大桌面平台: "across three desktop platforms",
 			"围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux 之间保持一致的工作节奏。":
 				"The same document capabilities and interaction model keep your workflow consistent across macOS, Windows, and Linux.",
-			"桌面版本 · 1.2.0": "Desktop release · 1.2.0",
+			"桌面版本 · 1.2.1": "Desktop release · 1.2.1",
 			"AppImage 与 DEB": "AppImage and DEB",
 			选择你的桌面平台: "Choose your desktop platform",
 			"安装包直接从 cubexp.com 下载。应用内更新使用同一域名上的签名更新服务。":
@@ -122,7 +122,7 @@ const pageCopy = {
 				"Examples of AI collaboration tasks across document formats",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
 			"macOS、Windows 与 Linux 桌面版现已开放下载。":
-				"CubeOffice 1.2.0 is available for macOS, Windows, and Linux.",
+				"CubeOffice 1.2.1 is available for macOS, Windows, and Linux.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",

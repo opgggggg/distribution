@@ -136,10 +136,10 @@ Required inputs for aggregation:
 
 ## Deterministic staging
 
-Place all five outputs on one trusted machine, then run:
+Place all five outputs on one trusted machine, then run from the distribution repository root:
 
 ```bash
-node .codex/skills/cubeoffice-release/scripts/stage-release.mjs \
+node .agents/skills/cubeoffice-release/scripts/stage-release.mjs \
   --version 1.2.0 \
   --notes "Chinese and English release notes" \
   --output /absolute/path/to/empty-stage \
