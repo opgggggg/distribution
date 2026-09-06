@@ -5,13 +5,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta
 			name="description"
-			content="CubeOffice 是面向 macOS、Windows 与 Linux 的通用 AI 文档应用，让你用熟悉的 AI 助手处理多格式办公文档。"
+			content="CubeOffice 是面向 macOS、Windows、Linux 与 Android 的通用 AI 文档应用，让你用熟悉的 AI 助手处理多格式办公文档。"
 		/>
 		<meta name="theme-color" content="#4f46e5" />
 		<title>CubeOffice｜跨平台文档工作台</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
-		<link rel="stylesheet" href="/styles.css?v=20260904-5" />
-		<script src="/i18n.js?v=20260904-5" defer></script>
+		<link rel="stylesheet" href="/styles.css?v=ff8a187f505c" />
+		<script src="/i18n.js?v=739ed2d49397" defer></script>
 		<script src="/app.js?v=20260904-1" defer></script>
 	</head>
 	<body data-page="home">
@@ -25,6 +25,7 @@
 				<div class="header-actions">
 					<nav id="site-nav" class="site-nav" aria-label="主要导航">
 						<a href="#download">下载</a>
+						<a href="/visio">Visio for Mac/Linux</a>
 						<a href="#platforms">支持平台</a>
 						<a href="#features">产品能力</a>
 						<a href="#formats">支持格式</a>
@@ -59,7 +60,7 @@
 			<section class="hero">
 				<div class="container hero-grid">
 					<div class="hero-copy">
-						<p class="eyebrow"><span></span> macOS · Windows · Linux</p>
+						<p class="eyebrow"><span></span> macOS · Windows · Linux · Android</p>
 						<h1>通用 AI 的<br /><em>文档工作台</em></h1>
 						<p class="hero-lead">
 							连接你常用的 AI 应用，在同一个工作区中处理
@@ -67,12 +68,12 @@
 							理解当前文档，并协助生成、改写、整理与编辑内容。
 						</p>
 						<div class="hero-actions">
-							<a class="button button-primary" href="#download">下载桌面版</a>
+							<a class="button button-primary" href="#download">下载应用</a>
 							<a class="button button-secondary" href="#gallery">了解 AI 协作</a>
 						</div>
 						<div class="availability" aria-label="产品状态">
 							<span class="status-dot"></span>
-							<span>CubeOffice 1.2.1 · macOS、Windows 与 Linux</span>
+							<span>桌面版 1.2.1 · Android 预览版 1.2.0</span>
 						</div>
 					</div>
 					<figure class="hero-visual ai-workspace-visual">
@@ -139,11 +140,11 @@
 					<div class="section-heading platform-heading">
 						<p class="section-kicker">一次熟悉，处处顺手</p>
 						<h2 id="platforms-title">
-							一套体验，<br class="mobile-break" />覆盖三大桌面平台
+							一套体验，<br class="mobile-break" />从桌面延伸到手机
 						</h2>
 						<p>
-							围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux
-							之间保持一致的工作节奏。
+							在 macOS、Windows 与 Linux 上处理桌面工作，在 Android
+							手机上随时阅读和编辑文档。
 						</p>
 					</div>
 					<div class="platform-grid">
@@ -187,6 +188,19 @@
 								<span>AppImage 与 DEB</span>
 							</div>
 						</article>
+						<article class="platform-card">
+							<div class="platform-icon">
+								<svg aria-hidden="true" viewBox="0 0 24 24">
+									<rect x="6" y="2" width="12" height="20" rx="3" />
+									<path d="M10 5h4M10 19h4" />
+								</svg>
+							</div>
+							<div>
+								<h3>Android</h3>
+								<p>移动预览版 · 1.2.0</p>
+								<span>手机与平板 · Android 8.0+</span>
+							</div>
+						</article>
 					</div>
 				</div>
 			</section>
@@ -194,10 +208,11 @@
 			<section id="download" class="download-section" aria-labelledby="download-title">
 				<div class="container">
 					<div class="section-heading download-heading">
-						<p class="section-kicker">CubeOffice 1.2.1</p>
-						<h2 id="download-title">选择你的桌面平台</h2>
+						<p class="section-kicker">CubeOffice 下载</p>
+						<h2 id="download-title">选择你的平台</h2>
 						<p>
-							安装包直接从 cubexp.com 下载。应用内更新使用同一域名上的签名更新服务。
+							安装包直接从 cubexp.com 下载。桌面版支持应用内更新；Android 预览版通过
+							APK 安装。
 						</p>
 					</div>
 					<div class="download-grid">
@@ -264,6 +279,24 @@
 								>
 							</div>
 						</article>
+						<article class="download-card" id="download-android">
+							<div class="download-card__icon" aria-hidden="true">
+								<svg class="download-icon-stroke" viewBox="0 0 24 24">
+									<rect x="6" y="2" width="12" height="20" rx="3" />
+									<path d="M10 5h4M10 19h4" />
+								</svg>
+							</div>
+							<div class="download-card__copy">
+								<p class="download-card__meta">Android 8.0+ · 预览版 1.2.0</p>
+								<h3>Android</h3>
+								<p>为手机和平板设计的触控界面，本地编辑与草稿保存。</p>
+							</div>
+							<a
+								class="button button-primary download-button"
+								href="/downloads/CubeOffice-1.2.0-Android-b1002001.apk"
+								>下载 APK <span>通用 APK</span></a
+							>
+						</article>
 					</div>
 					<p class="download-note">
 						首次安装时系统可能提示未识别开发者。你可以先核对
@@ -283,7 +316,7 @@
 						<li class="format-docx">DOCX</li>
 						<li class="format-pptx">PPTX</li>
 						<li class="format-xlsx">XLSX</li>
-						<li class="format-vsdx">VSDX</li>
+						<li class="format-vsdx"><a href="/visio">VSDX · Visio</a></li>
 						<li class="format-md">Markdown</li>
 						<li class="format-pdf">PDF</li>
 						<li class="format-jmp">JMP</li>
@@ -482,11 +515,11 @@
 				<div class="container closing-card">
 					<img src="/assets/cubeoffice-mark.svg" alt="" width="64" height="64" />
 					<div>
-						<p class="section-kicker">CubeOffice 1.2.1</p>
+						<p class="section-kicker">CubeOffice 下载</p>
 						<h2>让熟悉的 AI，真正参与文档工作</h2>
-						<p>macOS、Windows 与 Linux 桌面版现已开放下载。</p>
+						<p>CubeOffice 1.2.1 桌面版和 Android 1.2.0 预览版现已开放下载。</p>
 					</div>
-					<a class="button button-light" href="#download">下载桌面版</a>
+					<a class="button button-light" href="#download">下载应用</a>
 				</div>
 			</section>
 		</main>

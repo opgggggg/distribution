@@ -12,9 +12,17 @@ const pageCopy = {
 	home: {
 		title: "CubeOffice | Cross-platform document workspace",
 		description:
-			"CubeOffice is a cross-platform AI document app for macOS, Windows, and Linux, built to work with the AI assistant you already use.",
+			"CubeOffice is a cross-platform AI document app for macOS, Windows, Linux, and Android, built to work with the AI assistant you already use.",
 		text: {
 			...sharedText,
+			"CubeOffice 下载": "Download CubeOffice",
+			"移动预览版 · 1.2.0": "Mobile preview · 1.2.0",
+			"手机与平板 · Android 8.0+": "Phones and tablets · Android 8.0+",
+			"Android 8.0+ · 预览版 1.2.0": "Android 8.0+ · Preview 1.2.0",
+			"为手机和平板设计的触控界面，本地编辑与草稿保存。":
+				"Touch controls for phones and tablets, with local editing and draft saving.",
+			"下载 APK": "Download APK",
+			"通用 APK": "Universal APK",
 			支持平台: "Platforms",
 			产品能力: "Features",
 			支持格式: "Formats",
@@ -23,10 +31,13 @@ const pageCopy = {
 			文档工作台: "for any AI assistant",
 			"连接你常用的 AI 应用，在同一个工作区中处理 Word、PowerPoint、Excel、Visio 与 Markdown。让 AI 理解当前文档，并协助生成、改写、整理与编辑内容。":
 				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
+			下载应用: "Download app",
 			下载桌面版: "Download desktop app",
 			"了解 AI 协作": "See how AI collaboration works",
 			"CubeOffice 1.2.1 · macOS、Windows 与 Linux":
 				"CubeOffice 1.2.1 · macOS, Windows, and Linux",
+			"桌面版 1.2.1 · Android 预览版 1.2.0":
+				"Desktop 1.2.1 · Android preview 1.2.0",
 			"AI 已连接": "AI connected",
 			文件: "File",
 			插入: "Insert",
@@ -42,12 +53,18 @@ const pageCopy = {
 				"Illustration of the CubeOffice document workspace connected to an AI app",
 			"一次熟悉，处处顺手": "Familiar everywhere",
 			"一套体验，": "One experience,",
+			从桌面延伸到手机: "from desktop to mobile",
 			覆盖三大桌面平台: "across three desktop platforms",
+			"在 macOS、Windows 与 Linux 上处理桌面工作，在 Android 手机上随时阅读和编辑文档。":
+				"Work on macOS, Windows, and Linux, then read and edit documents on your Android phone.",
 			"围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux 之间保持一致的工作节奏。":
 				"The same document capabilities and interaction model keep your workflow consistent across macOS, Windows, and Linux.",
 			"桌面版本 · 1.2.1": "Desktop release · 1.2.1",
 			"AppImage 与 DEB": "AppImage and DEB",
+			选择你的平台: "Choose your platform",
 			选择你的桌面平台: "Choose your desktop platform",
+			"安装包直接从 cubexp.com 下载。桌面版支持应用内更新；Android 预览版通过 APK 安装。":
+				"Download directly from cubexp.com. Desktop apps support in-app updates; install the Android preview using its APK.",
 			"安装包直接从 cubexp.com 下载。应用内更新使用同一域名上的签名更新服务。":
 				"Installers download directly from cubexp.com. In-app updates use the signed update service on the same domain.",
 			"适用于 Apple Silicon（M 系列芯片）": "For Apple Silicon (M-series chips)",
@@ -121,6 +138,8 @@ const pageCopy = {
 			"不同文档格式的 AI 协作任务示意":
 				"Examples of AI collaboration tasks across document formats",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
+			"CubeOffice 1.2.1 桌面版和 Android 1.2.0 预览版现已开放下载。":
+				"CubeOffice 1.2.1 desktop apps and the Android 1.2.0 preview are available now.",
 			"macOS、Windows 与 Linux 桌面版现已开放下载。":
 				"CubeOffice 1.2.1 is available for macOS, Windows, and Linux.",
 		},
@@ -132,19 +151,121 @@ const pageCopy = {
 			"AI 协作流程": "AI collaboration workflow",
 		},
 	},
+	visio: {
+		title: "Visio editor for Mac and Linux | CubeOffice",
+		description:
+			"Open, view, edit, and save Microsoft Visio VSDX files on macOS and Linux with CubeOffice. Work with flowcharts, org charts, connectors, Shape Data, VSSX stencils, and draw.io imports.",
+		text: {
+			...sharedText,
+			"Mac 与 Linux": "Mac & Linux",
+			编辑能力: "Editing",
+			兼容性: "Compatibility",
+			常见问题: "FAQ",
+			"在 Mac 与 Linux 上，": "Edit Visio directly",
+			"直接编辑 Visio": "on Mac and Linux",
+			"无需切换到 Windows，也无需先把图表转成图片。CubeOffice 可直接打开、查看、编辑并保存 Microsoft Visio 的 VSDX 文件，让流程图、组织结构图和技术图表留在原生格式中。":
+				"No Windows switch and no image conversion. CubeOffice opens, views, edits, and saves Microsoft Visio VSDX files directly, keeping flowcharts, org charts, and technical diagrams in their native format.",
+			"下载 macOS / Linux 版": "Download for macOS / Linux",
+			"查看 Visio 功能": "Explore Visio features",
+			原生打开与保存: "Open and save natively",
+			图形库导入与导出: "Import and export stencils",
+			导入为可编辑图表: "Import as an editable diagram",
+			"CubeOffice 在 macOS 上打开并编辑真实 VSDX 经典流程图":
+				"CubeOffice opening and editing a real classic VSDX flowchart on macOS",
+			"跨平台 Visio 工作流": "Cross-platform Visio workflow",
+			"把 VSDX 带到 Windows 之外": "Take VSDX beyond Windows",
+			"同一套图表编辑能力运行在三个桌面平台。文件留在本地，团队仍可继续使用标准 VSDX 交付。":
+				"The same diagram editing capabilities run across all three desktop platforms. Files stay local while your team continues to deliver standard VSDX documents.",
+			"macOS 上不再只看预览": "Go beyond previews on macOS",
+			"在 Apple Silicon Mac 上打开 VSDX，选择图形、修改文字、调整连接线与布局，然后保存回可继续编辑的 Visio 文件。":
+				"Open VSDX on an Apple Silicon Mac, select shapes, edit text, adjust connectors and layouts, then save an editable Visio file.",
+			"Linux 也能参与图表协作": "Bring Linux into diagram workflows",
+			"在 Debian、Ubuntu 及支持 AppImage 的 x86_64 Linux 环境中处理 VSDX，无需远程桌面或 Windows 虚拟机。":
+				"Work with VSDX on Debian, Ubuntu, and x86_64 Linux systems that support AppImage—without a remote desktop or Windows virtual machine.",
+			文件默认在设备本地处理: "Local processing by default",
+			"打开、编辑和保存主要在本机完成。只有当你主动连接 AI 并选择上下文时，相关内容才交给所连接的 AI 应用。":
+				"Opening, editing, and saving happen primarily on your device. Content is provided to a connected AI app only when you choose to connect it and share context.",
+			无需注册登录: "No account required",
+			"不只是 VSDX 查看器": "More than a VSDX viewer",
+			"从打开，到真正完成修改": "From opening a file to finishing the edit",
+			"覆盖日常流程图、组织结构图、业务流程和技术图表所需的核心编辑工作。":
+				"Core editing tools for everyday flowcharts, org charts, business processes, and technical diagrams.",
+			"图形、文本与连接线": "Shapes, text, and connectors",
+			"插入内置图形和文本框，编辑形状文字，连接节点，并设置线条、箭头、填充、旋转、翻转、组合与层级。":
+				"Insert built-in shapes and text boxes, edit shape text, connect nodes, and control lines, arrows, fills, rotation, flipping, grouping, and z-order.",
+			排列与自动布局: "Arrange and auto-layout",
+			"对齐、等距分布和精确定位图形，并预览流程、层级、放射和环形布局。":
+				"Align, distribute, and position shapes precisely, with previewable flowchart, hierarchy, radial, and circular layouts.",
+			多页面与页面设计: "Multi-page design",
+			"管理多页图表、背景页、主题、纸张尺寸与方向，并使用网格、参考线、吸附和粘附。":
+				"Manage multi-page diagrams, background pages, themes, paper size and orientation, plus grids, guides, snap, and glue.",
+			"Shape Data 与数据图形": "Shape Data and data graphics",
+			"读取和编辑类型化 Shape Data，使用文本、数据条、图标和颜色展示数据，并支持 CSV 导入。":
+				"Read and edit typed Shape Data, visualize it with text, data bars, icons, and colors, and import data from CSV.",
+			图形库与模板: "Stencils and templates",
+			"搜索基本图形、流程图、BPMN 和组织结构图目录，也可导入或导出 VSSX 图形库。":
+				"Search Basic, Flowchart, BPMN, and Org Chart catalogs, or import and export VSSX stencil libraries.",
+			"AI 理解图表结构": "AI understands diagram structure",
+			"让兼容的 AI 应用读取页面、图形和连接关系，并协助添加节点、修改文字、整理结构或重新布局；每次修改仍可检查和撤销。":
+				"Let a compatible AI app read pages, shapes, and connections, then help add nodes, edit text, organize structure, or re-layout the diagram. Every change remains reviewable and undoable.",
+			格式兼容与安全边界: "Compatibility and security boundaries",
+			"保留原文件结构，明确处理边界": "Preserve source structure with clear boundaries",
+			"CubeOffice 使用源结构保留的 VSDX 写入方式。未被编辑器主动修改的包内容会尽可能保留，便于文件继续回到其他 Visio 工作流。":
+				"CubeOffice uses a source-preserving VSDX writer. Package content that the editor does not actively change is preserved where possible, so files can return to other Visio workflows.",
+			"原生 VSDX 读写": "Native VSDX read and write",
+			"打开现有文件、创建新图表，并保存为标准 VSDX。":
+				"Open existing files, create new diagrams, and save standard VSDX documents.",
+			安全保留高级内容: "Safely preserve advanced content",
+			"VBA、OLE、ActiveX 和插件内容可被保留和提示，但不会在 CubeOffice 中执行。":
+				"VBA, OLE, ActiveX, and add-in content can be preserved and reported, but is never executed in CubeOffice.",
+			确定性跨平台渲染: "Consistent cross-platform rendering",
+			"Mac、Linux 与 Windows 使用一致的浏览器渲染；不承诺与 Windows 版 Visio 像素级一致。":
+				"Mac, Linux, and Windows use the same deterministic browser rendering; pixel-identical output with Visio for Windows is not promised.",
+			现代格式优先: "Modern format first",
+			"核心编辑格式是 VSDX；旧版二进制 VSD 文件不属于当前完整编辑范围。":
+				"VSDX is the primary editing format. Legacy binary VSD files are not currently covered by the full editing experience.",
+			"关于 Mac、Linux 与 Visio": "About Mac, Linux, and Visio",
+			"Mac 上可以直接编辑 Visio 文件吗？": "Can I edit Visio files directly on a Mac?",
+			"可以。CubeOffice 的 macOS 版可以打开、编辑并保存 VSDX 文件，包括常见图形、文本、连接线、多页面和布局操作。目前提供 Apple Silicon 版本。":
+				"Yes. CubeOffice for macOS opens, edits, and saves VSDX files, including common shapes, text, connectors, multiple pages, and layout operations. An Apple Silicon build is currently available.",
+			"Linux 上需要安装 Microsoft Office 或 Wine 吗？": "Does Linux require Microsoft Office or Wine?",
+			"不需要。CubeOffice 以原生桌面应用提供 AppImage 和 DEB 安装包，不依赖 Microsoft Office、Wine 或 Windows 虚拟机。":
+				"No. CubeOffice is a native desktop application available as AppImage and DEB packages. It does not require Microsoft Office, Wine, or a Windows virtual machine.",
+			"保存后能回到 Microsoft Visio 继续编辑吗？": "Can I continue editing the saved file in Microsoft Visio?",
+			"CubeOffice 保存标准 VSDX 文件，并采用源结构保留策略。复杂专有功能可能存在显示差异，重要文件建议保留原始副本并在交付前复核。":
+				"CubeOffice saves standard VSDX files with a source-preserving strategy. Complex proprietary features may render differently, so keep the original and review important files before delivery.",
+			"支持哪些 Visio 图表类型？": "Which Visio diagram types are supported?",
+			"内置基本图形、流程图、BPMN 和组织结构图目录，也支持从文档主控形状与 VSSX 图形库插入内容。":
+				"Built-in catalogs cover Basic, Flowchart, BPMN, and Org Chart shapes, with insertion from document masters and VSSX stencil libraries.",
+			"可以把 draw.io 文件变成 Visio 文件吗？": "Can I turn a draw.io file into a Visio file?",
+			"可以导入 draw.io 内容并转换为可编辑的图表模型，之后保存为 VSDX。复杂图形在转换后建议人工检查。":
+				"You can import draw.io content into an editable diagram model and then save it as VSDX. Review complex diagrams after conversion.",
+			"让 Mac 与 Linux 真正加入 Visio 工作流": "Bring Mac and Linux into your Visio workflow",
+			"下载桌面版，直接开始处理 VSDX 图表。": "Download the desktop app and start working with VSDX diagrams.",
+			选择下载版本: "Choose a download",
+			返回首页: "Back to home",
+		},
+		attributes: {
+			"CubeOffice 首页": "CubeOffice home",
+			"Visio 页面导航": "Visio page navigation",
+			"Visio 核心支持": "Core Visio support",
+			"CubeOffice 在 macOS 上打开并编辑真实 VSDX 经典流程图":
+				"CubeOffice opening and editing a real classic VSDX flowchart on macOS",
+		},
+	},
 	privacy: {
 		title: "Privacy Policy | CubeOffice",
-		description: "CubeOffice Privacy Policy",
+		description: "CubeOffice Privacy Policy for macOS, Windows, Linux, and Android",
 		text: {
 			...sharedText,
 			返回首页: "Back to home",
 			生效日期: "Effective date",
-			"2026 年 9 月 4 日": "September 4, 2026",
+			"2026 年 9 月 7 日": "September 7, 2026",
 			运营者: "Operator",
 			隐私与数据保护: "Privacy and data protection",
 			"CubeOffice 隐私政策": "CubeOffice Privacy Policy",
-			"我们重视您的隐私。本政策适用于 CubeOffice 的 macOS、Windows 与 Linux 版本，并说明应用如何处理数据。CubeOffice 当前无需注册或登录，文档主要在您的设备本地处理。":
-				"We value your privacy. This policy applies to the macOS, Windows, and Linux versions of CubeOffice and explains how the app handles data. CubeOffice currently requires no registration or sign-in, and documents are primarily processed on your device.",
+			"我们重视您的隐私。本政策适用于 CubeOffice 的 macOS、Windows、Linux 与 Android 版本，并说明应用如何处理数据。CubeOffice 当前无需注册或登录，文档主要在您的设备本地处理。":
+				"We value your privacy. This policy applies to the macOS, Windows, Linux, and Android versions of CubeOffice and explains how the app handles data. CubeOffice currently requires no registration or sign-in, and documents are primarily processed on your device.",
 			"1. 我们处理的信息": "1. Information we process",
 			"当您主动选择打开、导入、创建或编辑文档时，应用会在您的设备上处理相应文件及其内容，以提供文档查看、编辑、保存、撤销和多标签工作区等功能。":
 				"When you choose to open, import, create, or edit a document, the app processes that file and its contents on your device to provide viewing, editing, saving, undo, and multi-tab workspace features.",
@@ -153,17 +274,21 @@ const pageCopy = {
 			"2. 设备权限": "2. Device permissions",
 			"应用仅在您主动选择文件、打开文件或保存文件时，通过所在操作系统提供的文件选择与存储能力访问相应内容。我们不会在未经您操作的情况下扫描其他文件。":
 				"The app accesses content through the operating system’s file selection and storage capabilities only when you choose, open, or save a file. We do not scan other files without your action.",
+			"Android 版本仅声明网络权限，用于您主动检查更新、启用自动更新检查或提交反馈。文档访问通过 Android 系统文件选择器授予的单次或持久化授权完成；应用不会请求读取设备全部照片、媒体或文件的权限。":
+				"The Android version declares only network access, used when you check for updates, enable automatic update checks, or submit feedback. Documents are accessed through one-time or persistent grants from the Android system file picker; the app does not request permission to read all photos, media, or files on the device.",
 			"3. 本地保存与删除": "3. Local storage and deletion",
 			"文档、编辑状态和自动恢复数据保存在您的设备本地，保存期限由您对文件和应用数据的管理决定。您可以删除文档、清除应用数据或卸载应用来移除本地数据。":
 				"Documents, editing state, and recovery data are stored locally on your device. Their retention depends on how you manage files and app data. You can remove local data by deleting documents, clearing app data, or uninstalling the app.",
+			"Android 版本会在应用私有存储中保存设置、匿名安装 ID、编辑草稿和必要的临时文件；保存到外部位置时，由您通过系统保存界面选择目标。Android 系统可能根据您的设备备份设置备份符合条件的应用数据，匿名安装 ID 明确排除在系统备份之外。":
+				"The Android version stores settings, an anonymous installation ID, editing drafts, and necessary temporary files in private app storage. When saving externally, you choose the destination through the system save interface. Android may back up eligible app data according to your device backup settings; the anonymous installation ID is explicitly excluded from system backup.",
 			"4. 匿名使用数据、诊断与反馈": "4. Anonymous usage data, diagnostics, and feedback",
-			"应用首次启动时会随机生成一个匿名安装 ID（不读取硬件序列号），并让您选择是否自动检查更新和上传错误诊断，这两个选项默认开启且可随时在设置中关闭。每次检查更新会发送该匿名 ID、应用版本、平台、架构和语言，用于按日去重统计活跃设备；我们不保存原始 IP 地址。":
-				"On first launch, the app generates a random anonymous installation ID without reading a hardware serial number. You can choose whether to check for updates and send error diagnostics automatically; both options are enabled by default and can be disabled in Settings at any time. Each update check sends the anonymous ID, app version, platform, architecture, and language to count daily active installations. We do not store raw IP addresses.",
-			"开启错误诊断后，应用可能上传已脱敏的错误消息、调用栈和基础系统信息，绝不附带文档或文档内容，诊断日志保存 30 天。您也可主动提交问题、建议或咨询，并自行选择是否提供联系方式、系统信息和截图；反馈记录会保留至完成处理或按您的请求删除。":
-				"When diagnostics are enabled, the app may upload redacted error messages, stack traces, and basic system information. Documents and document contents are never attached. Diagnostic logs are retained for 30 days. You may also submit a problem, suggestion, or question and choose whether to include contact details, system information, and a screenshot. Feedback is retained until it is handled or deleted at your request.",
+			"应用会随机生成一个匿名安装 ID，不读取硬件序列号。桌面版的自动更新检查和错误诊断默认开启，可随时在设置中关闭；Android 版的自动更新检查默认关闭，由您自行启用。每次检查更新会发送匿名 ID、应用版本、平台、架构和语言；Android 版还会发送版本代码和系统 SDK 版本。这些信息用于更新兼容性判断和按日去重统计活跃设备；我们不保存原始 IP 地址。":
+				"The app generates a random anonymous installation ID without reading a hardware serial number. Automatic update checks and error diagnostics are enabled by default on desktop and can be disabled in Settings; automatic update checks are disabled by default on Android and can be enabled by you. Each update check sends the anonymous ID, app version, platform, architecture, and language. Android also sends the version code and system SDK version. This information is used for update compatibility and deduplicated daily active-device counts. We do not store raw IP addresses.",
+			"在启用错误诊断的平台版本中，应用可能上传已脱敏的错误消息、调用栈和基础系统信息，绝不附带文档或文档内容，诊断日志保存 30 天。您也可主动提交问题、建议或咨询，并自行选择是否提供联系方式、系统信息和截图；反馈记录会保留至完成处理或按您的请求删除。":
+				"On platform versions where diagnostics are enabled, the app may upload redacted error messages, stack traces, and basic system information. Documents and document contents are never attached. Diagnostic logs are retained for 30 days. You may also submit a problem, suggestion, or question and choose whether to include contact details, system information, and a screenshot. Feedback is retained until it is handled or deleted at your request.",
 			"5. AI 应用连接与平台能力": "5. AI app connections and platform capabilities",
-			"CubeOffice 可以连接兼容的 AI 应用。当您主动发起 AI 操作时，相关指令及您选择提供的文档上下文可能由所连接的 AI 应用处理，以生成或执行您请求的结果。该 AI 应用对数据的处理受其自身隐私政策约束。不同平台版本也可能调用操作系统提供的标准文件、自动化与桌面能力。":
-				"CubeOffice can connect to compatible AI apps. When you initiate an AI action, the connected AI app may process the instruction and the document context you choose to provide in order to generate or perform the requested result. That app’s handling of data is governed by its own privacy policy. Platform versions may also use standard file, automation, and desktop capabilities provided by the operating system.",
+			"CubeOffice 可以连接兼容的 AI 应用。当您主动发起 AI 操作时，相关指令及您选择提供的文档上下文可能由所连接的 AI 应用处理，以生成或执行您请求的结果。该 AI 应用对数据的处理受其自身隐私政策约束。不同平台版本也可能调用操作系统提供的标准文件、自动化、桌面或移动端能力。":
+				"CubeOffice can connect to compatible AI apps. When you initiate an AI action, the connected AI app may process the instruction and the document context you choose to provide in order to generate or perform the requested result. That app’s handling of data is governed by its own privacy policy. Platform versions may also use standard file, automation, desktop, or mobile capabilities provided by the operating system.",
 			"6. 第三方共享与商业用途": "6. Third-party sharing and commercial use",
 			"除您主动连接并调用的 AI 应用外，我们不会主动向第三方共享您的文档内容。我们不会出售您的个人信息，也不会将文档内容用于广告或个性化推荐。法律法规另有要求的除外。":
 				"Except for an AI app that you choose to connect and invoke, we do not proactively share document contents with third parties. We do not sell your personal information or use document contents for advertising or personalized recommendations, except where required by law.",

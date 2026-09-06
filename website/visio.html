@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="在 macOS 和 Linux 上用 CubeOffice 打开、查看、编辑并保存 Microsoft Visio VSDX 文件。支持流程图、组织结构图、连接线、Shape Data、VSSX 图形库和 draw.io 导入。"
+		/>
+		<meta name="robots" content="index, follow" />
+		<meta name="theme-color" content="#4f46e5" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="CubeOffice" />
+		<meta property="og:title" content="Mac 与 Linux 上的 Visio VSDX 编辑器｜CubeOffice" />
+		<meta
+			property="og:description"
+			content="无需 Windows，在 macOS 和 Linux 上直接打开、编辑和保存 Visio VSDX 图表。"
+		/>
+		<meta property="og:url" content="https://cubexp.com/visio" />
+		<meta
+			property="og:image"
+			content="https://cubexp.com/assets/cubeoffice-visio-macos.png?v=21536b06aabd"
+		/>
+		<meta property="og:image:width" content="2880" />
+		<meta property="og:image:height" content="1880" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta
+			name="twitter:image"
+			content="https://cubexp.com/assets/cubeoffice-visio-macos.png?v=21536b06aabd"
+		/>
+		<link rel="canonical" href="https://cubexp.com/visio" />
+		<title>Mac 与 Linux 上的 Visio VSDX 编辑器｜CubeOffice</title>
+		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/styles.css?v=ff8a187f505c" />
+		<script src="/i18n.js?v=739ed2d49397" defer></script>
+		<script src="/app.js?v=20260904-1" defer></script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "SoftwareApplication",
+				"name": "CubeOffice",
+				"applicationCategory": "BusinessApplication",
+				"operatingSystem": "macOS, Linux, Windows",
+				"url": "https://cubexp.com/visio",
+				"description": "A cross-platform VSDX diagram editor for opening, editing and saving Microsoft Visio files on macOS, Linux and Windows.",
+				"fileFormat": "application/vnd.ms-visio.drawing.main+xml"
+			}
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "FAQPage",
+				"mainEntity": [
+					{
+						"@type": "Question",
+						"name": "Mac 上可以直接编辑 Visio 文件吗？",
+						"acceptedAnswer": {
+							"@type": "Answer",
+							"text": "可以。CubeOffice 的 macOS 版可以打开、编辑并保存 VSDX 文件，包括常见图形、文本、连接线、多页面和布局操作。目前提供 Apple Silicon 版本。"
+						}
+					},
+					{
+						"@type": "Question",
+						"name": "Linux 上需要安装 Microsoft Office 或 Wine 吗？",
+						"acceptedAnswer": {
+							"@type": "Answer",
+							"text": "不需要。CubeOffice 提供 AppImage 和 DEB 安装包，不依赖 Microsoft Office、Wine 或 Windows 虚拟机。"
+						}
+					},
+					{
+						"@type": "Question",
+						"name": "保存后能回到 Microsoft Visio 继续编辑吗？",
+						"acceptedAnswer": {
+							"@type": "Answer",
+							"text": "CubeOffice 保存标准 VSDX 文件，并采用源结构保留策略。复杂专有功能可能存在显示差异，重要文件建议保留原始副本并在交付前复核。"
+						}
+					}
+				]
+			}
+		</script>
+	</head>
+	<body data-page="visio">
+		<a class="skip-link" href="#main">跳到主要内容</a>
+		<header class="site-header">
+			<div class="container header-inner">
+				<a class="brand" href="/" aria-label="CubeOffice 首页">
+					<img src="/assets/cubeoffice-mark.svg" alt="" width="36" height="36" />
+					<span>CubeOffice</span>
+				</a>
+				<div class="header-actions">
+					<nav id="site-nav" class="site-nav" aria-label="Visio 页面导航">
+						<a href="#platforms">Mac 与 Linux</a>
+						<a href="#capabilities">编辑能力</a>
+						<a href="#compatibility">兼容性</a>
+						<a href="#faq">常见问题</a>
+						<a href="/#download">下载</a>
+					</nav>
+					<button class="language-toggle" type="button" data-language-toggle>
+						<span data-language-label>EN</span>
+					</button>
+					<button
+						class="nav-toggle"
+						type="button"
+						aria-expanded="false"
+						aria-controls="site-nav"
+					>
+						<span class="sr-only">打开导航</span>
+						<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">
+							<path
+								d="M4 7h16M4 12h16M4 17h16"
+								fill="none"
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-width="2"
+							/>
+						</svg>
+					</button>
+				</div>
+			</div>
+		</header>
+
+		<main id="main">
+			<section class="visio-hero">
+				<div class="container visio-hero__grid">
+					<div class="visio-hero__copy">
+						<p class="eyebrow"><span></span> Visio for macOS · Linux · Windows</p>
+						<h1>在 Mac 与 Linux 上，<em>直接编辑 Visio</em></h1>
+						<p class="visio-hero__lead">
+							无需切换到 Windows，也无需先把图表转成图片。CubeOffice
+							可直接打开、查看、编辑并保存 Microsoft Visio 的 VSDX
+							文件，让流程图、组织结构图和技术图表留在原生格式中。
+						</p>
+						<div class="hero-actions">
+							<a class="button button-primary" href="/#download"
+								>下载 macOS / Linux 版</a
+							>
+							<a class="button button-secondary" href="#capabilities"
+								>查看 Visio 功能</a
+							>
+						</div>
+						<ul class="visio-proof" aria-label="Visio 核心支持">
+							<li><strong>VSDX</strong><span>原生打开与保存</span></li>
+							<li><strong>VSSX</strong><span>图形库导入与导出</span></li>
+							<li><strong>draw.io</strong><span>导入为可编辑图表</span></li>
+						</ul>
+					</div>
+
+					<figure class="visio-canvas" aria-labelledby="visio-canvas-caption">
+						<picture>
+							<source
+								srcset="/assets/cubeoffice-visio-macos.webp?v=bf717c69fc40"
+								type="image/webp"
+							/>
+							<img
+								src="/assets/cubeoffice-visio-macos.png?v=21536b06aabd"
+								width="1440"
+								height="940"
+								alt="CubeOffice 在 macOS 上打开并编辑真实 VSDX 经典流程图"
+								fetchpriority="high"
+								decoding="async"
+							/>
+						</picture>
+						<figcaption id="visio-canvas-caption" class="sr-only">
+							CubeOffice 在 macOS 上打开并编辑真实 VSDX 经典流程图
+						</figcaption>
+					</figure>
+				</div>
+			</section>
+
+			<section
+				id="platforms"
+				class="section visio-platforms"
+				aria-labelledby="visio-platforms-title"
+			>
+				<div class="container">
+					<div class="section-heading section-heading-row">
+						<div>
+							<p class="section-kicker">跨平台 Visio 工作流</p>
+							<h2 id="visio-platforms-title">把 VSDX 带到 Windows 之外</h2>
+						</div>
+						<p>
+							同一套图表编辑能力运行在三个桌面平台。文件留在本地，团队仍可继续使用标准
+							VSDX 交付。
+						</p>
+					</div>
+					<div class="visio-platform-grid">
+						<article class="visio-platform-card visio-platform-card--primary">
+							<p class="visio-platform-card__label">APPLE SILICON</p>
+							<h3>macOS 上不再只看预览</h3>
+							<p>
+								在 Apple Silicon Mac 上打开
+								VSDX，选择图形、修改文字、调整连接线与布局，然后保存回可继续编辑的
+								Visio 文件。
+							</p>
+							<span>macOS 13+</span>
+						</article>
+						<article class="visio-platform-card">
+							<p class="visio-platform-card__label">APPIMAGE · DEB</p>
+							<h3>Linux 也能参与图表协作</h3>
+							<p>
+								在 Debian、Ubuntu 及支持 AppImage 的 x86_64 Linux 环境中处理
+								VSDX，无需远程桌面或 Windows 虚拟机。
+							</p>
+							<span>Linux x86_64</span>
+						</article>
+						<article class="visio-platform-card">
+							<p class="visio-platform-card__label">LOCAL-FIRST</p>
+							<h3>文件默认在设备本地处理</h3>
+							<p>
+								打开、编辑和保存主要在本机完成。只有当你主动连接 AI
+								并选择上下文时，相关内容才交给所连接的 AI 应用。
+							</p>
+							<span>无需注册登录</span>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section id="capabilities" class="section" aria-labelledby="visio-capabilities-title">
+				<div class="container">
+					<div class="section-heading">
+						<p class="section-kicker">不只是 VSDX 查看器</p>
+						<h2 id="visio-capabilities-title">从打开，到真正完成修改</h2>
+						<p>覆盖日常流程图、组织结构图、业务流程和技术图表所需的核心编辑工作。</p>
+					</div>
+					<div class="visio-bento">
+						<article class="visio-capability visio-capability--wide">
+							<span class="visio-capability__number">01</span>
+							<h3>图形、文本与连接线</h3>
+							<p>
+								插入内置图形和文本框，编辑形状文字，连接节点，并设置线条、箭头、填充、旋转、翻转、组合与层级。
+							</p>
+						</article>
+						<article class="visio-capability">
+							<span class="visio-capability__number">02</span>
+							<h3>排列与自动布局</h3>
+							<p>对齐、等距分布和精确定位图形，并预览流程、层级、放射和环形布局。</p>
+						</article>
+						<article class="visio-capability">
+							<span class="visio-capability__number">03</span>
+							<h3>多页面与页面设计</h3>
+							<p>
+								管理多页图表、背景页、主题、纸张尺寸与方向，并使用网格、参考线、吸附和粘附。
+							</p>
+						</article>
+						<article class="visio-capability">
+							<span class="visio-capability__number">04</span>
+							<h3>Shape Data 与数据图形</h3>
+							<p>
+								读取和编辑类型化 Shape
+								Data，使用文本、数据条、图标和颜色展示数据，并支持 CSV 导入。
+							</p>
+						</article>
+						<article class="visio-capability">
+							<span class="visio-capability__number">05</span>
+							<h3>图形库与模板</h3>
+							<p>
+								搜索基本图形、流程图、BPMN 和组织结构图目录，也可导入或导出 VSSX
+								图形库。
+							</p>
+						</article>
+						<article class="visio-capability visio-capability--accent">
+							<span class="visio-capability__number">06</span>
+							<h3>AI 理解图表结构</h3>
+							<p>
+								让兼容的 AI
+								应用读取页面、图形和连接关系，并协助添加节点、修改文字、整理结构或重新布局；每次修改仍可检查和撤销。
+							</p>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section
+				id="compatibility"
+				class="section visio-compatibility"
+				aria-labelledby="compatibility-title"
+			>
+				<div class="container visio-compatibility__grid">
+					<div>
+						<p class="section-kicker">格式兼容与安全边界</p>
+						<h2 id="compatibility-title">保留原文件结构，明确处理边界</h2>
+						<p>
+							CubeOffice 使用源结构保留的 VSDX
+							写入方式。未被编辑器主动修改的包内容会尽可能保留，便于文件继续回到其他
+							Visio 工作流。
+						</p>
+					</div>
+					<div class="compatibility-list">
+						<article>
+							<strong>原生 VSDX 读写</strong
+							><span>打开现有文件、创建新图表，并保存为标准 VSDX。</span>
+						</article>
+						<article>
+							<strong>安全保留高级内容</strong
+							><span
+								>VBA、OLE、ActiveX 和插件内容可被保留和提示，但不会在 CubeOffice
+								中执行。</span
+							>
+						</article>
+						<article>
+							<strong>确定性跨平台渲染</strong
+							><span
+								>Mac、Linux 与 Windows 使用一致的浏览器渲染；不承诺与 Windows 版
+								Visio 像素级一致。</span
+							>
+						</article>
+						<article>
+							<strong>现代格式优先</strong
+							><span
+								>核心编辑格式是 VSDX；旧版二进制 VSD
+								文件不属于当前完整编辑范围。</span
+							>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section id="faq" class="section visio-faq" aria-labelledby="visio-faq-title">
+				<div class="container visio-faq__grid">
+					<div class="section-heading">
+						<p class="section-kicker">常见问题</p>
+						<h2 id="visio-faq-title">关于 Mac、Linux 与 Visio</h2>
+					</div>
+					<div class="faq-list">
+						<details open>
+							<summary>Mac 上可以直接编辑 Visio 文件吗？</summary>
+							<p>
+								可以。CubeOffice 的 macOS 版可以打开、编辑并保存 VSDX
+								文件，包括常见图形、文本、连接线、多页面和布局操作。目前提供 Apple
+								Silicon 版本。
+							</p>
+						</details>
+						<details>
+							<summary>Linux 上需要安装 Microsoft Office 或 Wine 吗？</summary>
+							<p>
+								不需要。CubeOffice 以原生桌面应用提供 AppImage 和 DEB 安装包，不依赖
+								Microsoft Office、Wine 或 Windows 虚拟机。
+							</p>
+						</details>
+						<details>
+							<summary>保存后能回到 Microsoft Visio 继续编辑吗？</summary>
+							<p>
+								CubeOffice 保存标准 VSDX
+								文件，并采用源结构保留策略。复杂专有功能可能存在显示差异，重要文件建议保留原始副本并在交付前复核。
+							</p>
+						</details>
+						<details>
+							<summary>支持哪些 Visio 图表类型？</summary>
+							<p>
+								内置基本图形、流程图、BPMN 和组织结构图目录，也支持从文档主控形状与
+								VSSX 图形库插入内容。
+							</p>
+						</details>
+						<details>
+							<summary>可以把 draw.io 文件变成 Visio 文件吗？</summary>
+							<p>
+								可以导入 draw.io 内容并转换为可编辑的图表模型，之后保存为
+								VSDX。复杂图形在转换后建议人工检查。
+							</p>
+						</details>
+					</div>
+				</div>
+			</section>
+
+			<section class="closing">
+				<div class="container closing-card">
+					<img src="/assets/cubeoffice-mark.svg" alt="" width="64" height="64" />
+					<div>
+						<p class="section-kicker">CubeOffice 1.2.1</p>
+						<h2>让 Mac 与 Linux 真正加入 Visio 工作流</h2>
+						<p>下载桌面版，直接开始处理 VSDX 图表。</p>
+					</div>
+					<a class="button button-light" href="/#download">选择下载版本</a>
+				</div>
+			</section>
+		</main>
+
+		<footer class="site-footer">
+			<div class="container footer-inner">
+				<div class="brand footer-brand">
+					<img src="/assets/cubeoffice-mark.svg" alt="" width="28" height="28" /><span
+						>CubeOffice</span
+					>
+				</div>
+				<p>© <span data-current-year>2026</span> cubexp.com</p>
+				<div class="footer-links">
+					<a href="/">返回首页</a><a href="/privacy">隐私政策</a>
+				</div>
+			</div>
+		</footer>
+	</body>
+</html>

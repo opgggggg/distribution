@@ -652,6 +652,11 @@ a {
 	letter-spacing: 0.02em;
 }
 
+.format-list a {
+	color: inherit;
+	text-decoration: none;
+}
+
 .format-docx {
 	border-left-color: #1469c9 !important;
 }
@@ -693,7 +698,7 @@ a {
 
 .platform-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 16px;
 }
 
@@ -764,7 +769,7 @@ a {
 
 .download-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 18px;
 }
 
@@ -1275,6 +1280,286 @@ a {
 	font-size: 15px;
 }
 
+.footer-links {
+	display: flex;
+	gap: 20px;
+}
+
+/* Visio product page */
+.visio-hero {
+	position: relative;
+	overflow: hidden;
+	padding: 88px 0 96px;
+	background:
+		radial-gradient(circle at 78% 8%, rgb(79 70 229 / 16%), transparent 29%),
+		linear-gradient(180deg, #fff 0%, #f5f6ff 100%);
+}
+
+.visio-hero__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 0.85fr) minmax(520px, 1.15fr);
+	align-items: center;
+	gap: 64px;
+}
+
+.visio-hero__copy h1 {
+	margin: 0;
+	font-size: clamp(48px, 5.6vw, 78px);
+	font-weight: 830;
+	letter-spacing: -0.062em;
+	line-height: 1.06;
+}
+
+.visio-hero__copy h1 em {
+	display: block;
+	color: var(--brand);
+	font-style: normal;
+}
+
+.visio-hero__lead {
+	max-width: 650px;
+	margin: 28px 0 0;
+	color: var(--ink-muted);
+	font-size: 18px;
+	line-height: 1.85;
+}
+
+.visio-proof {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 28px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.visio-proof li {
+	display: grid;
+	gap: 1px;
+	min-width: 126px;
+	padding: 12px 14px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: rgb(255 255 255 / 82%);
+}
+
+.visio-proof strong {
+	color: var(--brand-deep);
+	font-size: 13px;
+}
+
+.visio-proof span {
+	color: var(--ink-muted);
+	font-size: 11px;
+}
+
+.visio-canvas {
+	margin: 0;
+	overflow: hidden;
+	border: 1px solid #d8dcef;
+	border-radius: 22px;
+	background: #fff;
+	box-shadow: 0 34px 90px rgb(49 46 129 / 18%);
+	transform: rotate(1deg);
+}
+
+.visio-canvas picture,
+.visio-canvas img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.visio-platforms {
+	background: var(--surface-muted);
+}
+
+.visio-platform-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 18px;
+}
+
+.visio-platform-card {
+	display: grid;
+	min-height: 310px;
+	align-content: space-between;
+	padding: 30px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: #fff;
+}
+
+.visio-platform-card--primary {
+	color: #fff;
+	background: var(--brand-deep);
+}
+
+.visio-platform-card__label {
+	margin: 0;
+	color: var(--brand-strong);
+	font-size: 12px;
+	font-weight: 780;
+	letter-spacing: 0.09em;
+}
+
+.visio-platform-card--primary .visio-platform-card__label {
+	color: #a5b4fc;
+}
+
+.visio-platform-card h3 {
+	margin: 56px 0 12px;
+	font-size: 25px;
+	letter-spacing: -0.035em;
+	line-height: 1.25;
+}
+
+.visio-platform-card p:not(.visio-platform-card__label) {
+	margin: 0 0 24px;
+	color: var(--ink-muted);
+}
+
+.visio-platform-card--primary p:not(.visio-platform-card__label) {
+	color: #dfe3ff;
+}
+
+.visio-platform-card span {
+	width: fit-content;
+	padding: 6px 10px;
+	border-radius: 999px;
+	color: var(--brand-strong);
+	background: var(--brand-soft);
+	font-size: 12px;
+	font-weight: 720;
+}
+
+.visio-bento {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 18px;
+}
+
+.visio-capability {
+	min-height: 260px;
+	padding: 30px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface-muted);
+}
+
+.visio-capability--wide {
+	grid-column: span 2;
+	background: #fff;
+}
+
+.visio-capability--accent {
+	color: #fff;
+	background: var(--brand);
+}
+
+.visio-capability__number {
+	color: #7c87a0;
+	font-size: 12px;
+	font-weight: 780;
+	letter-spacing: 0.1em;
+}
+
+.visio-capability--accent .visio-capability__number {
+	color: #c7d2fe;
+}
+
+.visio-capability h3 {
+	margin: 58px 0 12px;
+	font-size: 23px;
+	letter-spacing: -0.03em;
+}
+
+.visio-capability p {
+	margin: 0;
+	color: var(--ink-muted);
+}
+
+.visio-capability--accent p {
+	color: #eef2ff;
+}
+
+.visio-compatibility {
+	color: #fff;
+	background: #11152f;
+}
+
+.visio-compatibility__grid {
+	display: grid;
+	grid-template-columns: 0.82fr 1.18fr;
+	align-items: start;
+	gap: 80px;
+}
+
+.visio-compatibility h2 {
+	margin: 0;
+	font-size: clamp(34px, 4.5vw, 54px);
+	letter-spacing: -0.052em;
+	line-height: 1.14;
+}
+
+.visio-compatibility__grid > div:first-child > p:last-child {
+	color: #b9c0d4;
+}
+
+.compatibility-list {
+	display: grid;
+	gap: 1px;
+	border: 1px solid rgb(255 255 255 / 12%);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	background: rgb(255 255 255 / 12%);
+}
+
+.compatibility-list article {
+	display: grid;
+	grid-template-columns: 190px 1fr;
+	gap: 24px;
+	padding: 24px;
+	background: #191e3a;
+}
+
+.compatibility-list strong {
+	color: #fff;
+}
+
+.compatibility-list span {
+	color: #bcc4da;
+}
+
+.visio-faq__grid {
+	display: grid;
+	grid-template-columns: 0.72fr 1.28fr;
+	align-items: start;
+	gap: 72px;
+}
+
+.faq-list {
+	border-top: 1px solid var(--border);
+}
+
+.faq-list details {
+	border-bottom: 1px solid var(--border);
+}
+
+.faq-list summary {
+	padding: 24px 44px 24px 0;
+	cursor: pointer;
+	font-size: 18px;
+	font-weight: 720;
+	letter-spacing: -0.02em;
+}
+
+.faq-list details p {
+	max-width: 720px;
+	margin: -8px 0 24px;
+	color: var(--ink-muted);
+}
+
 .privacy-main {
 	padding: 80px 0 112px;
 	background: linear-gradient(180deg, #f8f9ff, #fff 420px);
@@ -1349,6 +1634,47 @@ a {
 }
 
 @media (max-width: 1000px) {
+	.nav-toggle {
+		display: inline-flex;
+	}
+
+	.site-nav:not(.privacy-nav) {
+		position: absolute;
+		top: calc(100% + 1px);
+		left: 16px;
+		right: 16px;
+		display: none;
+		padding: 8px;
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		background: #fff;
+		box-shadow: 0 18px 42px rgb(15 23 42 / 13%);
+	}
+
+	.site-nav[data-open="true"] {
+		display: grid;
+	}
+
+	.site-nav a {
+		display: flex;
+		align-items: center;
+	}
+
+	.visio-hero__grid,
+	.visio-compatibility__grid,
+	.visio-faq__grid {
+		grid-template-columns: 1fr;
+		gap: 48px;
+	}
+
+	.visio-canvas {
+		transform: none;
+	}
+
+	.visio-platform-grid {
+		grid-template-columns: 1fr 1fr;
+	}
+
 	.hero-grid {
 		grid-template-columns: 1fr;
 		gap: 54px;
@@ -1392,38 +1718,48 @@ a {
 }
 
 @media (max-width: 760px) {
+	.visio-hero {
+		padding: 64px 0 72px;
+	}
+
+	.visio-hero__copy h1 {
+		font-size: clamp(43px, 13vw, 62px);
+	}
+
+	.visio-proof,
+	.visio-platform-grid,
+	.visio-bento {
+		grid-template-columns: 1fr;
+	}
+
+	.visio-proof {
+		display: grid;
+	}
+
+	.visio-capability--wide {
+		grid-column: auto;
+	}
+
+	.visio-platform-card,
+	.visio-capability {
+		min-height: 0;
+	}
+
+	.compatibility-list article {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+
+	.footer-links {
+		flex-wrap: wrap;
+	}
+
 	.container {
 		width: min(calc(100% - 32px), var(--container));
 	}
 
 	.header-inner {
 		min-height: 68px;
-	}
-
-	.nav-toggle {
-		display: inline-flex;
-	}
-
-	.site-nav:not(.privacy-nav) {
-		position: absolute;
-		top: calc(100% + 1px);
-		left: 16px;
-		right: 16px;
-		display: none;
-		padding: 8px;
-		border: 1px solid var(--border);
-		border-radius: 14px;
-		background: #fff;
-		box-shadow: 0 18px 42px rgb(15 23 42 / 13%);
-	}
-
-	.site-nav[data-open="true"] {
-		display: grid;
-	}
-
-	.site-nav a {
-		display: flex;
-		align-items: center;
 	}
 
 	.hero {
