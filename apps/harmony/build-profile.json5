@@ -6,10 +6,10 @@
 				name: "default",
 				signingConfig: "default",
 				// app-profile:start
-				bundleName: "com.yaochn.auroraprimeoffice",
-				vendor: "yaochn",
-				versionCode: 10000,
-				versionName: "0.1.0",
+				bundleName: "com.cubexp.office",
+				vendor: "cubexp",
+				versionCode: 1000000,
+				versionName: "1.0.0",
 				icon: "$media:app_icon",
 				label: "$string:app_name",
 				// app-profile:end

@@ -10,6 +10,7 @@ apps/harmony/oh_modules/
 apps/harmony/entry/build/
 apps/harmony/entry/oh_modules/
 apps/harmony/entry/src/main/resources/rawfile/web/
+apps/harmony/build/
 
 # Android build products
 apps/android/.gradle/

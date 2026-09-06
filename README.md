@@ -10,6 +10,11 @@ The dependency direction is intentionally one-way: this repository consumes
 `als-office`; the `als-office` repository does not contain or reference these
 distribution applications.
 
+CubeOffice-owned identity, artwork, theme overrides, and release configuration
+live under `profiles/cubeoffice/`. The desktop build loads that profile through
+the upstream external-profile interface, so the `als-office` submodule remains
+an unmodified upstream checkout.
+
 ## Checkout
 
 ```sh
@@ -72,3 +77,21 @@ npm run build:android
 ```
 
 Open `apps/harmony` in DevEco Studio to build or run the HarmonyOS application.
+
+Build or preview the CubeOffice desktop distribution without changing the
+`als-office` submodule:
+
+```sh
+npm run desktop:web
+npm run desktop:dev
+npm run desktop:build
+```
+
+Use `npm run desktop:build:linux-x64` or `npm run desktop:build:win-x64` on the
+corresponding build host. `npm run desktop:config` prints the resolved Tauri
+configuration for inspection without building an installer.
+
+CubeOffice packages its main executable as `cubeoffice-app` and its CLI as
+`cubeoffice` (`.exe` on Windows). The upstream Cargo target names remain unchanged.
+Run `node --test scripts/tests/desktop-binary-name.test.mjs` to check the desktop
+binary configuration and sidecar staging for all three targets.

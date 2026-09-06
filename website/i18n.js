@@ -12,19 +12,9 @@ const pageCopy = {
 	home: {
 		title: "CubeOffice | Cross-platform document workspace",
 		description:
-			"CubeOffice is a cross-platform AI document app for macOS, Windows, Linux, and Android, built to work with the AI assistant you already use.",
+			"CubeOffice is a cross-platform AI document app for macOS, Windows, and Linux, built to work with the AI assistant you already use.",
 		text: {
 			...sharedText,
-			"CubeOffice 下载": "Download CubeOffice",
-			"移动预览版 · 1.2.0": "Mobile preview \u00b7 1.2.0",
-			"手机与平板 · Android 8.0+": "Phones and tablets \u00b7 Android 8.0+",
-			"Android 8.0+ · 预览版 1.2.0": "Android 8.0+ \u00b7 Preview 1.2.0",
-			"为手机和平板设计的触控界面，本地编辑与草稿保存。":
-				"Touch controls for phones and tablets, with local editing and draft saving.",
-			"下载 APK": "Download APK",
-			"通用 APK": "Universal APK",
-			"预览版：请保留原文件并核对导出结果。":
-				"Preview: keep your originals and check exported files.",
 			支持平台: "Platforms",
 			产品能力: "Features",
 			支持格式: "Formats",
@@ -33,9 +23,10 @@ const pageCopy = {
 			文档工作台: "for any AI assistant",
 			"连接你常用的 AI 应用，在同一个工作区中处理 Word、PowerPoint、Excel、Visio 与 Markdown。让 AI 理解当前文档，并协助生成、改写、整理与编辑内容。":
 				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
-			下载应用: "Download app",
+			下载桌面版: "Download desktop app",
 			"了解 AI 协作": "See how AI collaboration works",
-			"桌面版 1.2.0 · Android 预览版 1.2.0": "Desktop 1.2.0 · Android preview 1.2.0",
+			"CubeOffice 1.2.1 · macOS、Windows 与 Linux":
+				"CubeOffice 1.2.1 · macOS, Windows, and Linux",
 			"AI 已连接": "AI connected",
 			文件: "File",
 			插入: "Insert",
@@ -51,14 +42,14 @@ const pageCopy = {
 				"Illustration of the CubeOffice document workspace connected to an AI app",
 			"一次熟悉，处处顺手": "Familiar everywhere",
 			"一套体验，": "One experience,",
-			从桌面延伸到手机: "from desktop to mobile",
-			"在 macOS、Windows 与 Linux 上处理桌面工作，在 Android 手机上随时阅读和编辑文档。":
-				"Work on macOS, Windows, and Linux, then read and edit documents on your Android phone.",
-			"桌面版本 · 1.2.0": "Desktop release · 1.2.0",
+			覆盖三大桌面平台: "across three desktop platforms",
+			"围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux 之间保持一致的工作节奏。":
+				"The same document capabilities and interaction model keep your workflow consistent across macOS, Windows, and Linux.",
+			"桌面版本 · 1.2.1": "Desktop release · 1.2.1",
 			"AppImage 与 DEB": "AppImage and DEB",
-			选择你的平台: "Choose your platform",
-			"安装包直接从 cubexp.com 下载。桌面版支持应用内更新；Android 预览版通过 APK 安装。":
-				"Download directly from cubexp.com. Desktop apps support in-app updates; install the Android preview using its APK.",
+			选择你的桌面平台: "Choose your desktop platform",
+			"安装包直接从 cubexp.com 下载。应用内更新使用同一域名上的签名更新服务。":
+				"Installers download directly from cubexp.com. In-app updates use the signed update service on the same domain.",
 			"适用于 Apple Silicon（M 系列芯片）": "For Apple Silicon (M-series chips)",
 			"下载 DMG": "Download DMG",
 			"约 15 MB": "About 15 MB",
@@ -130,8 +121,8 @@ const pageCopy = {
 			"不同文档格式的 AI 协作任务示意":
 				"Examples of AI collaboration tasks across document formats",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
-			"macOS、Windows、Linux 桌面版和 Android 预览版现已开放下载，版本统一为 1.2.0。":
-				"CubeOffice 1.2.0 is available for macOS, Windows, Linux, and Android (preview).",
+			"macOS、Windows 与 Linux 桌面版现已开放下载。":
+				"CubeOffice 1.2.1 is available for macOS, Windows, and Linux.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",
@@ -145,20 +136,6 @@ const pageCopy = {
 		title: "Privacy Policy | CubeOffice",
 		description: "CubeOffice Privacy Policy",
 		text: {
-			"我们重视您的隐私。本政策适用于 CubeOffice 的 macOS、Windows、Linux 与 Android 版本，并说明应用如何处理数据。CubeOffice 当前无需注册或登录，文档主要在您的设备本地处理。":
-				"We value your privacy. This policy applies to CubeOffice on macOS, Windows, Linux, and Android. No account or login is currently required; documents are primarily processed on your device.",
-			"文档、编辑状态和自动恢复数据主要保存在您的设备本地。Android 应用内部的草稿会在清除应用数据或卸载时移除；通过系统文件选择器另存的文件仍需由您自行管理和删除。":
-				"Documents, editing state, and recovery data are primarily stored locally. On Android, clearing app data or uninstalling removes internal drafts. Files saved through the system file picker remain under your control and must be managed or deleted separately.",
-			"应用首次启动时会随机生成匿名安装 ID（clientId），不读取硬件序列号。每次检查更新会发送该 ID、应用版本、平台、处理器架构和语言，用于检查版本及按日去重统计活跃客户端；Android 还会发送内部构建号和系统 API 级别。我们不保存原始 IP 地址。桌面版自动更新与错误诊断选项默认开启，可在设置中关闭。":
-				"On first launch, the app generates a random installation ID (clientId), without reading hardware serial numbers. Update checks send this ID, app version, platform, processor architecture, and language for version checks and daily deduplicated activity counts. Android also sends its build number and OS API level. We do not retain raw IP addresses. Desktop automatic updates and diagnostics start enabled and can be disabled in Settings.",
-			"桌面版开启错误诊断后，可能上传已脱敏的错误消息、调用栈和基础系统信息，不附带文档内容，诊断日志保存 30 天。反馈由您主动提交，可按平台提供的选项附带联系方式、系统信息或截图；反馈记录会保留至完成处理或按您的请求删除。":
-				"When desktop diagnostics are enabled, redacted errors, stack traces, and basic system information may be uploaded without document contents. Diagnostic logs are retained for 30 days. Feedback is submitted by you, with optional contact details, system information, or screenshots where supported. Feedback is retained until handled or deleted at your request.",
-			"Android 的 clientId 保存在应用私有目录，不参与系统备份；覆盖升级会保留，清除应用数据或卸载后重新安装会生成新编号。自动检查更新默认关闭，开启后每天首次启动时检查，也可手动检查。APK 通过浏览器从 cubexp.com 下载，由 Android 系统确认安装。Android 当前不自动上传错误诊断，不读取或上传截图；反馈可选择附带联系方式和 Android 系统版本，不会自动附带文档。":
-				"On Android, clientId is stored privately and excluded from system backup. It survives app upgrades; clearing app data or reinstalling after uninstall creates a new ID. Automatic update checks are off by default; when enabled they run on the first launch each day, and manual checks are also available. APKs are downloaded from cubexp.com through the browser and installed with Android system confirmation. Android currently does not automatically upload diagnostics or read or upload screenshots. Feedback can optionally include contact details and the Android system version, but never automatically attaches documents.",
-			"Android 通过系统文件选择器访问您选择的文件，使用网络权限检查更新和提交反馈。您可主动使用系统剪贴板复制、粘贴；clientId 的复制操作仅写入编号，不读取已有剪贴板内容。":
-				"Android accesses files you select through the system file picker and uses network access for update checks and feedback. You can use the system clipboard to copy and paste. Copying clientId only writes the ID and does not read existing clipboard contents.",
-			"2026 年 9 月 6 日": "September 6, 2026",
-
 			...sharedText,
 			返回首页: "Back to home",
 			生效日期: "Effective date",

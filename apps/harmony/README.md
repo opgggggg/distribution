@@ -1,4 +1,4 @@
-# AuroraPrime Office for HarmonyOS
+# CubeOffice for HarmonyOS
 
 This proof of concept packages the existing Vue Office editors and viewers in an
 ArkWeb-backed HarmonyOS application. The ArkTS shell owns document selection and

@@ -1,0 +1,19 @@
+{
+	"version": "1.2.1",
+	"notes": "CubeOffice 1.2.1 fixes a possible freeze when opening Markdown files, makes toggle controls more consistent across editors, and corrects installed app and command-line tool names so CubeOffice and the cubeoffice command launch correctly.",
+	"pub_date": "2026-09-06T14:40:36.744Z",
+	"platforms": {
+		"darwin-aarch64": {
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkM4TXBWTERpOTNWMFNaWUFQOFdIOWtZNVlxUE00bW1oV09STSs0U1BrVm9iMGFIUWJ3WVVqOEZDQkcwNENEWWRTSUh1dXkzd0Q5dVdubExISmM2WFFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzAyNzczCWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6ClcyWjI4ei9kemxnbkp1NlhNMGRRZVpIRkw0cjdXZUpqUjVlOXNJb01ieEQ1WU9hbmZ1UUpNQlVvTy84R1VxLzJzcExIQjJlL29FNlh1VmJ6eUNveUNRPT0K",
+			"url": "https://cubexp.com/updates/1.2.1/CubeOffice-1.2.1-macOS-arm64.app.tar.gz"
+		},
+		"windows-x86_64": {
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSk8zSWV0NnZqbXU5QWpCVlQzUjd1TmdYNnJOWU5HQlEwK084RWcvUWUzaS9tRDVlbnU3STlPNGRUd2FOWXdQVmZWYUdieW9QVHNxMTBaSEJ2UmhTc1FRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzA1NjEyCWZpbGU6Q3ViZU9mZmljZV8xLjIuMV94NjQtc2V0dXAuZXhlCjl0OXhZQ05WeEdzWS9WWnh2cThRVzllcE9pWGR3VnA5NE1xaGxuRlZObStUTGlTTnZSNjlEUlh4RHd4R0E2YWpqVGphWWprUHdGVkhrd1lBd0RuMkF3PT0K",
+			"url": "https://cubexp.com/updates/1.2.1/CubeOffice-1.2.1-Windows-x64-setup.exe"
+		},
+		"linux-x86_64": {
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkNFcHhRTFRSMmhlb3FPTDRQT21JUDN6QktGZ1BzYmVXSnFHNEFBbmhWNXFmWHdKVzJ4ZG54ZFM3TVp6b1NiSUdaRnJoUWNtVXJaMlJrTnJXUE53c0FVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzA0MDM5CWZpbGU6Q3ViZU9mZmljZV8xLjIuMV9hbWQ2NC5BcHBJbWFnZQo2OEJ0eFFVSjVFeU5GSGFWNmdpc3l4cklsdTBSQkE4dDA3T01nb1NYZzNyQ2lqWEd1dEtRK2d2cDNhS0laZ2x6dllGUzNVZzF1cWNDOXBJV1NjZjBDUT09Cg==",
+			"url": "https://cubexp.com/updates/1.2.1/CubeOffice-1.2.1-Linux-x86_64.AppImage"
+		}
+	}
+}

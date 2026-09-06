@@ -1,0 +1,4 @@
+interface:
+    display_name: "CubeOffice Release"
+    short_description: "构建、签名并发布 CubeOffice 桌面端制品"
+    default_prompt: "使用 $cubeoffice-release 构建并发布一个 CubeOffice 桌面版本到 cubexp.com。"

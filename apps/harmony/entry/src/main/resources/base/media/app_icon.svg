@@ -1,13 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="background" x1="78" y1="52" x2="442" y2="470" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1BD5B1"/>
-      <stop offset="0.5" stop-color="#0BAD94"/>
-      <stop offset="1" stop-color="#05675E"/>
+      <stop stop-color="#818CF8"/>
+      <stop offset="0.48" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#312E81"/>
     </linearGradient>
   </defs>
-  <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#background)"/>
-  <path d="M119 370 216 155c9-19 21-28 37-30v88l-69 157h-65Z" fill="#FFFFFF"/>
-  <path d="M259 125c16 2 28 11 37 30l97 215h-74l-66-151v-94h6Z" fill="#E6FFF7"/>
-  <path d="M211 266h90l25 56H186l25-56Z" fill="#F2FFFB"/>
+  <rect width="512" height="512" fill="url(#background)"/>
+  <path d="M256 106 390 184 256 262 122 184 256 106Z" fill="#FFFFFF"/>
+  <path d="M122 184 256 262v152l-134-78V184Z" fill="#E0E7FF"/>
+  <path d="M256 262 390 184v152l-134 78V262Z" fill="#C7D2FE"/>
+  <g fill="#4F46E5" fill-opacity="0.8">
+    <path d="m286 289 68-39v17l-68 39v-17Z"/>
+    <path d="m286 322 68-39v17l-68 39v-17Z"/>
+    <path d="m286 355 48-28v17l-48 28v-17Z"/>
+  </g>
 </svg>

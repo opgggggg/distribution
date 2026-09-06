@@ -693,7 +693,7 @@ a {
 
 .platform-grid {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 16px;
 }
 
@@ -758,13 +758,13 @@ a {
 		linear-gradient(180deg, #f7f8ff, #fff);
 }
 
-.section-heading.download-heading {
-	max-width: none;
+.download-heading {
+	max-width: 760px;
 }
 
 .download-grid {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 18px;
 }
 
@@ -843,11 +843,9 @@ a {
 }
 
 .download-button {
-	gap: 4px 8px;
 	width: 100%;
 	margin-top: auto;
 	justify-content: space-between;
-	flex-wrap: wrap;
 }
 
 .download-button span {
@@ -863,7 +861,7 @@ a {
 }
 
 .download-note {
-	max-width: none;
+	max-width: 840px;
 	margin: 24px 0 0;
 	color: #5f6b80;
 	font-size: 13px;
@@ -1377,7 +1375,7 @@ a {
 	}
 
 	.download-grid {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr;
 	}
 
 	.download-card {
@@ -1506,7 +1504,6 @@ a {
 
 	.format-inner,
 	.platform-grid,
-	.download-grid,
 	.feature-grid,
 	.collaboration-steps,
 	.closing-card,
