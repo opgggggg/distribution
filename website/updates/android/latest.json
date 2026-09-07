@@ -1,8 +1,8 @@
 {
-  "versionCode": 1002002,
-  "versionName": "1.2.0",
+  "versionCode": 1002003,
+  "versionName": "1.2.1",
   "minSdk": 26,
-  "url": "https://cubexp.com/downloads/CubeOffice-1.2.0-Android-b1002002.apk",
-  "sha256": "4879f4784641207503fdc8cbdb0c730d209c8c83014cd01d453abcfcf79005e3",
-  "notes": "统一移动开关与桌面复选框、统一下拉组件，更新 Android 隐私政策。"
+  "url": "https://cubexp.com/downloads/CubeOffice-1.2.1-Android-b1002003.apk",
+  "sha256": "34a13bbbeae716935b7926af67ebb3e1a8ae6d92570b893bd6e5f4bd7089359b",
+  "notes": "修复打开 Markdown 文件时可能卡住的问题，并统一编辑器中的开关控件。"
 }
