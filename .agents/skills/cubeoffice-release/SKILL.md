@@ -21,6 +21,7 @@ Read [references/release-process.md](references/release-process.md) before chang
 - Write public release notes for end users: emphasize visible features, improvements, and fixes in plain language, and omit implementation details. Keep build identities, hashes, signing status, and other technical evidence in the internal release report instead.
 - Do not overwrite an existing version on the server unless the user explicitly requests replacement. Prefer issuing a new version.
 - Publish versioned files before atomically replacing `updates/latest.json`; the feed must never point at missing files.
+- Never type or manually copy a feed checksum. Generate SHA-256 from the exact final artifact, assert it is exactly 64 lowercase hexadecimal characters, and validate the complete feed locally and again after fetching it from the live server before declaring the release complete.
 
 ## Release workflow
 

@@ -185,6 +185,7 @@ Do not recursively overwrite `/var/www/cubexp.com` as a whole. Copy explicit dir
 - Parse the live JSON and confirm `version`, `pub_date`, all three platform keys, non-empty signatures, and HTTPS URLs.
 - `curl -fI` every download and updater URL; compare `Content-Length` where available.
 - Download or hash the remote files and compare against staged `SHA256SUMS.txt`.
+- For every feed checksum, derive the value from the exact staged/uploaded file with `sha256sum` or `shasum -a 256`; do not transcribe it manually. Assert the value matches `^[a-f0-9]{64}$` before writing JSON, then run the feed's client-side/schema validator against both the local file and the freshly fetched live file. A checksum with 65 or fewer than 64 characters is invalid even if the artifact itself is correct.
 - Confirm the website download links use the same four canonical filenames.
 - Confirm the English language switch renders the same released version.
 - Run `nginx -t` after relevant web-server configuration changes; static release uploads alone should not require an Nginx reload.
