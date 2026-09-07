@@ -67,6 +67,23 @@ Remaining device checks:
   retrying and refuses unsafe close/exit. The engine exception itself remains
   an upstream issue to reproduce with Android paste/IME input.
 
+## Startup validation (2026-09-08)
+
+Headless Chromium 152 with the WebView's file-to-file access preference, an
+emulated Android host object and a 390×844 viewport, loading the built
+`assets/web/index.html` from `file://`:
+
+- Home rendered and `appReady()` fired 150–230 ms after navigation with only
+  the ~1 MB entry chunk fetched; no console, exception or network errors.
+- New → Word loaded the DOCX engine chunks on demand and produced an editable
+  surface in about 600 ms; no errors.
+- Without the file-access preference the entry module is rejected by CORS, so
+  `setAllowFileAccessFromFileURLs(true)` in `MainActivity` is load-bearing.
+- `assembleDebug` with the API 35 SDK produced a 21 MB APK containing 101 chunks.
+
+Not yet verified on a device: the native startup view, real WebView timing,
+and the picker-open prefetch. No emulator or device was available.
+
 ## Local browser preview
 
 ```sh

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<string name="startup_loading">正在载入 %1$s…</string>
 	<string name="save_complete">文档已保存</string>
 	<string name="save_failed">文档保存失败</string>
 	<string name="shortcut_open_document">打开文件</string>

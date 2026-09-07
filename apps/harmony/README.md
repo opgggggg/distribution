@@ -55,6 +55,9 @@ be inspected. Disable it before a production release.
 - All format assets are intentionally inlined so ArkWeb can load them without
   local-origin CORS failures. This produces a large HAP; split loading needs a
   native asset protocol or an equivalent verified ArkWeb-safe transport.
+  This applies to HarmonyOS only: the Android APK builds the same sources with
+  `vite build --mode android`, keeps the code-split chunks, and loads them from
+  `file:///android_asset/` (see `apps/android/README.md`).
 - Automatic saves are app-local recovery snapshots. The explicit Save action
   still opens the system picker and writes a user-visible copy; direct write-back
   to an original picker URI is intentionally deferred.

@@ -27,6 +27,8 @@ const props = defineProps<{
 	immersive: boolean;
 }>();
 const emit = defineEmits<{
+	/** The system picker is opening; the host may start loading format engines. */
+	pick: [];
 	open: [event: Event];
 	select: [id: string];
 	restore: [id: string];
@@ -420,6 +422,7 @@ function dateLabel(item: DocumentItem) {
 		:disabled="opening"
 		tabindex="-1"
 		aria-hidden="true"
+		@click="emit('pick')"
 		@change="emit('open', $event)"
 	/>
 	<dialog

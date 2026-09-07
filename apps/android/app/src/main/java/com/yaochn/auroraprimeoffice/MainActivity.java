@@ -15,6 +15,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.util.Base64;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -24,10 +26,16 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
@@ -55,6 +63,10 @@ public final class MainActivity extends Activity {
   private static final int REQUEST_ASSISTANT_OPEN_DOCUMENT = 4103;
   private static final String ACTION_ASSISTANT_SUFFIX = ".action.ASSISTANT";
   private static final String LOCAL_APP_URL = "file:///android_asset/web/index.html";
+  // The Web shell reports appReady() right after Vue mounts; this only guards
+  // against a payload that never gets that far, so the user is not left behind
+  // an overlay with no way to see the WebView's own error page.
+  private static final long STARTUP_SPLASH_TIMEOUT_MS = 20_000;
   private static final String[] OFFICE_MIME_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -72,6 +84,8 @@ public final class MainActivity extends Activity {
   };
 
   private WebView webView;
+  private View startupSplash;
+  private final Runnable startupSplashTimeout = this::hideStartupSplash;
   private CubeOfficeServices cubeOfficeServices;
   private ValueCallback<Uri[]> pendingFileSelection;
   private AuroraDocumentBridge documentBridge;
@@ -88,7 +102,18 @@ public final class MainActivity extends Activity {
     webView.setBackgroundColor(Color.rgb(245, 247, 246));
     documentBridge = new AuroraDocumentBridge();
     configureWebView(webView);
-    setContentView(webView);
+    FrameLayout root = new FrameLayout(this);
+    root.addView(
+        webView,
+        new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+    startupSplash = createStartupSplash();
+    root.addView(
+        startupSplash,
+        new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+    startupSplash.postDelayed(startupSplashTimeout, STARTUP_SPLASH_TIMEOUT_MS);
+    setContentView(root);
     configureWindowInsets();
     if (Build.VERSION.SDK_INT >= 33) {
       backCallback = this::onBackPressed;
@@ -105,6 +130,74 @@ public final class MainActivity extends Activity {
     setIntent(intent);
     if (documentBridge == null || !documentBridge.receiveIntent(intent)) return;
     notifyWebOfPendingIntent();
+  }
+
+  /**
+   * Native stand-in for the first Web paint. The editor payload is several megabytes of JavaScript
+   * that the WebView has to read from the APK and compile before Vue can mount, and until then the
+   * WebView is an empty surface. Drawing the app mark and a spinner in the very first frame keeps
+   * the launch from reading as a frozen blank screen; the Web shell removes it through appReady()
+   * as soon as the home screen exists.
+   */
+  private View createStartupSplash() {
+    LinearLayout splash = new LinearLayout(this);
+    splash.setOrientation(LinearLayout.VERTICAL);
+    splash.setGravity(Gravity.CENTER);
+    splash.setBackgroundColor(getColor(R.color.aurora_surface));
+    // Swallow touches so taps during startup do not reach a half-built page.
+    splash.setClickable(true);
+    splash.setContentDescription(getString(R.string.startup_loading, getString(R.string.app_name)));
+
+    ImageView mark = new ImageView(this);
+    mark.setImageResource(R.drawable.app_icon);
+    mark.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    int markSize = dp(96);
+    splash.addView(mark, new LinearLayout.LayoutParams(markSize, markSize));
+
+    ProgressBar progress = new ProgressBar(this);
+    progress.setIndeterminate(true);
+    LinearLayout.LayoutParams progressLayout =
+        new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    progressLayout.topMargin = dp(32);
+    splash.addView(progress, progressLayout);
+
+    TextView label = new TextView(this);
+    label.setText(getString(R.string.startup_loading, getString(R.string.app_name)));
+    label.setTextColor(getColor(R.color.aurora_text_secondary));
+    label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+    LinearLayout.LayoutParams labelLayout =
+        new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    labelLayout.topMargin = dp(12);
+    splash.addView(label, labelLayout);
+    return splash;
+  }
+
+  private int dp(int value) {
+    return Math.round(
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics()));
+  }
+
+  private void hideStartupSplash() {
+    View splash = startupSplash;
+    if (splash == null) return;
+    startupSplash = null;
+    splash.removeCallbacks(startupSplashTimeout);
+    splash.setClickable(false);
+    splash
+        .animate()
+        .alpha(0f)
+        .setDuration(150)
+        .withEndAction(
+            () -> {
+              android.view.ViewParent parent = splash.getParent();
+              if (parent instanceof android.view.ViewGroup) {
+                ((android.view.ViewGroup) parent).removeView(splash);
+              }
+            })
+        .start();
   }
 
   private void notifyWebOfPendingIntent() {
@@ -200,6 +293,10 @@ public final class MainActivity extends Activity {
     settings.setDatabaseEnabled(true);
     settings.setAllowFileAccess(true);
     settings.setAllowContentAccess(true);
+    // Required, not optional: the payload is code-split ES modules under
+    // file:///android_asset/web/, and Chromium treats a file:// page as origin
+    // "null", so without this setting the entry module and every lazy chunk are
+    // rejected by CORS and the app never renders. Verified against Chromium 152.
     settings.setAllowFileAccessFromFileURLs(true);
     settings.setMediaPlaybackRequiresUserGesture(false);
     settings.setBuiltInZoomControls(false);
@@ -299,6 +396,7 @@ public final class MainActivity extends Activity {
     }
     if (pendingFileSelection != null) pendingFileSelection.onReceiveValue(null);
     pendingFileSelection = null;
+    if (startupSplash != null) startupSplash.removeCallbacks(startupSplashTimeout);
     if (documentBridge != null) documentBridge.dispose();
     if (webView != null) {
       webView.removeJavascriptInterface("auroraHarmonyHost");
@@ -360,6 +458,21 @@ public final class MainActivity extends Activity {
 
   private final class LocalContentWebViewClient extends WebViewClient {
     @Override
+    public void onPageFinished(WebView view, String url) {
+      super.onPageFinished(view, url);
+      // Module scripts hold back the load event until they have run, so this
+      // fires after the entry chunk executed even if appReady() never arrives.
+      hideStartupSplash();
+    }
+
+    @Override
+    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+      super.onReceivedError(view, request, error);
+      // Let the WebView's own error page through instead of hiding it behind the splash.
+      if (request.isForMainFrame()) hideStartupSplash();
+    }
+
+    @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
       Uri uri = request.getUrl();
       if ("file".equals(uri.getScheme()) && uri.toString().startsWith("file:///android_asset/")) {
@@ -383,6 +496,7 @@ public final class MainActivity extends Activity {
 
     @JavascriptInterface
     public boolean appReady() {
+      runOnUiThread(MainActivity.this::hideStartupSplash);
       return true;
     }
 

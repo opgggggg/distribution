@@ -3,7 +3,8 @@
 Platform distribution shells for AuroraPrime Office:
 
 - `apps/harmony`: HarmonyOS application and the shared mobile Web host.
-- `apps/android`: Android WebView application that packages the shared mobile host.
+- `apps/android`: Android WebView application that packages the shared mobile host
+  as a code-split payload (HarmonyOS uses the single-file inlined payload).
 - `als-office`: pinned upstream editor engine dependency.
 
 The dependency direction is intentionally one-way: this repository consumes

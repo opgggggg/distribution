@@ -1,32 +1,30 @@
 <script setup lang="ts">
-import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, toRaw, watch } from "vue";
+import {
+	computed,
+	defineAsyncComponent,
+	markRaw,
+	nextTick,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	toRaw,
+	watch,
+} from "vue";
 
-import { DOCX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-docx/vue";
 import {
 	UiArtifactFormatRegistry,
 	UiEditorI18nProvider,
 	UiRibbonModeProvider,
 	setUiEditorFileSink,
 	type EditorArtifactFormat,
+	type UiArtifactFormatContribution,
 	type UiArtifactSurfaceBinding,
 	type UiArtifactSurfaceHandle,
 	type UiArtifactSurfaceInput,
 } from "@yaochn/als-office-editor-ui/vue";
-import { MARKDOWN_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-markdown/vue";
-import { PDF_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-pdf/vue";
-import { PPTX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-pptx/vue";
-import { VSDX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-vsdx/vue";
-import {
-	JMP_VUE_FORMAT_CONTRIBUTION,
-	XLSX_VUE_FORMAT_CONTRIBUTION,
-} from "@yaochn/als-office-xlsx/vue";
 
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
 
-import DesktopWelcomePanel from "../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue";
-import CliActivityPanel from "../../../../als-office/apps/desktop/src/CliActivityPanel.vue";
-import AboutDialog from "../../../../als-office/apps/desktop/src/AboutDialog.vue";
-import SettingsDialog from "../../../../als-office/apps/desktop/src/SettingsDialog.vue";
 import type {
 	CliActivityEntry,
 	CliControlStatus,
@@ -57,6 +55,23 @@ import {
 	writeHarmonyAutosave,
 	type HarmonyAutosaveRecord,
 } from "./autosave-store";
+
+// Home paints from the entry chunk alone. The format engines (each several
+// megabytes of JavaScript) and the desktop-derived panels are separate chunks
+// that load the first time a document of that format opens or a panel shows.
+// The HarmonyOS build inlines these dynamic imports again, so it is unaffected.
+const DesktopWelcomePanel = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue"),
+);
+const CliActivityPanel = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/CliActivityPanel.vue"),
+);
+const AboutDialog = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/AboutDialog.vue"),
+);
+const SettingsDialog = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/SettingsDialog.vue"),
+);
 
 interface HarmonyFormatOption {
 	format: EditorArtifactFormat;
@@ -220,15 +235,81 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 	},
 ];
 const OPEN_ACCEPT = ".docx,.pptx,.xlsx,.jmp,.vsdx,.md,.markdown,.pdf,.drawio";
-const formats = new UiArtifactFormatRegistry([
-	DOCX_VUE_FORMAT_CONTRIBUTION,
-	PPTX_VUE_FORMAT_CONTRIBUTION,
-	XLSX_VUE_FORMAT_CONTRIBUTION,
-	JMP_VUE_FORMAT_CONTRIBUTION,
-	VSDX_VUE_FORMAT_CONTRIBUTION,
-	MARKDOWN_VUE_FORMAT_CONTRIBUTION,
-	PDF_VUE_FORMAT_CONTRIBUTION,
-]);
+const formats = new UiArtifactFormatRegistry();
+
+type FormatEngineModule = "docx" | "pptx" | "xlsx" | "vsdx" | "markdown" | "pdf";
+const FORMAT_ENGINE_MODULES: Readonly<
+	Record<FormatEngineModule, () => Promise<readonly UiArtifactFormatContribution[]>>
+> = {
+	docx: async () => [(await import("@yaochn/als-office-docx/vue")).DOCX_VUE_FORMAT_CONTRIBUTION],
+	pptx: async () => [(await import("@yaochn/als-office-pptx/vue")).PPTX_VUE_FORMAT_CONTRIBUTION],
+	xlsx: async () => {
+		const module = await import("@yaochn/als-office-xlsx/vue");
+		return [module.XLSX_VUE_FORMAT_CONTRIBUTION, module.JMP_VUE_FORMAT_CONTRIBUTION];
+	},
+	vsdx: async () => [(await import("@yaochn/als-office-vsdx/vue")).VSDX_VUE_FORMAT_CONTRIBUTION],
+	markdown: async () => [
+		(await import("@yaochn/als-office-markdown/vue")).MARKDOWN_VUE_FORMAT_CONTRIBUTION,
+	],
+	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
+};
+const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, FormatEngineModule>>> =
+	{
+		docx: "docx",
+		pptx: "pptx",
+		xlsx: "xlsx",
+		jmp: "xlsx",
+		vsdx: "vsdx",
+		markdown: "markdown",
+		pdf: "pdf",
+	};
+const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> = {
+	docx: "docx",
+	pptx: "pptx",
+	xlsx: "xlsx",
+	jmp: "xlsx",
+	vsdx: "vsdx",
+	md: "markdown",
+	markdown: "markdown",
+	pdf: "pdf",
+};
+const formatEngineLoads = new Map<FormatEngineModule, Promise<void>>();
+
+function loadFormatEngine(module: FormatEngineModule): Promise<void> {
+	let load = formatEngineLoads.get(module);
+	if (!load) {
+		load = FORMAT_ENGINE_MODULES[module]().then((contributions) => {
+			for (const contribution of contributions) {
+				if (!formats.get(contribution.plugin.manifest.id)) formats.register(contribution);
+			}
+		});
+		// A failed chunk load (for example, storage pressure) must stay retryable.
+		load.catch(() => formatEngineLoads.delete(module));
+		formatEngineLoads.set(module, load);
+	}
+	return load;
+}
+
+function ensureFormat(format: EditorArtifactFormat): Promise<void> {
+	const module = FORMAT_ENGINE_BY_FORMAT[format];
+	if (!module) return Promise.reject(new Error(`不支持 ${format} 格式。`));
+	return loadFormatEngine(module);
+}
+
+async function ensureAllFormats(): Promise<void> {
+	await Promise.all(
+		(Object.keys(FORMAT_ENGINE_MODULES) as FormatEngineModule[]).map(loadFormatEngine),
+	);
+}
+
+/**
+ * Start fetching the engines while the system file picker is open: the pick
+ * takes seconds, so the document usually opens with no extra wait. Failures
+ * surface later on the actual open path, so this only logs.
+ */
+function prefetchFormatEngines(): void {
+	ensureAllFormats().catch((cause) => console.warn("Could not preload format engines", cause));
+}
 const formatOptions = new Map(FORMAT_OPTIONS.map((option) => [option.format, option]));
 const editableFormats = FORMAT_OPTIONS.filter((option) => option.editable);
 const welcomePanelFormats = FORMAT_OPTIONS.map((option) => ({ label: option.shortLabel }));
@@ -601,6 +682,7 @@ async function addDocument(
 ): Promise<void> {
 	const id = `harmony-artifact-${++tabCounter}`;
 	const option = optionFor(format);
+	await ensureFormat(format);
 	// DocumentViewPicker files are backed by a temporary native URI. ArkWeb can
 	// read that handle to open a document, but a later PPTX export may receive an
 	// empty second read. Materialize it once so editing, autosave and Save As all
@@ -962,6 +1044,11 @@ function replaceFileExtension(fileName: string, extension: string): string {
 
 async function addFile(file: File): Promise<void> {
 	const extension = extensionOf(file.name);
+	const engine = FORMAT_ENGINE_BY_EXTENSION[extension];
+	// Converters (for example draw.io → VSDX) register with their engines, so an
+	// unknown extension needs every engine before an import can be resolved.
+	if (engine) await loadFormatEngine(engine);
+	else await ensureAllFormats();
 	const direct = formats.get(extension as EditorArtifactFormat);
 	if (direct) {
 		await addDocument(direct.plugin.manifest.id, file.name, file);
@@ -2521,6 +2608,7 @@ onBeforeUnmount(() => {
 			:editable="activeEditable"
 			:reduce-motion="preferences.reduceMotion"
 			:immersive="mobilePptxViewing"
+			@pick="prefetchFormatEngines"
 			@open="open"
 			@select="selectTab"
 			@restore="restoreAndroidDocument"
@@ -2675,7 +2763,13 @@ onBeforeUnmount(() => {
 						<path d="M2.75 6.25h5l1.5-2h8v11.5H2.75zM2.75 7.75h14.5" />
 					</svg>
 					<span class="harmony-action-label">{{ opening ? "打开中…" : "打开" }}</span>
-					<input type="file" :accept="OPEN_ACCEPT" :disabled="opening" @change="open" />
+					<input
+						type="file"
+						:accept="OPEN_ACCEPT"
+						:disabled="opening"
+						@click="prefetchFormatEngines"
+						@change="open"
+					/>
 				</label>
 				<button
 					type="button"
@@ -2882,6 +2976,7 @@ onBeforeUnmount(() => {
 									type="file"
 									:accept="OPEN_ACCEPT"
 									:disabled="opening"
+									@click="prefetchFormatEngines"
 									@change="open"
 								/>
 							</label>
@@ -3615,6 +3710,7 @@ onBeforeUnmount(() => {
 							type="file"
 							:accept="OPEN_ACCEPT"
 							:disabled="opening"
+							@click="prefetchFormatEngines"
 							@change="open"
 						/>
 					</label>
