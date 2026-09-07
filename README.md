@@ -27,6 +27,11 @@ The build preparation step links the pinned upstream checkout to the root npm
 installation. This keeps a single dependency tree while satisfying upstream
 build tools that resolve assets relative to `als-office/node_modules`.
 
+`als-office/apps/desktop` is a root workspace, so the desktop shell's Tauri
+dependencies install with everything else and `npm run desktop:*` works from a
+fresh clone. Only the desktop app is included: the distribution does not build
+the other upstream apps.
+
 For an existing checkout:
 
 ```sh

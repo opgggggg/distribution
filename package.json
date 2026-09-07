@@ -9,7 +9,8 @@
 	},
 	"workspaces": [
 		"apps/*",
-		"als-office/packages/*"
+		"als-office/packages/*",
+		"als-office/apps/desktop"
 	],
 	"scripts": {
 		"build": "npm run build:web",
@@ -19,8 +20,8 @@
 		"build:web": "npm run build:packages && npm run build:web -w @yaochn/als-office-harmony",
 		"build:android": "npm run build:packages && npm run build -w @yaochn/als-office-android",
 		"build:android:release": "npm run build:packages && npm run build:release -w @yaochn/als-office-android",
-		"desktop:web": "node scripts/run-cubeoffice-desktop.mjs --renderer-only",
-		"desktop:dev": "node scripts/run-cubeoffice-desktop.mjs --command dev",
+		"desktop:web": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --renderer-only",
+		"desktop:dev": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --command dev",
 		"desktop:config": "node scripts/run-cubeoffice-desktop.mjs --print-config",
 		"desktop:build": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs",
 		"desktop:build:linux-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-unknown-linux-gnu --bundles appimage,deb",
