@@ -2,6 +2,6 @@
 export const APP_PROFILE = {
 	"name": "CubeOffice",
 	"packageName": "com.cubexp.office",
-	"versionName": "1.2.1",
+	"versionName": "1.3.0",
 	"urlScheme": "cubeoffice"
 } as const;

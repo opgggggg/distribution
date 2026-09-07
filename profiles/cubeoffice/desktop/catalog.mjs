@@ -174,7 +174,7 @@ const cubeOfficeProfile = {
 	},
 	tauriConfig: {
 		...officeProfile.tauriConfig,
-		version: "1.2.1",
+		version: "1.3.0",
 		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
