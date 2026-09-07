@@ -1,19 +1,19 @@
 {
-	"version": "1.2.1",
-	"notes": "CubeOffice 1.2.1 fixes a possible freeze when opening Markdown files, makes toggle controls more consistent across editors, and corrects installed app and command-line tool names so CubeOffice and the cubeoffice command launch correctly.",
-	"pub_date": "2026-09-06T14:40:36.744Z",
+	"version": "1.3.0",
+	"notes": "CubeOffice 1.3.0 adds a template gallery. Creating a presentation now offers eight CubeOffice original templates, in English and Chinese, and you can still start from a blank slide; dismissing the picker leaves your open document untouched. The same templates are free to download from cubexp.com/templates. On Android, the app opens far faster and no longer shows a long blank screen while it starts. On phones and tablets, menus now open as bottom sheets that are easier to reach one-handed. AI and command-line document actions behave consistently, and prompt colours in the Markdown editor are fixed.",
+	"pub_date": "2026-09-07T18:04:38.097Z",
 	"platforms": {
 		"darwin-aarch64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkM4TXBWTERpOTNWMFNaWUFQOFdIOWtZNVlxUE00bW1oV09STSs0U1BrVm9iMGFIUWJ3WVVqOEZDQkcwNENEWWRTSUh1dXkzd0Q5dVdubExISmM2WFFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzAyNzczCWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6ClcyWjI4ei9kemxnbkp1NlhNMGRRZVpIRkw0cjdXZUpqUjVlOXNJb01ieEQ1WU9hbmZ1UUpNQlVvTy84R1VxLzJzcExIQjJlL29FNlh1VmJ6eUNveUNRPT0K",
-			"url": "https://cubexp.com/updates/1.2.1/CubeOffice-1.2.1-macOS-arm64.app.tar.gz"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSk9EdkVLblFGNUFjTnJ6NXJMWXdIcytXVVZVYlNoN1pLQzhMMStXZjAydDdVc1lGNW9SWSsyaWs2NXpSUW9IVFF3RHlaTEZ0c2xYSks2LzR3d0NISHdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODAwOTg0CWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6CkpZUm50RUlWS3hVR1gyR3JkdmZheXNoaHdGOTZGTllMcVorTmZHc2gvMldQc2toZVlxTk4zd0lxVER2dCtGTW5hSnlnT1RkMDh1VU4wU0R6Y05YdURnPT0K",
+			"url": "https://cubexp.com/updates/1.3.0/CubeOffice-1.3.0-macOS-arm64.app.tar.gz"
 		},
 		"windows-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSk8zSWV0NnZqbXU5QWpCVlQzUjd1TmdYNnJOWU5HQlEwK084RWcvUWUzaS9tRDVlbnU3STlPNGRUd2FOWXdQVmZWYUdieW9QVHNxMTBaSEJ2UmhTc1FRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzA1NjEyCWZpbGU6Q3ViZU9mZmljZV8xLjIuMV94NjQtc2V0dXAuZXhlCjl0OXhZQ05WeEdzWS9WWnh2cThRVzllcE9pWGR3VnA5NE1xaGxuRlZObStUTGlTTnZSNjlEUlh4RHd4R0E2YWpqVGphWWprUHdGVkhrd1lBd0RuMkF3PT0K",
-			"url": "https://cubexp.com/updates/1.2.1/CubeOffice-1.2.1-Windows-x64-setup.exe"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkYvTUJ3STNBVmVyTDFPRlpKRFFsOENValpPM3lLeUpTK0pGdmR4SWdTM1ZrakYvTUxJdnVkRU9qMlNTZlMrRkFNTUZnaFNIb0ZDUW1lRWduYm96QUFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODAwNzAzCWZpbGU6Q3ViZU9mZmljZV8xLjMuMF94NjQtc2V0dXAuZXhlCjJCSS9lZ05lRnA3TUhuc1pBMUh0UGt0WGd5MElFbE9QVFlrd2hBOXJVUEdHK0ozbGxyakwvWWhNblhoSXdZYXBtOFpXNlo5cFIzejFZM2R3Y2tSY0RRPT0K",
+			"url": "https://cubexp.com/updates/1.3.0/CubeOffice-1.3.0-Windows-x64-setup.exe"
 		},
 		"linux-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkNFcHhRTFRSMmhlb3FPTDRQT21JUDN6QktGZ1BzYmVXSnFHNEFBbmhWNXFmWHdKVzJ4ZG54ZFM3TVp6b1NiSUdaRnJoUWNtVXJaMlJrTnJXUE53c0FVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzA0MDM5CWZpbGU6Q3ViZU9mZmljZV8xLjIuMV9hbWQ2NC5BcHBJbWFnZQo2OEJ0eFFVSjVFeU5GSGFWNmdpc3l4cklsdTBSQkE4dDA3T01nb1NYZzNyQ2lqWEd1dEtRK2d2cDNhS0laZ2x6dllGUzNVZzF1cWNDOXBJV1NjZjBDUT09Cg==",
-			"url": "https://cubexp.com/updates/1.2.1/CubeOffice-1.2.1-Linux-x86_64.AppImage"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkZLM0Q1OVcvY3NsWlJibk4wWXEvNTM4L1pyT2h0UHcvNmkvWWJ4eUkweWc0eFNOU2ZTWHFZVlJsUzhwRUNWTGlFdjRZbk1wMDF2TVlIY2NnOGVUZ1FFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODA0MjMzCWZpbGU6Q3ViZU9mZmljZV8xLjMuMF9hbWQ2NC5BcHBJbWFnZQorMzhJSm84SE83SFpCT252ZCs1VXk0UnR0Z0dmckpWZDY1Zlc4VzgrZXBUNDFYOG5QMlluakxOc2xpbFhNVzFCNGtEc1VrNVljQnpQRXFVejlGTS9EQT09Cg==",
+			"url": "https://cubexp.com/updates/1.3.0/CubeOffice-1.3.0-Linux-x86_64.AppImage"
 		}
 	}
 }
