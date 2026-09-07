@@ -1,0 +1,277 @@
+{
+	"version": 1,
+	"updated": "2026-09-07",
+	"locales": [
+		"en",
+		"zh-CN"
+	],
+	"localeLabels": {
+		"en": "English",
+		"zh-CN": "简体中文"
+	},
+	"license": {
+		"id": "CubeOffice-Original-1.0",
+		"note": {
+			"en": "CubeOffice original template. Free to use, edit and redistribute, with or without attribution, for personal and commercial work.",
+			"zh-CN": "CubeOffice 原创模板。可自由使用、修改和再分发，用于个人或商业用途，无需署名。"
+		}
+	},
+	"templates": [
+		{
+			"id": "meridian",
+			"format": "pptx",
+			"name": {
+				"en": "Meridian",
+				"zh-CN": "子午线"
+			},
+			"description": {
+				"en": "An editorial business plan with generous margins and a quiet sand accent.",
+				"zh-CN": "留白充裕的商业计划版式，配沙色点缀，适合正式提案。"
+			},
+			"category": {
+				"en": "Business plan",
+				"zh-CN": "商业计划"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/meridian.svg?v=82f4d1c7ccfa",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/meridian.en.pptx?v=64d47597ce92",
+					"bytes": 48962,
+					"sha256": "64d47597ce92b4cbc607863000653c61ac704df0daa988f9593976ad7a443416"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/meridian.zh-CN.pptx?v=54dcaa0b46f9",
+					"bytes": 50241,
+					"sha256": "54dcaa0b46f9254b3db2a847869850f986deaae1cda68fd0d1991fdeebd66c53"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "kinetic",
+			"format": "pptx",
+			"name": {
+				"en": "Kinetic",
+				"zh-CN": "动势"
+			},
+			"description": {
+				"en": "A launch deck built on hard diagonals, heavy caps and a single electric accent.",
+				"zh-CN": "强对角线与重字重构成的发布会版式，单一荧光色点睛。"
+			},
+			"category": {
+				"en": "Product launch",
+				"zh-CN": "产品发布"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/kinetic.svg?v=3c6a02653e4b",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/kinetic.en.pptx?v=65d23b9d3300",
+					"bytes": 49120,
+					"sha256": "65d23b9d33006263837f2cb4014625aed465c0ee0f388099efd049bd37f21e99"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/kinetic.zh-CN.pptx?v=67fa0341a284",
+					"bytes": 50310,
+					"sha256": "67fa0341a2840504ed0d004d32b88adf9263d650e7fe91173ae43f2167a1effc"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "lattice",
+			"format": "pptx",
+			"name": {
+				"en": "Lattice",
+				"zh-CN": "网格"
+			},
+			"description": {
+				"en": "A numbers-first annual report: dot lattice, ruled tables, terracotta figures.",
+				"zh-CN": "以数字为主的年度报告：点阵底纹、线框表格、赭红数据。"
+			},
+			"category": {
+				"en": "Annual report",
+				"zh-CN": "年度报告"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/lattice.svg?v=7be0f0c304f1",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/lattice.en.pptx?v=5b37282e4286",
+					"bytes": 50051,
+					"sha256": "5b37282e4286681cb5e488bd3c117efae4f2f6a9cd7775f5e65724d6d4aa087e"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/lattice.zh-CN.pptx?v=832870d6f53a",
+					"bytes": 51123,
+					"sha256": "832870d6f53a20b5fa8bdcdadfa3dcb927381dbc3bba34770137329f80bf0718"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "tidewater",
+			"format": "pptx",
+			"name": {
+				"en": "Tidewater",
+				"zh-CN": "潮汐"
+			},
+			"description": {
+				"en": "Soft rounded panels and a deep teal range for sales and strategy reviews.",
+				"zh-CN": "圆角面板配深青色系，用于销售策略与业务复盘。"
+			},
+			"category": {
+				"en": "Sales strategy",
+				"zh-CN": "销售策略"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/tidewater.svg?v=fe059c1cf95b",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/tidewater.en.pptx?v=5c1b7f9f6d60",
+					"bytes": 49044,
+					"sha256": "5c1b7f9f6d605d9df280bd56c394dbadae697e4351db67ac2fcfbf08088c2bab"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/tidewater.zh-CN.pptx?v=7eecab7efc31",
+					"bytes": 50199,
+					"sha256": "7eecab7efc3104d93717c03fe71856c41e31549430ebba969812c8b67645c77c"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "ledger",
+			"format": "pptx",
+			"name": {
+				"en": "Ledger",
+				"zh-CN": "账簿"
+			},
+			"description": {
+				"en": "A functional status report: rules, tables and a four-step tracker.",
+				"zh-CN": "务实的项目状态报告：分隔线、表格与四段式进度条。"
+			},
+			"category": {
+				"en": "Project status",
+				"zh-CN": "项目状态"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/ledger.svg?v=d966a32c679b",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/ledger.en.pptx?v=bf1623b9dca9",
+					"bytes": 48816,
+					"sha256": "bf1623b9dca97f1accf447cac9c532f8e3dfb8fe34a09595d4a552ebb1068b9a"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/ledger.zh-CN.pptx?v=09ab974a65d8",
+					"bytes": 49956,
+					"sha256": "09ab974a65d87f739f58f13dc5a9506fea3fcf093c85fe0928c1ad9f09d35620"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "chalk",
+			"format": "pptx",
+			"name": {
+				"en": "Chalk",
+				"zh-CN": "粉笔"
+			},
+			"description": {
+				"en": "A warm workshop deck: numbered modules, soft circles, roomy line spacing.",
+				"zh-CN": "温暖的培训课件：模块编号、柔和圆形、宽松行距。"
+			},
+			"category": {
+				"en": "Training",
+				"zh-CN": "培训课件"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/chalk.svg?v=9e6257bed6ac",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/chalk.en.pptx?v=9669f9971d37",
+					"bytes": 49076,
+					"sha256": "9669f9971d37c12aa452cb2f889938080f3e3771ac3bcfdbab23d728ad58c338"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/chalk.zh-CN.pptx?v=902335eb9250",
+					"bytes": 50244,
+					"sha256": "902335eb9250d88197fda596fd7c980e5e279182842afb62c342c3b446f48e7f"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "passepartout",
+			"format": "pptx",
+			"name": {
+				"en": "Passepartout",
+				"zh-CN": "卡纸"
+			},
+			"description": {
+				"en": "A gallery portfolio: thin double frames, small captions, image-led pages.",
+				"zh-CN": "画廊式作品集：双细边框、小号图注、以图为主。"
+			},
+			"category": {
+				"en": "Portfolio",
+				"zh-CN": "作品集"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/passepartout.svg?v=b1fbb88add27",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/passepartout.en.pptx?v=b437ddb57caf",
+					"bytes": 48989,
+					"sha256": "b437ddb57caf0d319a08eab7914f4ea7618a71651fca07ecf8a7fbf74d063b4a"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/passepartout.zh-CN.pptx?v=a8d896e436e6",
+					"bytes": 50017,
+					"sha256": "a8d896e436e62af4e5657b839f2035128ad2597881f4ede925ada8d0dda0f564"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		},
+		{
+			"id": "monogram",
+			"format": "pptx",
+			"name": {
+				"en": "Monogram",
+				"zh-CN": "字母印记"
+			},
+			"description": {
+				"en": "Almost nothing: one hairline, one accent, type doing all the work.",
+				"zh-CN": "极简到只剩排版：一道细线、一种强调色。"
+			},
+			"category": {
+				"en": "Minimal",
+				"zh-CN": "极简通用"
+			},
+			"slides": 13,
+			"aspect": "16:9",
+			"preview": "/templates/previews/monogram.svg?v=a58c491576ca",
+			"files": {
+				"en": {
+					"url": "/templates/pptx/monogram.en.pptx?v=5bbe0d47b269",
+					"bytes": 48580,
+					"sha256": "5bbe0d47b26959e3cc04393494a4ac727d3ad4e625e7ff3d6516dc7e4f2bbcf9"
+				},
+				"zh-CN": {
+					"url": "/templates/pptx/monogram.zh-CN.pptx?v=e5bd29dea25f",
+					"bytes": 49636,
+					"sha256": "e5bd29dea25fc2d520e971753ed9c94aa0ede93416be7d5a90496c79f2f25a62"
+				}
+			},
+			"license": "CubeOffice-Original-1.0"
+		}
+	]
+}

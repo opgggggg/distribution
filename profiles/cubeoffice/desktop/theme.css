@@ -304,3 +304,28 @@ button.unsaved-dialog__primary {
 .update-dialog__progress {
 	accent-color: var(--cubeoffice-primary) !important;
 }
+
+/* The template picker, which the CubeOffice profile turns on by naming a
+   catalog endpoint. Scoped styles again, so these are marked important. */
+.template-card:hover {
+	border-color: var(--cubeoffice-border) !important;
+	box-shadow: 0 6px 18px var(--cubeoffice-shadow) !important;
+}
+
+.template-card:focus-visible,
+.template-dialog__close:focus-visible,
+.template-dialog__retry:focus-visible {
+	outline-color: var(--cubeoffice-ring) !important;
+}
+
+.template-card__preview {
+	background: var(--cubeoffice-surface) !important;
+}
+
+.template-card--blank .template-card__preview svg {
+	stroke: var(--cubeoffice-light) !important;
+}
+
+.template-dialog__close:hover {
+	background: var(--cubeoffice-surface) !important;
+}
