@@ -16,6 +16,21 @@ const pageCopy = {
 		text: {
 			...sharedText,
 			"CubeOffice 下载": "Download CubeOffice",
+			"通过 MCP 连接你已在用的 AI 应用": "Connects the AI app you already use, over MCP",
+			"AI 的": "Your AI's ",
+			好帮手: "right hand",
+			"AI 负责思考，CubeOffice 负责动手。":
+				"AI does the thinking. CubeOffice does the doing.",
+			"ChatGPT、Claude 这些 AI 很会写，却碰不到你电脑里的文件。把 CubeOffice 连上去，它们就能读懂你正打开的文档，并直接修改 Word 段落、Excel 单元格、PowerPoint 幻灯片与 Visio 图表。改动落在原生文件里，可继续编辑，也随时可以撤销。":
+				"AI apps like ChatGPT and Claude write well, but they cannot reach the files on your computer. Connect CubeOffice and they can read the document you have open and edit it directly — Word paragraphs, Excel cells, PowerPoint slides, Visio diagrams. Every change lands in the real file, still editable, and always undoable.",
+			已适配: "Works with",
+			"调用 CubeOffice": "Calling CubeOffice",
+			已写入原生文件: "Written to the real file",
+			"AI 想到的改动，由 CubeOffice 直接落进你电脑里的文件。":
+				"CubeOffice puts what the AI works out straight into the file on your computer.",
+			"ChatGPT 通过 MCP 调用 CubeOffice 修改文档的示意":
+				"Illustration of ChatGPT calling CubeOffice over MCP to edit a document",
+			"桌面版 1.3.0 · Android 预览版 1.3.0": "Desktop 1.3.0 · Android preview 1.3.0",
 			"移动预览版 · 1.3.0": "Mobile preview · 1.3.0",
 			"手机与平板 · Android 8.0+": "Phones and tablets · Android 8.0+",
 			"Android 8.0+ · 预览版 1.3.0": "Android 8.0+ · Preview 1.3.0",
@@ -28,29 +43,11 @@ const pageCopy = {
 			产品能力: "Features",
 			支持格式: "Formats",
 			"AI 协作": "AI collaboration",
-			"通用 AI 的": "A document workspace",
-			文档工作台: "for any AI assistant",
-			"连接你常用的 AI 应用，在同一个工作区中处理 Word、PowerPoint、Excel、Visio 与 Markdown。让 AI 理解当前文档，并协助生成、改写、整理与编辑内容。":
-				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
 			下载应用: "Download app",
 			下载桌面版: "Download desktop app",
 			"了解 AI 协作": "See how AI collaboration works",
 			"CubeOffice 1.3.0 · macOS、Windows 与 Linux":
 				"CubeOffice 1.3.0 · macOS, Windows, and Linux",
-			"桌面版 1.3.0 · Android 预览版 1.3.0": "Desktop 1.3.0 · Android preview 1.3.0",
-			"AI 已连接": "AI connected",
-			文件: "File",
-			插入: "Insert",
-			布局: "Layout",
-			审阅: "Review",
-			视图: "View",
-			文档助手: "Document assistant",
-			基于当前文档: "Using this document",
-			"把这页总结改写得更清晰，并突出关键数据。":
-				"Rewrite this summary for clarity and highlight the key figures.",
-			"已完成 · 可撤销": "Done · Undo available",
-			"CubeOffice 通用 AI 文档工作台界面示意":
-				"Illustration of the CubeOffice document workspace connected to an AI app",
 			"一次熟悉，处处顺手": "Familiar everywhere",
 			"一套体验，": "One experience,",
 			从桌面延伸到手机: "from desktop to mobile",
