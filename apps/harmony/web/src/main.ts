@@ -4,6 +4,7 @@ import App from "./App.vue";
 import { APP_PROFILE } from "./app-profile.generated";
 import "./styles.css";
 import "./android/android.css";
+import "./android/panels.css";
 
 document.title = APP_PROFILE.name;
 createApp(App).mount("#app");

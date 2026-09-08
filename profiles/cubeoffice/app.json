@@ -5,5 +5,11 @@
 	"versionCode": 1003001,
 	"versionName": "1.3.0",
 	"icon": "icon.png",
-	"urlScheme": "cubeoffice"
+	"urlScheme": "cubeoffice",
+	"documentTemplates": {
+		"endpoint": "https://cubexp.com/templates/index.json",
+		"formats": [
+			"pptx"
+		]
+	}
 }

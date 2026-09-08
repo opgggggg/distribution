@@ -80,6 +80,20 @@ public final class MainActivity extends Activity {
     "application/pdf",
     "text/markdown",
     "text/plain",
+    "application/msword",
+    "application/vnd.ms-excel",
+    "application/vnd.ms-powerpoint",
+    "text/csv",
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/emf",
+    "image/wmf",
+    "application/emf",
+    "application/wmf",
+    "application/x-emf",
+    "application/x-wmf",
+    "application/x-msmetafile",
     "application/octet-stream"
   };
 
@@ -971,6 +985,15 @@ public final class MainActivity extends Activity {
 
   private static String extensionForMimeType(String mimeType) {
     if (mimeType == null) return ".docx";
+    if ("application/msword".equals(mimeType)) return ".doc";
+    if ("application/vnd.ms-excel".equals(mimeType)) return ".xls";
+    if ("application/vnd.ms-powerpoint".equals(mimeType)) return ".ppt";
+    if ("text/csv".equals(mimeType)) return ".csv";
+    if ("image/png".equals(mimeType)) return ".png";
+    if ("image/jpeg".equals(mimeType)) return ".jpg";
+    if ("image/webp".equals(mimeType)) return ".webp";
+    if (mimeType.contains("emf")) return ".emf";
+    if (mimeType.contains("wmf") || mimeType.contains("msmetafile")) return ".wmf";
     if (mimeType.contains("presentationml")) return ".pptx";
     if (mimeType.contains("spreadsheetml")) return ".xlsx";
     if (mimeType.contains("visio")) return ".vsdx";

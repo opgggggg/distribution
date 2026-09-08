@@ -18,7 +18,8 @@
 		"@yaochn/als-office-pptx": "*",
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
-		"vue": "3.5.32"
+		"vue": "3.5.32",
+		"@yaochn/als-office-image": "*"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^5.2.0",
