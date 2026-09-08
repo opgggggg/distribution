@@ -132,3 +132,37 @@ inert and a release built from a clean checkout will not offer templates. The
 website gallery works regardless. When it merges, move the submodule pointer to
 the merged revision — the release process already requires updating it to the
 latest `origin/master` before a build.
+
+## Signing keys and certificates
+
+The paths below refer to the existing release machine, whose home directory is
+`/Users/pengcheng`. They are local release credentials, not files included in this
+repository. On another machine, restore them securely and configure the build to
+use their new locations. This inventory was recorded on 2026-09-08.
+
+| Platform / purpose                            | Local path or configuration                                                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Android release keystore                      | `/Users/pengcheng/.android/cubeoffice-signing/release.jks`                                                                      |
+| Android keystore alias                        | `cubeoffice`                                                                                                                    |
+| Android password file                         | `/Users/pengcheng/.android/cubeoffice-signing/store-password`                                                                   |
+| macOS, Windows, and Linux updater private key | `/Users/pengcheng/.tauri/auroraprime-office.key`                                                                                |
+| Desktop updater public key                    | `/Users/pengcheng/.tauri/auroraprime-office.key.pub`                                                                            |
+| macOS application signing                     | Ad-hoc signing (`signingIdentity: "-"`); no Developer ID certificate configured and no notarization                             |
+| Windows installer signing                     | No code-signing certificate configured                                                                                          |
+| HarmonyOS application signing                 | No production signing credentials configured in this repository; configure automatic debug signing in DevEco Studio when needed |
+
+CubeOffice inherits the desktop updater key named `auroraprime-office.key`.
+This key signs update artifacts for all three desktop platforms; it is separate
+from Apple Developer ID signing, Windows code signing, and the Android keystore.
+Desktop builds accept its path through `OFFICE_UPDATER_SIGNING_PRIVATE_KEY`
+(or `TAURI_SIGNING_PRIVATE_KEY` for direct Tauri builds).
+
+For Android signing, pass the password file to `apksigner` with
+`--ks-pass file:<password-file>`. The key password matches the store password, so
+omit `--key-pass`. See [Android release instructions](apps/android/README.md).
+
+Securely back up the Android keystore and password file, and the desktop updater
+key pair. Future Android updates need the same signing identity, and desktop
+updates must match the public key trusted by installed clients. Do not commit
+private keys, keystores, passwords, or signing certificates containing private
+keys to this repository. The public key may be included in application configuration.
