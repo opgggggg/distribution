@@ -117,21 +117,16 @@ cubexp.com — see `scripts/templates/README.md` and `website/README.md`.
 The app reads the catalog at runtime, so publishing a new template reaches
 existing installations without an app release.
 
-### Pending upstream merge request
+### App integration
 
-The picker itself is a generic, format-neutral capability and therefore lives
-upstream, not in this distribution:
-[als-office!571](https://gitlab.yaochn.com/infra/als-office/-/merge_requests/571)
-adds `documentTemplates`/`templateCopy` to the desktop profile, the catalog
-reader, and the picker. Nothing in it mentions CubeOffice: a profile that names
-no endpoint loads none of it and creating a document behaves exactly as before.
+The desktop picker and shared catalog reader live upstream:
+[als-office!571](https://gitlab.yaochn.com/infra/als-office/-/merge_requests/571).
+The pinned submodule includes this capability. A desktop profile that names no
+endpoint does not load the catalog and keeps the standard blank-document flow.
 
-Until that merge request lands, the pinned `als-office` submodule still points
-at a revision without the picker, so `documentTemplates` in this profile is
-inert and a release built from a clean checkout will not offer templates. The
-website gallery works regardless. When it merges, move the submodule pointer to
-the merged revision — the release process already requires updating it to the
-latest `origin/master` before a build.
+Android uses the same catalog, preview and checksum helpers in its presentation
+template panel. Both CubeOffice profiles point at the live catalog, and users
+can choose a template or start with a blank presentation.
 
 ## Signing keys and certificates
 

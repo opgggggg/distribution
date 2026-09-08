@@ -1,19 +1,19 @@
 {
-	"version": "1.3.0",
-	"notes": "CubeOffice 1.3.0 adds a template gallery. Creating a presentation now offers eight CubeOffice original templates, in English and Chinese, and you can still start from a blank slide; dismissing the picker leaves your open document untouched. The same templates are free to download from cubexp.com/templates. On Android, the app opens far faster and no longer shows a long blank screen while it starts. On phones and tablets, menus now open as bottom sheets that are easier to reach one-handed. AI and command-line document actions behave consistently, and prompt colours in the Markdown editor are fixed.",
-	"pub_date": "2026-09-07T18:04:38.097Z",
+	"version": "1.3.1",
+	"notes": "- Android 新建演示文稿时可预览和选择模板。\n- Android 底部导航更紧凑，文字格式面板重新设计，各编辑器面板的标题、关闭和操作样式保持一致。\n- 修复底部面板被遮罩挡住、错误提示无法关闭，以及 Markdown 编辑器重复加载的问题。\n- Android 恢复打开旧版 Word、Excel、PowerPoint 文件和图片，并完善从其他应用打开和分享文件。\n- Word 支持在页面中编辑页眉页脚及其中的表格，比较文档时可更清楚地看到修改的文字。\n- 改善 PowerPoint 图片、字体和主题颜色的显示。\n\nEnglish\n\n- Preview and choose a template when creating a presentation on Android.\n- Enjoy a more compact Android navigation bar, redesigned text formatting controls, and consistent editor panels with easy-to-reach close buttons.\n- Fixed blocked panel controls, errors that could not be dismissed, and repeated Markdown editor loading.\n- Restored Android support for opening legacy Word, Excel, and PowerPoint files and images, including files shared from other apps.\n- Edit Word headers, footers, and their tables directly on the page, and see changed words more clearly when comparing documents.\n- Improved PowerPoint image, font, and theme color rendering.\n",
+	"pub_date": "2026-09-08T17:07:15.689Z",
 	"platforms": {
 		"darwin-aarch64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSk9EdkVLblFGNUFjTnJ6NXJMWXdIcytXVVZVYlNoN1pLQzhMMStXZjAydDdVc1lGNW9SWSsyaWs2NXpSUW9IVFF3RHlaTEZ0c2xYSks2LzR3d0NISHdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODAwOTg0CWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6CkpZUm50RUlWS3hVR1gyR3JkdmZheXNoaHdGOTZGTllMcVorTmZHc2gvMldQc2toZVlxTk4zd0lxVER2dCtGTW5hSnlnT1RkMDh1VU4wU0R6Y05YdURnPT0K",
-			"url": "https://cubexp.com/updates/1.3.0/CubeOffice-1.3.0-macOS-arm64.app.tar.gz"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSk9IWU9HSU1QMkZnYTcyMWNvWGVvQ3l1cEN3TlhXYUxNdUFxNFJaQUdvOUV1RW5vN21HSzRxUU1UWm5idmRMWUZhTk0wVVI5QlBESmdtcDdTMDFIN1E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODg2NjU2CWZpbGU6Q3ViZU9mZmljZS5hcHAudGFyLmd6CmUydzhZSjlFN0JsSWlWOGc2R1NMNUpiRlI1NDNCS0dpNzZLUnVmZHFORVRXRVZjSmNJbDdQV1BSaXRQcHhZRGphZ2lzSWRjN3E4bmJJMFgyYWtYaUNRPT0K",
+			"url": "https://cubexp.com/updates/1.3.1/CubeOffice-1.3.1-macOS-arm64.app.tar.gz"
 		},
 		"windows-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkYvTUJ3STNBVmVyTDFPRlpKRFFsOENValpPM3lLeUpTK0pGdmR4SWdTM1ZrakYvTUxJdnVkRU9qMlNTZlMrRkFNTUZnaFNIb0ZDUW1lRWduYm96QUFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODAwNzAzCWZpbGU6Q3ViZU9mZmljZV8xLjMuMF94NjQtc2V0dXAuZXhlCjJCSS9lZ05lRnA3TUhuc1pBMUh0UGt0WGd5MElFbE9QVFlrd2hBOXJVUEdHK0ozbGxyakwvWWhNblhoSXdZYXBtOFpXNlo5cFIzejFZM2R3Y2tSY0RRPT0K",
-			"url": "https://cubexp.com/updates/1.3.0/CubeOffice-1.3.0-Windows-x64-setup.exe"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkpwT0VCQzFTUnpza0NoQmlha3FOTWkzbHlvSmxQcXJjS3N3U0w2TE1BMzhMcCtMNURvbkhYQVV5Unh3K0dCSzlPNUhkRG44NDgxK1BaVnA2UUsyTWdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODg3MTE3CWZpbGU6Q3ViZU9mZmljZV8xLjMuMV94NjQtc2V0dXAuZXhlCnQ3ZXAwbDdLQlV1UTU4Tmtwbkx1OEgyZXFsRE9EY0EvMURpc29oR2hndlpTZU9qVU55U1BPMmhoRHNXL2VaWE52OWNleFJ0cmk0Sm9mVmxQY3ZjWkNRPT0K",
+			"url": "https://cubexp.com/updates/1.3.1/CubeOffice-1.3.1-Windows-x64-setup.exe"
 		},
 		"linux-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkZLM0Q1OVcvY3NsWlJibk4wWXEvNTM4L1pyT2h0UHcvNmkvWWJ4eUkweWc0eFNOU2ZTWHFZVlJsUzhwRUNWTGlFdjRZbk1wMDF2TVlIY2NnOGVUZ1FFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODA0MjMzCWZpbGU6Q3ViZU9mZmljZV8xLjMuMF9hbWQ2NC5BcHBJbWFnZQorMzhJSm84SE83SFpCT252ZCs1VXk0UnR0Z0dmckpWZDY1Zlc4VzgrZXBUNDFYOG5QMlluakxOc2xpbFhNVzFCNGtEc1VrNVljQnpQRXFVejlGTS9EQT09Cg==",
-			"url": "https://cubexp.com/updates/1.3.0/CubeOffice-1.3.0-Linux-x86_64.AppImage"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVGRJeDNZengxSkRVTHhiaE9mWmRNOWE0OVJBQWRiSC9YTzRvZ1Z2RDRYVDVSR09rVHZKbkgzUFpQTTQvbUFmYTBaUWh6TUdsNFo1RUdLbk0xWXVyTm5CUVdNQjJoVFFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4ODg3MDc3CWZpbGU6Q3ViZU9mZmljZV8xLjMuMV9hbWQ2NC5BcHBJbWFnZQpoaURaQXVBeFpxdlRkU09RdGJQYmFTTkpqN3l3NXlBV3VyTkk1bVluN0VsLzRyQWF2WjRua2dBUW92TEhGOXZ0V3ZMKy9zSW11aW1MWEhrdGMvNlBDQT09Cg==",
+			"url": "https://cubexp.com/updates/1.3.1/CubeOffice-1.3.1-Linux-x86_64.AppImage"
 		}
 	}
 }
