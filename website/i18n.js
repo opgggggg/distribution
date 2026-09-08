@@ -21,8 +21,8 @@ const pageCopy = {
 			好帮手: "right hand",
 			"AI 负责思考，CubeOffice 负责动手。":
 				"AI does the thinking. CubeOffice does the doing.",
-			"ChatGPT、Claude 这些 AI 很会写，却碰不到你电脑里的文件。把 CubeOffice 连上去，它们就能读懂你正打开的文档，并直接修改 Word 段落、Excel 单元格、PowerPoint 幻灯片与 Visio 图表。改动落在原生文件里，可继续编辑，也随时可以撤销。":
-				"AI apps like ChatGPT and Claude write well, but they cannot reach the files on your computer. Connect CubeOffice and they can read the document you have open and edit it directly — Word paragraphs, Excel cells, PowerPoint slides, Visio diagrams. Every change lands in the real file, still editable, and always undoable.",
+			"ChatGPT、Claude 这些 AI 很会写，却搞不定 Office 的文件格式——直接让它们生成 .docx、.pptx，排版和样式往往一塌糊涂。把 CubeOffice 连上去，它们就能读懂你正打开的文档，并直接修改 Word 段落、Excel 单元格、PowerPoint 幻灯片与 Visio 图表。改动落在原生文件里，可继续编辑，也随时可以撤销。":
+				"AI apps like ChatGPT and Claude write well, but Office file formats defeat them: ask one for a .docx or .pptx and the layout and styling usually fall apart. Connect CubeOffice and they can read the document you have open and edit it directly — Word paragraphs, Excel cells, PowerPoint slides, Visio diagrams. Every change lands in the real file, still editable, and always undoable.",
 			已适配: "Works with",
 			"调用 CubeOffice": "Calling CubeOffice",
 			已写入原生文件: "Written to the real file",
