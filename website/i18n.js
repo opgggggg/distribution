@@ -16,7 +16,7 @@ const pageCopy = {
 		text: {
 			...sharedText,
 			"CubeOffice 下载": "Download CubeOffice",
-			"通过 MCP 连接你已在用的 AI 应用": "Connects the AI app you already use, over MCP",
+			"连接你已在用的 AI 应用": "Connects the AI app you already use",
 			"AI 的": "Your AI's ",
 			好帮手: "right hand",
 			"AI 负责思考，CubeOffice 负责动手。":
@@ -28,8 +28,8 @@ const pageCopy = {
 			已写入原生文件: "Written to the real file",
 			"AI 想到的改动，由 CubeOffice 直接落进你电脑里的文件。":
 				"CubeOffice puts what the AI works out straight into the file on your computer.",
-			"ChatGPT 通过 MCP 调用 CubeOffice 修改文档的示意":
-				"Illustration of ChatGPT calling CubeOffice over MCP to edit a document",
+			"ChatGPT 调用 CubeOffice 修改文档的示意":
+				"Illustration of ChatGPT calling CubeOffice to edit a document",
 			"桌面版 1.3.0 · Android 预览版 1.3.0": "Desktop 1.3.0 · Android preview 1.3.0",
 			"移动预览版 · 1.3.0": "Mobile preview · 1.3.0",
 			"手机与平板 · Android 8.0+": "Phones and tablets · Android 8.0+",

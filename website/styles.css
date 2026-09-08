@@ -300,12 +300,11 @@ a {
 	font-weight: 560;
 }
 
-.ha-protocol {
-	fill: var(--brand-strong);
-	font-size: 12.5px;
-	font-weight: 760;
-	letter-spacing: 0.06em;
-	text-anchor: middle;
+.ha-link {
+	fill: none;
+	stroke: var(--brand);
+	stroke-width: 2;
+	stroke-linecap: round;
 }
 
 .ha-flow {
@@ -394,10 +393,6 @@ a {
 @media (max-width: 560px) {
 	.ha-name {
 		font-size: 23px;
-	}
-
-	.ha-protocol {
-		font-size: 19px;
 	}
 
 	.ha-note,

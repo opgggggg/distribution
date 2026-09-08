@@ -10,8 +10,8 @@
 		<meta name="theme-color" content="#4f46e5" />
 		<title>CubeOffice｜跨平台文档工作台</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
-		<link rel="stylesheet" href="/styles.css?v=942fc41ecfba" />
-		<script src="/i18n.js?v=ba79ba833929" defer></script>
+		<link rel="stylesheet" href="/styles.css?v=6b71c18ddc22" />
+		<script src="/i18n.js?v=d8cda02e828c" defer></script>
 		<script src="/app.js?v=20260904-1" defer></script>
 	</head>
 	<body data-page="home">
@@ -61,7 +61,7 @@
 			<section class="hero">
 				<div class="container hero-grid">
 					<div class="hero-copy">
-						<p class="eyebrow"><span></span> 通过 MCP 连接你已在用的 AI 应用</p>
+						<p class="eyebrow"><span></span> 连接你已在用的 AI 应用</p>
 						<h1>AI 的<em>好帮手</em></h1>
 						<p class="hero-tagline">AI 负责思考，CubeOffice 负责动手。</p>
 						<p class="hero-lead">
@@ -99,7 +99,7 @@
 							aria-labelledby="hero-art-title"
 						>
 							<title id="hero-art-title">
-								ChatGPT 通过 MCP 调用 CubeOffice 修改文档的示意
+								ChatGPT 调用 CubeOffice 修改文档的示意
 							</title>
 							<defs>
 								<linearGradient id="ha-bg" x1="0" y1="0" x2="1" y2="1">
@@ -234,23 +234,19 @@
 							<circle class="ha-note-icon" cx="72" cy="330" r="5" fill="#4f46e5" />
 							<text class="ha-note" x="86" y="335">调用 CubeOffice</text>
 
-							<!-- middle: the two-way MCP link -->
+							<!-- middle: the two-way link. Left unnamed on purpose -- it is MCP
+								 underneath, but a reader does not need the term. -->
 							<path class="ha-flow" d="M268 204H396" marker-end="url(#ha-tip)" />
 							<path
 								class="ha-flow ha-flow--back"
 								d="M396 258H268"
 								marker-end="url(#ha-tip-soft)"
 							/>
-							<rect
-								x="302"
-								y="216"
-								width="60"
-								height="30"
-								rx="15"
-								fill="#ffffff"
-								stroke="#d5dbf6"
-							/>
-							<text class="ha-protocol" x="332" y="236">MCP</text>
+							<circle cx="332" cy="231" r="21" fill="#ffffff" stroke="#d5dbf6" />
+							<g class="ha-link" transform="translate(321.2 220.2) scale(0.9)">
+								<path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3" />
+								<path d="M8 12h8" />
+							</g>
 
 							<!-- right: CubeOffice, holding the real file -->
 							<g filter="url(#ha-shadow)">
