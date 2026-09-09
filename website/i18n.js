@@ -30,10 +30,10 @@ const pageCopy = {
 				"CubeOffice puts what the AI works out straight into the file on your computer.",
 			"ChatGPT 调用 CubeOffice 修改文档的示意":
 				"Illustration of ChatGPT calling CubeOffice to edit a document",
-			"桌面版 1.3.1 · Android 预览版 1.3.1": "Desktop 1.3.1 · Android preview 1.3.1",
-			"移动预览版 · 1.3.1": "Mobile preview · 1.3.1",
+			"桌面版 1.4.1 · Android 预览版 1.4.1": "Desktop 1.4.1 · Android preview 1.4.1",
+			"移动预览版 · 1.4.1": "Mobile preview · 1.4.1",
 			"手机与平板 · Android 8.0+": "Phones and tablets · Android 8.0+",
-			"Android 8.0+ · 预览版 1.3.1": "Android 8.0+ · Preview 1.3.1",
+			"Android 8.0+ · 预览版 1.4.1": "Android 8.0+ · Preview 1.4.1",
 			"为手机和平板设计的触控界面，本地编辑与草稿保存。":
 				"Touch controls for phones and tablets, with local editing and draft saving.",
 			"下载 APK": "Download APK",
@@ -46,8 +46,8 @@ const pageCopy = {
 			下载应用: "Download app",
 			下载桌面版: "Download desktop app",
 			"了解 AI 协作": "See how AI collaboration works",
-			"CubeOffice 1.3.1 · macOS、Windows 与 Linux":
-				"CubeOffice 1.3.1 · macOS, Windows, and Linux",
+			"CubeOffice 1.4.1 · macOS、Windows 与 Linux":
+				"CubeOffice 1.4.1 · macOS, Windows, and Linux",
 			"一次熟悉，处处顺手": "Familiar everywhere",
 			"一套体验，": "One experience,",
 			从桌面延伸到手机: "from desktop to mobile",
@@ -56,7 +56,7 @@ const pageCopy = {
 				"Work on macOS, Windows, and Linux, then read and edit documents on your Android phone.",
 			"围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux 之间保持一致的工作节奏。":
 				"The same document capabilities and interaction model keep your workflow consistent across macOS, Windows, and Linux.",
-			"桌面版本 · 1.3.1": "Desktop release · 1.3.1",
+			"桌面版本 · 1.4.1": "Desktop release · 1.4.1",
 			"AppImage 与 DEB": "AppImage and DEB",
 			选择你的平台: "Choose your platform",
 			选择你的桌面平台: "Choose your desktop platform",
@@ -135,10 +135,10 @@ const pageCopy = {
 			"不同文档格式的 AI 协作任务示意":
 				"Examples of AI collaboration tasks across document formats",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
-			"CubeOffice 1.3.1 桌面版和 Android 1.3.1 预览版现已开放下载。":
-				"CubeOffice 1.3.1 desktop apps and the Android 1.3.1 preview are available now.",
+			"CubeOffice 1.4.1 桌面版和 Android 1.4.1 预览版现已开放下载。":
+				"CubeOffice 1.4.1 desktop apps and the Android 1.4.1 preview are available now.",
 			"macOS、Windows 与 Linux 桌面版现已开放下载。":
-				"CubeOffice 1.3.1 is available for macOS, Windows, and Linux.",
+				"CubeOffice 1.4.1 is available for macOS, Windows, and Linux.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",
@@ -290,7 +290,7 @@ const pageCopy = {
 				"You may use, edit and redistribute them for personal and commercial work, with or without attribution. The placeholder copy is there to show what belongs in each slot; its figures, names and conclusions are invented, so replace them with your own.",
 			"模板正文使用 Georgia、Arial、Trebuchet MS、Verdana 与 Times New Roman 等 Windows 与 macOS 均已内置的字体，中日韩字符交由系统字体回退处理，因此模板不附带任何字体文件。":
 				"The templates set only faces that ship with both Windows and macOS — Georgia, Arial, Trebuchet MS, Verdana and Times New Roman — and leave CJK characters to the reader's system font, which is why no font file is bundled.",
-			"CubeOffice 1.3.1": "CubeOffice 1.3.1",
+			"CubeOffice 1.4.1": "CubeOffice 1.4.1",
 			新建演示文稿时就能选模板: "Choose a template as you create the presentation",
 			"下载桌面版，从「新建」菜单直接开始。":
 				"Download the desktop app and start from the New menu.",

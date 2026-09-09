@@ -2,8 +2,8 @@
 	"name": "CubeOffice",
 	"packageName": "com.cubexp.office",
 	"vendor": "cubexp",
-	"versionCode": 1004000,
-	"versionName": "1.4.0",
+	"versionCode": 1004001,
+	"versionName": "1.4.1",
 	"icon": "icon.png",
 	"urlScheme": "cubeoffice",
 	"documentTemplates": {
