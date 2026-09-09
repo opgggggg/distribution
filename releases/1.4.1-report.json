@@ -1,0 +1,80 @@
+{
+	"version": "1.4.1",
+	"androidVersionCode": 1004001,
+	"distribution": "98c9219ec1720a7d0592d405e1399ef492be20d6",
+	"upstream": "03592d49ebb8d9f5757762f66b951369338148ff",
+	"notes": "- 修复 Windows 安装后无法正常打开应用的问题。\n- 改善 Word、Excel、PowerPoint 和 Visio 的字体显示，优先使用系统已安装字体，并在缺少字体时选择更合适的替代字体。\n- 改善 Word 的行距、分页和 PDF 导出效果，修复横向文档比较时页面宽度不正确及滚动时页面背景错位的问题。\n- 改善 Android 最近文档预览和演示文稿加载体验，全屏演示时隐藏系统栏，让更多空间用于展示内容。\n\n## English\n\n- Fixed an issue that prevented the Windows app from opening correctly after installation.\n- Improved font rendering in Word, Excel, PowerPoint, and Visio, using installed system fonts when available and more suitable substitutes when fonts are missing.\n- Improved Word line spacing, pagination, and PDF export. Fixed incorrect page widths when comparing landscape documents and misaligned page backgrounds while scrolling.\n- Improved recent-document previews and presentation loading on Android. Fullscreen presentations now hide system bars to provide more room for content.\n",
+	"archiveSha256": "446e46d275874fb983e63ded146d1a6c3c5ec13eb63823b370c0a667567b2f42",
+	"status": "published",
+	"verifiedAt": "2026-09-09T13:54:44.347683+00:00",
+	"artifacts": {
+		"downloads/CubeOffice-1.4.1-macOS-arm64.dmg": {
+			"sha256": "34ae727e30473ca8cc3789508faecb447efd991b8d691ace10327bc10711442f",
+			"size": 16694976,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.1-macOS-arm64.dmg"
+		},
+		"downloads/CubeOffice-1.4.1-Windows-x64-setup.exe": {
+			"sha256": "80b999b3ef62d3e6acae32b868c8b9391ac14f8a9607606be91ac8cb0f258e2a",
+			"size": 14978442,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.1-Windows-x64-setup.exe"
+		},
+		"downloads/CubeOffice-1.4.1-Linux-x86_64.AppImage": {
+			"sha256": "5c9b74bfcf1868d6cde837460d129fc20ed1e544ca99f47f30d28f554c196a27",
+			"size": 112290296,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.1-Linux-x86_64.AppImage"
+		},
+		"downloads/CubeOffice-1.4.1-Linux-x86_64.deb": {
+			"sha256": "e3f8f6e280e1fa7e520c6676869c1ac78cf06c7c86bb20ffce5b64925ae5f06a",
+			"size": 18224694,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.1-Linux-x86_64.deb"
+		},
+		"downloads/CubeOffice-1.4.1-Android-b1004001.apk": {
+			"sha256": "4534037c7127a07a1391b6cdc9452bc81fcd8cafc19e411f5bb77a23b40b8783",
+			"size": 16223403,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.1-Android-b1004001.apk"
+		},
+		"updates/1.4.1/CubeOffice-1.4.1-macOS-arm64.app.tar.gz": {
+			"sha256": "320a8082268c07d9187c5aaa345b94ea00cf272bd21b10fb3732c72b532d5ab5",
+			"size": 16843229,
+			"url": "https://cubexp.com/updates/1.4.1/CubeOffice-1.4.1-macOS-arm64.app.tar.gz"
+		},
+		"updates/1.4.1/CubeOffice-1.4.1-macOS-arm64.app.tar.gz.sig": {
+			"sha256": "1b4a256fba6c3ef0dd91031a83b79134c1013c4ad85b13595b6b8255d8e5e55e",
+			"size": 408,
+			"url": "https://cubexp.com/updates/1.4.1/CubeOffice-1.4.1-macOS-arm64.app.tar.gz.sig"
+		},
+		"updates/1.4.1/CubeOffice-1.4.1-Windows-x64-setup.exe": {
+			"sha256": "80b999b3ef62d3e6acae32b868c8b9391ac14f8a9607606be91ac8cb0f258e2a",
+			"size": 14978442,
+			"url": "https://cubexp.com/updates/1.4.1/CubeOffice-1.4.1-Windows-x64-setup.exe"
+		},
+		"updates/1.4.1/CubeOffice-1.4.1-Windows-x64-setup.exe.sig": {
+			"sha256": "d6cefc79718d216368ce6893c7f4dc09d5c3f58d29e399c3fd61083fd617b68b",
+			"size": 420,
+			"url": "https://cubexp.com/updates/1.4.1/CubeOffice-1.4.1-Windows-x64-setup.exe.sig"
+		},
+		"updates/1.4.1/CubeOffice-1.4.1-Linux-x86_64.AppImage": {
+			"sha256": "5c9b74bfcf1868d6cde837460d129fc20ed1e544ca99f47f30d28f554c196a27",
+			"size": 112290296,
+			"url": "https://cubexp.com/updates/1.4.1/CubeOffice-1.4.1-Linux-x86_64.AppImage"
+		},
+		"updates/1.4.1/CubeOffice-1.4.1-Linux-x86_64.AppImage.sig": {
+			"sha256": "9c98347aca353fa47766138b324fd8ba694c1569d1774a7d72658a31d302c864",
+			"size": 424,
+			"url": "https://cubexp.com/updates/1.4.1/CubeOffice-1.4.1-Linux-x86_64.AppImage.sig"
+		}
+	},
+	"checks": [
+		"Native build identities and smoke checks",
+		"Android certificate continuity",
+		"Three cryptographic updater signatures",
+		"Local and remote SHA-256 checks",
+		"Public HTTPS byte ranges and live feed validation"
+	],
+	"limits": [
+		"macOS ad-hoc signed, not notarized; Windows has no Authenticode certificate.",
+		"Automated service/build/package checks do not replace physical Android and desktop GUI testing.",
+		"Supplemental headless Chrome packaged Android DOCX preview-persistence regression did not pass, including after native builds finished; document rendering succeeded. No connected Android device was available to confirm native behavior.",
+		"Final Windows installer GUI was not retested because the VM was locked; the startup fix had prior diagnostic GUI verification."
+	]
+}
