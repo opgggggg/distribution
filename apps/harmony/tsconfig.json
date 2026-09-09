@@ -1,5 +1,10 @@
 {
 	"compilerOptions": {
+		"paths": {
+			"@yaochn/als-office-editor-ui/document-preview": [
+				"../../als-office/packages/editor-ui/src/document-preview.ts"
+			]
+		},
 		"target": "ES2022",
 		"useDefineForClassFields": true,
 		"module": "ESNext",

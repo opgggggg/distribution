@@ -10,6 +10,26 @@ try {
 	const result = await page.evaluate(async () => {
 		const { captureDocumentPreview } = await import("/src/document-preview.ts");
 		const store = await import("/src/autosave-store.ts");
+		// API readiness may arrive before the page. Never cache the empty stage.
+		document.body.innerHTML =
+			'<section id="late" style="width:800px;height:450px"><div data-workspace-region="stage"></div></section>';
+		const pending = captureDocumentPreview(document.querySelector("#late"));
+		setTimeout(() => {
+			document.querySelector("#late").innerHTML =
+				'<div id="viewer"><div class="als-ofs-pptx-slide" style="width:800px;height:450px;background:red">Ready</div></div>';
+		}, 450);
+		const delayed = new Image();
+		delayed.src = await pending;
+		await delayed.decode();
+		if (delayed.width !== 480 || delayed.height !== 270)
+			throw new Error("Captured loading shell instead of delayed slide");
+		document.body.innerHTML =
+			'<section id="continuous"><div class="als-ofs-docx-word-page" data-word-page-id="word-web-page" style="width:800px;height:16000px;background:red">First screen</div></section>';
+		const continuous = new Image();
+		continuous.src = await captureDocumentPreview(document.querySelector("#continuous"));
+		await continuous.decode();
+		if (continuous.width !== 480 || continuous.height !== 672)
+			throw new Error("Shrank entire Word web layout instead of first screen");
 		document.body.innerHTML =
 			'<section id="surface"><div id="viewer"><div class="als-ofs-pptx-slide" style="width:800px;height:450px;background:rgb(255,0,0)">First slide</div><div class="als-ofs-pptx-slide" style="width:800px;height:450px;background:blue">Second slide</div></div></section>';
 		const preview = await captureDocumentPreview(document.querySelector("#surface"));
@@ -60,7 +80,7 @@ try {
 		await store.deleteHarmonyAutosave(record.id);
 		return answer;
 	});
-	assert.equal(result.width, 240);
+	assert.equal(result.width, 480);
 	assert.ok(result.pixel[0] > 240 && result.pixel[2] < 20, "capture must use first slide");
 	assert.equal(result.unchanged, true, "preview must survive without the editor DOM");
 	assert.ok(

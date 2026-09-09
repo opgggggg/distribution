@@ -16,7 +16,6 @@
 		"@yaochn/als-office-pptx": "*",
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
-		"html-to-image": "^1.11.13",
 		"vue": "3.5.32"
 	},
 	"devDependencies": {

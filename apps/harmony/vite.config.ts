@@ -9,6 +9,11 @@ export default defineConfig({
 	base: "./",
 	plugins: [vue()],
 	resolve: {
+		alias: {
+			"@yaochn/als-office-editor-ui/document-preview": fromHere(
+				"../../als-office/packages/editor-ui/src/document-preview.ts",
+			),
+		},
 		dedupe: ["vue"],
 	},
 	build: {

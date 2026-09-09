@@ -4,6 +4,7 @@ import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, toRaw, wa
 import { DOCX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-docx/vue";
 import {
 	UiArtifactFormatRegistry,
+	useUiDialogs,
 	UiEditorI18nProvider,
 	UiRibbonModeProvider,
 	setUiEditorFileSink,
@@ -74,6 +75,7 @@ interface HarmonyFormatOption {
 interface HarmonyDocumentTab {
 	preview?: string;
 	previewPending?: boolean;
+	previewCaptured?: boolean;
 	loaded?: boolean;
 	id: string;
 	autosaveId: string;
@@ -1039,20 +1041,24 @@ async function open(event: Event): Promise<void> {
 function selectTab(id: string): void {
 	if (id === HOME_TAB_ID || tabs.value.some((tab) => tab.id === id)) activeId.value = id;
 	const tab = tabs.value.find((item) => item.id === id);
-	if (tab?.editor && !tab.preview) void nextTick(() => prepareDocumentPreview(tab));
+	if (tab?.editor && !tab.previewCaptured) void nextTick(() => prepareDocumentPreview(tab));
 }
 
-function closeTab(id: string): void {
-	const index = tabs.value.findIndex((tab) => tab.id === id);
+const dialogs = useUiDialogs(() => ({ locale: "zh-CN" }));
+
+async function closeTab(id: string): Promise<void> {
+	let index = tabs.value.findIndex((tab) => tab.id === id);
 	if (index < 0) return;
 	const tab = tabs.value[index];
 	if (
 		tab?.editor?.getState().dirty &&
 		!autosaveIsCurrent(tab) &&
-		!window.confirm(`关闭“${tab.fileName}”并放弃未保存的更改？`)
+		!(await dialogs.confirm(`关闭“${tab.fileName}”并放弃未保存的更改？`, { destructive: true }))
 	) {
 		return;
 	}
+	index = tabs.value.findIndex((item) => item === tab);
+	if (index < 0) return;
 	clearAutosaveTimer(id);
 	autosaveUnsubscribers.get(id)?.();
 	autosaveUnsubscribers.delete(id);
@@ -1065,7 +1071,7 @@ function closeTab(id: string): void {
 }
 
 async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
-	if (!androidLayout || !tab.editor || tab.previewPending || (tab.loaded && tab.preview)) return;
+	if (!androidLayout || !tab.editor || tab.previewPending || tab.previewCaptured) return;
 	tab.previewPending = true;
 	try {
 		await tab.editor?.ready();
@@ -1089,8 +1095,13 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 		const surface = document.querySelector<HTMLElement>(
 			`.harmony-documents__surface[data-document-id="${tab.id}"]`,
 		);
-		if (!tab.preview && tab.source && surface)
-			tab.preview = await captureDocumentPreview(surface);
+		if (tab.source && surface) {
+			const preview = await captureDocumentPreview(surface);
+			if (preview) {
+				tab.preview = preview;
+				tab.previewCaptured = true;
+			}
+		}
 		const record = autosaveHistory.value.find((item) => item.id === tab.autosaveId);
 		if (record && tab.preview) {
 			await updateHarmonyPreview(record.id, tab.preview);

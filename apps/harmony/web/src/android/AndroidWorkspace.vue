@@ -279,15 +279,17 @@ function previewLabel(item: DocumentItem): string {
 								v-if="item.preview"
 								:src="item.preview"
 								alt=""
-								width="56"
-								height="48"
+								width="112"
+								height="128"
 								loading="lazy"
 							/>
 							<Icon v-else name="file" />
-							<strong>{{ previewLabel(item) }}</strong>
 						</span>
 						<span class="android-file-copy"
 							><strong>{{ item.fileName }}</strong
+							><small class="android-file-format" :data-format="item.format">{{
+								previewLabel(item)
+							}}</small
 							><small>{{ dateLabel(item) }}</small></span
 						><Icon name="chevron" />
 					</button>
