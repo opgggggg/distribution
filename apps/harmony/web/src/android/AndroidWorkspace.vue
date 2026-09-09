@@ -161,6 +161,9 @@ function dateLabel(item: DocumentItem) {
 		new Intl.DateTimeFormat("zh-CN", { month: "short", day: "numeric" }).format(item.savedAt)
 	);
 }
+function previewLabel(item: DocumentItem): string {
+	return item.format === "markdown" ? "MD" : item.format.toUpperCase();
+}
 </script>
 
 <template>
@@ -264,11 +267,14 @@ function dateLabel(item: DocumentItem) {
 						:disabled="opening"
 						@click="select(item)"
 					>
-						<span class="android-file-type" :data-format="item.format"
-							><Icon name="file" /><small>{{
-								item.format === "markdown" ? "MD" : item.format.toUpperCase()
-							}}</small></span
+						<span
+							class="android-file-preview"
+							:data-format="item.format"
+							aria-hidden="true"
 						>
+							<span class="android-file-preview-page"> <i></i><i></i><i></i> </span>
+							<strong>{{ previewLabel(item) }}</strong>
+						</span>
 						<span class="android-file-copy"
 							><strong>{{ item.fileName }}</strong
 							><small>{{ dateLabel(item) }}</small></span

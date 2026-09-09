@@ -264,6 +264,51 @@
 	width: 18px;
 	color: var(--android-secondary);
 }
+.android-file-preview {
+	display: grid;
+	place-items: center;
+	position: relative;
+	width: 56px;
+	height: 48px;
+	flex: 0 0 56px;
+	padding: 4px;
+	box-sizing: border-box;
+	border: 1px solid var(--android-outline);
+	border-radius: 8px;
+	color: var(--format-color);
+	background: var(--android-container);
+	box-shadow: 0 2px 5px rgb(20 50 35 / 8%);
+}
+.android-file-preview-page {
+	position: absolute;
+	inset: 5px 8px 15px;
+	display: grid;
+	align-content: center;
+	gap: 3px;
+	padding: 4px;
+	border-radius: 3px;
+	background: var(--android-surface);
+}
+.android-file-preview-page i {
+	display: block;
+	height: 2px;
+	border-radius: 2px;
+	background: currentcolor;
+	opacity: 0.42;
+}
+.android-file-preview-page i:nth-child(2) {
+	width: 72%;
+}
+.android-file-preview-page i:nth-child(3) {
+	width: 88%;
+}
+.android-file-preview > strong {
+	position: relative;
+	align-self: end;
+	font-size: 9px;
+	line-height: 1;
+	letter-spacing: 0.03em;
+}
 .android-file-type {
 	display: grid;
 	place-items: center;
@@ -668,10 +713,18 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	background: transparent;
 }
 .android-app .als-ofs-xlsx-formula-bar {
+	height: 56px;
 	min-height: 56px;
+	box-sizing: border-box;
+	align-items: center;
+}
+.android-app .als-ofs-xlsx-name-box-wrap,
+.android-app .als-ofs-xlsx-formula-input-wrap {
+	height: 48px;
 }
 .android-app .als-ofs-xlsx-name-box,
 .android-app .als-ofs-xlsx-formula-input {
+	height: 48px;
 	min-height: 48px;
 	font-size: 16px;
 }

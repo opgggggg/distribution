@@ -2095,7 +2095,7 @@ html[data-reduce-motion="true"] *::after {
 }
 .harmony-app.is-mobile-layout
 	.harmony-documents__surface[data-format="pptx"][data-mobile-mode="reading"]
-	#dropzone[data-editor-view="all"]
+	#dropzone:is([data-editor-view="all"], [data-editor-view="single"])
 	.als-ofs-pptx-slide-frame[data-editor-active-slide="true"] {
 	outline: 0;
 }
