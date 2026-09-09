@@ -137,6 +137,24 @@ const base = process.env.ANDROID_PREVIEW_URL || "http://127.0.0.1:5173/?platform
 			.filter({ hasText: "课堂笔记.pptx" })
 			.waitFor();
 		await p.locator(".als-ofs-pptx-editor-component").waitFor();
+		await p.waitForFunction(() => {
+			const editor = document.querySelector(".als-ofs-pptx-editor-component");
+			return editor?.dataset.renderState === "ready";
+		});
+		assert.equal(await p.locator("#dropzone").getAttribute("data-editor-view"), "all");
+		const slideFrames = p.locator("#viewer .als-ofs-pptx-slide-frame");
+		assert.equal(await slideFrames.count(), 13, "the entire template is rendered");
+		assert.equal(
+			await slideFrames.evaluateAll((frames) =>
+				frames.filter((frame) => getComputedStyle(frame).display !== "none").length,
+			),
+			13,
+			"opening a mobile deck shows every slide",
+		);
+		assert.match(
+			await p.locator(".als-ofs-pptx-mobile-zoom-controls__output").textContent(),
+			/^\d+%$/,
+		);
 		console.log("Navigation and template failure/retry/import passed");
 		await p.close();
 

@@ -711,8 +711,8 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 			...binding,
 			props: {
 				...binding.props,
-				// Start with one readable slide; the overview remains an explicit action.
-				slideViewMode: "single",
+				// Open in overview; playback and slide selection enter single-slide mode.
+				slideViewMode: "all",
 			},
 		};
 	}
@@ -1621,7 +1621,12 @@ async function showMobilePptxOverview(
 		await tab.editor?.ready();
 		await nextTick();
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-		if (tab.id === activeId.value && tab.mobileMode === "reading") setMobilePptxView("single");
+		if (
+			tab.id === activeId.value &&
+			tab.mobileMode === "reading" &&
+			!mobilePptxViewing.value
+		)
+			setMobilePptxView("all");
 	} catch {
 		// Loading and import errors are already surfaced by the presentation editor.
 	}
@@ -1693,10 +1698,12 @@ function syncMobilePptxZoomLabel(): void {
 		const color = getComputedStyle(slide).backgroundColor;
 		mobilePptxBackground.value = color === "rgba(0, 0, 0, 0)" ? "#ffffff" : color;
 	}
-	mobilePptxZoomLabel.value =
+	const zoom = Number.parseFloat(
 		mobilePptxZoomControls()
 			?.querySelector<HTMLElement>(".als-ofs-pptx-mobile-zoom-controls__output")
-			?.textContent?.trim() || "100%";
+			?.textContent?.trim() || "100",
+	);
+	mobilePptxZoomLabel.value = `${Number.isFinite(zoom) ? Math.trunc(zoom) : 100}%`;
 }
 
 function bindMobilePptxZoomObserver(): void {
