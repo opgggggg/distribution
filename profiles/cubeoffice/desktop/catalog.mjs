@@ -39,6 +39,7 @@ const cubeOfficeProfile = {
 	description:
 		"A cross-platform document workspace for opening, editing, and reading Office files with your preferred AI app working alongside you.",
 	welcomePanelModule: fromHere("./CubeOfficeWelcomePanel.vue"),
+	settingsExtensionModule: fromHere("./CubeOfficeSettings.vue"),
 	settingsCopy: {
 		en: {
 			...officeProfile.settingsCopy.en,

@@ -128,6 +128,34 @@ Android uses the same catalog, preview and checksum helpers in its presentation
 template panel. Both CubeOffice profiles point at the live catalog, and users
 can choose a template or start with a blank presentation.
 
+## Private release workspace
+
+All CubeOffice-specific secrets and non-repository release material live under
+`/Users/pengcheng/cubexp.com/` (`~/cubexp.com/`). Keep this directory outside Git,
+with directory permissions `0700` and secret-file permissions `0600`. Never put
+secret values in documentation, command logs, screenshots, or release artifacts.
+
+| Purpose                                            | Path relative to `~/cubexp.com/`                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| HarmonyOS signing key (alias `cubeoffice-release`) | `harmony/cubeoffice-release.p12`                                   |
+| HarmonyOS certificate / CSR                        | `harmony/cubeoffice-release.cer`, `harmony/cubeoffice-release.csr` |
+| HarmonyOS production Profile                       | `harmony/cubeoffice-release-profile.p7b`                           |
+| HarmonyOS keystore password                        | `harmony/store-password`                                           |
+| Server SSH key (`root@43.159.230.137`)             | `ssh/cubexp.pem`                                                   |
+| Existing cubexp.com admin password                 | `admin/password`                                                   |
+| Private build outputs and signing reports          | `releases/<version>/`, `logs/`                                     |
+
+These credentials were consolidated on 2026-09-09. The old Harmony signing
+directory and `~/cubexp.pem` are no longer the canonical locations. The signing
+password remains in the OS keychain as an existing recovery copy. The website
+serves no files from this local folder. The live server retains its runtime
+password hash in `/etc/cubeoffice-api.env`; this move does not reset the password.
+
+Use this root for all future private CubeOffice configuration and local artifacts.
+Commit only source, public metadata and sanitized verification summaries. Existing
+shared Android/desktop keys below are not moved implicitly: other release
+workflows may still use them.
+
 ## Signing keys and certificates
 
 The paths below refer to the existing release machine, whose home directory is
@@ -135,16 +163,16 @@ The paths below refer to the existing release machine, whose home directory is
 repository. On another machine, restore them securely and configure the build to
 use their new locations. This inventory was recorded on 2026-09-08.
 
-| Platform / purpose                            | Local path or configuration                                                                                                     |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Android release keystore                      | `/Users/pengcheng/.android/cubeoffice-signing/release.jks`                                                                      |
-| Android keystore alias                        | `cubeoffice`                                                                                                                    |
-| Android password file                         | `/Users/pengcheng/.android/cubeoffice-signing/store-password`                                                                   |
-| macOS, Windows, and Linux updater private key | `/Users/pengcheng/.tauri/auroraprime-office.key`                                                                                |
-| Desktop updater public key                    | `/Users/pengcheng/.tauri/auroraprime-office.key.pub`                                                                            |
-| macOS application signing                     | Ad-hoc signing (`signingIdentity: "-"`); no Developer ID certificate configured and no notarization                             |
-| Windows installer signing                     | No code-signing certificate configured                                                                                          |
-| HarmonyOS application signing                 | No production signing credentials configured in this repository; configure automatic debug signing in DevEco Studio when needed |
+| Platform / purpose                            | Local path or configuration                                                                         |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Android release keystore                      | `/Users/pengcheng/.android/cubeoffice-signing/release.jks`                                          |
+| Android keystore alias                        | `cubeoffice`                                                                                        |
+| Android password file                         | `/Users/pengcheng/.android/cubeoffice-signing/store-password`                                       |
+| macOS, Windows, and Linux updater private key | `/Users/pengcheng/.tauri/auroraprime-office.key`                                                    |
+| Desktop updater public key                    | `/Users/pengcheng/.tauri/auroraprime-office.key.pub`                                                |
+| macOS application signing                     | Ad-hoc signing (`signingIdentity: "-"`); no Developer ID certificate configured and no notarization |
+| Windows installer signing                     | No code-signing certificate configured                                                              |
+| HarmonyOS application signing                 | `/Users/pengcheng/cubexp.com/harmony/` (see private workspace above)                                |
 
 CubeOffice inherits the desktop updater key named `auroraprime-office.key`.
 This key signs update artifacts for all three desktop platforms; it is separate

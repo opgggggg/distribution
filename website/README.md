@@ -1,5 +1,9 @@
 # CubeOffice website deployment overlay
 
+Private deployment credentials live at `~/cubexp.com/`: SSH key
+`ssh/cubexp.pem` for `root@43.159.230.137`, and administrator password
+`admin/password`. Never copy this private directory into the website document root.
+
 These files extend the existing cubexp.com site with Android downloads, privacy disclosures, and admin controls.
 They depend on the existing production app.js, assets, and other pages; this is
 not a complete standalone site. Deploy the changed public HTML/CSS/JavaScript, admin assets, and Android update feed.

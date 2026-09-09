@@ -26,6 +26,8 @@ import {
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
 import AndroidIcon from "./android/AndroidIcon.vue";
 import ErrorNotice from "./ErrorNotice.vue";
+const ClientServicesDialog = defineAsyncComponent(() => import("./services/ClientServicesDialog.vue"));
+const clientServicesOpen = ref(false);
 import type { AndroidTextFormat } from "./android/text-format";
 const AndroidTextFormatPanel = defineAsyncComponent(
 	() => import("./android/AndroidTextFormatPanel.vue"),
@@ -75,7 +77,7 @@ import {
 // Home paints from the entry chunk alone. The format engines (each several
 // megabytes of JavaScript) and the desktop-derived panels are separate chunks
 // that load the first time a document of that format opens or a panel shows.
-// The HarmonyOS build inlines these dynamic imports again, so it is unaffected.
+// Android and HarmonyOS retain the same code-split payload.
 const DesktopWelcomePanel = defineAsyncComponent(
 	() => import("../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue"),
 );
@@ -335,14 +337,6 @@ async function ensureAllFormats(): Promise<void> {
 	);
 }
 
-/**
- * Start fetching the engines while the system file picker is open: the pick
- * takes seconds, so the document usually opens with no extra wait. Failures
- * surface later on the actual open path, so this only logs.
- */
-function prefetchFormatEngines(): void {
-	ensureAllFormats().catch((cause) => console.warn("Could not preload format engines", cause));
-}
 const formatOptions = new Map(FORMAT_OPTIONS.map((option) => [option.format, option]));
 const editableFormats = FORMAT_OPTIONS.filter((option) => option.editable);
 const welcomePanelFormats = FORMAT_OPTIONS.map((option) => ({ label: option.shortLabel }));
@@ -2622,6 +2616,13 @@ function handleAndroidEscape(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+	// Let the workspace paint before optional network work; failure stays silent
+	// here, while the explicit check in settings reports actionable errors.
+	window.setTimeout(() => {
+		void import("./services/client-services").then(async ({ checkAutomaticStoreUpdate }) => {
+			if (await checkAutomaticStoreUpdate()) clientServicesOpen.value = true;
+		}).catch(() => {});
+	}, 1500);
 	document.addEventListener("keydown", handleAndroidEscape);
 	document.addEventListener("pointerdown", closeMenus);
 	document.addEventListener("focusin", handleMobileFocusIn);
@@ -2722,7 +2723,6 @@ onBeforeUnmount(() => {
 			:editable="activeEditable"
 			:reduce-motion="preferences.reduceMotion"
 			:immersive="mobilePptxViewing"
-			@pick="prefetchFormatEngines"
 			@open="open"
 			@select="selectTab"
 			@restore="restoreAndroidDocument"
@@ -2789,6 +2789,7 @@ onBeforeUnmount(() => {
 						<span>系统设置…</span>
 						<kbd class="harmony-app-menu__shortcut">Ctrl+,</kbd>
 					</button>
+					<button type="button" role="menuitem" @click="closeAppMenu(); clientServicesOpen = true">反馈与更新…</button>
 				</span>
 			</span>
 			<strong class="harmony-chrome__brand">{{ APP_PROFILE.name }}</strong>
@@ -2881,7 +2882,6 @@ onBeforeUnmount(() => {
 						type="file"
 						:accept="OPEN_ACCEPT"
 						:disabled="opening"
-						@click="prefetchFormatEngines"
 						@change="open"
 					/>
 				</label>
@@ -3094,7 +3094,6 @@ onBeforeUnmount(() => {
 									type="file"
 									:accept="OPEN_ACCEPT"
 									:disabled="opening"
-									@click="prefetchFormatEngines"
 									@change="open"
 								/>
 							</label>
@@ -3852,7 +3851,6 @@ onBeforeUnmount(() => {
 							type="file"
 							:accept="OPEN_ACCEPT"
 							:disabled="opening"
-							@click="prefetchFormatEngines"
 							@change="open"
 						/>
 					</label>
@@ -3934,5 +3932,6 @@ onBeforeUnmount(() => {
 			:auto-update-enabled="false"
 			@close="settingsDialogOpen = false"
 		/>
+		<ClientServicesDialog v-if="clientServicesOpen" @close="clientServicesOpen = false" />
 	</main>
 </template>
