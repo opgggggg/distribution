@@ -255,3 +255,14 @@ Do not recursively overwrite `/var/www/cubexp.com` as a whole. Copy explicit dir
 - Confirm the English language switch renders the same released version.
 - Run `nginx -t` after relevant web-server configuration changes; static release uploads alone should not require an Nginx reload.
 - Keep previous version directories intact so reverting `latest.json` remains possible.
+
+## Bash orchestration
+
+For a combined desktop and Android release, use the repository entry point
+`bash scripts/release-cubeoffice.sh`. Its `prepare`, `build`, `stage`, `publish`,
+and `verify` phases automate the desktop invariants above and the Android
+signing/feed requirements in `apps/android/README.md`. See
+`scripts/release/README.md` and start with `--dry-run`. The driver requires a
+reviewed notes file, keeps build commits local, and never replaces an existing
+public version. Native browser and physical-device regression testing remains a
+separate responsibility; the script's report records its actual check scope.

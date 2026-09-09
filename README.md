@@ -189,3 +189,12 @@ key pair. Future Android updates need the same signing identity, and desktop
 updates must match the public key trusted by installed clients. Do not commit
 private keys, keystores, passwords, or signing certificates containing private
 keys to this repository. The public key may be included in application configuration.
+
+## Four-platform release automation
+
+Use `bash scripts/release-cubeoffice.sh` to prepare, build, sign, stage, publish,
+and verify macOS, Windows, Linux, and Android releases. It creates an isolated
+release worktree, preserves current changes, and supports resuming validated
+outputs after a failure. Start with `--help` or `--dry-run`; see
+[scripts/release/README.md](scripts/release/README.md) for commands, configuration,
+build-host prerequisites, and publication safeguards.
