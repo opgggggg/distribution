@@ -2100,13 +2100,14 @@ html[data-reduce-motion="true"] *::after {
 	outline: 0;
 }
 .harmony-app.is-mobile-layout.is-pptx-viewing {
+	--als-ofs-pptx-edge-to-edge: 1;
 	position: fixed;
 	z-index: 1000;
 	inset: 0;
 	width: 100dvw;
 	height: 100dvh;
 	grid-template-rows: minmax(0, 1fr);
-	background: #111514;
+	background: var(--harmony-pptx-background, #fff);
 }
 .harmony-documents__surface[data-format="pptx"][data-mobile-mode="reading"]
 	#viewer
@@ -2127,6 +2128,11 @@ html[data-reduce-motion="true"] *::after {
 .harmony-app.is-mobile-layout.is-pptx-viewing .als-ofs-pptx-mobile-zoom-controls {
 	display: none !important;
 }
+/* Playback is audience-facing; retain comments in the document for review. */
+.harmony-app.is-mobile-layout.is-pptx-viewing
+	:is(.als-ofs-pptx-comment, .als-ofs-pptx-editor-comment-marker-host, .comments-panel) {
+	display: none !important;
+}
 .harmony-app.is-mobile-layout.is-pptx-viewing
 	.als-ofs-pptx-slide-frame.harmony-pptx-slide-enter-from-right {
 	animation: harmony-pptx-slide-enter-from-right 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -2138,13 +2144,13 @@ html[data-reduce-motion="true"] *::after {
 .harmony-app.is-mobile-layout.is-pptx-viewing > .harmony-body {
 	grid-row: 1;
 	height: 100dvh;
-	background: #111514;
+	background: var(--harmony-pptx-background, #fff);
 }
 .harmony-app.is-mobile-layout.is-pptx-viewing
 	:is(.harmony-workspace, .harmony-documents, .harmony-documents__surface[data-format="pptx"]) {
 	width: 100%;
 	height: 100%;
-	background: #111514;
+	background: var(--harmony-pptx-background, #fff);
 }
 .harmony-app.is-mobile-layout.is-pptx-viewing .harmony-documents__surface[data-format="pptx"] {
 	touch-action: none;
@@ -2201,7 +2207,16 @@ html[data-reduce-motion="true"] *::after {
 	place-items: center;
 	padding: 0;
 	box-sizing: border-box;
-	background: #111514 !important;
+	background: var(--harmony-pptx-background, #fff) !important;
+}
+.harmony-app.is-mobile-layout.is-pptx-viewing .editor-stage {
+	background: var(--harmony-pptx-background, #fff) !important;
+}
+.harmony-app.is-mobile-layout.is-pptx-viewing
+	#viewer
+	:is(.als-ofs-pptx-slide, .als-ofs-pptx-slide-frame, .als-ofs-pptx-wrapper) {
+	box-shadow: none !important;
+	border-radius: 0 !important;
 }
 .harmony-app.is-mobile-layout.is-pptx-viewing
 	.harmony-documents__surface[data-format="pptx"]

@@ -29,7 +29,9 @@ import { captureDocumentPreview } from "./document-preview";
 import { updateHarmonyPreview, ensureHarmonyRecent } from "./autosave-store";
 import AndroidIcon from "./android/AndroidIcon.vue";
 import ErrorNotice from "./ErrorNotice.vue";
-const ClientServicesDialog = defineAsyncComponent(() => import("./services/ClientServicesDialog.vue"));
+const ClientServicesDialog = defineAsyncComponent(
+	() => import("./services/ClientServicesDialog.vue"),
+);
 const clientServicesOpen = ref(false);
 import type { AndroidTextFormat } from "./android/text-format";
 const AndroidTextFormatPanel = defineAsyncComponent(
@@ -419,6 +421,7 @@ const mobileTextEditing = ref(false);
 const mobilePptxViewing = ref(false);
 const mobilePptxSingleView = ref(false);
 const mobilePptxZoomLabel = ref("100%");
+const mobilePptxBackground = ref("#ffffff");
 const mobilePptxControlsVisible = ref(true);
 const mobilePortrait = ref(true);
 const mobileDocxImageInput = ref<HTMLInputElement | null>(null);
@@ -708,13 +711,8 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 			...binding,
 			props: {
 				...binding.props,
-				// Phone reading is a continuous, full-width slide list. The explicit
-				// prop also makes the intended initial view available before the runtime
-				// finishes importing a large deck, instead of relying only on a later click.
-				slideViewMode:
-					tab.mobileMode === "reading" && mobilePortrait.value && !mobilePptxViewing.value
-						? "all"
-						: "single",
+				// Start with one readable slide; the overview remains an explicit action.
+				slideViewMode: "single",
 			},
 		};
 	}
@@ -1623,7 +1621,7 @@ async function showMobilePptxOverview(
 		await tab.editor?.ready();
 		await nextTick();
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-		if (tab.id === activeId.value && tab.mobileMode === "reading") setMobilePptxView("all");
+		if (tab.id === activeId.value && tab.mobileMode === "reading") setMobilePptxView("single");
 	} catch {
 		// Loading and import errors are already surfaced by the presentation editor.
 	}
@@ -1688,6 +1686,13 @@ function mobilePptxZoomControls(): HTMLElement | null {
 }
 
 function syncMobilePptxZoomLabel(): void {
+	const slide = activeDocumentSurface()?.querySelector<HTMLElement>(
+		"#viewer .als-ofs-pptx-slide-frame[data-editor-active-slide='true'] .als-ofs-pptx-slide",
+	);
+	if (slide) {
+		const color = getComputedStyle(slide).backgroundColor;
+		mobilePptxBackground.value = color === "rgba(0, 0, 0, 0)" ? "#ffffff" : color;
+	}
 	mobilePptxZoomLabel.value =
 		mobilePptxZoomControls()
 			?.querySelector<HTMLElement>(".als-ofs-pptx-mobile-zoom-controls__output")
@@ -1704,6 +1709,13 @@ function bindMobilePptxZoomObserver(): void {
 	syncMobilePptxZoomLabel();
 	mobilePptxZoomObserver = new MutationObserver(syncMobilePptxZoomLabel);
 	mobilePptxZoomObserver.observe(output, { characterData: true, childList: true, subtree: true });
+	const surface = activeDocumentSurface();
+	if (surface)
+		mobilePptxZoomObserver.observe(surface, {
+			attributes: true,
+			attributeFilter: ["data-editor-active-slide"],
+			subtree: true,
+		});
 }
 
 function runMobilePptxZoom(command: "in" | "out" | "fit"): void {
@@ -2595,14 +2607,6 @@ function handleNativeBack(): boolean {
 		activityOpen.value = false;
 		return true;
 	}
-	if (
-		activeTab.value?.format === "pptx" &&
-		activeTab.value.mobileMode === "reading" &&
-		activeDocumentSurface()?.querySelector("#dropzone[data-editor-view='single']")
-	) {
-		setMobilePptxView("all");
-		return true;
-	}
 	if (mobileTextEditing.value || isMobileDocumentTextTarget(document.activeElement)) {
 		dismissMobileKeyboard();
 		return true;
@@ -2644,6 +2648,9 @@ function syncMobileLayout(event?: MediaQueryListEvent): void {
 
 function syncMobileOrientation(): void {
 	mobilePortrait.value = window.innerHeight >= window.innerWidth;
+	if (mobilePptxViewing.value) {
+		void nextTick(() => requestAnimationFrame(() => runMobilePptxZoom("fit")));
+	}
 	if (mobilePortrait.value && !mobilePptxViewing.value) {
 		void nextTick(() => showMobilePptxOverview(activeTab.value));
 	}
@@ -2726,9 +2733,11 @@ onMounted(() => {
 	// Let the workspace paint before optional network work; failure stays silent
 	// here, while the explicit check in settings reports actionable errors.
 	window.setTimeout(() => {
-		void import("./services/client-services").then(async ({ checkAutomaticStoreUpdate }) => {
-			if (await checkAutomaticStoreUpdate()) clientServicesOpen.value = true;
-		}).catch(() => {});
+		void import("./services/client-services")
+			.then(async ({ checkAutomaticStoreUpdate }) => {
+				if (await checkAutomaticStoreUpdate()) clientServicesOpen.value = true;
+			})
+			.catch(() => {});
 	}, 1500);
 	document.addEventListener("keydown", handleAndroidEscape);
 	document.addEventListener("pointerdown", closeMenus);
@@ -2806,6 +2815,7 @@ onBeforeUnmount(() => {
 <template>
 	<main
 		class="harmony-app"
+		:style="{ '--harmony-pptx-background': mobilePptxBackground }"
 		:class="{
 			'has-document': !homeActive,
 			'android-app': androidLayout,
@@ -2899,7 +2909,16 @@ onBeforeUnmount(() => {
 						<span>系统设置…</span>
 						<kbd class="harmony-app-menu__shortcut">Ctrl+,</kbd>
 					</button>
-					<button type="button" role="menuitem" @click="closeAppMenu(); clientServicesOpen = true">反馈与更新…</button>
+					<button
+						type="button"
+						role="menuitem"
+						@click="
+							closeAppMenu();
+							clientServicesOpen = true;
+						"
+					>
+						反馈与更新…
+					</button>
 				</span>
 			</span>
 			<strong class="harmony-chrome__brand">{{ APP_PROFILE.name }}</strong>
@@ -2988,12 +3007,7 @@ onBeforeUnmount(() => {
 						<path d="M2.75 6.25h5l1.5-2h8v11.5H2.75zM2.75 7.75h14.5" />
 					</svg>
 					<span class="harmony-action-label">{{ opening ? "打开中…" : "打开" }}</span>
-					<input
-						type="file"
-						:accept="OPEN_ACCEPT"
-						:disabled="opening"
-						@change="open"
-					/>
+					<input type="file" :accept="OPEN_ACCEPT" :disabled="opening" @change="open" />
 				</label>
 				<button
 					type="button"

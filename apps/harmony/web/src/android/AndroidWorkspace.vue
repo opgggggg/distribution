@@ -256,10 +256,6 @@ function previewLabel(item: DocumentItem): string {
 					</h2>
 					<span>{{ visibleDocuments.length }} 个</span>
 				</div>
-				<div v-if="opening" class="android-progress" role="status">
-					<progress :aria-label="openingLabel" />
-					{{ openingLabel }}
-				</div>
 				<div v-if="visibleDocuments.length" class="android-file-list">
 					<button
 						v-for="item in visibleDocuments"

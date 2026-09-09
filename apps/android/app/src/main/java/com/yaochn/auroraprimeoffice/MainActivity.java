@@ -235,9 +235,9 @@ public final class MainActivity extends Activity {
                 android.view.ViewGroup.MarginLayoutParams layout =
                     (android.view.ViewGroup.MarginLayoutParams) webView.getLayoutParams();
                 layout.setMargins(
-                    bars.left,
+                    presentationImmersive ? 0 : bars.left,
                     presentationImmersive ? 0 : bars.top,
-                    bars.right,
+                    presentationImmersive ? 0 : bars.right,
                     Math.max(presentationImmersive ? 0 : bars.bottom, ime.bottom));
                 webView.setLayoutParams(layout);
                 return WindowInsets.CONSUMED;
@@ -270,6 +270,14 @@ public final class MainActivity extends Activity {
   private void applyPresentationImmersive(boolean enabled) {
     presentationImmersive = enabled;
     Window window = getWindow();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      WindowManager.LayoutParams attributes = window.getAttributes();
+      attributes.layoutInDisplayCutoutMode =
+          enabled
+              ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+              : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;
+      window.setAttributes(attributes);
+    }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       window.setDecorFitsSystemWindows(false);
       WindowInsetsController controller = window.getInsetsController();
