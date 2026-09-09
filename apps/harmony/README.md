@@ -17,8 +17,41 @@ persistence; the editing surfaces remain browser-native and do not import Tauri.
   flushing and restoration of open editable documents after relaunch.
 - Chunked export to the application cache followed by a format-aware native save picker.
 - Browser fallback for checking the renderer before DevEco Studio is installed.
+- Shared Android/Harmony feedback and client-services UI (`web/src/services`),
+  accessible from the Harmony app menu under **反馈与更新**.
+- Harmony's native adapter persists a random client ID in Preferences and submits
+  text feedback to the existing CubeOffice API. Update checks use AppGallery Kit
+  `checkAppUpdate`; installation uses `showUpdateDialog` only after checking again.
+  There is no website package-download fallback for Harmony or unknown channels.
+  Successful checks report the client ID to the existing update-checks/DAU API;
+  a statistics failure does not prevent a store update.
+
+### Client-services integration status
+
+This is not yet feature parity with the full planned client-services design.
+Automatic checks are opt-in and currently run when the services panel mounts.
+First-run consent, automatic diagnostic uploads, screenshot/system-info attachment
+on Harmony and other store-specific adapters remain to be implemented. Desktop
+settings now mount the same feedback component through `settingsExtensionModule`;
+the distribution owns its HTTP adapter and the desktop shell retains its updater.
+The shared component accepts a service adapter, so no desktop-global native bridge
+is installed. Desktop ID creation currently occurs on first opening settings, not
+on initial launch. Keep CubeOffice logic in this repo.
+
+Validation: shared bridge/channel tests and both frontend/ArkTS compilation.
+Before release, use a signed installation on an AppGallery-capable real device to
+verify no-update/update-available, offline, privacy refusal, store dialog dismissal,
+feedback submission, and persistence across restart. Emulator-only validation
+cannot prove the real market update flow. No signing or submission is implied by
+these development builds.
 
 ## Build the web payload
+
+Production signing material is outside Git at `~/cubexp.com/harmony/`:
+`cubeoffice-release.p12` (alias `cubeoffice-release`), `cubeoffice-release.cer`,
+`cubeoffice-release-profile.p7b`, and `store-password`. Store private reports under
+`~/cubexp.com/logs/` and candidates under `~/cubexp.com/releases/<version>/`.
+Never commit signing credentials.
 
 From the repository root, install the npm workspace and build the Harmony web
 payload:
@@ -52,9 +85,14 @@ be inspected. Disable it before a production release.
 
 - The Base64 chunk bridge avoids one giant JavaScript string but still copies
   exported bytes. Profile large documents on a real device before production.
-- All format assets are intentionally inlined so ArkWeb can load them without
-  local-origin CORS failures. This produces a large HAP; split loading needs a
-  native asset protocol or an equivalent verified ArkWeb-safe transport.
+- Both hosts use the same code-split Vue build. HarmonyOS intercepts
+  `https://cubeoffice.invalid/` and serves packaged `rawfile/web/` assets;
+  Android serves its assets from `file:///android_asset/`.
+  The reserved HarmonyOS origin is local, not a network service. Format engines
+  and picker libraries load on demand. Do not run the old inline-assets script.
+  Changing from the old rawfile origin changes Web storage scope: existing
+  app-local recovery snapshots/settings require migration before publishing an
+  upgrade. Verify module loading and file import/export on an API 17 device.
 - Automatic saves are app-local recovery snapshots. The explicit Save action
   still opens the system picker and writes a user-visible copy; direct write-back
   to an original picker URI is intentionally deferred.

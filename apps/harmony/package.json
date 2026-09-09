@@ -6,7 +6,9 @@
 	"scripts": {
 		"build": "npm run build:web",
 		"prebuild:web": "npm --prefix ../.. run profile:sync",
-		"build:web": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts && node scripts/inline-web-assets.mjs"
+		"build:web": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts",
+		"prebuild:web:android": "npm --prefix ../.. run profile:sync -- --android",
+		"build:web:android": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode android"
 	},
 	"dependencies": {
 		"@yaochn/als-office-docx": "*",
@@ -16,7 +18,8 @@
 		"@yaochn/als-office-pptx": "*",
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
-		"vue": "3.5.32"
+		"vue": "3.5.32",
+		"@yaochn/als-office-image": "*"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^5.2.0",

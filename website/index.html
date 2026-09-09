@@ -10,8 +10,8 @@
 		<meta name="theme-color" content="#4f46e5" />
 		<title>CubeOffice｜跨平台文档工作台</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
-		<link rel="stylesheet" href="/styles.css?v=ff8a187f505c" />
-		<script src="/i18n.js?v=0ebcd0179933" defer></script>
+		<link rel="stylesheet" href="/styles.css?v=6b71c18ddc22" />
+		<script src="/i18n.js?v=d12f1bf9fb0e" defer></script>
 		<script src="/app.js?v=20260904-1" defer></script>
 	</head>
 	<body data-page="home">
@@ -26,6 +26,7 @@
 					<nav id="site-nav" class="site-nav" aria-label="主要导航">
 						<a href="#download">下载</a>
 						<a href="/visio">Visio for Mac/Linux</a>
+						<a href="/templates">模板</a>
 						<a href="#platforms">支持平台</a>
 						<a href="#features">产品能力</a>
 						<a href="#formats">支持格式</a>
@@ -60,76 +61,275 @@
 			<section class="hero">
 				<div class="container hero-grid">
 					<div class="hero-copy">
-						<p class="eyebrow"><span></span> macOS · Windows · Linux · Android</p>
-						<h1>通用 AI 的<br /><em>文档工作台</em></h1>
+						<p class="eyebrow"><span></span> 连接你已在用的 AI 应用</p>
+						<h1>AI 的<em>好帮手</em></h1>
+						<p class="hero-tagline">AI 负责思考，CubeOffice 负责动手。</p>
 						<p class="hero-lead">
-							连接你常用的 AI 应用，在同一个工作区中处理
-							Word、PowerPoint、Excel、Visio 与 Markdown。让 AI
-							理解当前文档，并协助生成、改写、整理与编辑内容。
+							ChatGPT、Claude 这些 AI 很会写，却搞不定 Office
+							的文件格式——直接让它们生成 .docx、.pptx，排版和样式往往一塌糊涂。把
+							CubeOffice 连上去，它们就能读懂你正打开的文档，并直接修改 Word
+							段落、Excel 单元格、PowerPoint 幻灯片与 Visio
+							图表。改动落在原生文件里，可继续编辑，也随时可以撤销。
 						</p>
+						<div class="ai-partners">
+							<span class="ai-partners__label">已适配</span>
+							<ul class="ai-partners__list">
+								<li>ChatGPT</li>
+								<li>Claude</li>
+								<li>Gemini</li>
+								<li>Cursor</li>
+								<li>Codex</li>
+							</ul>
+						</div>
 						<div class="hero-actions">
 							<a class="button button-primary" href="#download">下载应用</a>
 							<a class="button button-secondary" href="#gallery">了解 AI 协作</a>
 						</div>
 						<div class="availability" aria-label="产品状态">
 							<span class="status-dot"></span>
-							<span>桌面版 1.2.1 · Android 预览版 1.2.1</span>
+							<span>macOS · Windows · Linux · Android</span>
+							<span aria-hidden="true">·</span>
+							<span>桌面版 1.3.1 · Android 预览版 1.3.1</span>
 						</div>
 					</div>
-					<figure class="hero-visual ai-workspace-visual">
-						<div class="window-bar" aria-hidden="true">
-							<span></span><span></span><span></span>
-						</div>
-						<div class="workspace-shell" aria-hidden="true">
-							<div class="workspace-tabs">
-								<span class="workspace-brand"
-									><img
-										src="/assets/cubeoffice-mark.svg"
-										alt=""
-										width="20"
-										height="20"
+					<figure class="hero-visual hero-figure">
+						<svg
+							class="hero-figure__art"
+							viewBox="0 0 680 460"
+							role="img"
+							aria-labelledby="hero-art-title"
+						>
+							<title id="hero-art-title">
+								ChatGPT 调用 CubeOffice 修改文档的示意
+							</title>
+							<defs>
+								<linearGradient id="ha-bg" x1="0" y1="0" x2="1" y2="1">
+									<stop offset="0" stop-color="#f6f7ff" />
+									<stop offset="1" stop-color="#eaecff" />
+								</linearGradient>
+								<linearGradient id="ha-brand" x1="0" y1="0" x2="0" y2="1">
+									<stop offset="0" stop-color="#6366f1" />
+									<stop offset="1" stop-color="#4338ca" />
+								</linearGradient>
+								<linearGradient id="ha-bar" x1="0" y1="1" x2="0" y2="0">
+									<stop offset="0" stop-color="#c7d2fe" />
+									<stop offset="1" stop-color="#6366f1" />
+								</linearGradient>
+								<filter id="ha-shadow" x="-20%" y="-20%" width="140%" height="140%">
+									<feDropShadow
+										dx="0"
+										dy="10"
+										stdDeviation="14"
+										flood-color="#312e81"
+										flood-opacity="0.13"
 									/>
-									CubeOffice</span
+								</filter>
+								<marker
+									id="ha-tip"
+									viewBox="0 0 10 10"
+									refX="8"
+									refY="5"
+									markerWidth="6"
+									markerHeight="6"
+									orient="auto-start-reverse"
 								>
-								<span class="workspace-tab">Quarterly review.docx</span>
-								<span class="ai-connected"><i></i> AI 已连接</span>
-							</div>
-							<div class="workspace-tools">
-								<span>文件</span><span>插入</span><span>布局</span><span>审阅</span
-								><span>视图</span>
-							</div>
-							<div class="workspace-content">
-								<div class="document-sheet">
-									<span class="doc-label">Q3 BUSINESS REVIEW</span>
-									<h3>Momentum, measured.</h3>
-									<div class="text-line text-line-long"></div>
-									<div class="text-line"></div>
-									<div class="document-chart">
-										<i></i><i></i><i></i><i></i><i></i>
-									</div>
-									<div class="text-line text-line-long"></div>
-									<div class="text-line text-line-short"></div>
-								</div>
-								<aside class="assistant-panel">
-									<div class="assistant-heading">
-										<span class="ai-mark">AI</span>
-										<div>
-											<strong>文档助手</strong><small>基于当前文档</small>
-										</div>
-									</div>
-									<div class="assistant-prompt">
-										把这页总结改写得更清晰，并突出关键数据。
-									</div>
-									<div class="assistant-response">
-										<span></span><span></span
-										><span class="response-short"></span>
-									</div>
-									<div class="assistant-result">已完成 · 可撤销</div>
-								</aside>
-							</div>
-						</div>
-						<figcaption class="sr-only">
-							CubeOffice 通用 AI 文档工作台界面示意
+									<path d="M0 1 9 5 0 9Z" fill="#4f46e5" />
+								</marker>
+								<marker
+									id="ha-tip-soft"
+									viewBox="0 0 10 10"
+									refX="8"
+									refY="5"
+									markerWidth="6"
+									markerHeight="6"
+									orient="auto-start-reverse"
+								>
+									<path d="M0 1 9 5 0 9Z" fill="#a5b4fc" />
+								</marker>
+							</defs>
+
+							<!-- backdrop -->
+							<rect width="680" height="460" rx="32" fill="url(#ha-bg)" />
+							<circle cx="616" cy="54" r="100" fill="#e0e5ff" opacity="0.75" />
+							<circle
+								cx="66"
+								cy="406"
+								r="68"
+								fill="none"
+								stroke="#d3daff"
+								stroke-width="10"
+							/>
+							<rect
+								x="320"
+								y="388"
+								width="26"
+								height="26"
+								rx="8"
+								fill="#d7ddff"
+								transform="rotate(18 333 401)"
+							/>
+							<rect
+								x="316"
+								y="56"
+								width="18"
+								height="18"
+								rx="6"
+								fill="#c7d2fe"
+								transform="rotate(-12 325 65)"
+							/>
+
+							<!-- left: the AI app you already use -->
+							<rect x="62" y="82" width="180" height="46" rx="18" fill="#dfe4ff" />
+							<g filter="url(#ha-shadow)">
+								<rect
+									x="44"
+									y="96"
+									width="216"
+									height="268"
+									rx="24"
+									fill="#ffffff"
+								/>
+							</g>
+							<circle cx="82" cy="136" r="19" fill="#000000" />
+							<!-- The OpenAI mark, shown to identify a supported AI app.
+								 OpenAI and ChatGPT are trademarks of OpenAI; CubeOffice is
+								 not affiliated with or endorsed by them. -->
+							<path
+								transform="translate(71.5 125.5) scale(0.875)"
+								fill="#ffffff"
+								d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"
+							/>
+							<text class="ha-name" x="112" y="142">ChatGPT</text>
+
+							<rect x="104" y="178" width="136" height="48" rx="15" fill="#f1f3fa" />
+							<rect x="118" y="193" width="108" height="7" rx="3.5" fill="#c9cfe1" />
+							<rect x="118" y="207" width="68" height="7" rx="3.5" fill="#d8dcea" />
+
+							<rect
+								x="64"
+								y="242"
+								width="152"
+								height="58"
+								rx="15"
+								fill="url(#ha-brand)"
+							/>
+							<rect
+								x="80"
+								y="259"
+								width="120"
+								height="7"
+								rx="3.5"
+								fill="#ffffff"
+								opacity="0.9"
+							/>
+							<rect
+								x="80"
+								y="274"
+								width="80"
+								height="7"
+								rx="3.5"
+								fill="#ffffff"
+								opacity="0.6"
+							/>
+
+							<circle class="ha-note-icon" cx="72" cy="330" r="5" fill="#4f46e5" />
+							<text class="ha-note" x="86" y="335">调用 CubeOffice</text>
+
+							<!-- middle: the two-way link. Left unnamed on purpose -- it is MCP
+								 underneath, but a reader does not need the term. -->
+							<path class="ha-flow" d="M268 204H396" marker-end="url(#ha-tip)" />
+							<path
+								class="ha-flow ha-flow--back"
+								d="M396 258H268"
+								marker-end="url(#ha-tip-soft)"
+							/>
+							<circle cx="332" cy="231" r="21" fill="#ffffff" stroke="#d5dbf6" />
+							<g class="ha-link" transform="translate(321.2 220.2) scale(0.9)">
+								<path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3" />
+								<path d="M8 12h8" />
+							</g>
+
+							<!-- right: CubeOffice, holding the real file -->
+							<g filter="url(#ha-shadow)">
+								<rect
+									x="404"
+									y="65"
+									width="232"
+									height="330"
+									rx="24"
+									fill="#ffffff"
+								/>
+							</g>
+							<image
+								href="/assets/cubeoffice-mark.svg"
+								x="428"
+								y="91"
+								width="26"
+								height="26"
+							/>
+							<text class="ha-name" x="464" y="111">CubeOffice</text>
+							<rect x="428" y="133" width="184" height="1" fill="#eceffa" />
+
+							<rect x="428" y="159" width="58" height="8" rx="4" fill="#c3caf8" />
+							<rect x="428" y="179" width="136" height="13" rx="6" fill="#312e81" />
+							<rect x="428" y="209" width="150" height="7" rx="3.5" fill="#dfe3ef" />
+							<rect x="428" y="224" width="150" height="7" rx="3.5" fill="#dfe3ef" />
+
+							<rect x="418" y="241" width="172" height="26" rx="9" fill="#eef2ff" />
+							<rect x="428" y="249" width="128" height="10" rx="5" fill="#4f46e5" />
+							<path
+								class="ha-spark"
+								d="M600 245q1.2 6.6 7.7 8.8-6.5 2.2-7.7 8.8-1.2-6.6-7.7-8.8 6.5-2.2 7.7-8.8Z"
+							/>
+
+							<rect
+								x="428"
+								y="308"
+								width="26"
+								height="28"
+								rx="5"
+								fill="url(#ha-bar)"
+							/>
+							<rect
+								x="464"
+								y="292"
+								width="26"
+								height="44"
+								rx="5"
+								fill="url(#ha-bar)"
+							/>
+							<rect
+								x="500"
+								y="272"
+								width="26"
+								height="64"
+								rx="5"
+								fill="url(#ha-bar)"
+							/>
+							<rect
+								x="536"
+								y="300"
+								width="26"
+								height="36"
+								rx="5"
+								fill="url(#ha-bar)"
+							/>
+							<rect x="428" y="340" width="134" height="4" rx="2" fill="#e6eaf6" />
+
+							<circle class="ha-note-icon" cx="440" cy="370" r="11" fill="#eef2ff" />
+							<path
+								class="ha-note-icon"
+								d="m435 370 3.6 3.8 6.4-7"
+								fill="none"
+								stroke="#4f46e5"
+								stroke-width="2.4"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+							<text class="ha-note" x="459" y="375">已写入原生文件</text>
+						</svg>
+						<figcaption class="hero-figure__caption">
+							AI 想到的改动，由 CubeOffice 直接落进你电脑里的文件。
 						</figcaption>
 					</figure>
 				</div>
@@ -157,7 +357,7 @@
 							</div>
 							<div>
 								<h3>macOS</h3>
-								<p>桌面版本 · 1.2.1</p>
+								<p>桌面版本 · 1.3.1</p>
 								<span>Apple Silicon</span>
 							</div>
 						</article>
@@ -171,7 +371,7 @@
 							</div>
 							<div>
 								<h3>Windows</h3>
-								<p>桌面版本 · 1.2.1</p>
+								<p>桌面版本 · 1.3.1</p>
 								<span>Windows x64</span>
 							</div>
 						</article>
@@ -184,7 +384,7 @@
 							</div>
 							<div>
 								<h3>Linux</h3>
-								<p>桌面版本 · 1.2.1</p>
+								<p>桌面版本 · 1.3.1</p>
 								<span>AppImage 与 DEB</span>
 							</div>
 						</article>
@@ -197,7 +397,7 @@
 							</div>
 							<div>
 								<h3>Android</h3>
-								<p>移动预览版 · 1.2.1</p>
+								<p>移动预览版 · 1.3.1</p>
 								<span>手机与平板 · Android 8.0+</span>
 							</div>
 						</article>
@@ -231,7 +431,7 @@
 							</div>
 							<a
 								class="button button-primary download-button"
-								href="/downloads/CubeOffice-1.2.1-macOS-arm64.dmg"
+								href="/downloads/CubeOffice-1.3.1-macOS-arm64.dmg"
 								>下载 DMG <span>约 15 MB</span></a
 							>
 						</article>
@@ -250,7 +450,7 @@
 							</div>
 							<a
 								class="button button-primary download-button"
-								href="/downloads/CubeOffice-1.2.1-Windows-x64-setup.exe"
+								href="/downloads/CubeOffice-1.3.1-Windows-x64-setup.exe"
 								>下载安装器 <span>Windows x64</span></a
 							>
 						</article>
@@ -269,12 +469,12 @@
 							<div class="download-card__actions">
 								<a
 									class="button button-primary download-button"
-									href="/downloads/CubeOffice-1.2.1-Linux-x86_64.AppImage"
+									href="/downloads/CubeOffice-1.3.1-Linux-x86_64.AppImage"
 									>AppImage</a
 								>
 								<a
 									class="button button-secondary download-button"
-									href="/downloads/CubeOffice-1.2.1-Linux-x86_64.deb"
+									href="/downloads/CubeOffice-1.3.1-Linux-x86_64.deb"
 									>DEB</a
 								>
 							</div>
@@ -287,13 +487,13 @@
 								</svg>
 							</div>
 							<div class="download-card__copy">
-								<p class="download-card__meta">Android 8.0+ · 预览版 1.2.1</p>
+								<p class="download-card__meta">Android 8.0+ · 预览版 1.3.1</p>
 								<h3>Android</h3>
 								<p>为手机和平板设计的触控界面，本地编辑与草稿保存。</p>
 							</div>
 							<a
 								class="button button-primary download-button"
-								href="/downloads/CubeOffice-1.2.1-Android-b1002003.apk"
+								href="/downloads/CubeOffice-1.3.1-Android-b1003002.apk"
 								>下载 APK <span>通用 APK</span></a
 							>
 						</article>
@@ -517,7 +717,7 @@
 					<div>
 						<p class="section-kicker">CubeOffice 下载</p>
 						<h2>让熟悉的 AI，真正参与文档工作</h2>
-						<p>CubeOffice 1.2.1 桌面版和 Android 1.2.1 预览版现已开放下载。</p>
+						<p>CubeOffice 1.3.1 桌面版和 Android 1.3.1 预览版现已开放下载。</p>
 					</div>
 					<a class="button button-light" href="#download">下载应用</a>
 				</div>

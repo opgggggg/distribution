@@ -1,6 +1,12 @@
 <script setup lang="ts">
 defineProps<{ name: string }>();
 const paths: Record<string, string> = {
+	"align-left": "M4 5h16M4 10h10M4 15h16M4 20h10",
+	"align-center": "M4 5h16M7 10h10M4 15h16M7 20h10",
+	"align-right": "M4 5h16M10 10h10M4 15h16M10 20h10",
+	"align-justify": "M4 5h16M4 10h16M4 15h16M4 20h16",
+	"list-bullet": "M8 6h12M8 12h12M8 18h12M3 6h.01M3 12h.01M3 18h.01",
+	"list-number": "M9 6h11M9 12h11M9 18h11M3 4h1v5M2 9h4M2 14c0-2 3-2 3 0l-3 5h3",
 	back: "m12 5-7 7 7 7M5 12h15",
 	close: "m6 6 12 12M18 6 6 18",
 	more: "M12 5h.01M12 12h.01M12 19h.01",

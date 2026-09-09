@@ -4,6 +4,7 @@ import type { EditorArtifactFormat } from "@yaochn/als-office-editor-ui/vue";
 import { APP_PROFILE } from "../app-profile.generated";
 import appMark from "../../../AppScope/resources/base/media/app_icon.png";
 import { UiCheckbox } from "@yaochn/als-office-editor-ui/vue";
+import { OPEN_ACCEPT } from "../open-formats";
 import Icon from "./AndroidIcon.vue";
 import AndroidServices from "./AndroidServices.vue";
 interface DocumentItem {
@@ -29,6 +30,8 @@ const props = defineProps<{
 	immersive: boolean;
 }>();
 const emit = defineEmits<{
+	/** The system picker is opening; the host may start loading format engines. */
+	pick: [];
 	open: [event: Event];
 	select: [id: string];
 	restore: [id: string];
@@ -65,7 +68,7 @@ const formats = [
 ] as const;
 const allDocuments = computed(() => [...props.documents, ...props.history]);
 const visibleDocuments = computed(() =>
-	(destination.value === "open" ? props.documents : allDocuments.value).filter(
+	allDocuments.value.filter(
 		(item) =>
 			(filter.value === "all" || item.format === filter.value) &&
 			item.fileName.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase()),
@@ -210,7 +213,7 @@ function previewLabel(item: DocumentItem): string {
 		<div class="android-library-scroll">
 			<template v-if="destination !== 'settings'">
 				<div class="android-page-title">
-					<h1>{{ destination === "open" ? "正在打开" : "你的文档" }}</h1>
+					<h1>你的文档</h1>
 					<p>随时打开，接着完成。</p>
 				</div>
 				<label class="android-search"
@@ -232,6 +235,7 @@ function previewLabel(item: DocumentItem): string {
 							{ id: 'all', label: '全部' },
 							...formats,
 							{ id: 'pdf', label: 'PDF' },
+							{ id: 'image', label: '图片' },
 							{ id: 'jmp', label: 'JMP' },
 						]"
 						:key="item.id"
@@ -248,13 +252,7 @@ function previewLabel(item: DocumentItem): string {
 				</button>
 				<div class="android-list-heading">
 					<h2>
-						{{
-							query || filter !== "all"
-								? "搜索结果"
-								: destination === "open"
-									? "当前工作区"
-									: "最近与草稿"
-						}}
+						{{ query || filter !== "all" ? "搜索结果" : "最近与草稿" }}
 					</h2>
 					<span>{{ visibleDocuments.length }} 个</span>
 				</div>
@@ -363,7 +361,6 @@ function previewLabel(item: DocumentItem): string {
 			<button
 				v-for="item in [
 					{ id: 'files', label: '文件', icon: 'folder' },
-					{ id: 'open', label: '已打开', icon: 'recent' },
 					{ id: 'settings', label: '设置', icon: 'settings' },
 				]"
 				:key="item.id"
@@ -384,45 +381,59 @@ function previewLabel(item: DocumentItem): string {
 				<Icon name="undo" /><span>撤销</span>
 			</button>
 			<button
+				aria-label="格式"
 				:disabled="!ready"
 				@pointerdown.prevent
-				@click="
-					active.format === 'docx' || active.format === 'markdown'
-						? (sheet = 'format')
-						: emit('format')
-				"
+				@click="active.format === 'markdown' ? (sheet = 'format') : emit('format')"
 			>
 				<Icon name="format" /><span>格式</span>
 			</button>
-			<button :disabled="!ready" @pointerdown.prevent @click="emit('insert')">
+			<button
+				aria-label="插入"
+				:disabled="!ready"
+				@pointerdown.prevent
+				@click="emit('insert')"
+			>
 				<Icon name="plus" /><span>插入</span>
 			</button>
-			<button :disabled="!ready || saving" @pointerdown.prevent @click="emit('save')">
+			<button
+				aria-label="另存"
+				:disabled="!ready || saving"
+				@pointerdown.prevent
+				@click="emit('save')"
+			>
 				<Icon name="save" /><span>{{ saving ? "保存中" : "另存" }}</span>
 			</button>
 			<button
 				v-if="active.format === 'pptx'"
+				aria-label="新幻灯片"
 				:disabled="!ready"
 				@pointerdown.prevent
 				@click="emit('newSlide')"
 			>
 				<Icon name="file" /><span>新幻灯片</span>
 			</button>
-			<button v-else @pointerdown.prevent @click="emit('keyboard')">
+			<button v-else aria-label="收起键盘" @pointerdown.prevent @click="emit('keyboard')">
 				<Icon name="keyboard" /><span>收起键盘</span>
 			</button>
 		</template>
 		<template v-else>
-			<button :disabled="!ready" @click="emit('search')">
+			<button aria-label="查找" :disabled="!ready" @click="emit('search')">
 				<Icon name="search" /><span>查找</span>
 			</button>
-			<button v-if="active.format === 'pptx'" :disabled="!ready" @click="emit('present')">
+			<button
+				v-if="active.format === 'pptx'"
+				aria-label="播放"
+				:disabled="!ready"
+				@click="emit('present')"
+			>
 				<Icon name="play" /><span>播放</span>
 			</button>
 			<span class="android-tool-spacer" />
 			<button
 				v-if="editable"
 				class="android-edit-cta"
+				aria-label="编辑文档"
 				:disabled="!ready"
 				@click="emit('edit')"
 			>
@@ -435,10 +446,11 @@ function previewLabel(item: DocumentItem): string {
 		ref="picker"
 		class="android-file-input"
 		type="file"
-		accept=".docx,.pptx,.xlsx,.jmp,.vsdx,.md,.markdown,.pdf,.drawio"
+		:accept="OPEN_ACCEPT"
 		:disabled="opening"
 		tabindex="-1"
 		aria-hidden="true"
+		@click="emit('pick')"
 		@change="emit('open', $event)"
 	/>
 	<dialog
@@ -449,7 +461,6 @@ function previewLabel(item: DocumentItem): string {
 		@click.self="sheet = ''"
 	>
 		<div class="android-sheet-content">
-			<div class="android-sheet-handle" aria-hidden="true" />
 			<header>
 				<h2 id="android-sheet-title">{{ sheetTitle }}</h2>
 				<button class="android-icon-button" aria-label="关闭面板" @click="sheet = ''">
@@ -508,11 +519,7 @@ function previewLabel(item: DocumentItem): string {
 					"
 				>
 					<Icon name="folder" /><span>打开其他文件</span></button
-				><button
-					class="android-sheet-row"
-					:disabled="saving || !ready"
-					@click="action('close')"
-				>
+				><button class="android-sheet-row" :disabled="saving" @click="action('close')">
 					<Icon name="close" /><span
 						><strong>关闭文档</strong
 						><small>先保存本地草稿，再返回文件列表</small></span

@@ -2,8 +2,12 @@
 	"name": "CubeOffice",
 	"packageName": "com.cubexp.office",
 	"vendor": "cubexp",
-	"versionCode": 1002003,
-	"versionName": "1.2.1",
+	"versionCode": 1004000,
+	"versionName": "1.4.0",
 	"icon": "icon.png",
-	"urlScheme": "cubeoffice"
+	"urlScheme": "cubeoffice",
+	"documentTemplates": {
+		"endpoint": "https://cubexp.com/templates/index.json",
+		"formats": ["pptx"]
+	}
 }

@@ -219,7 +219,7 @@ a {
 .hero-grid {
 	position: relative;
 	display: grid;
-	grid-template-columns: minmax(0, 0.78fr) minmax(520px, 1.22fr);
+	grid-template-columns: minmax(0, 1fr) minmax(440px, 1.04fr);
 	align-items: center;
 	gap: 64px;
 }
@@ -260,12 +260,156 @@ a {
 	font-style: normal;
 }
 
+.hero-tagline {
+	max-width: 590px;
+	margin: 22px 0 0;
+	color: var(--ink);
+	font-size: clamp(20px, 2.1vw, 27px);
+	font-weight: 760;
+	letter-spacing: -0.02em;
+	line-height: 1.35;
+}
+
+/* The hero illustration: an AI app on the left, CubeOffice and the real file
+   on the right, joined by MCP. Named apps state real interoperability -- the
+   drawing imitates no product's interface and implies no endorsement. */
+.hero-figure {
+	margin: 0;
+}
+
+.hero-figure__art {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.hero-figure__art text {
+	font-family: inherit;
+}
+
+.ha-name {
+	fill: var(--ink);
+	font-size: 16px;
+	font-weight: 680;
+	letter-spacing: -0.01em;
+}
+
+.ha-note {
+	fill: var(--ink-muted);
+	font-size: 13.5px;
+	font-weight: 560;
+}
+
+.ha-link {
+	fill: none;
+	stroke: var(--brand);
+	stroke-width: 2;
+	stroke-linecap: round;
+}
+
+.ha-flow {
+	fill: none;
+	stroke: var(--brand);
+	stroke-width: 2.4;
+	stroke-linecap: round;
+}
+
+.ha-flow--back {
+	stroke: #a5b4fc;
+	stroke-dasharray: 7 7;
+}
+
+.ha-spark {
+	fill: #fbbf24;
+}
+
+.hero-figure__caption {
+	margin-top: 18px;
+	color: var(--ink-muted);
+	font-size: 15px;
+	line-height: 1.6;
+	text-align: center;
+}
+
 .hero-lead {
 	max-width: 590px;
 	margin: 28px 0 0;
 	color: var(--ink-muted);
 	font-size: 18px;
 	line-height: 1.85;
+}
+
+/* The AI apps CubeOffice is compatible with. Stated as compatibility, not
+   partnership: these are other companies' products and nothing here is
+   endorsed by them. */
+.ai-partners {
+	display: flex;
+	margin-top: 26px;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+}
+
+.ai-partners__label {
+	color: var(--ink-muted);
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.ai-partners__list {
+	display: flex;
+	margin: 0;
+	padding: 0;
+	gap: 8px;
+	flex-wrap: wrap;
+	list-style: none;
+}
+
+.ai-partners__list li {
+	display: flex;
+	padding: 7px 14px;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	align-items: center;
+	gap: 7px;
+	background: var(--surface);
+	color: var(--ink);
+	font-size: 14px;
+	font-weight: 650;
+}
+
+.ai-partners__list li::before {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--brand);
+	content: "";
+}
+
+/* Under ~560px the illustration scales down past the point where its small
+   labels are readable, so keep only the names and let the shapes carry it. */
+@media (max-width: 560px) {
+	.ha-name {
+		font-size: 23px;
+	}
+
+	.ha-note,
+	.ha-note-icon {
+		display: none;
+	}
+}
+
+@media (max-width: 640px) {
+	.ai-partners {
+		gap: 10px;
+	}
+
+	.ai-partners__list li {
+		padding: 6px 11px;
+		font-size: 13px;
+	}
 }
 
 .hero-actions {
@@ -334,7 +478,6 @@ a {
 	background: #16a34a;
 	box-shadow: 0 0 0 4px rgb(22 163 74 / 11%);
 }
-
 .hero-visual {
 	margin: 0;
 	overflow: hidden;
@@ -342,199 +485,7 @@ a {
 	border-radius: 22px;
 	background: #fff;
 	box-shadow: 0 32px 80px rgb(49 46 129 / 16%);
-	transform: rotate(1.4deg);
 }
-
-.hero-visual img {
-	width: 100%;
-	height: auto;
-}
-
-.ai-workspace-visual {
-	min-height: 470px;
-	background: #f3f5fb;
-}
-
-.workspace-shell {
-	padding: 14px;
-}
-
-.workspace-tabs,
-.workspace-tools {
-	display: flex;
-	align-items: center;
-}
-
-.workspace-tabs {
-	gap: 8px;
-	padding: 2px 2px 12px;
-}
-
-.workspace-brand,
-.workspace-tab,
-.ai-connected {
-	display: inline-flex;
-	align-items: center;
-	gap: 7px;
-	font-size: 11px;
-	font-weight: 700;
-}
-
-.workspace-brand {
-	margin-right: 2px;
-}
-
-.hero-visual .workspace-brand img {
-	width: 20px;
-	height: 20px;
-	flex: 0 0 auto;
-}
-
-.workspace-tab {
-	padding: 7px 10px;
-	border: 1px solid #dfe3ef;
-	border-radius: 8px;
-	color: #4b5870;
-	background: #fff;
-}
-
-.ai-connected {
-	margin-left: auto;
-	padding: 6px 9px;
-	border-radius: 999px;
-	color: #28613d;
-	background: #e8f7ed;
-}
-
-.ai-connected i {
-	width: 7px;
-	height: 7px;
-	border-radius: 50%;
-	background: #22a85a;
-}
-
-.workspace-tools {
-	gap: 20px;
-	padding: 10px 14px;
-	border: 1px solid #e2e6f0;
-	border-radius: 10px 10px 0 0;
-	color: #67748a;
-	background: #fff;
-	font-size: 10px;
-	font-weight: 650;
-}
-
-.workspace-content {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 190px;
-	gap: 10px;
-	padding: 16px;
-	border: 1px solid #e2e6f0;
-	border-top: 0;
-	border-radius: 0 0 12px 12px;
-	background: #e9ecf3;
-}
-
-.document-sheet,
-.assistant-panel {
-	border: 1px solid #dfe3ed;
-	border-radius: 10px;
-	background: #fff;
-	box-shadow: 0 12px 32px rgb(38 46 70 / 8%);
-}
-
-.document-sheet {
-	min-height: 330px;
-	padding: 46px 42px;
-}
-
-.doc-label {
-	color: var(--brand);
-	font-size: 8px;
-	font-weight: 800;
-	letter-spacing: 0.12em;
-}
-
-.document-sheet h3 {
-	margin: 8px 0 20px;
-	font-size: 21px;
-	letter-spacing: -0.035em;
-}
-
-.text-line {
-	width: 68%;
-	height: 7px;
-	margin-bottom: 8px;
-	border-radius: 999px;
-	background: #e8eaf0;
-}
-
-.text-line-long {
-	width: 92%;
-}
-.text-line-short {
-	width: 48%;
-}
-
-.document-chart {
-	display: flex;
-	height: 96px;
-	align-items: end;
-	gap: 12px;
-	margin: 26px 0;
-	padding: 12px 18px;
-	border-left: 2px solid var(--brand);
-	background: #f5f6ff;
-}
-
-.document-chart i {
-	width: 20px;
-	border-radius: 4px 4px 0 0;
-	background: #8b8cf6;
-}
-
-.document-chart i:nth-child(1) {
-	height: 32%;
-}
-.document-chart i:nth-child(2) {
-	height: 58%;
-}
-.document-chart i:nth-child(3) {
-	height: 44%;
-}
-.document-chart i:nth-child(4) {
-	height: 78%;
-}
-.document-chart i:nth-child(5) {
-	height: 67%;
-}
-
-.assistant-panel {
-	align-self: start;
-	padding: 16px;
-}
-
-.assistant-heading,
-.demo-label {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.assistant-heading strong,
-.demo-label strong {
-	display: block;
-	font-size: 12px;
-}
-
-.assistant-heading small,
-.demo-label small {
-	display: block;
-	margin-top: 1px;
-	color: #7b879a;
-	font-size: 9px;
-}
-
 .ai-mark {
 	display: grid;
 	width: 30px;
@@ -548,64 +499,6 @@ a {
 	font-weight: 800;
 	letter-spacing: -0.02em;
 }
-
-.assistant-prompt {
-	margin: 18px 0 12px 18px;
-	padding: 10px;
-	border-radius: 9px 9px 2px 9px;
-	color: #354159;
-	background: #eef0ff;
-	font-size: 10px;
-	line-height: 1.55;
-}
-
-.assistant-response {
-	padding: 12px;
-	border: 1px solid #eceef5;
-	border-radius: 9px;
-}
-
-.assistant-response span {
-	display: block;
-	width: 100%;
-	height: 6px;
-	margin-bottom: 7px;
-	border-radius: 999px;
-	background: #e4e7ed;
-}
-
-.assistant-response .response-short {
-	width: 62%;
-	margin-bottom: 0;
-}
-
-.assistant-result {
-	margin-top: 12px;
-	padding: 7px 9px;
-	border-radius: 8px;
-	color: #315846;
-	background: #ebf8ef;
-	font-size: 9px;
-	font-weight: 700;
-}
-
-.window-bar {
-	display: flex;
-	height: 34px;
-	align-items: center;
-	gap: 7px;
-	padding: 0 14px;
-	border-bottom: 1px solid #edf0f7;
-	background: #fafbfe;
-}
-
-.window-bar span {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: #cbd2e3;
-}
-
 .format-strip {
 	border-block: 1px solid var(--border);
 	background: #fff;
@@ -1790,54 +1683,6 @@ a {
 	.hero-visual {
 		border-radius: 15px;
 	}
-
-	.ai-workspace-visual {
-		min-height: 0;
-	}
-
-	.workspace-shell {
-		padding: 9px;
-	}
-
-	.workspace-tab {
-		display: none;
-	}
-
-	.workspace-tools {
-		gap: 12px;
-		overflow: hidden;
-	}
-
-	.workspace-content {
-		grid-template-columns: 1fr;
-		padding: 10px;
-	}
-
-	.document-sheet {
-		min-height: 235px;
-		padding: 26px 24px;
-	}
-
-	.assistant-panel {
-		display: grid;
-		grid-template-columns: 1fr 1.3fr;
-		align-items: start;
-		gap: 10px;
-	}
-
-	.assistant-prompt {
-		margin: 0;
-	}
-
-	.assistant-response,
-	.assistant-result {
-		display: none;
-	}
-
-	.window-bar {
-		height: 27px;
-	}
-
 	.format-inner,
 	.platform-grid,
 	.feature-grid,

@@ -12,6 +12,32 @@ local IndexedDB autosave, and external-link handling without duplicating editor 
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
+## Startup payload
+
+Gradle's `preBuild` runs `scripts/sync-web.mjs`, which builds the shared mobile
+Web shell with `vite build --mode android` straight into
+`app/src/main/assets/web/`. Unlike the HarmonyOS payload, the Android payload is
+**not** inlined into one file: `index.html` stays a small shell that loads a
+~1 MB entry chunk (the home screen), the six format engines are separate chunks
+`App.vue` imports the first time a document of that format opens (or as soon as
+the system file picker opens, so the pick and the load overlap), and the ~60 MB
+of icon and SmartArt libraries load only when a picker inside the editor asks
+for them. The WebView serves all of it from `file:///android_asset/web/` with
+`setAllowFileAccessFromFileURLs(true)`, which is what lets ES module chunks load
+from that origin; without it Chromium rejects them as cross-origin.
+
+Do not switch Android back to the inlined HarmonyOS build. That single 84 MB
+`index.html` made every cold start read and compile the whole editor, including
+the icon libraries, before the first paint, and inline scripts never get a V8
+code cache — the visible result was a long blank screen on first open.
+`sync-web.mjs` fails the build if `index.html` is inlined again.
+
+While the entry chunk loads, `MainActivity` shows a native startup view (brand
+surface colour, app mark, spinner, “正在载入 CubeOffice…”) over the WebView. The
+Web shell removes it by calling `auroraHarmonyHost.appReady()` right after Vue
+mounts; `onPageFinished`, a main-frame load error, and a 20 s timeout are the
+fallbacks so the user is never stuck behind it.
+
 Android defaults to `profiles/cubeoffice/`, copied from the CubeOffice desktop
 distribution profile: display name `CubeOffice`, application ID `com.cubexp.office`,
 vendor `cubexp`, URL scheme `cubeoffice`, and the shared 1024px brand icon.

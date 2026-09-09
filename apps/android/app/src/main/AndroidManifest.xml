@@ -57,6 +57,20 @@
 				<data android:mimeType="text/x-markdown" />
 				<data android:mimeType="application/x-markdown" />
 				<data android:mimeType="text/plain" />
+				<data android:mimeType="application/msword" />
+				<data android:mimeType="application/vnd.ms-excel" />
+				<data android:mimeType="application/vnd.ms-powerpoint" />
+				<data android:mimeType="text/csv" />
+				<data android:mimeType="image/png" />
+				<data android:mimeType="image/jpeg" />
+				<data android:mimeType="image/webp" />
+				<data android:mimeType="image/emf" />
+				<data android:mimeType="image/wmf" />
+				<data android:mimeType="application/emf" />
+				<data android:mimeType="application/wmf" />
+				<data android:mimeType="application/x-emf" />
+				<data android:mimeType="application/x-wmf" />
+				<data android:mimeType="application/x-msmetafile" />
 				<data android:mimeType="application/octet-stream" />
 			</intent-filter>
 			<intent-filter>
@@ -79,6 +93,20 @@
 				<data android:mimeType="text/x-markdown" />
 				<data android:mimeType="application/x-markdown" />
 				<data android:mimeType="text/plain" />
+				<data android:mimeType="application/msword" />
+				<data android:mimeType="application/vnd.ms-excel" />
+				<data android:mimeType="application/vnd.ms-powerpoint" />
+				<data android:mimeType="text/csv" />
+				<data android:mimeType="image/png" />
+				<data android:mimeType="image/jpeg" />
+				<data android:mimeType="image/webp" />
+				<data android:mimeType="image/emf" />
+				<data android:mimeType="image/wmf" />
+				<data android:mimeType="application/emf" />
+				<data android:mimeType="application/wmf" />
+				<data android:mimeType="application/x-emf" />
+				<data android:mimeType="application/x-wmf" />
+				<data android:mimeType="application/x-msmetafile" />
 				<data android:mimeType="application/octet-stream" />
 			</intent-filter>
 			<intent-filter>
@@ -101,6 +129,20 @@
 				<data android:mimeType="text/x-markdown" />
 				<data android:mimeType="application/x-markdown" />
 				<data android:mimeType="text/plain" />
+				<data android:mimeType="application/msword" />
+				<data android:mimeType="application/vnd.ms-excel" />
+				<data android:mimeType="application/vnd.ms-powerpoint" />
+				<data android:mimeType="text/csv" />
+				<data android:mimeType="image/png" />
+				<data android:mimeType="image/jpeg" />
+				<data android:mimeType="image/webp" />
+				<data android:mimeType="image/emf" />
+				<data android:mimeType="image/wmf" />
+				<data android:mimeType="application/emf" />
+				<data android:mimeType="application/wmf" />
+				<data android:mimeType="application/x-emf" />
+				<data android:mimeType="application/x-wmf" />
+				<data android:mimeType="application/x-msmetafile" />
 				<data android:mimeType="application/octet-stream" />
 			</intent-filter>
 		</activity>

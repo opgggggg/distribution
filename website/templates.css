@@ -1,0 +1,179 @@
+/* Template gallery. Kept out of styles.css so publishing a gallery change does
+   not force a cache-busting version bump on every other page's stylesheet. */
+
+.template-grid {
+	display: grid;
+	gap: 22px;
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.template-card {
+	display: flex;
+	overflow: hidden;
+	flex-direction: column;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+}
+
+.template-card figure {
+	margin: 0;
+	border-bottom: 1px solid var(--border);
+	background: var(--surface-muted);
+	aspect-ratio: 16 / 9;
+}
+
+.template-card figure img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.template-card-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	padding: 22px 24px 24px;
+	gap: 8px;
+}
+
+.template-card h3 {
+	margin: 0;
+	font-size: 20px;
+	letter-spacing: -0.02em;
+}
+
+.template-card-meta {
+	margin: 0;
+	color: var(--brand);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.template-card p:not(.template-card-meta) {
+	margin: 0;
+	color: var(--ink-muted);
+	font-size: 15px;
+	line-height: 1.6;
+}
+
+.template-card-downloads {
+	display: flex;
+	margin-top: auto;
+	padding-top: 18px;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.template-download {
+	padding: 8px 14px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	color: var(--ink);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.template-download:hover {
+	border-color: var(--brand);
+	color: var(--brand);
+	background: var(--brand-soft);
+}
+
+.template-download:focus-visible {
+	outline: 3px solid var(--focus);
+	outline-offset: 2px;
+}
+
+.template-status {
+	margin: 0;
+	padding: 26px 0;
+	color: var(--ink-muted);
+	font-size: 16px;
+}
+
+.template-license {
+	padding: 34px 38px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface-muted);
+}
+
+.template-license h2 {
+	margin: 0 0 14px;
+	font-size: clamp(24px, 3vw, 32px);
+	letter-spacing: -0.03em;
+}
+
+.template-license p {
+	max-width: 760px;
+	margin: 0 0 12px;
+	color: var(--ink-muted);
+	font-size: 16px;
+	line-height: 1.7;
+}
+
+.template-license p:last-child {
+	margin-bottom: 0;
+}
+
+.template-steps {
+	display: grid;
+	margin: 0;
+	padding: 0;
+	gap: 18px;
+	grid-template-columns: repeat(3, 1fr);
+	list-style: none;
+	counter-reset: template-step;
+}
+
+.template-steps li {
+	padding: 26px 28px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	counter-increment: template-step;
+}
+
+.template-steps li::before {
+	display: block;
+	margin-bottom: 12px;
+	color: var(--brand);
+	content: counter(template-step, decimal-leading-zero);
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.template-steps strong {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 18px;
+	letter-spacing: -0.02em;
+}
+
+.template-steps span {
+	color: var(--ink-muted);
+	font-size: 15px;
+	line-height: 1.6;
+}
+
+@media (max-width: 960px) {
+	.template-grid,
+	.template-steps {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 640px) {
+	.template-grid,
+	.template-steps {
+		grid-template-columns: 1fr;
+	}
+
+	.template-license {
+		padding: 26px 22px;
+	}
+}

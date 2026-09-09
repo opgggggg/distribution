@@ -76,6 +76,7 @@ export const APP_PROFILE = ${JSON.stringify(
 		packageName: profile.packageName,
 		versionName: profile.versionName,
 		urlScheme: profile.urlScheme,
+		documentTemplates: profile.documentTemplates ?? null,
 	},
 	null,
 	"\t",

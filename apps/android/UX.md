@@ -9,14 +9,14 @@ screen keep touch controls. HarmonyOS retains its own home and chrome.
 - **Files:** searchable recent drafts and open documents, format filters, the
   Android system document picker, and an extended New button. No desktop welcome
   panel or unsupported AI connection claims.
-- **Navigation:** Files / Open / Settings are top-level destinations. A document
+- **Navigation:** Files / Settings are top-level destinations. A document
   occupies one screen. Switch documents from its title or the document menu.
 - **Reading:** imported and restored documents open read-only. Tapping text does
   not enter editing. Markdown displays a rendered preview. Edit is an explicit
   bottom action; completing editing returns to reading without remounting the
   engine or losing its undo history.
 - **Editing:** bottom controls expose Undo, Format, Insert, Save a copy, and Hide
-  keyboard. Text formatting has a compact sheet; advanced commands use the
+  keyboard. Sheets share the DOCX Insert surface and a right-aligned close button; advanced commands use the
   format engine's mobile ribbon. Redo lives in the document menu.
 - **Saving:** the status distinguishes a local draft from an exported file.
   Save a copy opens the system destination picker. Closing first saves a draft;
@@ -34,7 +34,8 @@ modal dialogs isolate sheet focus and restore it when dismissed. Layout uses
 scrollable content, safe fixed controls, reduced-motion support, semantic light
 and dark tokens, and system fonts. Android respects system font scaling.
 Android 11+ system-bar, display-cutout, and IME insets resize the WebView bounds,
-including fixed sheets, for Android 15 edge-to-edge behavior.
+including fixed sheets, for Android 15 edge-to-edge behavior. Home and editor
+footers have 52px rows, 48px touch targets and a green active home tab.
 
 ## Validation (2026-09-06)
 
@@ -67,6 +68,23 @@ Remaining device checks:
   retrying and refuses unsafe close/exit. The engine exception itself remains
   an upstream issue to reproduce with Android paste/IME input.
 
+## Startup validation (2026-09-08)
+
+Headless Chromium 152 with the WebView's file-to-file access preference, an
+emulated Android host object and a 390×844 viewport, loading the built
+`assets/web/index.html` from `file://`:
+
+- Home rendered and `appReady()` fired 150–230 ms after navigation with only
+  the ~1 MB entry chunk fetched; no console, exception or network errors.
+- New → Word loaded the DOCX engine chunks on demand and produced an editable
+  surface in about 600 ms; no errors.
+- Without the file-access preference the entry module is rejected by CORS, so
+  `setAllowFileAccessFromFileURLs(true)` in `MainActivity` is load-bearing.
+- `assembleDebug` with the API 35 SDK produced a 21 MB APK containing 101 chunks.
+
+Not yet verified on a device: the native startup view, real WebView timing,
+and the picker-open prefetch. No emulator or device was available.
+
 ## Local browser preview
 
 ```sh
@@ -84,3 +102,29 @@ Design references:
 - https://developer.android.com/develop/ui/views/layout/edge-to-edge
 - https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back
 - https://support.google.com/accessibility/android/answer/7101858
+
+## Android workspace update (2026-09-09)
+
+- Files and Settings share a compact footer. Active navigation uses green without a pill.
+- Word formatting has a dedicated phone panel with Text/Paragraph tabs, a font picker,
+  size stepper, style controls, and color palette. All tools remain available from its
+  secondary action. Other tool panels share the title, right-side close, spacing,
+  neutral controls and borderless sections.
+- Ribbon scrims end at the tool surface; they cannot intercept its controls. Word
+  establishes a text insertion point before opening formatting controls.
+- Error notices can be dismissed, including validation inside the Insert/Format dialogs.
+- New presentations offer the profile's existing template catalog, previews, retry,
+  checksum-checked download, and an offline blank-document path.
+- The file picker and Android VIEW/SEND/SEND_MULTIPLE associations include legacy
+  DOC/DOT, XLS/XLT, PPT/PPS/POT, CSV and supported PNG/JPEG/WebP/EMF/WMF images.
+- Surface refs compare the original component instance, preventing repeated Markdown
+  adapter wrapping from remounting the same document in a render loop.
+
+Browser regression checks: `apps/android/tests/workspace.cjs` (run with Vite's Android
+preview; set `PLAYWRIGHT_MODULE_PATH` when using a bundled Playwright install).
+
+Validation: the browser regression script passed for all five editors at 375×812,
+390×844, 812×375 and 1024×768 (including dark mode and reduced motion). The pinned
+XLS importer/converter regression passed. Vue type checking and Android API 35
+`assembleDebug` passed. Native picker association/Back/IME behavior still needs an
+Android device check.

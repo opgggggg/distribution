@@ -16,41 +16,38 @@ const pageCopy = {
 		text: {
 			...sharedText,
 			"CubeOffice 下载": "Download CubeOffice",
-		"移动预览版 · 1.2.1": "Mobile preview · 1.2.1",
+			"连接你已在用的 AI 应用": "Connects the AI app you already use",
+			"AI 的": "Your AI's ",
+			好帮手: "right hand",
+			"AI 负责思考，CubeOffice 负责动手。":
+				"AI does the thinking. CubeOffice does the doing.",
+			"ChatGPT、Claude 这些 AI 很会写，却搞不定 Office 的文件格式——直接让它们生成 .docx、.pptx，排版和样式往往一塌糊涂。把 CubeOffice 连上去，它们就能读懂你正打开的文档，并直接修改 Word 段落、Excel 单元格、PowerPoint 幻灯片与 Visio 图表。改动落在原生文件里，可继续编辑，也随时可以撤销。":
+				"AI apps like ChatGPT and Claude write well, but Office file formats defeat them: ask one for a .docx or .pptx and the layout and styling usually fall apart. Connect CubeOffice and they can read the document you have open and edit it directly — Word paragraphs, Excel cells, PowerPoint slides, Visio diagrams. Every change lands in the real file, still editable, and always undoable.",
+			已适配: "Works with",
+			"调用 CubeOffice": "Calling CubeOffice",
+			已写入原生文件: "Written to the real file",
+			"AI 想到的改动，由 CubeOffice 直接落进你电脑里的文件。":
+				"CubeOffice puts what the AI works out straight into the file on your computer.",
+			"ChatGPT 调用 CubeOffice 修改文档的示意":
+				"Illustration of ChatGPT calling CubeOffice to edit a document",
+			"桌面版 1.3.1 · Android 预览版 1.3.1": "Desktop 1.3.1 · Android preview 1.3.1",
+			"移动预览版 · 1.3.1": "Mobile preview · 1.3.1",
 			"手机与平板 · Android 8.0+": "Phones and tablets · Android 8.0+",
-		"Android 8.0+ · 预览版 1.2.1": "Android 8.0+ · Preview 1.2.1",
+			"Android 8.0+ · 预览版 1.3.1": "Android 8.0+ · Preview 1.3.1",
 			"为手机和平板设计的触控界面，本地编辑与草稿保存。":
 				"Touch controls for phones and tablets, with local editing and draft saving.",
 			"下载 APK": "Download APK",
 			"通用 APK": "Universal APK",
+			模板: "Templates",
 			支持平台: "Platforms",
 			产品能力: "Features",
 			支持格式: "Formats",
 			"AI 协作": "AI collaboration",
-			"通用 AI 的": "A document workspace",
-			文档工作台: "for any AI assistant",
-			"连接你常用的 AI 应用，在同一个工作区中处理 Word、PowerPoint、Excel、Visio 与 Markdown。让 AI 理解当前文档，并协助生成、改写、整理与编辑内容。":
-				"Connect the AI app you already use and work with Word, PowerPoint, Excel, Visio, and Markdown in one place. Give your assistant document context so it can help create, rewrite, organize, and edit content.",
 			下载应用: "Download app",
 			下载桌面版: "Download desktop app",
 			"了解 AI 协作": "See how AI collaboration works",
-			"CubeOffice 1.2.1 · macOS、Windows 与 Linux":
-				"CubeOffice 1.2.1 · macOS, Windows, and Linux",
-		"桌面版 1.2.1 · Android 预览版 1.2.1":
-			"Desktop 1.2.1 · Android preview 1.2.1",
-			"AI 已连接": "AI connected",
-			文件: "File",
-			插入: "Insert",
-			布局: "Layout",
-			审阅: "Review",
-			视图: "View",
-			文档助手: "Document assistant",
-			基于当前文档: "Using this document",
-			"把这页总结改写得更清晰，并突出关键数据。":
-				"Rewrite this summary for clarity and highlight the key figures.",
-			"已完成 · 可撤销": "Done · Undo available",
-			"CubeOffice 通用 AI 文档工作台界面示意":
-				"Illustration of the CubeOffice document workspace connected to an AI app",
+			"CubeOffice 1.3.1 · macOS、Windows 与 Linux":
+				"CubeOffice 1.3.1 · macOS, Windows, and Linux",
 			"一次熟悉，处处顺手": "Familiar everywhere",
 			"一套体验，": "One experience,",
 			从桌面延伸到手机: "from desktop to mobile",
@@ -59,7 +56,7 @@ const pageCopy = {
 				"Work on macOS, Windows, and Linux, then read and edit documents on your Android phone.",
 			"围绕同一套文档能力与交互逻辑构建，在 macOS、Windows 与 Linux 之间保持一致的工作节奏。":
 				"The same document capabilities and interaction model keep your workflow consistent across macOS, Windows, and Linux.",
-			"桌面版本 · 1.2.1": "Desktop release · 1.2.1",
+			"桌面版本 · 1.3.1": "Desktop release · 1.3.1",
 			"AppImage 与 DEB": "AppImage and DEB",
 			选择你的平台: "Choose your platform",
 			选择你的桌面平台: "Choose your desktop platform",
@@ -138,10 +135,10 @@ const pageCopy = {
 			"不同文档格式的 AI 协作任务示意":
 				"Examples of AI collaboration tasks across document formats",
 			"让熟悉的 AI，真正参与文档工作": "Bring the AI you know into real document work",
-		"CubeOffice 1.2.1 桌面版和 Android 1.2.1 预览版现已开放下载。":
-			"CubeOffice 1.2.1 desktop apps and the Android 1.2.1 preview are available now.",
+			"CubeOffice 1.3.1 桌面版和 Android 1.3.1 预览版现已开放下载。":
+				"CubeOffice 1.3.1 desktop apps and the Android 1.3.1 preview are available now.",
 			"macOS、Windows 与 Linux 桌面版现已开放下载。":
-				"CubeOffice 1.2.1 is available for macOS, Windows, and Linux.",
+				"CubeOffice 1.3.1 is available for macOS, Windows, and Linux.",
 		},
 		attributes: {
 			"CubeOffice 首页": "CubeOffice home",
@@ -228,20 +225,24 @@ const pageCopy = {
 			"Mac 上可以直接编辑 Visio 文件吗？": "Can I edit Visio files directly on a Mac?",
 			"可以。CubeOffice 的 macOS 版可以打开、编辑并保存 VSDX 文件，包括常见图形、文本、连接线、多页面和布局操作。目前提供 Apple Silicon 版本。":
 				"Yes. CubeOffice for macOS opens, edits, and saves VSDX files, including common shapes, text, connectors, multiple pages, and layout operations. An Apple Silicon build is currently available.",
-			"Linux 上需要安装 Microsoft Office 或 Wine 吗？": "Does Linux require Microsoft Office or Wine?",
+			"Linux 上需要安装 Microsoft Office 或 Wine 吗？":
+				"Does Linux require Microsoft Office or Wine?",
 			"不需要。CubeOffice 以原生桌面应用提供 AppImage 和 DEB 安装包，不依赖 Microsoft Office、Wine 或 Windows 虚拟机。":
 				"No. CubeOffice is a native desktop application available as AppImage and DEB packages. It does not require Microsoft Office, Wine, or a Windows virtual machine.",
-			"保存后能回到 Microsoft Visio 继续编辑吗？": "Can I continue editing the saved file in Microsoft Visio?",
+			"保存后能回到 Microsoft Visio 继续编辑吗？":
+				"Can I continue editing the saved file in Microsoft Visio?",
 			"CubeOffice 保存标准 VSDX 文件，并采用源结构保留策略。复杂专有功能可能存在显示差异，重要文件建议保留原始副本并在交付前复核。":
 				"CubeOffice saves standard VSDX files with a source-preserving strategy. Complex proprietary features may render differently, so keep the original and review important files before delivery.",
 			"支持哪些 Visio 图表类型？": "Which Visio diagram types are supported?",
 			"内置基本图形、流程图、BPMN 和组织结构图目录，也支持从文档主控形状与 VSSX 图形库插入内容。":
 				"Built-in catalogs cover Basic, Flowchart, BPMN, and Org Chart shapes, with insertion from document masters and VSSX stencil libraries.",
-			"可以把 draw.io 文件变成 Visio 文件吗？": "Can I turn a draw.io file into a Visio file?",
+			"可以把 draw.io 文件变成 Visio 文件吗？":
+				"Can I turn a draw.io file into a Visio file?",
 			"可以导入 draw.io 内容并转换为可编辑的图表模型，之后保存为 VSDX。复杂图形在转换后建议人工检查。":
 				"You can import draw.io content into an editable diagram model and then save it as VSDX. Review complex diagrams after conversion.",
 			"让 Mac 与 Linux 真正加入 Visio 工作流": "Bring Mac and Linux into your Visio workflow",
-			"下载桌面版，直接开始处理 VSDX 图表。": "Download the desktop app and start working with VSDX diagrams.",
+			"下载桌面版，直接开始处理 VSDX 图表。":
+				"Download the desktop app and start working with VSDX diagrams.",
 			选择下载版本: "Choose a download",
 			返回首页: "Back to home",
 		},
@@ -251,6 +252,54 @@ const pageCopy = {
 			"Visio 核心支持": "Core Visio support",
 			"CubeOffice 在 macOS 上打开并编辑真实 VSDX 经典流程图":
 				"CubeOffice opening and editing a real classic VSDX flowchart on macOS",
+		},
+	},
+	templates: {
+		title: "Free PowerPoint templates | CubeOffice originals",
+		description:
+			"Eight original CubeOffice PowerPoint templates, free to download, edit and redistribute. 16:9, thirteen slides each, in English and Chinese, and selectable when you create a new PPTX in CubeOffice.",
+		text: {
+			...sharedText,
+			"CubeOffice 原创模板": "CubeOffice originals",
+			模板库: "Template library",
+			在应用中使用: "Use them in the app",
+			授权说明: "Licence",
+			不必从空白页开始: "You do not have to start from a blank page",
+			"8 套为 CubeOffice 从零设计的演示文稿模板。每套 16:9、共 13 页，包含封面、目录、章节页、要点页、数据页、时间线、表格、图文页与结尾页，并提供中文与英文两个版本。免费下载，也可自由再分发。":
+				"Eight presentation templates designed for CubeOffice from scratch. Each is 16:9 and thirteen slides — cover, contents, section dividers, a lead page, figures, a timeline, a table, an image page and a closing page — in both English and Chinese. Free to download and free to redistribute.",
+			浏览模板: "Browse templates",
+			"下载 CubeOffice": "Download CubeOffice",
+			"选择语言版本后直接下载 .pptx 文件，可在 CubeOffice、PowerPoint、Keynote 或 WPS 中打开编辑。":
+				"Pick a language and download the .pptx directly. The files open and edit in CubeOffice, PowerPoint, Keynote and WPS.",
+			"正在加载模板…": "Loading templates…",
+			"在 CubeOffice 里直接选用": "Pick one inside CubeOffice",
+			"桌面版新建演示文稿时会列出这些模板，按界面语言给出对应语种的版本，无需事先下载。":
+				"The desktop app lists these templates when you create a presentation, in the language the interface is set to, with no download step first.",
+			"点击「新建」": "Click New",
+			"在标题栏的新建菜单中选择 PowerPoint 演示文稿。":
+				"Choose PowerPoint presentation from the New menu in the title bar.",
+			选择模板: "Choose a template",
+			"模板库会即时从本页读取同一份清单，第一项始终是空白演示文稿。":
+				"The picker reads the same catalog this page does, and a blank presentation is always the first choice.",
+			开始编辑: "Start editing",
+			"模板以未命名文档打开，保存时由你决定文件名和位置，原模板不受影响。":
+				"The template opens as an unnamed document, so saving asks you where it goes and the template itself is untouched.",
+			"这些模板是 CubeOffice 的原创作品：版式、配色、字体搭配、装饰图形与示例文案均为自行设计与生成。模板中不包含任何第三方模板的版式或素材，也不包含照片、图标集或字体文件。":
+				"These templates are CubeOffice's own work: the layouts, palettes, type pairings, decorative shapes and placeholder copy were all designed and generated for this set. No template contains a layout or asset taken from a third-party template, and none contains a photograph, icon set or font file.",
+			"你可以自由使用、修改和再分发，用于个人或商业用途，无需署名。示例文案仅作占位提示，其中的数字、名称与结论均为虚构，请替换为你自己的内容。":
+				"You may use, edit and redistribute them for personal and commercial work, with or without attribution. The placeholder copy is there to show what belongs in each slot; its figures, names and conclusions are invented, so replace them with your own.",
+			"模板正文使用 Georgia、Arial、Trebuchet MS、Verdana 与 Times New Roman 等 Windows 与 macOS 均已内置的字体，中日韩字符交由系统字体回退处理，因此模板不附带任何字体文件。":
+				"The templates set only faces that ship with both Windows and macOS — Georgia, Arial, Trebuchet MS, Verdana and Times New Roman — and leave CJK characters to the reader's system font, which is why no font file is bundled.",
+			"CubeOffice 1.3.1": "CubeOffice 1.3.1",
+			新建演示文稿时就能选模板: "Choose a template as you create the presentation",
+			"下载桌面版，从「新建」菜单直接开始。":
+				"Download the desktop app and start from the New menu.",
+			选择下载版本: "Choose a download",
+			返回首页: "Back to home",
+		},
+		attributes: {
+			"CubeOffice 首页": "CubeOffice home",
+			模板页面导航: "Template page navigation",
 		},
 	},
 	privacy: {

@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, toRaw, watch } from "vue";
+import {
+	computed,
+	defineAsyncComponent,
+	markRaw,
+	nextTick,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	toRaw,
+	watch,
+} from "vue";
 
-import { DOCX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-docx/vue";
 import {
 	UiArtifactFormatRegistry,
 	useUiDialogs,
@@ -9,27 +18,34 @@ import {
 	UiRibbonModeProvider,
 	setUiEditorFileSink,
 	type EditorArtifactFormat,
+	type UiArtifactFormatContribution,
 	type UiArtifactSurfaceBinding,
 	type UiArtifactSurfaceHandle,
 	type UiArtifactSurfaceInput,
 } from "@yaochn/als-office-editor-ui/vue";
-import { MARKDOWN_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-markdown/vue";
-import { PDF_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-pdf/vue";
-import { PPTX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-pptx/vue";
-import { VSDX_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-vsdx/vue";
-import {
-	JMP_VUE_FORMAT_CONTRIBUTION,
-	XLSX_VUE_FORMAT_CONTRIBUTION,
-} from "@yaochn/als-office-xlsx/vue";
 
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
 import { captureDocumentPreview } from "./document-preview";
 import { updateHarmonyPreview, ensureHarmonyRecent } from "./autosave-store";
+import AndroidIcon from "./android/AndroidIcon.vue";
+import ErrorNotice from "./ErrorNotice.vue";
+const ClientServicesDialog = defineAsyncComponent(() => import("./services/ClientServicesDialog.vue"));
+const clientServicesOpen = ref(false);
+import type { AndroidTextFormat } from "./android/text-format";
+const AndroidTextFormatPanel = defineAsyncComponent(
+	() => import("./android/AndroidTextFormatPanel.vue"),
+);
+const androidFormatOpen = ref(false);
+const androidTextFormat = ref<AndroidTextFormat>({});
+import { OPEN_ACCEPT } from "./open-formats";
+import type { DocumentTemplateSource } from "../../../../als-office/apps/desktop/src/document-templates";
+const AndroidTemplatePicker = defineAsyncComponent(
+	() => import("./android/AndroidTemplatePicker.vue"),
+);
+const templateSource: DocumentTemplateSource | undefined =
+	APP_PROFILE.documentTemplates ?? undefined;
+const templatePickerOpen = ref(false);
 
-import DesktopWelcomePanel from "../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue";
-import CliActivityPanel from "../../../../als-office/apps/desktop/src/CliActivityPanel.vue";
-import AboutDialog from "../../../../als-office/apps/desktop/src/AboutDialog.vue";
-import SettingsDialog from "../../../../als-office/apps/desktop/src/SettingsDialog.vue";
 import type {
 	CliActivityEntry,
 	CliControlStatus,
@@ -60,6 +76,23 @@ import {
 	writeHarmonyAutosave,
 	type HarmonyAutosaveRecord,
 } from "./autosave-store";
+
+// Home paints from the entry chunk alone. The format engines (each several
+// megabytes of JavaScript) and the desktop-derived panels are separate chunks
+// that load the first time a document of that format opens or a panel shows.
+// Android and HarmonyOS retain the same code-split payload.
+const DesktopWelcomePanel = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue"),
+);
+const CliActivityPanel = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/CliActivityPanel.vue"),
+);
+const AboutDialog = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/AboutDialog.vue"),
+);
+const SettingsDialog = defineAsyncComponent(
+	() => import("../../../../als-office/apps/desktop/src/SettingsDialog.vue"),
+);
 
 interface HarmonyFormatOption {
 	format: EditorArtifactFormat;
@@ -112,25 +145,13 @@ interface MobileDocxEditor {
 	setSelection(selection: MobileDocxSelection | null): MobileDocxSelection | null;
 	focus(): void;
 	editor: {
-		getSelectionFormat(): {
-			bold?: boolean;
-			italic?: boolean;
-			underline?: string;
-			listType?: string | null;
-		};
+		getSelectionFormat(): AndroidTextFormat;
 	};
 	writePort: {
 		dispatchCommand(command: Record<string, unknown>): unknown;
 	};
-	applyTextFormat(format: {
-		bold?: boolean;
-		italic?: boolean;
-		underline?: "none" | "single";
-	}): void;
-	applyParagraphFormat(format: {
-		listType?: "bullet" | "decimal" | null;
-		styleId?: string;
-	}): void;
+	applyTextFormat(format: AndroidTextFormat): void;
+	applyParagraphFormat(format: AndroidTextFormat): void;
 	insertPicture(
 		blob: Blob,
 		at: MobileDocxPosition,
@@ -225,17 +246,104 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 		baseName: "Data Table",
 		editable: false,
 	},
+	{
+		format: "image",
+		label: "图片",
+		documentLabel: "图片",
+		shortLabel: "图片",
+		icon: "IMG",
+		extension: "png",
+		baseName: "Image",
+		editable: false,
+	},
 ];
-const OPEN_ACCEPT = ".docx,.pptx,.xlsx,.jmp,.vsdx,.md,.markdown,.pdf,.drawio";
-const formats = new UiArtifactFormatRegistry([
-	DOCX_VUE_FORMAT_CONTRIBUTION,
-	PPTX_VUE_FORMAT_CONTRIBUTION,
-	XLSX_VUE_FORMAT_CONTRIBUTION,
-	JMP_VUE_FORMAT_CONTRIBUTION,
-	VSDX_VUE_FORMAT_CONTRIBUTION,
-	MARKDOWN_VUE_FORMAT_CONTRIBUTION,
-	PDF_VUE_FORMAT_CONTRIBUTION,
-]);
+const formats = new UiArtifactFormatRegistry();
+
+type FormatEngineModule = "docx" | "pptx" | "xlsx" | "vsdx" | "markdown" | "pdf" | "image";
+const FORMAT_ENGINE_MODULES: Readonly<
+	Record<FormatEngineModule, () => Promise<readonly UiArtifactFormatContribution[]>>
+> = {
+	docx: async () => [(await import("@yaochn/als-office-docx/vue")).DOCX_VUE_FORMAT_CONTRIBUTION],
+	pptx: async () => [(await import("@yaochn/als-office-pptx/vue")).PPTX_VUE_FORMAT_CONTRIBUTION],
+	xlsx: async () => {
+		const module = await import("@yaochn/als-office-xlsx/vue");
+		return [module.XLSX_VUE_FORMAT_CONTRIBUTION, module.JMP_VUE_FORMAT_CONTRIBUTION];
+	},
+	vsdx: async () => [(await import("@yaochn/als-office-vsdx/vue")).VSDX_VUE_FORMAT_CONTRIBUTION],
+	markdown: async () => [
+		(await import("@yaochn/als-office-markdown/vue")).MARKDOWN_VUE_FORMAT_CONTRIBUTION,
+	],
+	image: async () => [
+		(await import("@yaochn/als-office-image/vue")).IMAGE_VUE_FORMAT_CONTRIBUTION,
+	],
+	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
+};
+const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, FormatEngineModule>>> =
+	{
+		docx: "docx",
+		pptx: "pptx",
+		xlsx: "xlsx",
+		jmp: "xlsx",
+		vsdx: "vsdx",
+		markdown: "markdown",
+		pdf: "pdf",
+		image: "image",
+	};
+const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> = {
+	doc: "docx",
+	dot: "docx",
+	ppt: "pptx",
+	pps: "pptx",
+	pot: "pptx",
+	xls: "xlsx",
+	xlt: "xlsx",
+	csv: "xlsx",
+	drawio: "vsdx",
+	txt: "markdown",
+	png: "image",
+	jpg: "image",
+	jpeg: "image",
+	webp: "image",
+	emf: "image",
+	wmf: "image",
+	docx: "docx",
+	pptx: "pptx",
+	xlsx: "xlsx",
+	jmp: "xlsx",
+	vsdx: "vsdx",
+	md: "markdown",
+	markdown: "markdown",
+	pdf: "pdf",
+};
+const formatEngineLoads = new Map<FormatEngineModule, Promise<void>>();
+
+function loadFormatEngine(module: FormatEngineModule): Promise<void> {
+	let load = formatEngineLoads.get(module);
+	if (!load) {
+		load = FORMAT_ENGINE_MODULES[module]().then((contributions) => {
+			for (const contribution of contributions) {
+				if (!formats.get(contribution.plugin.manifest.id)) formats.register(contribution);
+			}
+		});
+		// A failed chunk load (for example, storage pressure) must stay retryable.
+		load.catch(() => formatEngineLoads.delete(module));
+		formatEngineLoads.set(module, load);
+	}
+	return load;
+}
+
+function ensureFormat(format: EditorArtifactFormat): Promise<void> {
+	const module = FORMAT_ENGINE_BY_FORMAT[format];
+	if (!module) return Promise.reject(new Error(`不支持 ${format} 格式。`));
+	return loadFormatEngine(module);
+}
+
+async function ensureAllFormats(): Promise<void> {
+	await Promise.all(
+		(Object.keys(FORMAT_ENGINE_MODULES) as FormatEngineModule[]).map(loadFormatEngine),
+	);
+}
+
 const formatOptions = new Map(FORMAT_OPTIONS.map((option) => [option.format, option]));
 const editableFormats = FORMAT_OPTIONS.filter((option) => option.editable);
 const welcomePanelFormats = FORMAT_OPTIONS.map((option) => ({ label: option.shortLabel }));
@@ -321,6 +429,7 @@ const appMenuHost = ref<HTMLElement | null>(null);
 const appMenu = ref<HTMLElement | null>(null);
 const appMenuTrigger = ref<HTMLButtonElement | null>(null);
 const preferences = ref(loadDesktopPreferences());
+const surfaceInstances = new Map<string, unknown>();
 const surfaceRefs = new Map<string, (instance: unknown) => void>();
 const formatCounters = new Map<EditorArtifactFormat, number>();
 let tabCounter = 0;
@@ -453,8 +562,8 @@ function restoreAndroidDocument(id: string): void {
 
 async function closeAndroidDocument(): Promise<void> {
 	const tab = activeTab.value;
-	if (!tab?.editor || saving.value) return;
-	if (optionFor(tab.format).editable) {
+	if (!tab || saving.value) return;
+	if (tab.editor && optionFor(tab.format).editable) {
 		clearAutosaveTimer(tab.id);
 		await runAutosave(tab);
 		if (!autosaveIsCurrent(tab)) {
@@ -464,6 +573,35 @@ async function closeAndroidDocument(): Promise<void> {
 	}
 	closeTab(tab.id);
 	showMobileHome();
+}
+
+function openAndroidFormat(): void {
+	if (activeTab.value?.format !== "docx") {
+		void openMobileRibbonTab("home");
+		return;
+	}
+	const context = mobileDocxTextSelection();
+	if (!context) return;
+	androidTextFormat.value = { ...context.editor.editor.getSelectionFormat() };
+	androidFormatOpen.value = true;
+}
+
+function updateAndroidTextFormat(patch: AndroidTextFormat, paragraph = false): void {
+	const context = mobileDocxTextSelection();
+	if (!context) return;
+	try {
+		if (paragraph) context.editor.applyParagraphFormat(patch);
+		else context.editor.applyTextFormat(patch);
+		androidTextFormat.value = { ...androidTextFormat.value, ...patch };
+	} catch (cause) {
+		reportError(cause);
+	}
+}
+
+async function openAndroidAllTools(): Promise<void> {
+	androidFormatOpen.value = false;
+	await nextTick();
+	await openMobileRibbonTab("home");
 }
 
 function androidTextCommand(command: string): void {
@@ -486,6 +624,7 @@ const autosaveQueued = new Set<string>();
 let autosavesRestored = false;
 
 watch(activeId, () => {
+	androidFormatOpen.value = false;
 	if (mobilePptxViewing.value) {
 		mobilePptxViewing.value = false;
 		void setMobilePresentationLandscape(false);
@@ -618,6 +757,7 @@ async function addDocument(
 		requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
 	);
 	const option = optionFor(format);
+	await ensureFormat(format);
 	// DocumentViewPicker files are backed by a temporary native URI. ArkWeb can
 	// read that handle to open a document, but a later PPTX export may receive an
 	// empty second read. Materialize it once so editing, autosave and Save As all
@@ -847,6 +987,29 @@ function historyTimeLabel(savedAt: number): string {
 }
 
 async function createDocument(format: EditorArtifactFormat): Promise<void> {
+	if (androidLayout && format === "pptx" && templateSource?.formats.includes(format)) {
+		if (!opening.value) templatePickerOpen.value = true;
+		return;
+	}
+	await createBlankDocument(format);
+}
+
+async function createPresentationTemplate(
+	file: { name: string; blob: Blob } | null,
+): Promise<void> {
+	templatePickerOpen.value = false;
+	if (!file) return createBlankDocument("pptx");
+	opening.value = true;
+	try {
+		await addDocument("pptx", file.name, file.blob, { mobileMode: "editing" });
+	} catch (cause) {
+		reportError(cause);
+	} finally {
+		opening.value = false;
+	}
+}
+
+async function createBlankDocument(format: EditorArtifactFormat): Promise<void> {
 	if (opening.value) return;
 	const option = optionFor(format);
 	if (!option.editable) return;
@@ -993,7 +1156,14 @@ function replaceFileExtension(fileName: string, extension: string): string {
 
 async function addFile(file: File): Promise<void> {
 	const extension = extensionOf(file.name);
-	const direct = formats.get(extension as EditorArtifactFormat);
+	const engine = FORMAT_ENGINE_BY_EXTENSION[extension];
+	// Converters (for example draw.io → VSDX) register with their engines, so an
+	// unknown extension needs every engine before an import can be resolved.
+	if (engine) await loadFormatEngine(engine);
+	else await ensureAllFormats();
+	const direct =
+		formats.get((extension === "txt" ? "markdown" : extension) as EditorArtifactFormat) ??
+		formats.list().find(({ plugin }) => plugin.manifest.mimeTypes.includes(file.type));
 	if (direct) {
 		await addDocument(direct.plugin.manifest.id, file.name, file);
 		return;
@@ -1006,7 +1176,10 @@ async function addFile(file: File): Promise<void> {
 		},
 		{ openable: (format) => formats.get(format) !== undefined },
 	);
-	if (!converter) throw new Error("不支持这个文件类型。请选择 Office、PDF 或 Markdown 文件。");
+	if (!converter)
+		throw new Error(
+			"不支持这个文件类型。请选择 Office、PDF、Markdown 或 PNG/JPEG/WebP/EMF/WMF 图片。",
+		);
 	const targetFormat = converter.manifest.target.format;
 	const targetExtension = converter.manifest.target.extensions[0] ?? targetFormat;
 	const converted = await formats.engine.conversions.convert(
@@ -1065,6 +1238,7 @@ async function closeTab(id: string): Promise<void> {
 	autosaveQueued.delete(id);
 	formats.unmount(id);
 	surfaceRefs.delete(id);
+	surfaceInstances.delete(id);
 	tabs.value.splice(index, 1);
 	if (activeId.value !== id) return;
 	activeId.value = tabs.value[Math.min(index, tabs.value.length - 1)]?.id ?? HOME_TAB_ID;
@@ -1116,6 +1290,7 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 
 function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 	if (!instance) {
+		surfaceInstances.delete(tab.id);
 		clearAutosaveTimer(tab.id);
 		autosaveUnsubscribers.get(tab.id)?.();
 		autosaveUnsubscribers.delete(tab.id);
@@ -1123,7 +1298,10 @@ function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 		tab.editor = null;
 		return;
 	}
-	if (toRaw(tab.editor?.exposed) === toRaw(instance)) return;
+	// Adapters may wrap the exposed object (Markdown does); compare the actual
+	// component instance so a render cannot remount its own surface indefinitely.
+	if (surfaceInstances.get(tab.id) === toRaw(instance)) return;
+	surfaceInstances.set(tab.id, toRaw(instance));
 	const mounted = formats.mount(tab.format, surfaceInput(tab), instance);
 	tab.editor = mounted ? markRaw(mounted) : null;
 	void prepareDocumentPreview(tab);
@@ -1287,6 +1465,10 @@ async function openMobileRibbonTab(tabId?: "home" | "insert"): Promise<void> {
 	mobileInsertMenuOpen.value = false;
 	mobileInsertLinkOpen.value = false;
 	await nextTick();
+	if (androidLayout && activeTab.value?.format === "docx") {
+		const editor = activeDocxEditor();
+		if (editor) ensureMobileDocxTextSelection(editor);
+	}
 	if (!tabId) return;
 	const surface = document.querySelector<HTMLElement>(
 		'.harmony-documents__surface[data-active="true"]',
@@ -2367,6 +2549,19 @@ function handleNativeBack(): boolean {
 		aboutDialogOpen.value = false;
 		return true;
 	}
+	if (androidFormatOpen.value) {
+		if (error.value) error.value = "";
+		else androidFormatOpen.value = false;
+		return true;
+	}
+	if (templatePickerOpen.value) {
+		templatePickerOpen.value = false;
+		return true;
+	}
+	if (error.value) {
+		error.value = "";
+		return true;
+	}
 	if (settingsDialogOpen.value) {
 		settingsDialogOpen.value = false;
 		return true;
@@ -2528,6 +2723,13 @@ function handleAndroidEscape(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+	// Let the workspace paint before optional network work; failure stays silent
+	// here, while the explicit check in settings reports actionable errors.
+	window.setTimeout(() => {
+		void import("./services/client-services").then(async ({ checkAutomaticStoreUpdate }) => {
+			if (await checkAutomaticStoreUpdate()) clientServicesOpen.value = true;
+		}).catch(() => {});
+	}, 1500);
 	document.addEventListener("keydown", handleAndroidEscape);
 	document.addEventListener("pointerdown", closeMenus);
 	document.addEventListener("focusin", handleMobileFocusIn);
@@ -2643,7 +2845,7 @@ onBeforeUnmount(() => {
 			@undo="undoActive"
 			@redo="redoActive"
 			@search="openActiveSearch"
-			@format="openMobileRibbonTab('home')"
+			@format="openAndroidFormat"
 			@insert="
 				activeTab?.format === 'docx'
 					? openMobileInsertMenu()
@@ -2697,6 +2899,7 @@ onBeforeUnmount(() => {
 						<span>系统设置…</span>
 						<kbd class="harmony-app-menu__shortcut">Ctrl+,</kbd>
 					</button>
+					<button type="button" role="menuitem" @click="closeAppMenu(); clientServicesOpen = true">反馈与更新…</button>
 				</span>
 			</span>
 			<strong class="harmony-chrome__brand">{{ APP_PROFILE.name }}</strong>
@@ -2785,7 +2988,12 @@ onBeforeUnmount(() => {
 						<path d="M2.75 6.25h5l1.5-2h8v11.5H2.75zM2.75 7.75h14.5" />
 					</svg>
 					<span class="harmony-action-label">{{ opening ? "打开中…" : "打开" }}</span>
-					<input type="file" :accept="OPEN_ACCEPT" :disabled="opening" @change="open" />
+					<input
+						type="file"
+						:accept="OPEN_ACCEPT"
+						:disabled="opening"
+						@change="open"
+					/>
 				</label>
 				<button
 					type="button"
@@ -2962,7 +3170,11 @@ onBeforeUnmount(() => {
 			</div>
 		</header>
 
-		<p v-if="error" class="harmony-feedback" role="alert">{{ error }}</p>
+		<ErrorNotice
+			v-if="!mobileInsertMenuOpen && !androidFormatOpen"
+			:message="error"
+			@dismiss="error = ''"
+		/>
 
 		<div
 			v-show="!androidLayout || !homeActive"
@@ -3142,7 +3354,7 @@ onBeforeUnmount(() => {
 			@click="closeMobileRibbon"
 		/>
 		<button
-			v-if="mobileRibbonOpen && activeTab"
+			v-if="!androidLayout && mobileRibbonOpen && activeTab"
 			type="button"
 			class="harmony-mobile-ribbon-done"
 			@click="closeMobileRibbon"
@@ -3150,6 +3362,13 @@ onBeforeUnmount(() => {
 			完成
 		</button>
 
+		<header v-if="androidLayout && mobileRibbonOpen && activeTab" class="android-ribbon-header">
+			<span aria-hidden="true" />
+			<strong>{{ mobileRibbonSection === "insert" ? "插入" : "格式" }}</strong>
+			<button class="android-icon-button" aria-label="关闭面板" @click="closeMobileRibbon">
+				<AndroidIcon name="close" />
+			</button>
+		</header>
 		<nav
 			v-if="!androidLayout && activeTab && activeMobileEditing"
 			class="harmony-mobile-toolbar"
@@ -3543,6 +3762,22 @@ onBeforeUnmount(() => {
 			@change="insertSelectedMobileDocxImages"
 		/>
 
+		<AndroidTextFormatPanel
+			v-if="androidFormatOpen"
+			:format="androidTextFormat"
+			:error="error"
+			@close="androidFormatOpen = false"
+			@text="updateAndroidTextFormat($event)"
+			@paragraph="updateAndroidTextFormat($event, true)"
+			@more="openAndroidAllTools"
+			@dismiss-error="error = ''"
+		/>
+		<AndroidTemplatePicker
+			v-if="templatePickerOpen && templateSource"
+			:source="templateSource"
+			@close="templatePickerOpen = false"
+			@choose="createPresentationTemplate"
+		/>
 		<dialog
 			ref="mobileInsertDialog"
 			@cancel.prevent="closeMobileInsertMenu"
@@ -3557,16 +3792,17 @@ onBeforeUnmount(() => {
 				aria-label="添加内容"
 			>
 				<header>
+					<span aria-hidden="true" />
+					<strong>添加</strong>
 					<button type="button" aria-label="关闭添加面板" @click="closeMobileInsertMenu">
 						<svg viewBox="0 0 24 24" aria-hidden="true">
 							<path d="m6 6 12 12M18 6 6 18" />
 						</svg>
 					</button>
-					<strong>添加</strong>
-					<span aria-hidden="true" />
 				</header>
 
 				<div class="harmony-mobile-insert-sheet__body">
+					<ErrorNotice :message="error" @dismiss="error = ''" />
 					<section class="harmony-mobile-insert-section">
 						<h3>基础</h3>
 						<div class="harmony-mobile-insert-headings" aria-label="段落样式">
@@ -3817,5 +4053,6 @@ onBeforeUnmount(() => {
 			:auto-update-enabled="false"
 			@close="settingsDialogOpen = false"
 		/>
+		<ClientServicesDialog v-if="clientServicesOpen" @close="clientServicesOpen = false" />
 	</main>
 </template>

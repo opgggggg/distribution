@@ -124,6 +124,71 @@ npm run desktop:build:linux-x64
 
 The build requires the updater signing environment. `--no-updater-artifacts` is suitable only for a deliberately unsigned installer-only diagnostic build; it cannot satisfy a production release.
 
+Set the signing password explicitly, as an empty string:
+
+```bash
+OFFICE_UPDATER_SIGNING_PRIVATE_KEY="$HOME/.tauri/auroraprime-office.key" \
+TAURI_SIGNING_PRIVATE_KEY_PASSWORD='' \
+npm run desktop:build
+```
+
+The key is unencrypted, and `resolveProfileSigningEnv` deliberately drops an
+empty profile variable so the environment's own value survives. Set only the
+`OFFICE_*` pair and nothing supplies the password: Tauri then prompts for one,
+which fails on a non-interactive host with `Device not configured`, after the
+bundles are already written. Check for the `.sig` files, not just for bundles.
+
+Never read a build's result through a pipe. `npm run desktop:build | tail` reports
+the exit status of `tail`, so a failed build looks successful; the build scripts
+themselves propagate failure correctly. Use `set -o pipefail`, or redirect to a
+file and check the status separately.
+
+### Building Linux on Apple Silicon
+
+`.agents/skills/cubeoffice-release/linux/build-linux-x86_64.sh <output-dir>`
+builds the signed AppImage and `.deb` in a Debian 12 amd64 container from
+`git archive` of the current revision. It needs an x86_64 container runtime
+backed by **Rosetta**, not QEMU:
+
+```bash
+colima start rosetta --vm-type vz --vz-rosetta --cpu 6 --memory 10 --disk 60
+DOCKER_CONTEXT=colima-rosetta .agents/skills/cubeoffice-release/linux/build-linux-x86_64.sh /tmp/linux-out
+```
+
+A separate colima profile leaves the default one untouched. Two failures are
+specific to this path and both surface only as `failed to run linuxdeploy`:
+
+- Under QEMU user-mode emulation linuxdeploy starts but its subprocesses die,
+  reporting `subprocess failed (exit code 2)` even for a trivial AppDir. Rosetta
+  runs it correctly. Do not spend time on the AppDir.
+- Rosetta refuses to exec an AppImage at all, because the AppImage marker
+  (`AI\x02` at offset 8) sits in the ELF header's ABI-version padding, which
+  Rosetta validates. Running the tool directly through the loader shows the real
+  message, `ELF file ABI version invalid`. The script zeroes those three bytes in
+  the downloaded tools; the AppImage it produces is unaffected.
+
+Confirm a suspected linuxdeploy problem by running it by hand on an AppDir
+holding nothing but `/bin/true` — Tauri hides its output.
+
+### Windows build host notes
+
+The UTM Windows VM is **Windows on ARM**; `x86_64-pc-windows-msvc` is installed
+and the MSVC toolchain cross-compiles genuine x64 binaries. Verify rather than
+assume: `file` reports the NSIS installer as PE32/i386 because the installer stub
+always is, so read the PE machine field of `cubeoffice-app.exe` and the CLI
+sidecar instead, and expect `0x8664`.
+
+That VM has host-only networking: DNS resolves and the gateway answers, but
+there is no route out, so `npm ci` times out. Give it the Mac's connectivity
+with an HTTP CONNECT proxy bound to the bridge address and
+`npm config set proxy`/`https-proxy`. `curl` there still fails with
+`CRYPT_E_REVOCATION_OFFLINE` because schannel cannot reach the revocation lists;
+npm uses Node's TLS and is unaffected, so test with `npm ping`, not curl.
+
+A Tauri release build needs several GB free on `C:`. Rust `target` directories
+from previous release trees under `C:\src` are the usual place to reclaim it,
+but they are build caches on someone's machine: ask before deleting them.
+
 Locate outputs below `als-office/apps/desktop/src-tauri/target` instead of assuming a single target directory. Select outputs from the intended target and current build, not merely the newest unrelated file.
 
 Required inputs for aggregation:

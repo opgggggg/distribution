@@ -1,5 +1,9 @@
 # CubeOffice API
 
+Local operational credentials: `~/cubexp.com/ssh/cubexp.pem` and
+`~/cubexp.com/admin/password`. The running server retains its password hash in
+`/etc/cubeoffice-api.env`; do not replace it with a plaintext password.
+
 Source synchronized from the running production service before adding platform distribution.
 Runtime: Python 3, psycopg2, PostgreSQL; credentials remain in the server environment.
 

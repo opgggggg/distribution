@@ -39,6 +39,7 @@ const cubeOfficeProfile = {
 	description:
 		"A cross-platform document workspace for opening, editing, and reading Office files with your preferred AI app working alongside you.",
 	welcomePanelModule: fromHere("./CubeOfficeWelcomePanel.vue"),
+	settingsExtensionModule: fromHere("./CubeOfficeSettings.vue"),
 	settingsCopy: {
 		en: {
 			...officeProfile.settingsCopy.en,
@@ -47,6 +48,39 @@ const cubeOfficeProfile = {
 		"zh-CN": {
 			...officeProfile.settingsCopy["zh-CN"],
 			subtitle: "选择 CubeOffice 在这台电脑上的工作方式。",
+		},
+	},
+	// CubeOffice's own starter presentations, published alongside the website so
+	// the gallery can grow without shipping an app update. `cubexp.com` is
+	// already in this profile's connect-src, which is what the fetch needs.
+	documentTemplates: {
+		endpoint: "https://cubexp.com/templates/index.json",
+		formats: ["pptx"],
+	},
+	templateCopy: {
+		en: {
+			title: "New presentation",
+			subtitle: "Start from a CubeOffice template, or from a blank slide.",
+			blank: "Blank presentation",
+			blankHelp: "One empty slide",
+			slides: "{count} slides",
+			loading: "Loading templates…",
+			loadFailed: "Templates could not be loaded. You can still start from blank.",
+			retry: "Try again",
+			empty: "No templates are available yet.",
+			close: "Close",
+		},
+		"zh-CN": {
+			title: "新建演示文稿",
+			subtitle: "从 CubeOffice 模板开始，或从空白页开始。",
+			blank: "空白演示文稿",
+			blankHelp: "一页空白幻灯片",
+			slides: "{count} 页",
+			loading: "正在加载模板…",
+			loadFailed: "模板加载失败，你仍然可以从空白页开始。",
+			retry: "重试",
+			empty: "暂时还没有可用的模板。",
+			close: "关闭",
 		},
 	},
 	clientServices: {
@@ -141,7 +175,7 @@ const cubeOfficeProfile = {
 	},
 	tauriConfig: {
 		...officeProfile.tauriConfig,
-		version: "1.2.1",
+		version: "1.3.1",
 		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,

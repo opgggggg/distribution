@@ -4,6 +4,7 @@ import { picker } from '@kit.CoreFileKit';
 import { webview } from '@kit.ArkWeb';
 
 import { HarmonyDocumentBridge } from '../bridge/HarmonyDocumentBridge';
+import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
 
 @Entry
 @Component
@@ -11,6 +12,7 @@ struct Index {
   @State private webReady: boolean = false;
   @StorageLink('harmonyIntent') private harmonyIntent: string = '';
   private controller: webview.WebviewController = new webview.WebviewController();
+  private clientServices: HarmonyClientServices = new HarmonyClientServices();
   private documentEventCallback = (): void => {
     if (!this.webReady) return;
     this.controller.runJavaScript(
@@ -41,6 +43,11 @@ struct Index {
   aboutToAppear(): void {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.bridge.initialize(context);
+    try {
+      this.clientServices.initialize(context);
+    } catch (_) {
+      console.warn('Client services unavailable; document editing remains available');
+    }
     emitter.on('aurora-native-document', this.documentEventCallback);
   }
 
@@ -50,12 +57,47 @@ struct Index {
 
   build() {
     Stack() {
-      Web({ src: $rawfile('web/index.html'), controller: this.controller })
+      Web({ src: 'https://cubeoffice.invalid/index.html', controller: this.controller })
         .width('100%')
         .height('100%')
         .javaScriptAccess(true)
         .domStorageAccess(true)
         .fileAccess(true)
+        .onControllerAttached(() => {
+          this.controller.registerJavaScriptProxy(this.clientServices, 'cubeofficeServices',
+            ['getInfo', 'setAutomatic', 'copyClientId', 'request', 'takeResult']);
+        })
+        .onInterceptRequest((event) => {
+          if (!event) return null;
+          const prefix = 'https://cubeoffice.invalid/';
+          const url = event.request.getRequestUrl();
+          if (!url.startsWith(prefix)) return null;
+          const path = url.substring(prefix.length).split('?')[0].split('#')[0];
+          const response = new WebResourceResponse();
+          // Only packaged assets are served. Never fall back to the network for
+          // our reserved origin, and never allow access outside web/.
+          if (!/^[a-zA-Z0-9_./-]+$/.test(path) || path.split('/').includes('..')) {
+            response.setResponseData('');
+            response.setResponseCode(404);
+            response.setReasonMessage('Not Found');
+          } else {
+            response.setResponseData($rawfile('web/' + path));
+            response.setResponseCode(200);
+            response.setReasonMessage('OK');
+          }
+          const extension = path.split('.').pop() || '';
+          const types = new Map<string, string>([
+            ['html', 'text/html'], ['js', 'text/javascript'], ['css', 'text/css'],
+            ['json', 'application/json'], ['svg', 'image/svg+xml'],
+            ['png', 'image/png'], ['jpg', 'image/jpeg'], ['webp', 'image/webp'],
+            ['woff', 'font/woff'], ['woff2', 'font/woff2'], ['ttf', 'font/ttf'],
+            ['wasm', 'application/wasm']
+          ]);
+          response.setResponseMimeType(types.get(extension) || 'application/octet-stream');
+          response.setResponseEncoding('utf-8');
+          response.setResponseIsReady(true);
+          return response;
+        })
         .javaScriptProxy({
           object: this.bridge,
           name: 'auroraHarmonyHost',
