@@ -1,8 +1,8 @@
 {
-	"versionCode": 1003002,
-	"versionName": "1.3.1",
+	"versionCode": 1004000,
+	"versionName": "1.4.0",
 	"minSdk": 26,
-	"url": "https://cubexp.com/downloads/CubeOffice-1.3.1-Android-b1003002.apk",
-	"sha256": "daacb19d4b00e367d9ea48ed2e7555aab126e174d1f1168ae4b898c7b2a6aeba",
-	"notes": "- Android 新建演示文稿时可预览和选择模板。\n- Android 底部导航更紧凑，文字格式面板重新设计，各编辑器面板的标题、关闭和操作样式保持一致。\n- 修复底部面板被遮罩挡住、错误提示无法关闭，以及 Markdown 编辑器重复加载的问题。\n- Android 恢复打开旧版 Word、Excel、PowerPoint 文件和图片，并完善从其他应用打开和分享文件。\n- Word 支持在页面中编辑页眉页脚及其中的表格，比较文档时可更清楚地看到修改的文字。\n- 改善 PowerPoint 图片、字体和主题颜色的显示。\n\nEnglish\n\n- Preview and choose a template when creating a presentation on Android.\n- Enjoy a more compact Android navigation bar, redesigned text formatting controls, and consistent editor panels with easy-to-reach close buttons.\n- Fixed blocked panel controls, errors that could not be dismissed, and repeated Markdown editor loading.\n- Restored Android support for opening legacy Word, Excel, and PowerPoint files and images, including files shared from other apps.\n- Edit Word headers, footers, and their tables directly on the page, and see changed words more clearly when comparing documents.\n- Improved PowerPoint image, font, and theme color rendering.\n"
+	"url": "https://cubexp.com/downloads/CubeOffice-1.4.0-Android-b1004000.apk",
+	"sha256": "74cdc1f71db4bcf0a358d5f7ebfd0934dce58b79f4f49a6e30e34f994f9c2f2f",
+	"notes": "- 最近文档支持显示真实内容预览，重新打开应用后仍可查看；桌面端预览排列更紧凑。\n- Android 演示文稿横屏观看时，控制栏会自动隐藏，轻触即可再次显示。\n- 打开文档时显示加载阶段，便于了解当前进度。\n- 改善新建、确认和提示对话框，以及手机上的表格行高、列宽设置。\n- 修复 Word 列表跨页后重复显示编号或项目符号的问题。\n- 修复 Visio 文本包含多种格式时，工具栏设置无法正确应用的问题。\n\nEnglish\n\n- Recent documents show content previews that remain available after reopening the app, with a more compact desktop gallery.\n- Android presentation controls hide automatically in landscape viewing and reappear with a tap.\n- Document loading now shows progress stages.\n- Improved creation, confirmation, and notice dialogs, plus spreadsheet row-height and column-width controls on phones.\n- Fixed repeated numbering and bullets when a Word list item continues onto another page.\n- Fixed toolbar formatting not applying correctly to Visio text with mixed formatting.\n"
 }

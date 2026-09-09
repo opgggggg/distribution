@@ -1,0 +1,114 @@
+{
+	"version": "1.4.0",
+	"androidVersionCode": 1004000,
+	"buildRevision": "c319e1a9b850ef7eabcdd68beeacf250e0a23505",
+	"upstreamRevision": "4a74e12a1825b5a4fb59723ace9fb854f0a2f6ed",
+	"status": "published",
+	"buildHosts": {
+		"macOS": "Apple Silicon macOS; Homebrew Rust 1.97.1; aarch64-apple-darwin",
+		"Windows": "UTM Windows ARM; MSVC x64 target; x86_64-pc-windows-msvc",
+		"Linux": "Maintained Debian 12 amd64 container on Colima Rosetta; x86_64-unknown-linux-gnu",
+		"Android": "macOS; Temurin JDK 21; Android SDK 35"
+	},
+	"verification": [
+		"Clean workspace-local npm ci and shared package build",
+		"Desktop naming, profile configuration and client-service checks",
+		"Android release feed validator and shared service bridge checks",
+		"Five-editor Android workspace, template selection, legacy Office and image import, responsive layouts, dark mode and reduced motion",
+		"Preview capture and draft preservation; real Word, PowerPoint and PDF previews restored after reload; desktop recent gallery",
+		"Nine Word paginated list variants; Visio editor session and text-format run tests",
+		"Android release build, APK v2/v3 signature and signing identity match against 1.3.1",
+		"Packaged Android file-origin template gallery, all eight live previews and presentation creation",
+		"macOS arm64 architecture, bundle identity, ad-hoc signature, DMG integrity and CLI help",
+		"Local bilingual website version and five download links",
+		"Linux AppImage and Debian package build, amd64 metadata, ELF architecture, CLI help and cryptographic updater signature",
+		"macOS updater signature cryptographically verified against configured public key",
+		"Website translation asset URL refreshed with its content hash",
+		"Windows native x64 app and CLI PE headers, installer 1.4.0 version, CLI help, and cryptographic updater signature",
+		"All versioned artifact sizes and SHA-256 hashes checked on the deployment server before changing feeds",
+		"Public HTTPS HEAD and first/last byte range checks matched every download and updater artifact",
+		"Desktop and Android feeds atomically published after artifact checks; freshly fetched Android feed passed actual client validator",
+		"Live home, template and Visio pages verified in Chinese and English with version 1.4.0 and all five download links"
+	],
+	"buildNotes": [
+		"Build source archived from the same committed distribution and upstream revisions for Windows and Linux. Native build cache directories reused.",
+		"Windows disk space recovered using reversible NTFS compression of build directories, npm cache and Rust toolchains; no previous source or artifacts deleted.",
+		"Android retry used the complete existing Temurin JDK after the DevEco runtime lacked jlink.",
+		"macOS retry excluded the unrelated broken rustup installation from process PATH and used Homebrew Rust.",
+		"Linux retry used the existing container PATH after a login shell dropped the Cargo bin directory."
+	],
+	"signing": {
+		"android": "Existing release certificate; APK v2 and v3",
+		"desktopUpdaters": "Existing Tauri/minisign key; all three signatures cryptographically verified",
+		"macOS": "Ad-hoc; no Developer ID signing or notarization",
+		"Windows": "No Authenticode signing"
+	},
+	"limits": [
+		"Android interactions verified in Chromium with native bridge stubs; no physical Android-device testing.",
+		"Desktop package, binary and browser checks do not substitute for complete manual GUI regression."
+	],
+	"verifiedAt": "2026-09-09T06:30:24.958627+00:00",
+	"artifacts": {
+		"updates/1.4.0/CubeOffice-1.4.0-macOS-arm64.app.tar.gz": {
+			"sha256": "7d016788be4e5ce0d69f490b034b00506eeaa7fd4765e0b47bac996f2c2bfce3",
+			"size": 16828076,
+			"url": "https://cubexp.com/updates/1.4.0/CubeOffice-1.4.0-macOS-arm64.app.tar.gz"
+		},
+		"updates/1.4.0/CubeOffice-1.4.0-Linux-x86_64.AppImage": {
+			"sha256": "79f1da0ad77e4feba7cceffaf6a77037893d156d44bad0dfc0dae4595e882696",
+			"size": 112269816,
+			"url": "https://cubexp.com/updates/1.4.0/CubeOffice-1.4.0-Linux-x86_64.AppImage"
+		},
+		"updates/1.4.0/CubeOffice-1.4.0-Linux-x86_64.AppImage.sig": {
+			"sha256": "54721d88b9937841a838fd0758bc079f7ba9a984988a5875e1ab79c8d239f12c",
+			"size": 424,
+			"url": "https://cubexp.com/updates/1.4.0/CubeOffice-1.4.0-Linux-x86_64.AppImage.sig"
+		},
+		"updates/1.4.0/CubeOffice-1.4.0-Windows-x64-setup.exe.sig": {
+			"sha256": "78e52a0030d772a81f6b0e4417ede90ed4b377cf223c08db004b64fb7a312288",
+			"size": 420,
+			"url": "https://cubexp.com/updates/1.4.0/CubeOffice-1.4.0-Windows-x64-setup.exe.sig"
+		},
+		"updates/1.4.0/CubeOffice-1.4.0-Windows-x64-setup.exe": {
+			"sha256": "e508bb0e55eada85a244c94ff4ff6c8e2a821db4bf2e6e7225d845f0dd06d4bd",
+			"size": 14957088,
+			"url": "https://cubexp.com/updates/1.4.0/CubeOffice-1.4.0-Windows-x64-setup.exe"
+		},
+		"updates/1.4.0/CubeOffice-1.4.0-macOS-arm64.app.tar.gz.sig": {
+			"sha256": "27410a2c23f4ca4ca090b9272715d78d1167b7c558b59b78d7768c218eefe6ff",
+			"size": 408,
+			"url": "https://cubexp.com/updates/1.4.0/CubeOffice-1.4.0-macOS-arm64.app.tar.gz.sig"
+		},
+		"downloads/CubeOffice-1.4.0-Linux-x86_64.AppImage": {
+			"sha256": "79f1da0ad77e4feba7cceffaf6a77037893d156d44bad0dfc0dae4595e882696",
+			"size": 112269816,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.0-Linux-x86_64.AppImage"
+		},
+		"downloads/CubeOffice-1.4.0-macOS-arm64.dmg": {
+			"sha256": "62d62230d9fcadde298483cecc83f33f5314bd06019da308a07b0212f6b87557",
+			"size": 16691006,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.0-macOS-arm64.dmg"
+		},
+		"downloads/CubeOffice-1.4.0-Android-b1004000.apk": {
+			"sha256": "74cdc1f71db4bcf0a358d5f7ebfd0934dce58b79f4f49a6e30e34f994f9c2f2f",
+			"size": 16198827,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.0-Android-b1004000.apk"
+		},
+		"downloads/CubeOffice-1.4.0-Windows-x64-setup.exe": {
+			"sha256": "e508bb0e55eada85a244c94ff4ff6c8e2a821db4bf2e6e7225d845f0dd06d4bd",
+			"size": 14957088,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.0-Windows-x64-setup.exe"
+		},
+		"downloads/CubeOffice-1.4.0-Linux-x86_64.deb": {
+			"sha256": "193f5e95e23b500f9dbed4139a435a152d5ce31539879ca8878b53745b79c11e",
+			"size": 18213198,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.0-Linux-x86_64.deb"
+		}
+	},
+	"feeds": {
+		"desktop": "https://cubexp.com/updates/latest.json",
+		"android": "https://cubexp.com/updates/android/latest.json"
+	},
+	"rollback": "Previous public website files and manifests retained in /var/www/cubexp.com/.release-staging/1.4.0-c319e1a/backup; previous versioned artifacts remain available.",
+	"sourceArchiveSha256": "b0ce62c19d1593e466790b5710aa88829b362cec35e83c629db0e3fa1d5ba933"
+}
