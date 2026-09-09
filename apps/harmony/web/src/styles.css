@@ -2004,6 +2004,17 @@ html[data-reduce-motion="true"] *::after {
 	background: rgb(18 23 22 / 78%);
 	box-shadow: 0 8px 28px rgb(0 0 0 / 28%);
 	backdrop-filter: blur(12px);
+	opacity: 1;
+	transform: translateY(0);
+	transition:
+		opacity 180ms ease,
+		transform 180ms ease;
+	will-change: opacity, transform;
+}
+.harmony-app.is-mobile-layout .harmony-pptx-viewer-controls.is-hidden {
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(-8px);
 }
 .harmony-app.is-mobile-layout .harmony-pptx-viewer-controls > button {
 	display: grid;
@@ -2144,6 +2155,7 @@ html[data-reduce-motion="true"] *::after {
 	box-sizing: border-box;
 	touch-action: none;
 	overscroll-behavior: none;
+	min-height: 100dvh;
 }
 .harmony-app.is-mobile-layout.is-pptx-viewing
 	.als-ofs-pptx-slide-frame.harmony-pptx-slide-drag-current {

@@ -303,6 +303,7 @@ const mobileTextEditing = ref(false);
 const mobilePptxViewing = ref(false);
 const mobilePptxSingleView = ref(false);
 const mobilePptxZoomLabel = ref("100%");
+const mobilePptxControlsVisible = ref(true);
 const mobilePortrait = ref(true);
 const mobileDocxImageInput = ref<HTMLInputElement | null>(null);
 const activityEntries = ref<CliActivityEntry[]>([]);
@@ -349,6 +350,7 @@ let mobilePptxZoomObserver: MutationObserver | undefined;
 let mobilePptxSlideSettling = false;
 let mobilePptxSettlingDrag: MobilePptxSlideDrag | undefined;
 let mobilePptxSlideSettleToken = 0;
+let mobilePptxControlsTimer: number | undefined;
 
 const harmonyControlStatus: CliControlStatus = {
 	listening: true,
@@ -1470,6 +1472,7 @@ async function startMobilePptxViewing(): Promise<void> {
 	setMobilePptxView("single");
 	mobilePptxViewing.value = true;
 	mobilePptxSingleView.value = true;
+	showMobilePptxControls();
 	mobilePptxGesture = undefined;
 	await nextTick();
 	bindMobilePptxZoomObserver();
@@ -1478,6 +1481,9 @@ async function startMobilePptxViewing(): Promise<void> {
 
 function stopMobilePptxViewing(): void {
 	mobilePptxViewing.value = false;
+	if (mobilePptxControlsTimer !== undefined) window.clearTimeout(mobilePptxControlsTimer);
+	mobilePptxControlsTimer = undefined;
+	mobilePptxControlsVisible.value = true;
 	mobilePptxSlideAnimationToken += 1;
 	mobilePptxZoomObserver?.disconnect();
 	mobilePptxZoomObserver = undefined;
@@ -1489,6 +1495,16 @@ function stopMobilePptxViewing(): void {
 	mobilePptxSlideSettleToken += 1;
 	void setMobilePresentationLandscape(false);
 	void nextTick(() => showMobilePptxOverview(activeTab.value));
+}
+
+function showMobilePptxControls(): void {
+	if (!mobilePptxViewing.value) return;
+	mobilePptxControlsVisible.value = true;
+	if (mobilePptxControlsTimer !== undefined) window.clearTimeout(mobilePptxControlsTimer);
+	mobilePptxControlsTimer = window.setTimeout(() => {
+		mobilePptxControlsVisible.value = false;
+		mobilePptxControlsTimer = undefined;
+	}, 3200);
 }
 
 function prepareMobilePptxSlideDrag(
@@ -1595,6 +1611,7 @@ function settleMobilePptxSlideDrag(drag: MobilePptxSlideDrag, commit: boolean): 
 function beginMobilePptxSwipe(event: PointerEvent): void {
 	const tab = activeTab.value;
 	if (!mobileLayout.value || tab?.format !== "pptx" || tab.mobileMode !== "reading") return;
+	if (mobilePptxViewing.value) showMobilePptxControls();
 	if (mobilePptxSlideSettling) return;
 	if (event.pointerType === "mouse" && event.button !== 0) return;
 	if (
@@ -2164,6 +2181,7 @@ function handleMobileDocumentAreaClick(event: MouseEvent, tab: HarmonyDocumentTa
 		// The visible presentation controls proxy the hidden native slide navigator.
 		// Let those programmatic clicks reach the runtime while blocking canvas edits.
 		if (target.closest(".als-ofs-pptx-mobile-slide-controls")) return;
+		showMobilePptxControls();
 		event.preventDefault();
 		event.stopPropagation();
 		return;
@@ -2479,6 +2497,8 @@ onBeforeUnmount(() => {
 	window.removeEventListener("resize", syncMobileImeInset);
 	window.removeEventListener("resize", syncMobileOrientation);
 	if (mobilePptxViewing.value) void setMobilePresentationLandscape(false);
+	if (mobilePptxControlsTimer !== undefined) window.clearTimeout(mobilePptxControlsTimer);
+	mobilePptxControlsTimer = undefined;
 	if (mobileImeSyncFrame !== undefined) cancelAnimationFrame(mobileImeSyncFrame);
 	document.documentElement.style.removeProperty("--harmony-mobile-ime-inset");
 	delete window.auroraHandleBack;
@@ -3362,7 +3382,13 @@ onBeforeUnmount(() => {
 			</template>
 		</nav>
 
-		<nav v-if="mobilePptxViewing" class="harmony-pptx-viewer-controls" aria-label="横屏观看">
+		<nav
+			v-if="mobilePptxViewing"
+			class="harmony-pptx-viewer-controls"
+			:class="{ 'is-hidden': !mobilePptxControlsVisible }"
+			:aria-hidden="!mobilePptxControlsVisible"
+			aria-label="横屏观看"
+		>
 			<button
 				type="button"
 				aria-label="上一张幻灯片"
