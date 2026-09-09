@@ -2108,6 +2108,12 @@ html[data-reduce-motion="true"] *::after {
 	grid-template-rows: minmax(0, 1fr);
 	background: #111514;
 }
+.harmony-documents__surface[data-format="pptx"][data-mobile-mode="reading"]
+	#viewer
+	.als-ofs-pptx-element[data-editor-selected="true"] {
+	outline: none !important;
+	box-shadow: none !important;
+}
 .harmony-app.is-mobile-layout.is-pptx-viewing > :is(.harmony-chrome, .harmony-feedback),
 .harmony-app.is-mobile-layout.is-pptx-viewing > .harmony-mobile-toolbar,
 .harmony-app.is-mobile-layout.is-pptx-viewing > .harmony-mobile-ribbon-scrim,

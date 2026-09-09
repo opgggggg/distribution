@@ -289,6 +289,14 @@
 	border-radius: 3px;
 	background: var(--android-surface);
 }
+.android-file-preview img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	position: absolute;
+	inset: 0;
+	border-radius: 8px;
+}
 .android-file-preview-page i {
 	display: block;
 	height: 2px;
@@ -721,6 +729,17 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 .android-app .als-ofs-xlsx-name-box-wrap,
 .android-app .als-ofs-xlsx-formula-input-wrap {
 	height: 48px;
+}
+.android-app .als-ofs-xlsx-formula-input-wrap > label {
+	height: 48px;
+}
+.android-app .als-ofs-xlsx-name-box.als-ofs-ui-input,
+.android-app .als-ofs-xlsx-formula-input.als-ofs-ui-textarea {
+	height: 48px;
+	min-height: 48px;
+}
+.android-app .als-ofs-xlsx-formula-input.als-ofs-ui-textarea {
+	padding-block: 13px;
 }
 .android-app .als-ofs-xlsx-name-box,
 .android-app .als-ofs-xlsx-formula-input {

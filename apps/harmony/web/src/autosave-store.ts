@@ -10,6 +10,18 @@ export interface HarmonyAutosaveRecord {
 	format: EditorArtifactFormat;
 	blob: Blob;
 	savedAt: number;
+	preview?: string;
+}
+
+export async function updateHarmonyPreview(id: string, preview: string): Promise<void> {
+	const database = await openDatabase();
+	const transaction = database.transaction(AUTOSAVE_STORE, "readwrite");
+	const store = transaction.objectStore(AUTOSAVE_STORE);
+	const request = store.get(id);
+	request.onsuccess = () => {
+		if (request.result) store.put({ ...request.result, preview });
+	};
+	await transactionComplete(transaction);
 }
 
 let databasePromise: Promise<IDBDatabase> | undefined;
@@ -77,6 +89,22 @@ export async function writeHarmonyAutosave(record: HarmonyAutosaveRecord): Promi
 	const transaction = database.transaction(AUTOSAVE_STORE, "readwrite");
 	transaction.objectStore(AUTOSAVE_STORE).put(record);
 	await transactionComplete(transaction);
+}
+
+export async function ensureHarmonyRecent(
+	record: HarmonyAutosaveRecord,
+): Promise<HarmonyAutosaveRecord> {
+	const database = await openDatabase();
+	const transaction = database.transaction(AUTOSAVE_STORE, "readwrite");
+	const store = transaction.objectStore(AUTOSAVE_STORE);
+	let result = record;
+	const request = store.get(record.id);
+	request.onsuccess = () => {
+		if (request.result) result = request.result;
+		else store.put(record);
+	};
+	await transactionComplete(transaction);
+	return result;
 }
 
 export async function deleteHarmonyAutosave(id: string): Promise<void> {

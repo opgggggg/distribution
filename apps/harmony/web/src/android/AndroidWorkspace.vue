@@ -7,6 +7,7 @@ import { UiCheckbox } from "@yaochn/als-office-editor-ui/vue";
 import Icon from "./AndroidIcon.vue";
 import AndroidServices from "./AndroidServices.vue";
 interface DocumentItem {
+	preview?: string;
 	id: string;
 	fileName: string;
 	format: EditorArtifactFormat;
@@ -19,6 +20,7 @@ const props = defineProps<{
 	active: DocumentItem | null;
 	editing: boolean;
 	opening: boolean;
+	openingLabel: string;
 	saving: boolean;
 	ready: boolean;
 	status: string;
@@ -257,7 +259,8 @@ function previewLabel(item: DocumentItem): string {
 					<span>{{ visibleDocuments.length }} 个</span>
 				</div>
 				<div v-if="opening" class="android-progress" role="status">
-					正在准备文档，请稍候…
+					<progress :aria-label="openingLabel" />
+					{{ openingLabel }}
 				</div>
 				<div v-if="visibleDocuments.length" class="android-file-list">
 					<button
@@ -272,7 +275,15 @@ function previewLabel(item: DocumentItem): string {
 							:data-format="item.format"
 							aria-hidden="true"
 						>
-							<span class="android-file-preview-page"> <i></i><i></i><i></i> </span>
+							<img
+								v-if="item.preview"
+								:src="item.preview"
+								alt=""
+								width="56"
+								height="48"
+								loading="lazy"
+							/>
+							<Icon v-else name="file" />
 							<strong>{{ previewLabel(item) }}</strong>
 						</span>
 						<span class="android-file-copy"

@@ -22,6 +22,8 @@ import {
 } from "@yaochn/als-office-xlsx/vue";
 
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
+import { captureDocumentPreview } from "./document-preview";
+import { updateHarmonyPreview, ensureHarmonyRecent } from "./autosave-store";
 
 import DesktopWelcomePanel from "../../../../als-office/apps/desktop/src/DesktopWelcomePanel.vue";
 import CliActivityPanel from "../../../../als-office/apps/desktop/src/CliActivityPanel.vue";
@@ -70,6 +72,9 @@ interface HarmonyFormatOption {
 }
 
 interface HarmonyDocumentTab {
+	preview?: string;
+	previewPending?: boolean;
+	loaded?: boolean;
 	id: string;
 	autosaveId: string;
 	fileName: string;
@@ -278,6 +283,7 @@ const autosaveHistory = ref<HarmonyAutosaveRecord[]>([]);
 const activeId = ref(HOME_TAB_ID);
 const saving = ref(false);
 const opening = ref(false);
+const openingLabel = ref("正在读取文件…");
 const error = ref("");
 const newMenuOpen = ref(false);
 const appMenuOpen = ref(false);
@@ -429,7 +435,7 @@ const mobileReadingStatusLabel = computed(() => {
 
 const androidDocumentStatus = computed(() => {
 	if (saving.value) return "正在另存到文件…";
-	if (!activeTab.value?.editor) return "正在载入文档…";
+	if (!activeTab.value?.editor || !activeTab.value.loaded) return "正在解析和渲染文档…";
 	if (!activeEditable.value) return "只读 · " + activeTab.value.format.toUpperCase();
 	const status = activeTab.value.autosaveStatus;
 	if (status === "saving" || status === "pending") return "正在保存本地草稿…";
@@ -540,6 +546,8 @@ function surfaceInput(tab: HarmonyDocumentTab): UiArtifactSurfaceInput {
 function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 	const binding = formats.require(tab.format).createBinding(surfaceInput(tab));
 	if (!mobileLayout.value) return binding;
+	if (tab.format === "xlsx")
+		return { ...binding, props: { ...binding.props, allowDimensionResize: true } };
 	if (tab.format === "markdown") {
 		return {
 			...binding,
@@ -602,6 +610,11 @@ async function addDocument(
 	} = {},
 ): Promise<void> {
 	const id = `harmony-artifact-${++tabCounter}`;
+	openingLabel.value = "正在读取文件…";
+	await nextTick();
+	await new Promise<void>((resolve) =>
+		requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+	);
 	const option = optionFor(format);
 	// DocumentViewPicker files are backed by a temporary native URI. ArkWeb can
 	// read that handle to open a document, but a later PPTX export may receive an
@@ -612,6 +625,8 @@ async function addDocument(
 				type: source.type || "application/octet-stream",
 			})
 		: undefined;
+	openingLabel.value = "正在准备文档内容…";
+	await nextTick();
 	const modelValue = await formats.prepareModelValue(format, stableSource);
 	tabs.value.push({
 		id,
@@ -621,6 +636,7 @@ async function addDocument(
 		extension: option.extension,
 		source: stableSource,
 		modelValue,
+		preview: autosaveHistory.value.find((record) => record.id === options.autosaveId)?.preview,
 		editor: null,
 		autosaveStatus: options.autosavedAt ? "saved" : "idle",
 		autosaveRevision: undefined,
@@ -680,6 +696,16 @@ async function persistAutosave(
 	blob: Blob,
 	revision: string,
 ): Promise<void> {
+	if (androidLayout && !tab.preview && tab.loaded && tab.id === activeId.value) {
+		const surface = activeDocumentSurface();
+		if (surface) {
+			try {
+				tab.preview = await captureDocumentPreview(surface);
+			} catch {
+				/* Saving a document must not depend on preview generation. */
+			}
+		}
+	}
 	const savedAt = Date.now();
 	const record: HarmonyAutosaveRecord = {
 		id: tab.autosaveId,
@@ -687,6 +713,7 @@ async function persistAutosave(
 		format: tab.format,
 		blob,
 		savedAt,
+		preview: tab.preview,
 	};
 	await writeHarmonyAutosave(record);
 	const historyIndex = autosaveHistory.value.findIndex((item) => item.id === record.id);
@@ -776,8 +803,8 @@ async function restoreAutosaves(): Promise<void> {
 	if (autosavesRestored) return;
 	autosavesRestored = true;
 	try {
-		autosaveHistory.value = (await listHarmonyAutosaves()).filter(
-			(record) => formatOptions.get(record.format)?.editable,
+		autosaveHistory.value = (await listHarmonyAutosaves()).filter((record) =>
+			formatOptions.has(record.format),
 		);
 	} catch (cause) {
 		console.error("Could not load HarmonyOS automatic save history", cause);
@@ -1011,6 +1038,8 @@ async function open(event: Event): Promise<void> {
 
 function selectTab(id: string): void {
 	if (id === HOME_TAB_ID || tabs.value.some((tab) => tab.id === id)) activeId.value = id;
+	const tab = tabs.value.find((item) => item.id === id);
+	if (tab?.editor && !tab.preview) void nextTick(() => prepareDocumentPreview(tab));
 }
 
 function closeTab(id: string): void {
@@ -1035,6 +1064,45 @@ function closeTab(id: string): void {
 	activeId.value = tabs.value[Math.min(index, tabs.value.length - 1)]?.id ?? HOME_TAB_ID;
 }
 
+async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
+	if (!androidLayout || !tab.editor || tab.previewPending || (tab.loaded && tab.preview)) return;
+	tab.previewPending = true;
+	try {
+		await tab.editor?.ready();
+		tab.loaded = true;
+		if (tab.source) {
+			const recent = await ensureHarmonyRecent({
+				id: tab.autosaveId,
+				fileName: tab.fileName,
+				format: tab.format,
+				blob: tab.source,
+				savedAt: Date.now(),
+				preview: tab.preview,
+			});
+			if (!autosaveHistory.value.some((item) => item.id === recent.id))
+				autosaveHistory.value.push(recent);
+		}
+		await nextTick();
+		await new Promise<void>((resolve) =>
+			requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+		);
+		const surface = document.querySelector<HTMLElement>(
+			`.harmony-documents__surface[data-document-id="${tab.id}"]`,
+		);
+		if (!tab.preview && tab.source && surface)
+			tab.preview = await captureDocumentPreview(surface);
+		const record = autosaveHistory.value.find((item) => item.id === tab.autosaveId);
+		if (record && tab.preview) {
+			await updateHarmonyPreview(record.id, tab.preview);
+			record.preview = tab.preview;
+		}
+	} catch (cause) {
+		console.warn("Document preview unavailable", cause);
+	} finally {
+		tab.previewPending = false;
+	}
+}
+
 function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 	if (!instance) {
 		clearAutosaveTimer(tab.id);
@@ -1047,6 +1115,7 @@ function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 	if (toRaw(tab.editor?.exposed) === toRaw(instance)) return;
 	const mounted = formats.mount(tab.format, surfaceInput(tab), instance);
 	tab.editor = mounted ? markRaw(mounted) : null;
+	void prepareDocumentPreview(tab);
 	bindAutosave(tab);
 	if (tab.mobileAutofocusPending && tab.id === activeId.value) {
 		tab.mobileAutofocusPending = false;
@@ -1477,6 +1546,10 @@ async function startMobilePptxViewing(): Promise<void> {
 	await nextTick();
 	bindMobilePptxZoomObserver();
 	await setMobilePresentationLandscape(true);
+	await nextTick();
+	requestAnimationFrame(() => {
+		if (mobilePptxViewing.value) runMobilePptxZoom("fit");
+	});
 }
 
 function stopMobilePptxViewing(): void {
@@ -2180,7 +2253,12 @@ function handleMobileDocumentAreaClick(event: MouseEvent, tab: HarmonyDocumentTa
 	if (tab.mobileMode === "reading" && tab.format === "pptx" && mobilePptxViewing.value) {
 		// The visible presentation controls proxy the hidden native slide navigator.
 		// Let those programmatic clicks reach the runtime while blocking canvas edits.
-		if (target.closest(".als-ofs-pptx-mobile-slide-controls")) return;
+		if (
+			target.closest(
+				".als-ofs-pptx-mobile-slide-controls, .als-ofs-pptx-mobile-zoom-controls",
+			)
+		)
+			return;
 		showMobilePptxControls();
 		event.preventDefault();
 		event.stopPropagation();
@@ -2535,8 +2613,9 @@ onBeforeUnmount(() => {
 			:active="activeTab"
 			:editing="activeMobileEditing"
 			:opening="opening"
+			:opening-label="openingLabel"
 			:saving="saving"
-			:ready="Boolean(activeTab?.editor)"
+			:ready="Boolean(activeTab?.editor && activeTab.loaded)"
 			:status="androidDocumentStatus"
 			:editable="activeEditable"
 			:reduce-motion="preferences.reduceMotion"
@@ -2994,6 +3073,7 @@ onBeforeUnmount(() => {
 						class="harmony-documents__surface"
 						:data-active="tab.id === activeId ? 'true' : undefined"
 						:data-format="tab.format"
+						:data-document-id="tab.id"
 						:data-mobile-mode="mobileLayout ? tab.mobileMode : undefined"
 						@click.capture="handleMobileDocumentAreaClick($event, tab)"
 						@pointerdown.capture="beginMobilePptxSwipe"
@@ -3387,6 +3467,10 @@ onBeforeUnmount(() => {
 			class="harmony-pptx-viewer-controls"
 			:class="{ 'is-hidden': !mobilePptxControlsVisible }"
 			:aria-hidden="!mobilePptxControlsVisible"
+			:inert="!mobilePptxControlsVisible"
+			@pointerdown="showMobilePptxControls"
+			@keydown="showMobilePptxControls"
+			@focusin="showMobilePptxControls"
 			aria-label="横屏观看"
 		>
 			<button
