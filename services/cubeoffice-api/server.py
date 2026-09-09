@@ -172,6 +172,17 @@ def migrate():
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     with database() as connection:
         connection.execute(SCHEMA)
+        columns = {row[0] for row in connection.execute(
+            "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'feedback'"
+        ).fetchall()}
+        for name, definition in (
+            ("reply", "TEXT NOT NULL DEFAULT ''"),
+            ("fixed_version", "TEXT NOT NULL DEFAULT ''"),
+            ("updated_at", "TEXT"),
+            ("revision", "INTEGER NOT NULL DEFAULT 0"),
+        ):
+            if name not in columns:
+                connection.execute("ALTER TABLE feedback ADD COLUMN " + name + " " + definition)
         existing = {
             row[0]
             for row in connection.execute(
@@ -640,13 +651,30 @@ class Handler(BaseHTTPRequestHandler):
         status = text(payload.get("status"), 24)
         if status not in ("new", "reviewing", "resolved"):
             raise ApiError(400, "invalid_status", "Invalid status.")
+        reply = payload.get("reply")
+        if "reply" in payload and (not isinstance(reply, str) or len(reply) > 12000):
+            raise ApiError(400, "invalid_reply", "Reply must be text of at most 12000 characters.")
+        revision = payload.get("revision")
+        fixed_version = payload.get("fixed_version")
+        if "fixed_version" in payload and (not isinstance(fixed_version, str) or len(fixed_version) > 100):
+            raise ApiError(400, "invalid_fixed_version", "Fix version must be text of at most 100 characters.")
+        if ("reply" in payload or "fixed_version" in payload) and (type(revision) is not int or revision < 0):
+            raise ApiError(400, "invalid_revision", "A valid feedback revision is required.")
         with database() as connection:
-            changed = connection.execute(
-                "UPDATE feedback SET status = ? WHERE id = ?", (status, feedback_id)
-            ).rowcount
-        if not changed:
-            raise ApiError(404, "not_found", "Feedback was not found.")
-        self.write_json(200, {"ok": True})
+            row = connection.execute(
+                "SELECT * FROM feedback WHERE id = ? FOR UPDATE", (feedback_id,)
+            ).fetchone()
+            if not row:
+                raise ApiError(404, "not_found", "Feedback was not found.")
+            if revision is not None and revision != row["revision"]:
+                raise ApiError(409, "conflict", "Feedback changed. Reopen it before saving; keep your reply text.")
+            connection.execute(
+                "UPDATE feedback SET status = ?, reply = ?, fixed_version = ?, updated_at = ?, revision = revision + 1 WHERE id = ?",
+                (status, text(reply, 12000) if "reply" in payload else row["reply"],
+                 text(fixed_version, 100) if "fixed_version" in payload else row["fixed_version"], utc_now(), feedback_id),
+            )
+            saved = connection.execute("SELECT * FROM feedback WHERE id = ?", (feedback_id,)).fetchone()
+        self.write_json(200, {"ok": True, "item": self.public_row(saved)})
 
     def admin_screenshot(self, feedback_id):
         with database() as connection:

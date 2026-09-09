@@ -59,6 +59,9 @@ function renderPlatforms() {
 
 let activeTab = "feedback";
 let currentItems = [];
+const statusLabels = { new: "待处理", reviewing: "处理中", resolved: "已解决" };
+const replyDrafts = new Map();
+const versionDrafts = new Map();
 
 async function request(path, options = {}) {
 	const response = await fetch(path, {
@@ -158,7 +161,7 @@ function configureFilter() {
 					["warning", "警告"],
 					["info", "信息"],
 				];
-	filter.options = choices.map(([value, label]) => ({value, label}));
+	filter.options = choices.map(([value, label]) => ({ value, label }));
 	filter.value = choices[0][0];
 }
 
@@ -169,10 +172,19 @@ function recordButton(item) {
 	const badge = element(
 		"span",
 		"badge",
-		activeTab === "feedback" ? item.status || item.category : item.level,
+		activeTab === "feedback" ? statusLabels[item.status] || item.status : item.level,
 	);
 	const summary = element("span", "summary", item.message);
+	if (activeTab === "feedback") {
+		badge.dataset.status = item.status;
+		summary.append(
+			element("small", "reply-summary", item.reply ? `回复：${item.reply}` : "暂无回复"),
+		);
+	}
 	const version = element("small", "", item.app_version || "—");
+	if (activeTab === "feedback" && item.fixed_version) {
+		summary.append(element("span", "reply-summary", `修复版本：${item.fixed_version}`));
+	}
 	const time = element("small", "", formatTime(item.created_at));
 	button.append(badge, summary, version, time);
 	button.addEventListener("click", () => showDetail(item));
@@ -208,7 +220,16 @@ function showDetail(item) {
 		detailBlock("内容", item.message, true),
 	];
 	if (activeTab === "feedback") {
-		blocks.push(detailBlock("分类 / 状态", `${item.category} · ${item.status}`));
+		blocks.push(
+			detailBlock(
+				"分类 / 状态",
+				`${item.category} · ${statusLabels[item.status] || item.status}`,
+			),
+		);
+		if (item.updated_at)
+			blocks.push(
+				detailBlock("处理更新时间", new Date(item.updated_at).toLocaleString("zh-CN")),
+			);
 		if (item.contact) blocks.push(detailBlock("联系方式", item.contact));
 		if (item.screenshot_path) {
 			const imageBlock = element("section", "detail-block");
@@ -219,25 +240,94 @@ function showDetail(item) {
 			imageBlock.append(image);
 			blocks.push(imageBlock);
 		}
-		const actions = element("div", "status-actions");
-		for (const [status, label] of [
-			["new", "标记待处理"],
-			["reviewing", "标记处理中"],
-			["resolved", "标记已解决"],
-		]) {
-			const button = element("button", "", label);
-			button.type = "button";
-			button.addEventListener("click", async () => {
-				await request("/api/v1/admin/feedback/status", {
+		const form = element("form", "feedback-form");
+		const statusLabel = element("label", "", "处理状态");
+		statusLabel.htmlFor = "feedback-status";
+		const status = element("cube-select");
+		status.id = "feedback-status";
+		status.setAttribute("aria-label", "处理状态");
+		status.options = Object.entries(statusLabels).map(([value, label]) => ({ value, label }));
+		status.value = item.status;
+		const versionLabel = element("label", "", "修复版本（可选）");
+		versionLabel.htmlFor = "feedback-fixed-version";
+		const fixedVersion = element("input");
+		fixedVersion.id = "feedback-fixed-version";
+		fixedVersion.type = "text";
+		fixedVersion.maxLength = 100;
+		fixedVersion.placeholder = "例如：CubeOffice 1.4.1 / als-office 0.57.4";
+		fixedVersion.value = versionDrafts.get(item.id) ?? item.fixed_version ?? "";
+		fixedVersion.addEventListener("input", () =>
+			versionDrafts.set(item.id, fixedVersion.value),
+		);
+		const replyLabel = element("label", "", "处理回复");
+		replyLabel.htmlFor = "feedback-reply";
+		const reply = element("textarea");
+		reply.id = "feedback-reply";
+		reply.rows = 5;
+		reply.maxLength = 12000;
+		reply.value = replyDrafts.get(item.id) ?? item.reply ?? "";
+		reply.addEventListener("input", () => replyDrafts.set(item.id, reply.value));
+		reply.setAttribute("aria-describedby", "feedback-reply-help");
+		const help = element(
+			"p",
+			"feedback-help",
+			"保存在管理后台，不会自动发送邮件或通知客户端。最多 12,000 字。",
+		);
+		help.id = "feedback-reply-help";
+		const notice = element("p", "feedback-notice");
+		notice.setAttribute("role", "status");
+		const save = element("button", "button primary", "保存处理信息");
+		save.type = "submit";
+		form.append(
+			statusLabel,
+			status,
+			versionLabel,
+			fixedVersion,
+			replyLabel,
+			reply,
+			help,
+			notice,
+			save,
+		);
+		form.addEventListener("submit", async (event) => {
+			event.preventDefault();
+			if (save.disabled) return;
+			save.disabled = true;
+			reply.disabled = true;
+			fixedVersion.disabled = true;
+			save.textContent = "正在保存…";
+			notice.textContent = "";
+			try {
+				const result = await request("/api/v1/admin/feedback/status", {
 					method: "POST",
-					body: JSON.stringify({ id: item.id, status }),
+					body: JSON.stringify({
+						id: item.id,
+						status: status.value,
+						reply: reply.value,
+						fixed_version: fixedVersion.value,
+						revision: item.revision ?? 0,
+					}),
 				});
-				detail.close();
-				await Promise.all([loadOverview(), loadRecords()]);
-			});
-			actions.append(button);
-		}
-		blocks.push(actions);
+				Object.assign(item, result.item);
+				replyDrafts.delete(item.id);
+				versionDrafts.delete(item.id);
+				notice.textContent = "状态、修复版本和回复已保存。";
+				await Promise.all([loadOverview(), loadRecords()]).catch(() => {
+					notice.textContent = "已保存，但列表刷新失败，请点击刷新。";
+				});
+			} catch (error) {
+				notice.textContent =
+					error.status === 409
+						? "其他管理员已修改此反馈。回复草稿已保留，请刷新列表并重新打开后保存。"
+						: `保存失败：${error.message}。回复草稿已保留，可重试。`;
+			} finally {
+				save.disabled = false;
+				reply.disabled = false;
+				fixedVersion.disabled = false;
+				save.textContent = "保存处理信息";
+			}
+		});
+		blocks.push(form);
 	}
 	if (item.stack) blocks.push(detailBlock("Stack", item.stack, true));
 	if (item.context)
@@ -264,7 +354,7 @@ loginForm.addEventListener("submit", async (event) => {
 	try {
 		await request("/api/v1/admin/login", {
 			method: "POST",
-			body: JSON.stringify({ password: new FormData(loginForm).get("password") }),
+			body: JSON.stringify({ password: loginForm.querySelector("#password").value }),
 		});
 		loginForm.reset();
 		setAuthenticated(true);
@@ -276,6 +366,9 @@ loginForm.addEventListener("submit", async (event) => {
 		submit.disabled = false;
 	}
 });
+
+// Enable submission only after the handler that prevents native navigation exists.
+loginForm.querySelector("button[type='submit']").disabled = false;
 
 document.querySelector("[data-logout]").addEventListener("click", async () => {
 	await request("/api/v1/admin/logout", { method: "POST", body: "{}" }).catch(() => {});

@@ -2,14 +2,16 @@
 <html lang="zh-CN">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="referrer" content="no-referrer" />
+		<script src="/admin/login-safety.js?v=1"></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="robots" content="noindex, nofollow" />
 		<meta name="theme-color" content="#4f46e5" />
 		<title>CubeOffice Admin</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="/admin/controls.css?v=ec57b504de42" />
-		<link rel="stylesheet" href="/admin/styles.css?v=64e83aa1b1a8" />
-		<script type="module" src="/admin/app.js?v=eec1d6d40859" defer></script>
+		<link rel="stylesheet" href="/admin/styles.css?v=0832131b2ad5" />
+		<script type="module" src="/admin/app.js?v=68d87a25d91e" defer></script>
 	</head>
 	<body>
 		<header class="admin-header">
@@ -29,17 +31,12 @@
 				<p class="eyebrow">OPERATIONS CONSOLE</p>
 				<h1>登录管理后台</h1>
 				<p>查看匿名活跃数据、用户反馈和客户端错误日志。</p>
-				<form data-login-form>
+				<form data-login-form method="post" action="/api/v1/admin/login">
 					<label for="password">管理员密码</label>
-					<input
-						id="password"
-						name="password"
-						type="password"
-						autocomplete="current-password"
-						required
-					/>
+					<input id="password" type="password" autocomplete="current-password" required />
 					<p class="form-error" role="alert" data-login-error hidden></p>
-					<button class="button primary" type="submit">登录</button>
+					<button class="button primary" type="submit" disabled>登录</button>
+					<noscript>请启用 JavaScript 后登录；密码不会通过地址栏提交。</noscript>
 				</form>
 			</section>
 
