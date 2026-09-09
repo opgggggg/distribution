@@ -142,6 +142,9 @@ def valid_client_id(value):
 class Database:
     def __init__(self):
         self.connection = psycopg2.connect(DB_DSN, connect_timeout=5)
+        # Production runs under a C locale on some hosts; keep Unicode request
+        # data from being encoded as ASCII by psycopg2 before it reaches Postgres.
+        self.connection.set_client_encoding("UTF8")
 
     def __enter__(self):
         return self
