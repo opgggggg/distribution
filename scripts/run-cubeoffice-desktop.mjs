@@ -34,6 +34,10 @@ const result = spawnSync(command[0], command[1], {
 	env: {
 		...process.env,
 		DESKTOP_APP_PROFILE: "cubeoffice",
+		OFFICE_FONTS_CONFIG: path.join(
+			repositoryRoot,
+			"profiles/cubeoffice/desktop/font-source.json",
+		),
 		DESKTOP_APP_PROFILES_PACKAGE: profileCatalog,
 	},
 });

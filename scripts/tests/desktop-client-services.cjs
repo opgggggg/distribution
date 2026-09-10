@@ -1,35 +1,66 @@
-const fs = require('node:fs');
-const assert = require('node:assert/strict');
-const ts = require('typescript');
+const fs = require("node:fs");
+const assert = require("node:assert/strict");
+const ts = require("typescript");
 (async () => {
- const source = fs.readFileSync('profiles/cubeoffice/desktop/client-services.ts', 'utf8');
- const js = ts.transpileModule(source, {compilerOptions: {module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022}}).outputText;
- const { createDesktopClientServices } = await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'));
- const storage = new Map();
- global.localStorage = {getItem: k => storage.get(k) ?? null, setItem: (k,v) => storage.set(k,v)};
- let calls = [];
- global.fetch = async (url, options) => { calls.push({url,options}); return {ok:true,json:async()=>({feedback_id:'FB-test'})}; };
- const a = createDesktopClientServices('1.3.1', 'en');
- const b = createDesktopClientServices('1.3.1', 'en');
- assert.equal(JSON.parse(a.getInfo()).client_id, JSON.parse(b.getInfo()).client_id);
- assert.equal(a.request('updates', '{}'), '');
- assert.equal(a.request('install-update', '{}'), '');
- assert.equal(calls.length, 0);
- const id = a.request('feedback', JSON.stringify({message:'Test feedback content',contact:'',category:'bug',screenshot:'must not send'}));
- assert.ok(id);
- assert.equal(a.request('feedback','{}'),'');
- await new Promise(resolve => setImmediate(resolve));
- assert.equal(JSON.parse(a.takeResult(id)).data.feedback_id,'FB-test');
- assert.equal(a.takeResult(id), '');
- const payload = JSON.parse(calls[0].options.body);
- assert.equal(payload.screenshot, undefined);
- assert.equal(calls[0].url, 'https://cubexp.com/api/v1/feedback');
- assert.equal(calls[0].options.redirect, 'error');
- assert.throws(() => a.request('feedback', JSON.stringify({message:'short'})));
- global.fetch = async () => { throw new Error('offline'); };
- const failed = a.request('feedback', JSON.stringify({message:'Test feedback content'}));
- await new Promise(resolve => setImmediate(resolve));
- assert.equal(JSON.parse(a.takeResult(failed)).ok, false);
- console.log('Desktop identity, feedback, failure handling and updater isolation checks passed');
- process.exit(0);
-})().catch(error => { console.error(error); process.exit(1); });
+	const { getDesktopAppProfile } = await import("../../profiles/cubeoffice/desktop/catalog.mjs");
+	const { resolveProfileRuntimeEnv } =
+		await import("../../als-office/apps/desktop/scripts/desktop-profiles.mjs");
+	const profile = getDesktopAppProfile("cubeoffice");
+	assert.equal(
+		profile.settingsExtensionModule,
+		undefined,
+		"desktop no longer embeds the mobile feedback form",
+	);
+	const env = resolveProfileRuntimeEnv(profile);
+	assert.equal(env.DESKTOP_FEEDBACK_BACKEND, "rest");
+	assert.equal(env.DESKTOP_FEEDBACK_ENDPOINT, "https://cubexp.com/api/v1/feedback");
+	assert.equal(env.DESKTOP_ERROR_LOG_ENDPOINT, "https://cubexp.com/api/v1/logs");
+	const defaults = resolveProfileRuntimeEnv({
+		id: "office",
+		name: "Office",
+		identifier: "office",
+	});
+	assert.equal(defaults.DESKTOP_FEEDBACK_BACKEND, "compose");
+	assert.equal(defaults.DESKTOP_FEEDBACK_ENDPOINT, "");
+	assert.equal(defaults.DESKTOP_ERROR_LOG_ENDPOINT, "");
+	globalThis.__clientProfile = profile;
+	const source = fs
+		.readFileSync("als-office/apps/desktop/src/client-context.ts", "utf8")
+		.replace(
+			'import { DESKTOP_APP_PROFILE } from "./app-profile";',
+			"const DESKTOP_APP_PROFILE = globalThis.__clientProfile;",
+		);
+	const js = ts.transpileModule(source, {
+		compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+	}).outputText;
+	const { getClientContext } = await import(
+		"data:text/javascript;base64," + Buffer.from(js).toString("base64")
+	);
+	const stored = new Map([["cubeoffice.client-id", "existing-installation-id-123"]]);
+	global.localStorage = {
+		getItem: (k) => stored.get(k) ?? null,
+		setItem: (k, v) => stored.set(k, v),
+	};
+	assert.deepEqual(getClientContext("en"), {
+		clientId: "existing-installation-id-123",
+		locale: "en",
+	});
+	stored.clear();
+	const first = getClientContext("zh-CN");
+	assert.match(first.clientId, /^[a-zA-Z0-9_-]{20,80}$/);
+	assert.equal(getClientContext("en").clientId, first.clientId);
+	global.localStorage = {
+		getItem: () => {
+			throw new Error("storage unavailable");
+		},
+	};
+	assert.throws(() => getClientContext("en"), /storage unavailable/);
+	profile.clientServices = undefined;
+	assert.deepEqual(getClientContext("en"), {}, "Compose does not collect installation identity");
+	console.log(
+		"Shared desktop profile routing, legacy installation identity, storage failures and Compose anonymity passed.",
+	);
+})().catch((error) => {
+	console.error(error);
+	process.exitCode = 1;
+});

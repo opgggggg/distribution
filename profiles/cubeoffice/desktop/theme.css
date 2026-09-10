@@ -329,3 +329,8 @@ button.unsaved-dialog__primary {
 .template-dialog__close:hover {
 	background: var(--cubeoffice-surface) !important;
 }
+
+.feedback-dialog,
+.client-services-settings {
+	--als-ofs-ui-accent: var(--cubeoffice-primary);
+}
