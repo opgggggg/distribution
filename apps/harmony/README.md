@@ -31,12 +31,8 @@ persistence; the editing surfaces remain browser-native and do not import Tauri.
 This is not yet feature parity with the full planned client-services design.
 Automatic checks are opt-in and currently run when the services panel mounts.
 First-run consent, automatic diagnostic uploads, screenshot/system-info attachment
-on Harmony and other store-specific adapters remain to be implemented. Desktop
-settings now mount the same feedback component through `settingsExtensionModule`;
-the distribution owns its HTTP adapter and the desktop shell retains its updater.
-The shared component accepts a service adapter, so no desktop-global native bridge
-is installed. Desktop ID creation currently occurs on first opening settings, not
-on initial launch. Keep CubeOffice logic in this repo.
+on Harmony and other store-specific adapters remain to be implemented. Desktop feedback uses the shared upstream desktop dialog and native collector
+adapters; Android and HarmonyOS continue to use the shared mobile component.
 
 Validation: shared bridge/channel tests and both frontend/ArkTS compilation.
 Before release, use a signed installation on an AppGallery-capable real device to

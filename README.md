@@ -128,6 +128,16 @@ Android uses the same catalog, preview and checksum helpers in its presentation
 template panel. Both CubeOffice profiles point at the live catalog, and users
 can choose a template or start with a blank presentation.
 
+## Optional desktop fonts
+
+CubeOffice downloads missing fonts from a pinned release on `cubexp.com`, with
+system fonts taking priority, SHA-256 verification and an offline disk cache.
+The desktop launcher selects `profiles/cubeoffice/desktop/font-source.json` for
+all targets. Prepare the versioned font assets with
+`node scripts/prepare-cubeoffice-fonts.mjs`; deployment details are in
+[website/fonts/README.md](website/fonts/README.md). The font files, licenses and
+corresponding sources are published separately from desktop installers.
+
 ## Private release workspace
 
 All CubeOffice-specific secrets and non-repository release material live under
@@ -189,3 +199,17 @@ key pair. Future Android updates need the same signing identity, and desktop
 updates must match the public key trusted by installed clients. Do not commit
 private keys, keystores, passwords, or signing certificates containing private
 keys to this repository. The public key may be included in application configuration.
+
+## Shared desktop feedback and diagnostics
+
+Desktop Settings and About use the upstream shared feedback dialog and error
+reporter. `profiles/cubeoffice/desktop/catalog.mjs` selects the CubeOffice adapter
+and `/api/v1/feedback` / `/api/v1/logs` endpoints; the default Office profile keeps
+its Compose collectors. CubeOffice reuses `cubeoffice.client-id`, preserves all
+four feedback categories and shows the website's feedback reference. The old
+mobile-form desktop bridge is removed; Android and HarmonyOS are unchanged.
+
+Targeted checks: `node scripts/tests/desktop-client-services.cjs`, upstream
+`apps/desktop/tests/error-reporting.mjs`, and Cargo's `feedback::tests`. The browser
+test `als-office/apps/desktop/tests/client-services-ui.mjs` uses Playwright (available via
+`NODE_PATH`) to exercise both configurations with a mocked native transport.

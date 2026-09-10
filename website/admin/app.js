@@ -1,3 +1,4 @@
+import { createFontLibrary } from "./fonts.js?v=fb8a44e63948";
 import "./controls.js?v=022a6ee0e230";
 const login = document.querySelector("[data-login]");
 const loginForm = document.querySelector("[data-login-form]");
@@ -56,6 +57,8 @@ function renderPlatforms() {
 	}
 	platforms.replaceChildren(list);
 }
+
+const fontLibrary = createFontLibrary(document.querySelector("#font-library"));
 
 let activeTab = "feedback";
 let currentItems = [];
@@ -343,7 +346,7 @@ async function loadOverview() {
 }
 
 async function loadDashboard() {
-	await Promise.all([loadOverview(), loadRecords()]);
+	await Promise.all([loadOverview(), loadRecords(), fontLibrary.load()]);
 }
 
 loginForm.addEventListener("submit", async (event) => {

@@ -1,0 +1,78 @@
+{
+	"version": "1.4.2",
+	"androidVersionCode": 1004002,
+	"distribution": "1d24dd3f188e03a785ff6e6843f46fa4e83d027c",
+	"upstream": "7ad8c35e3d86a0b04a2118b83beac6b95c4bc653",
+	"notes": "- 打开文档时自动下载缺失字体，已下载字体可离线使用。\n- 桌面版统一意见反馈入口和表单，可在设置或关于中提交问题与建议；应用错误会上报脱敏诊断信息，不附带文档。\n- 改善反馈类型下拉菜单的选择和键盘操作体验。\n\n## English\n\n- Missing fonts are downloaded when needed; downloaded fonts remain available offline.\n- Desktop feedback now uses a consistent form accessible from Settings and About. App errors send redacted diagnostics without attaching documents.\n- Improved feedback category selection and keyboard interaction.\n",
+	"archiveSha256": "2177a254ee9e1657fc62b163d8adc88f029d9c4589d8acdd4ff33b3efa2dff35",
+	"status": "published",
+	"verifiedAt": "2026-09-10T16:27:57.852976+00:00",
+	"artifacts": {
+		"downloads/CubeOffice-1.4.2-macOS-arm64.dmg": {
+			"sha256": "9f8d0d9d4dc49b64fca2e506266b678734ce9e852fec82c925f966953d3d590e",
+			"size": 16834008,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.2-macOS-arm64.dmg"
+		},
+		"downloads/CubeOffice-1.4.2-Windows-x64-setup.exe": {
+			"sha256": "79c78db01a05cc5835cfc4d01c6b84dfb270aa89d96ec4bcfab2981c2237209d",
+			"size": 15090795,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.2-Windows-x64-setup.exe"
+		},
+		"downloads/CubeOffice-1.4.2-Linux-x86_64.AppImage": {
+			"sha256": "cd21acf83924e9a78ce44936cb25d29b15bf6e3a2c010532aae2878c5439dc62",
+			"size": 112429560,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.2-Linux-x86_64.AppImage"
+		},
+		"downloads/CubeOffice-1.4.2-Linux-x86_64.deb": {
+			"sha256": "abc5ed7d4568abd3197670c19ac1e9a581d452c4bb44f4ad439d0aeedf14be3e",
+			"size": 18378250,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.2-Linux-x86_64.deb"
+		},
+		"downloads/CubeOffice-1.4.2-Android-b1004002.apk": {
+			"sha256": "397eb771a2cafcf8ef09490afc5e63d3c1ec97c9369feb835f510e10d75634af",
+			"size": 16227499,
+			"url": "https://cubexp.com/downloads/CubeOffice-1.4.2-Android-b1004002.apk"
+		},
+		"updates/1.4.2/CubeOffice-1.4.2-macOS-arm64.app.tar.gz": {
+			"sha256": "4d97bce78c6a24d984ba1512f72ecd4ad20de9204237306b6eb57cd015a3f63e",
+			"size": 16994465,
+			"url": "https://cubexp.com/updates/1.4.2/CubeOffice-1.4.2-macOS-arm64.app.tar.gz"
+		},
+		"updates/1.4.2/CubeOffice-1.4.2-macOS-arm64.app.tar.gz.sig": {
+			"sha256": "9775f211f633c8465f8195a7d51d71516a0705509a973e309f899594a8b1877c",
+			"size": 408,
+			"url": "https://cubexp.com/updates/1.4.2/CubeOffice-1.4.2-macOS-arm64.app.tar.gz.sig"
+		},
+		"updates/1.4.2/CubeOffice-1.4.2-Windows-x64-setup.exe": {
+			"sha256": "79c78db01a05cc5835cfc4d01c6b84dfb270aa89d96ec4bcfab2981c2237209d",
+			"size": 15090795,
+			"url": "https://cubexp.com/updates/1.4.2/CubeOffice-1.4.2-Windows-x64-setup.exe"
+		},
+		"updates/1.4.2/CubeOffice-1.4.2-Windows-x64-setup.exe.sig": {
+			"sha256": "a908e0724decaf68ebdaa3b1fc31852b8adbc534e55f212a00d4df93393908ac",
+			"size": 420,
+			"url": "https://cubexp.com/updates/1.4.2/CubeOffice-1.4.2-Windows-x64-setup.exe.sig"
+		},
+		"updates/1.4.2/CubeOffice-1.4.2-Linux-x86_64.AppImage": {
+			"sha256": "cd21acf83924e9a78ce44936cb25d29b15bf6e3a2c010532aae2878c5439dc62",
+			"size": 112429560,
+			"url": "https://cubexp.com/updates/1.4.2/CubeOffice-1.4.2-Linux-x86_64.AppImage"
+		},
+		"updates/1.4.2/CubeOffice-1.4.2-Linux-x86_64.AppImage.sig": {
+			"sha256": "d0ccb46a243ac8745dcd1ec4eba4856664b35bcccf4dd678a0d2d6298838baae",
+			"size": 424,
+			"url": "https://cubexp.com/updates/1.4.2/CubeOffice-1.4.2-Linux-x86_64.AppImage.sig"
+		}
+	},
+	"checks": [
+		"Native build identities and smoke checks",
+		"Android certificate continuity",
+		"Three cryptographic updater signatures",
+		"Local and remote SHA-256 checks",
+		"Public HTTPS byte ranges and live feed validation"
+	],
+	"limits": [
+		"macOS ad-hoc signed, not notarized; Windows has no Authenticode certificate.",
+		"Automated service/build/package checks do not replace physical Android and desktop GUI testing."
+	]
+}

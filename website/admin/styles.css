@@ -743,3 +743,83 @@ cube-select .als-ofs-ui-dropdown__trigger {
 	--als-ofs-ui-accent: #5145df;
 	--als-ofs-ui-focus: #5145df;
 }
+
+.font-nav {
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+}
+.fonts-panel {
+	margin: 20px 0;
+	scroll-margin-top: 84px;
+}
+.fonts-panel a {
+	color: #4338ca;
+	text-underline-offset: 3px;
+}
+.font-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin: 16px 22px;
+}
+.font-toolbar label {
+	font-size: 13px;
+	font-weight: 700;
+}
+.font-toolbar input {
+	min-height: 44px;
+	width: min(100%, 340px);
+	padding: 10px 12px;
+	border: 1px solid #d7d9e5;
+	border-radius: 10px;
+	font-size: 16px;
+}
+.font-toolbar input:focus-visible,
+.fonts-panel a:focus-visible,
+.font-table-scroll:focus-visible {
+	outline: 2px solid #5145df;
+	outline-offset: 3px;
+}
+.font-table-scroll {
+	max-height: 520px;
+	overflow: auto;
+}
+.font-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+	text-align: left;
+}
+.font-table th,
+.font-table td {
+	padding: 13px 22px;
+	border-bottom: 1px solid #eceef5;
+	white-space: nowrap;
+}
+.font-table th {
+	position: sticky;
+	top: 0;
+	background: #f7f8fc;
+	color: #526079;
+	z-index: 1;
+}
+.font-table tbody tr:hover {
+	background: #fafaff;
+}
+@media (max-width: 600px) {
+	.header-actions {
+		gap: 4px;
+	}
+	.header-actions .button {
+		padding: 0 9px;
+	}
+	.brand {
+		gap: 5px;
+		font-size: 13px;
+	}
+	.brand b {
+		display: none;
+	}
+}

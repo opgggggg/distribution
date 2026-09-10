@@ -10,8 +10,8 @@
 		<title>CubeOffice Admin</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="/admin/controls.css?v=ec57b504de42" />
-		<link rel="stylesheet" href="/admin/styles.css?v=0832131b2ad5" />
-		<script type="module" src="/admin/app.js?v=68d87a25d91e" defer></script>
+		<link rel="stylesheet" href="/admin/styles.css?v=e6893c12a82b" />
+		<script type="module" src="/admin/app.js?v=927fba1b5797" defer></script>
 	</head>
 	<body>
 		<header class="admin-header">
@@ -20,6 +20,7 @@
 				<span>CubeOffice <b>Admin</b></span>
 			</a>
 			<div class="header-actions" data-auth-actions hidden>
+				<a class="button secondary font-nav" href="#font-library">字体库</a>
 				<button type="button" class="button secondary" data-refresh>刷新</button>
 				<button type="button" class="button ghost" data-logout>退出</button>
 			</div>
@@ -95,6 +96,49 @@
 					<p class="platform-help">
 						按匿名安装 ID 去重，归入客户端最近上报的平台。近 30
 						天活跃来自更新检查记录；尚未上报的安装不计入。
+					</p>
+				</section>
+
+				<section class="panel fonts-panel" id="font-library" aria-labelledby="fonts-title">
+					<header>
+						<div>
+							<p class="eyebrow">FONT LIBRARY</p>
+							<h2 id="fonts-title">字体库</h2>
+						</div>
+						<a data-font-catalog target="_blank" rel="noopener" hidden>查看字体清单</a>
+					</header>
+					<p class="platform-summary" data-font-summary aria-live="polite"></p>
+					<div class="font-toolbar">
+						<label for="font-search">搜索字体</label>
+						<input
+							id="font-search"
+							data-font-search
+							type="search"
+							placeholder="字体名称、字重或许可证"
+							disabled
+						/>
+						<button type="button" class="button secondary" data-font-retry hidden>
+							重新加载
+						</button>
+					</div>
+					<p class="platform-summary" data-font-status role="status"></p>
+					<div class="font-table-scroll" tabindex="0" role="region" aria-label="字体列表">
+						<table class="font-table">
+							<thead>
+								<tr>
+									<th scope="col">字体家族</th>
+									<th scope="col">字重 / 样式</th>
+									<th scope="col">格式</th>
+									<th scope="col">大小</th>
+									<th scope="col">许可证</th>
+									<th scope="col">下载</th>
+								</tr>
+							</thead>
+							<tbody data-font-rows></tbody>
+						</table>
+					</div>
+					<p class="platform-help">
+						已发布到本站，供桌面客户端在缺失字体时按需下载。可查看字体文件及授权说明。
 					</p>
 				</section>
 
