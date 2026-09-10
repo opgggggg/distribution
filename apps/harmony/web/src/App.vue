@@ -1621,11 +1621,7 @@ async function showMobilePptxOverview(
 		await tab.editor?.ready();
 		await nextTick();
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-		if (
-			tab.id === activeId.value &&
-			tab.mobileMode === "reading" &&
-			!mobilePptxViewing.value
-		)
+		if (tab.id === activeId.value && tab.mobileMode === "reading" && !mobilePptxViewing.value)
 			setMobilePptxView("all");
 	} catch {
 		// Loading and import errors are already surfaced by the presentation editor.
@@ -4058,6 +4054,12 @@ onBeforeUnmount(() => {
 			v-if="aboutDialogOpen"
 			:app-name="APP_PROFILE.name"
 			:about-title="`Office for ${nativeHostLabel()}`"
+			feedback-label="意见反馈"
+			diagnostics-label="提交反馈时不会自动附带文档或日志。"
+			@feedback="
+				aboutDialogOpen = false;
+				clientServicesOpen = true;
+			"
 			:logo-url="appMarkUrl"
 			:copy="aboutCopy"
 			:is-checking-for-updates="false"
