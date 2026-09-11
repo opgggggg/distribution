@@ -1,0 +1,21 @@
+/sdcard/qa.png: 1 file pulled, 0 skipped. 122.4 MB/s (205275 bytes in 0.002s)
+native dark true
+/sdcard/qa.png: 1 file pulled, 0 skipped. 107.9 MB/s (172439 bytes in 0.002s)
+[
+  {
+    width: 194.09524536132812,
+    height: 48,
+    font: '12px',
+    color: 'rgb(17, 122, 69)'
+  },
+  {
+    width: 194.09524536132812,
+    height: 48,
+    font: '12px',
+    color: 'rgb(32, 38, 36)'
+  }
+]
+
+Final APK: native dark + Chinese menu passed; system bar background visually verified.
+Final APK: 320dp / 200% font, width=320, scale=1.
+Final APK: tablet dialog width=640, viewport=1616.

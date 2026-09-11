@@ -48,13 +48,19 @@
 	border-radius: 10px;
 }
 .android-brand {
-	flex: 1;
+	flex: 1 1 160px;
+	min-width: 0;
+	overflow-wrap: anywhere;
 	font-size: 20px;
 	letter-spacing: -0.4px;
 }
 .android-local-badge {
 	font-size: 12px;
 	color: var(--android-secondary);
+	margin-left: auto;
+}
+.android-topbar-home {
+	flex-wrap: wrap;
 }
 .android-topbar svg,
 .android-library svg,
@@ -155,6 +161,10 @@
 }
 .android-search:focus-within {
 	outline: 2px solid var(--android-primary);
+}
+.android-search input::placeholder {
+	color: var(--android-secondary);
+	opacity: 1;
 }
 .android-search .android-icon-button {
 	margin-right: -12px;
@@ -838,7 +848,7 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	justify-content: space-between;
 }
 
-/* Compact WeChat-style tabs: the whole 48px row remains tappable. */
+/* Compact touch navigation retains legible labels and a 48px hit area. */
 .android-navigation {
 	padding: 2px 12px;
 	background: var(--android-surface);
@@ -847,7 +857,7 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	min-height: 48px;
 	align-content: center;
 	gap: 2px;
-	font-size: 10px;
+	font-size: 12px;
 	color: var(--android-text);
 }
 .android-navigation button > span {
@@ -855,8 +865,8 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	height: 24px;
 }
 .android-navigation button[aria-current] {
-	color: #07b75b;
-	font-weight: 500;
+	color: var(--android-primary);
+	font-weight: 600;
 }
 .android-navigation button[aria-current] > span {
 	background: transparent;
@@ -875,12 +885,55 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	border-radius: 8px;
 }
 .android-editor-tools button span {
-	font-size: 10px;
+	font-size: 12px;
+}
+
+/* Services inherit the workspace theme, including native dark-mode changes. */
+.android-app .android-library .als-ofs-editor-ui {
+	--als-ofs-ui-surface: var(--android-card);
+	--als-ofs-ui-surface-muted: var(--android-container);
+	--als-ofs-ui-surface-hover: var(--android-container);
+	--als-ofs-ui-border: var(--android-outline);
+	--als-ofs-ui-border-strong: var(--android-secondary);
+	--als-ofs-ui-text: var(--android-text);
+	--als-ofs-ui-text-muted: var(--android-secondary);
+	--als-ofs-ui-accent: var(--android-primary);
+	--als-ofs-ui-accent-hover: var(--android-primary);
+	--als-ofs-ui-focus: var(--android-primary);
+}
+.android-app .android-services button,
+.android-app .android-service-download {
+	border-color: var(--android-outline);
+	background: var(--android-container);
+	color: var(--android-primary);
+}
+.android-app .android-services textarea,
+.android-app .android-services input:not([type="checkbox"]),
+.android-app .android-services select {
+	border-color: var(--android-outline);
+	background: var(--android-card);
+	color: var(--android-text);
+	font-size: 16px;
+}
+.android-app .android-services textarea::placeholder,
+.android-app .android-services input::placeholder {
+	color: var(--android-secondary);
+	opacity: 1;
+}
+.android-app .android-services a {
+	color: var(--android-primary);
+	display: inline-flex;
+	align-items: center;
+	min-height: 48px;
+}
+.android-app .android-services :is(input, textarea, a):focus-visible {
+	outline: 2px solid var(--android-primary);
+	outline-offset: 2px;
 }
 
 /* All Android sheets use the DOCX Insert header and surface treatment. */
 .android-sheet {
-	max-width: none;
+	max-width: 640px;
 	max-height: 72dvh;
 	border-radius: 22px 22px 0 0;
 	background: var(--android-card);

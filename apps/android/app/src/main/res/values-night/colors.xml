@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="aurora_surface">#171B19</color>
+	<color name="aurora_system_bar">#171B19</color>
+	<color name="aurora_text_secondary">#A8B6AD</color>
+</resources>

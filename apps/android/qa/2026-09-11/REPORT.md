@@ -1,0 +1,95 @@
+# CubeOffice 安卓版功能与 UI/UX 走查报告
+
+日期：2026-09-11。对象：当前工作区 CubeOffice 1.4.2 debug APK。修改保留在工作区，未发布。
+
+本轮使用真正的 Android 模拟器运行安装包，覆盖主要工作闭环；不是桌面浏览器的手机尺寸预览。结论仅适用于下面列明的样例、功能和配置，不代表所有 Office 高级命令、格式兼容性或所有安卓设备均已验收。
+
+## 环境与方法
+
+- Android 15 / API 35，ARM64，Android System WebView 124.0.6367.219。
+- 默认手机：1080×2400，420dpi；横屏实际 WebView 866×364 CSS px。
+- 小屏：960×2080，480dpi，320dp 宽，系统字体 200%。
+- 平板：1600×2560，240dpi，横屏实际 WebView 1616×1011 CSS px。
+- 使用 adb 安装、原生 DocumentsUI 导入/另存、Android 返回键、原生软键盘，以及 Playwright Android WebView 检查文本、光标、尺寸和搜索高亮。
+- 自动化连接显式清除 Playwright 默认的浅色模拟，使用实际系统颜色模式。截图来自 adb，包含系统栏和键盘。
+- 设计基准：内容优先、48dp 主要触控区域、4/8dp 间距体系、语义颜色、文字对比度、受约束的平板面板宽度、系统栏与 IME 安全区；保留现有品牌语言。
+
+## 已修复问题
+
+| 编号 | 级别 | 复现与影响 | 修改及验证 |
+|---|---|---|---|
+| F01 | P1 | Word 先加粗再连续输入，`ABC` 可能只留下 `C`；格式命令把刚输入的文字保持为选区 | 字形格式应用后将选区折叠到新文字末尾；验证连续输入、换段、撤销/重做和导出正文 |
+| F02 | P1 | 点击正文后立即输入，偶发 `OfficeABC` 变成 `fficeABCO` | 正文写入取消尚未执行的 pointerup 定位；外层空白点击定位同时校验文档版本，键盘重排后不再覆盖新输入；重绘期间优先使用模型光标。新增编辑器与外层异步顺序测试，并通过连续 10 次立即输入复测 |
+| F03 | P2 | 滚动到设置页下方，再切换文件，文件页继承设置页滚动位置，跳过标题与搜索框 | 分目的地保存/恢复滚动位置；首次切回文件为 0，再回设置恢复原位置 |
+| U01 | P2 | 原生宿主固定浅色主题，深色样式与系统栏缺少完整原生适配 | 增加 night 资源，统一启动底色、状态/导航栏图标和 WebView 背景；配置变化更新主题而不主动重建编辑器；刷新 Android 15 透明系统栏背后的窗口背景，避免浅色底配白色图标 |
+| U02 | P2 | 服务按钮混用紫色，深色表单/开关/下拉仍继承浅色基础样式；搜索占位符对比不足 | 统一到 Android 语义色，映射共享控件主题变量，保留输入焦点描边；修正搜索/反馈占位符颜色，并为服务下拉菜单提供中文语言环境（取消按钮不再显示 Cancel） |
+| U03 | P2 | 底部文字只有 10px，浅色选中绿对比度约 2.47:1 | 标签提高为 12px，选中态使用品牌语义色并加字重；主色进一步调整为 `#117a45`，以达到普通文字 4.5:1 要求；保留至少 48px 点击区域 |
+| U04 | P2 | 320dp、200% 字体下品牌栏撑宽页面，实际视口扩成 386px | 品牌栏支持换行与收缩；复测 `innerWidth=320`、`visualViewport.width=320`、`scale=1`、根滚动宽度 320 |
+| U05 | P2 | 平板新建面板铺满 1616px，文本与操作间距离过大 | 限制为居中 640px；实测 x=488、宽 640，手机仍占满可用宽度 |
+
+## 功能覆盖
+
+| 功能 | 本轮结果与证据范围 |
+|---|---|
+| 首页/文件 | 最近草稿、名称搜索、无结果、清除筛选、新建、文件/设置切换及滚动恢复通过 |
+| Word | 新建、加粗连续输入、换段、格式面板、撤销/重做、编辑/阅读切换、本地草稿通过；原生另存生成的 DOCX 解包校验正文为 `OfficeABC`、`Second` 两段 |
+| XLSX | 新建、A1 输入 `=SUM(1,2)`、返回 A1 显示 3 且公式保留；格式/插入面板、草稿通过 |
+| PPTX | 新建空白、添加至两页、格式面板、原生横屏播放、Android 返回退出播放通过 |
+| VSDX | 新建、格式/插入面板、插入流程图形、完成编辑和草稿通过 |
+| Markdown | 多行编辑、渲染阅读、返回首页再打开内容一致通过 |
+| PDF | 原生 DocumentsUI 打开样例，页面文字可读；输入 Revenue 后出现当前匹配高亮 |
+| 图片 | 原生 DocumentsUI 打开 PNG，进入只读图片界面通过 |
+| 原生保存 | 系统目标选择器另存生成 `Document (1).docx`；ZIP 完整性和 `word/document.xml` 正文核对通过。工作区证据副本为 `export-final.docx` |
+| 重启恢复 | 多次强制停止/重启及覆盖安装后草稿仍可打开；包含 Word、XLSX、Markdown。未模拟存储损坏或导出途中断电 |
+| 键盘/返回 | 实际软键盘出现时工具栏位于键盘之上；面板、编辑/阅读、播放返回均有覆盖。中文候选词输入未完成真机验证 |
+| 设置/服务 | 偏好、反馈展开/收起、主题、滚动和表单布局检查；更新清单、异步桥接与渠道隔离由本地测试验证。未向生产服务发送反馈 |
+
+## 验证记录
+
+- Android `assembleDebug` 成功，包含移动 Web 的 Vue 类型检查与生产打包。
+- DOCX Vue 声明类型检查通过。
+- `word-canvas-selection-focus.mjs`：12 个焦点恢复场景通过。
+- `word-canvas-composition.mjs`：组合输入逻辑测试通过。
+- `word-canvas-pointer-input.mjs`：pointerup/input 两种异步事件顺序通过。
+- `apps/android/tests/selection-race.cjs`：外层空白区域点击/输入竞态 3 个场景通过。
+- 实际模拟器连续 10 次“点击正文后立即输入 OfficeABC”通过，日志见 `typing-stress.log`。
+- `apps/android/tests/services.cjs`：更新清单、异步桥接、商店渠道隔离通过。
+- `apps/android/tests/emulator.cjs`：实际安装包回归，日志见 `emulator.log`。
+- 主仓库与 als-office 子模块的 `git diff --check` 通过。
+- 本轮执行 Android 与受影响编辑器的定向验证；桌面全量质量、覆盖率和发布门禁未运行，留给对应 CI/发布验收。
+
+可重复执行模拟器回归：先启动模拟器并安装本次 debug APK，启动应用到文件页，再执行：
+
+```sh
+ADB_PATH=/path/to/adb \
+PLAYWRIGHT_MODULE_PATH=/path/to/playwright \
+node apps/android/tests/emulator.cjs
+```
+
+可选环境变量：`ANDROID_SERIAL`（默认 emulator-5554）、`ANDROID_QA_OUTPUT`（默认 /tmp/cubeoffice-emulator-qa）。脚本会创建测试草稿，不清空应用数据、不提交生产反馈。PDF 自动回归通过 WebView 文件输入加载本地 fixture；真正原生文件选择器导入由本轮额外手工自动化走查覆盖。
+
+## 交付文件
+
+- 安装包：`apps/android/app/build/outputs/apk/debug/app-debug.apk`，debug 签名，仅供测试。
+- 功能修复位于 als-office 子模块的 `packages/docx/src/vue/word/use-word-canvas.ts`；子模块仍为未提交修改，需要和主仓库 UI/原生改动一起保留。
+- 模拟器脚本：`apps/android/tests/emulator.cjs`。
+- 截图、导出样例与验证日志与本报告放在同一目录。
+
+## 尚未覆盖的验收边界
+
+本轮不是完整 Office 兼容性认证。以下内容仍须后续专项验收：Android 8–14/旧 WebView；厂商真机、中文/第三方 IME、TalkBack 与硬件键盘；复杂 DOC/DOCX 修订、批注、表格、公式及大型文件；全部 XLSX 函数、图表、透视表；复杂 PPTX 动画、音视频；复杂 VSDX 导入与连接器；全部旧格式/JMP；真实网络错误、更新安装、生产反馈交付；存储不足、进程在保存中被杀等恢复场景。
+
+模拟器冷启动曾出现一次 System UI 无响应，恢复后继续测试，该事件不计作 CubeOffice 缺陷。单份样例通过不能推导为全部格式或全部机型通过；本报告也不将有限截图验收表述为所有设备“像素级完美”。
+
+## 截图证据
+
+| 场景 | 证据 |
+|---|---|
+| Word 输入与软键盘 | [修改前](word-before.png) · [修改后](word.png) |
+| 表格、演示、流程图 | [表格](spreadsheet.png) · [横屏播放](presentation.png) · [流程图](diagram.png) |
+| PDF 与图片 | [PDF 搜索高亮](pdf-search.png) · [原生打开图片](image.png) |
+| 小屏 200% 字体 | [修改前](small-font-before.png) · [修改后](small-font.png) |
+| 平板新建面板 | [修改前](tablet-before.png) · [修改后](tablet.png) |
+| 最终浅色/深色界面 | [首页](home.png) · [深色控件](dark-controls.png) |
+
+截图中的重复文件名来自自动化创建的测试草稿。APK 的大小与 SHA-256 见 [build.json](build.json)。

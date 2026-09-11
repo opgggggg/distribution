@@ -113,7 +113,7 @@ public final class MainActivity extends Activity {
     configureSystemBars();
 
     webView = new WebView(this);
-    webView.setBackgroundColor(Color.rgb(245, 247, 246));
+    webView.setBackgroundColor(getColor(R.color.aurora_surface));
     documentBridge = new AuroraDocumentBridge();
     configureWebView(webView);
     FrameLayout root = new FrameLayout(this);
@@ -252,12 +252,34 @@ public final class MainActivity extends Activity {
     // the IME. Some OEM builds do not reliably apply the manifest setting
     // when a WebView owns the focused contenteditable, so set it explicitly.
     window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+    // Android 15 draws transparent system bars over the window background.
+    // Refresh it on a live theme change as well as the legacy bar colours.
+    window.setBackgroundDrawable(
+        new android.graphics.drawable.ColorDrawable(getColor(R.color.aurora_surface)));
     window.setStatusBarColor(getColor(R.color.aurora_system_bar));
     window.setNavigationBarColor(getColor(R.color.aurora_system_bar));
     window
         .getDecorView()
         .setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            isNightMode() ? 0 : View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+  }
+
+  private boolean isNightMode() {
+    return (getResources().getConfiguration().uiMode
+        & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+        == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+  }
+
+  @Override
+  public void onConfigurationChanged(android.content.res.Configuration configuration) {
+    getTheme().applyStyle(R.style.Theme_AuroraPrimeOffice, true);
+    super.onConfigurationChanged(configuration);
+    configureSystemBars();
+    if (webView != null) {
+      webView.setBackgroundColor(getColor(R.color.aurora_surface));
+      webView.getSettings().setTextZoom(Math.round(configuration.fontScale * 100));
+    }
+    if (presentationImmersive) applyPresentationImmersive(true);
   }
 
   @Override

@@ -2521,7 +2521,13 @@ function handleMobileDocumentAreaClick(event: MouseEvent, tab: HarmonyDocumentTa
 	const clickedDocumentContent = target.closest(
 		"[data-word-block-id], [data-word-inline-offset-start], [data-word-caret-offset]",
 	);
+	const clickedRevision = tab.editor?.getState().revision;
+	const clickIsCurrent = () =>
+		activeId.value === tab.id &&
+		tab.mobileMode === "editing" &&
+		tab.editor?.getState().revision === clickedRevision;
 	window.setTimeout(() => {
+		if (!clickIsCurrent()) return;
 		if (!isMobileDocumentTextTarget(document.activeElement)) editor.focus();
 		// A tap on real text/cells already has an accurate browser caret. A tap on
 		// the empty remainder of a short page has no DOM text position, so place
@@ -2531,6 +2537,9 @@ function handleMobileDocumentAreaClick(event: MouseEvent, tab: HarmonyDocumentTa
 			// Focus itself can emit a selectionchange with contenteditable's root as
 			// the caret. Let that event settle before publishing the real model range.
 			requestAnimationFrame(() => {
+				// Typing may already have advanced the caret while the keyboard and
+				// page reflow. Never apply an older blank-area tap after that edit.
+				if (!clickIsCurrent()) return;
 				mobileDocxNearestParagraphSelection(editor, event.clientY);
 				mobileTextEditing.value = true;
 				syncMobileImeInset();

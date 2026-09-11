@@ -1,0 +1,8 @@
+{
+  "apk": "apps/android/app/build/outputs/apk/debug/app-debug.apk",
+  "bytes": 21885636,
+  "sha256": "28ed7ad3dee09f991ce0d39adf39b5342a987c5801f111f6115106ea933a2092",
+  "version": "1.4.2",
+  "androidApi": 35,
+  "webview": "124.0.6367.219"
+}

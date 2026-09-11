@@ -54,6 +54,15 @@ const emit = defineEmits<{
 }>();
 const servicesPanel = ref<InstanceType<typeof AndroidServices>>();
 const destination = ref("files");
+const libraryScroll = ref<HTMLElement>();
+const destinationScroll = new Map<string, number>();
+watch(destination, async (value, previous) => {
+	destinationScroll.set(previous, libraryScroll.value?.scrollTop ?? 0);
+	const focused = document.activeElement;
+	if (focused instanceof HTMLElement && libraryScroll.value?.contains(focused)) focused.blur();
+	await nextTick();
+	if (libraryScroll.value) libraryScroll.value.scrollTop = destinationScroll.get(value) ?? 0;
+});
 const query = ref("");
 const filter = ref("all");
 const sheet = ref<"" | "new" | "more" | "format" | "documents">("");
@@ -172,7 +181,7 @@ function previewLabel(item: DocumentItem): string {
 </script>
 
 <template>
-	<header v-show="!immersive" class="android-topbar">
+	<header v-show="!immersive" class="android-topbar" :class="{ 'android-topbar-home': !active }">
 		<template v-if="active">
 			<button class="android-icon-button" aria-label="返回" @click="emit('back')">
 				<Icon name="back" />
@@ -210,7 +219,7 @@ function previewLabel(item: DocumentItem): string {
 		</template>
 	</header>
 	<section v-show="!active" class="android-library" aria-label="文档工作区">
-		<div class="android-library-scroll">
+		<div ref="libraryScroll" class="android-library-scroll">
 			<template v-if="destination !== 'settings'">
 				<div class="android-page-title">
 					<h1>你的文档</h1>

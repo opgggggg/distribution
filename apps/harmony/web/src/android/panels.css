@@ -1,6 +1,6 @@
 /* Android tools share one quiet surface, with space instead of nested borders. */
 .android-app {
-	--android-primary: #13834b;
+	--android-primary: #117a45;
 	--android-primary-container: #e6f3eb;
 	--android-surface: #f6f7f8;
 	--android-container: #f1f3f4;
