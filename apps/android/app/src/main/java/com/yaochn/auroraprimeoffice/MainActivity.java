@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
@@ -261,12 +260,14 @@ public final class MainActivity extends Activity {
     window
         .getDecorView()
         .setSystemUiVisibility(
-            isNightMode() ? 0 : View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            isNightMode()
+                ? 0
+                : View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
   }
 
   private boolean isNightMode() {
     return (getResources().getConfiguration().uiMode
-        & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+            & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
         == android.content.res.Configuration.UI_MODE_NIGHT_YES;
   }
 
