@@ -2,7 +2,7 @@
 	"string": [
 		{
 			"name": "app_name",
-			"value": "CubeOffice"
+			"value": "CubeOffice 文档"
 		},
 		{
 			"name": "module_desc",
@@ -10,15 +10,15 @@
 		},
 		{
 			"name": "EntryAbility_desc",
-			"value": "CubeOffice workspace"
+			"value": "CubeOffice 文档 workspace"
 		},
 		{
 			"name": "EntryAbility_label",
-			"value": "CubeOffice"
+			"value": "CubeOffice 文档"
 		},
 		{
 			"name": "app_loading",
-			"value": "正在载入 CubeOffice…"
+			"value": "正在载入 CubeOffice 文档…"
 		}
 	]
 }

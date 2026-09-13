@@ -1,5 +1,5 @@
 {
-	"name": "CubeOffice",
+	"name": "CubeOffice 文档",
 	"packageName": "com.cubexp.office",
 	"vendor": "cubexp",
 	"versionCode": 1004002,
@@ -8,6 +8,8 @@
 	"urlScheme": "cubeoffice",
 	"documentTemplates": {
 		"endpoint": "https://cubexp.com/templates/index.json",
-		"formats": ["pptx"]
+		"formats": [
+			"pptx"
+		]
 	}
 }
