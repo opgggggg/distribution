@@ -138,8 +138,12 @@ onMounted(() => {
 				><UiCheckbox label="" :model-value="info.automatic" @change="automatic"
 			/></label>
 			<p class="android-service-help">
-				检查更新会向 cubexp.com 发送客户端编号、应用版本及平台信息，用于使用统计，不发送文档内容。
-				{{ storeChannel ? "此版本仅通过华为应用市场检查和安装更新，不从网站下载更新包。" : "此版本通过 cubexp.com 检查更新。" }}
+				{{
+					storeChannel
+						? "此版本通过华为应用市场检查和安装更新，不从网站下载更新包。检查时会另外向 cubexp.com 发送客户端编号、应用版本及平台信息用于使用统计，该统计失败不影响更新。"
+						: "此版本通过 cubexp.com 检查更新，会发送客户端编号、应用版本及平台信息，用于版本比对和使用统计。"
+				}}
+				不发送文档内容。
 			</p>
 			<button type="button" :disabled="checking" @click="check">
 				{{ checking ? "正在检查…" : "检查更新" }}
