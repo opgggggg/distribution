@@ -1,0 +1,18 @@
+DEVICE {
+  ua: 'Mozilla/5.0 (Linux; Android 15; sdk_gphone64_arm64 Build/AE3A.240806.043; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/124.0.6367.219 Mobile Safari/537.36 AuroraPrimeOfficeAndroid/0.1',
+  width: 412,
+  height: 842,
+  dpr: 2.625
+}
+DOCX page ms 542
+DOCX preview ms 1366
+PPTX controls ms 422
+PPTX preview ms 1377
+LANDSCAPE { w: 915, h: 412 }
+PASS native left/right swipes
+THUMBNAILS [
+  { loaded: true, width: 480, height: 672 },
+  { loaded: true, width: 480, height: 270 }
+]
+ERRORS []
+PASS emulator checks

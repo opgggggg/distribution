@@ -125,6 +125,7 @@ interface HarmonyDocumentTab {
 	autosaveRevision: string | undefined;
 	autosavedAt: number | undefined;
 	mobileMode: "reading" | "editing";
+	mobilePptxView?: "all" | "single";
 	mobileAutofocusPending: boolean;
 }
 
@@ -727,7 +728,7 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 			props: {
 				...binding.props,
 				// Open in overview; playback and slide selection enter single-slide mode.
-				slideViewMode: "all",
+				slideViewMode: tab.mobilePptxView ?? "all",
 			},
 		};
 	}
@@ -851,16 +852,6 @@ async function persistAutosave(
 	blob: Blob,
 	revision: string,
 ): Promise<void> {
-	if (nativeMobileLayout && !tab.preview && tab.loaded && tab.id === activeId.value) {
-		const surface = activeDocumentSurface();
-		if (surface) {
-			try {
-				tab.preview = await captureDocumentPreview(surface);
-			} catch {
-				/* Saving a document must not depend on preview generation. */
-			}
-		}
-	}
 	const savedAt = Date.now();
 	const record: HarmonyAutosaveRecord = {
 		id: tab.autosaveId,
@@ -877,6 +868,8 @@ async function persistAutosave(
 	tab.autosaveRevision = revision;
 	tab.autosavedAt = savedAt;
 	tab.autosaveStatus = "saved";
+	// Preview capture is best effort and must never delay committing document bytes.
+	if (!tab.preview) void prepareDocumentPreview(tab);
 }
 
 function runAutosave(tab: HarmonyDocumentTab): Promise<void> {
@@ -1282,7 +1275,16 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 		const surface = document.querySelector<HTMLElement>(
 			`.harmony-documents__surface[data-document-id="${tab.id}"]`,
 		);
-		if (tab.source && surface) {
+		if (tab.preview) {
+			tab.previewCaptured = true;
+		} else if (surface && tab.id === activeId.value) {
+			// Let the opening frame and input paint before starting DOM capture.
+			await new Promise<void>((resolve) => {
+				if (window.requestIdleCallback)
+					window.requestIdleCallback(() => resolve(), { timeout: 1500 });
+				else window.setTimeout(resolve, 100);
+			});
+			if (tab.id !== activeId.value || !surface.isConnected) return;
 			const preview = await captureDocumentPreview(surface);
 			if (preview) {
 				tab.preview = preview;
@@ -1599,17 +1601,19 @@ function mobilePptxCommand(labels: readonly string[]): HTMLElement | null {
 }
 
 function setMobilePptxView(mode: "all" | "single"): boolean {
-	const surface = activeDocumentSurface();
-	const button =
-		mode === "all"
-			? surface?.querySelector<HTMLButtonElement>(
-					'[title="幻灯片浏览视图"], [title="Slide Sorter View"], .als-ofs-pptx-mobile-slide-controls [aria-label="显示所有幻灯片"], .als-ofs-pptx-mobile-slide-controls [aria-label="Show all slides"]',
-				)
-			: surface?.querySelector<HTMLButtonElement>(
-					'[title="普通视图"], [title="Normal View"]',
-				);
-	if (!button) return false;
-	button.click();
+	const tab = activeTab.value;
+	if (!tab?.editor || tab.format !== "pptx") return false;
+	// The mobile shell does not mount the desktop statusbar's view buttons.
+	// Drive the editor's public prop so playback really enters single-slide mode.
+	tab.mobilePptxView = mode;
+	// Slide selection can change the runtime view without changing this prop.
+	// The mobile navigator remains available to restore the overview in that case.
+	if (mode === "all")
+		activeDocumentSurface()
+			?.querySelector<HTMLButtonElement>(
+				'.als-ofs-pptx-mobile-slide-controls [aria-label="显示所有幻灯片"], .als-ofs-pptx-mobile-slide-controls [aria-label="Show all slides"]',
+			)
+			?.click();
 	mobilePptxSingleView.value = mode === "single";
 	mobilePptxGesture = undefined;
 	return true;

@@ -1,0 +1,8 @@
+PASS whole-app idle and navigation {
+  "idleScriptMs": 0,
+  "idleTaskMs": 1.063,
+  "heapMB": 97.88528823852539,
+  "nodes": 47775,
+  "navigationScriptMs": 21.394,
+  "navigationTaskMs": 638.237
+}

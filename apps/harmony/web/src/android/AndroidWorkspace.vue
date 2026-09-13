@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+	computed,
+	defineAsyncComponent,
+	nextTick,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	watch,
+} from "vue";
 import type { EditorArtifactFormat } from "@yaochn/als-office-editor-ui/vue";
 import { APP_PROFILE } from "../app-profile.generated";
 import appMark from "../../../AppScope/resources/base/media/app_icon.png";
 import { UiCheckbox } from "@yaochn/als-office-editor-ui/vue";
 import { OPEN_ACCEPT } from "../open-formats";
 import Icon from "./AndroidIcon.vue";
-import AndroidServices from "./AndroidServices.vue";
+const AndroidServices = defineAsyncComponent(() => import("./AndroidServices.vue"));
 interface DocumentItem {
 	preview?: string;
 	id: string;
@@ -54,9 +62,11 @@ const emit = defineEmits<{
 }>();
 const servicesPanel = ref<InstanceType<typeof AndroidServices>>();
 const destination = ref("files");
+const servicesVisited = ref(false);
 const libraryScroll = ref<HTMLElement>();
 const destinationScroll = new Map<string, number>();
 watch(destination, async (value, previous) => {
+	if (value === "settings") servicesVisited.value = true;
 	destinationScroll.set(previous, libraryScroll.value?.scrollTop ?? 0);
 	const focused = document.activeElement;
 	if (focused instanceof HTMLElement && libraryScroll.value?.contains(focused)) focused.blur();
@@ -351,7 +361,11 @@ function previewLabel(item: DocumentItem): string {
 					<p>文档、表格、演示与笔记，随身处理。</p>
 				</section>
 			</template>
-			<div v-show="destination === 'settings'"><AndroidServices ref="servicesPanel" /></div>
+			<div v-show="destination === 'settings'">
+				<!-- Retain form and scroll state after the first visit, but keep settings
+				     initialization and its code out of the first workspace paint. -->
+				<AndroidServices v-if="servicesVisited" ref="servicesPanel" />
+			</div>
 		</div>
 		<button
 			v-if="destination !== 'settings'"

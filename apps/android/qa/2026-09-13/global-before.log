@@ -1,0 +1,41 @@
+IDLE {
+  TaskDuration: 0.7817919999999999,
+  ScriptDuration: 0.766673,
+  LayoutDuration: 0,
+  RecalcStyleDuration: 0,
+  JSHeapUsedSize: 5478312,
+  Nodes: 0,
+  Documents: 0
+} HEAP_MB 95.95822525024414 NODES 46942
+STATE {
+  url: 'file:///android_asset/web/index.html',
+  surfaces: 5,
+  visible: undefined,
+  rows: 59
+}
+HOME_SETTINGS_12_SWITCHES {
+  TaskDuration: 1.4574589999999998,
+  ScriptDuration: 0.5771019999999999,
+  LayoutDuration: 0.084685,
+  RecalcStyleDuration: 0.048392
+}
+CPU_TOP [
+  { fn: '(idle)', url: '', line: -1, ms: 2719 },
+  { fn: '(program)', url: '', line: -1, ms: 733 },
+  { fn: 'tu', url: 'index-Dg2SOqwz.js', line: 5, ms: 172 },
+  { fn: 'lC', url: 'index-Dg2SOqwz.js', line: 1241, ms: 128 },
+  { fn: 'lC', url: 'index-Dg2SOqwz.js', line: 1241, ms: 127 },
+  { fn: '', url: 'index-Cfk-PBI9.js', line: 951, ms: 105 },
+  { fn: 'rf', url: 'index-Dg2SOqwz.js', line: 13, ms: 88 },
+  { fn: 'OS', url: 'index-Dg2SOqwz.js', line: 13, ms: 81 },
+  { fn: '(garbage collector)', url: '', line: -1, ms: 79 },
+  { fn: 'getTextAlternativeInternal', url: '', line: 3622, ms: 78 },
+  { fn: 'tu', url: 'index-Dg2SOqwz.js', line: 5, ms: 75 },
+  { fn: 'queryRole', url: '', line: 5258, ms: 50 },
+  { fn: 'OS', url: 'index-Dg2SOqwz.js', line: 13, ms: 46 },
+  { fn: 'tu', url: 'index-Dg2SOqwz.js', line: 5, ms: 38 },
+  { fn: 'pg', url: 'index-Dg2SOqwz.js', line: 1241, ms: 36 },
+  { fn: 'tu', url: 'index-Dg2SOqwz.js', line: 5, ms: 35 },
+  { fn: 'getAriaRole', url: '', line: 3342, ms: 35 },
+  { fn: 'z', url: 'index-Cfk-PBI9.js', line: 951, ms: 35 }
+]

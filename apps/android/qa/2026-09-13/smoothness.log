@@ -1,0 +1,3 @@
+DOCX_SCROLL { samples: 106, p50: 17, p95: 17, max: 17, over100ms: 0 }
+PPTX_SWIPES { samples: 183, p50: 17, p95: 17, max: 300, over100ms: 1 }
+FINAL_SLIDE 0

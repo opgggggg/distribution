@@ -25,7 +25,9 @@ export default defineConfig(({ mode }) => {
 		plugins: [vue()],
 		resolve: {
 			alias: {
-				"@yaochn/als-office-editor-ui/document-preview": fromHere("../../als-office/packages/editor-ui/src/document-preview.ts"),
+				"@yaochn/als-office-editor-ui/document-preview": fromHere(
+					"../../als-office/packages/editor-ui/src/document-preview.ts",
+				),
 			},
 			dedupe: ["vue"],
 		},
@@ -35,7 +37,9 @@ export default defineConfig(({ mode }) => {
 				: fromHere("./entry/src/main/resources/rawfile/web"),
 			emptyOutDir: true,
 			assetsInlineLimit: 4096,
-			cssCodeSplit: false,
+			// Android should load only workspace styles at startup, then each
+			// editor's styles with its lazy JavaScript chunk.
+			cssCodeSplit: android,
 			chunkSizeWarningLimit: 4_000,
 			rollupOptions: {
 				output: {
