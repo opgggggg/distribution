@@ -4,7 +4,10 @@ Platform distribution shells for AuroraPrime Office:
 
 - `apps/harmony`: HarmonyOS application and the shared mobile Web host.
 - `apps/android`: Android WebView application that packages the shared mobile host
-  as a code-split payload (HarmonyOS uses the single-file inlined payload).
+  as a code-split payload. HarmonyOS uses the same code-split output, served from
+  packaged rawfile resources through the ArkWeb request interceptor. Both native
+  hosts also render the same mobile workspace UI (`apps/harmony/web/src/android/`);
+  only the browser falls back to the desktop layout.
 - `als-office`: pinned upstream editor engine dependency.
 
 The dependency direction is intentionally one-way: this repository consumes
@@ -73,8 +76,14 @@ profile. Android Gradle reads the selected profile directly and generates its ic
 Build the shared HarmonyOS/mobile Web payload:
 
 ```sh
-npm run build:web
+APP_PROFILE=cubeoffice npm run build:web
 ```
+
+> Always pass `APP_PROFILE` for a CubeOffice build. `build:web` runs `profile:sync`
+> in its prebuild hook, and HarmonyOS defaults to `profiles/default/` — without the
+> variable the generated app identity is rewritten to `com.yaochn.auroraprimeoffice`
+> at version `0.1.0`, which silently invalidates any signature bound to
+> `com.cubexp.office` (installs then fail with `verify signature failed`).
 
 Build the Android debug APK after configuring the Android SDK:
 
