@@ -222,3 +222,10 @@ Targeted checks: `node scripts/tests/desktop-client-services.cjs`, upstream
 `apps/desktop/tests/error-reporting.mjs`, and Cargo's `feedback::tests`. The browser
 test `als-office/apps/desktop/tests/client-services-ui.mjs` uses Playwright (available via
 `NODE_PATH`) to exercise both configurations with a mocked native transport.
+
+## OFD package
+
+`packages/ofd` is the independently publishable `@cubexp/ofd` package, maintained
+outside the `als-office` submodule. Build with `npm run build:ofd`, test with
+`npm run test:ofd`, and see [its README](packages/ofd/README.md) for browser, Vue
+and Node APIs. It is not automatically installed into a distribution app profile.

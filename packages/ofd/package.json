@@ -1,0 +1,79 @@
+{
+	"name": "@cubexp/ofd",
+	"version": "0.1.0",
+	"description": "Independent OFD parser, viewer and conversion package",
+	"license": "Apache-2.0",
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./node": {
+			"types": "./dist/node.d.ts",
+			"import": "./dist/node.js"
+		},
+		"./vue": {
+			"types": "./dist/vue/index.d.ts",
+			"import": "./dist/vue/index.js"
+		},
+		"./office": {
+			"types": "./dist/office.d.ts",
+			"import": "./dist/office.js"
+		},
+		"./office-node": {
+			"types": "./dist/office-node.d.ts",
+			"import": "./dist/office-node.js"
+		},
+		"./office-vue": {
+			"types": "./dist/office-vue.d.ts",
+			"import": "./dist/office-vue.js"
+		}
+	},
+	"scripts": {
+		"build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
+		"check:types": "tsc -p tsconfig.json",
+		"test": "npm run build && npm run test:built",
+		"test:built": "node --test tests/document.mjs tests/node-conversion.mjs",
+		"prepack": "npm run build"
+	},
+	"dependencies": {
+		"@xmldom/xmldom": "^0.9.12",
+		"fflate": "^0.8.2",
+		"pdf-lib": "^1.17.1"
+	},
+	"optionalDependencies": {
+		"@napi-rs/canvas": "1.0.3",
+		"pdfjs-dist": "^6.2.108"
+	},
+	"peerDependencies": {
+		"vue": "^3.5.0",
+		"@yaochn/als-office-editor-core": "^0.57.10",
+		"@yaochn/als-office-editor-ui": "^0.57.10"
+	},
+	"peerDependenciesMeta": {
+		"vue": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-core": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-ui": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"typescript": "^5.0.3",
+		"@types/node": "^22.20.1"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

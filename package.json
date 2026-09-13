@@ -10,7 +10,8 @@
 	"workspaces": [
 		"apps/*",
 		"als-office/packages/*",
-		"als-office/apps/desktop"
+		"als-office/apps/desktop",
+		"packages/*"
 	],
 	"scripts": {
 		"build": "npm run build:web",
@@ -25,6 +26,8 @@
 		"desktop:config": "node scripts/run-cubeoffice-desktop.mjs --print-config",
 		"desktop:build": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs",
 		"desktop:build:linux-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-unknown-linux-gnu --bundles appimage,deb",
-		"desktop:build:win-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-pc-windows-msvc --bundles nsis"
+		"desktop:build:win-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-pc-windows-msvc --bundles nsis",
+		"build:ofd": "npm run build -w @cubexp/ofd",
+		"test:ofd": "npm test -w @cubexp/ofd"
 	}
 }

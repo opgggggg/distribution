@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>OpenDocument viewer smoke test</title>
+	</head>
+	<body style="margin: 0">
+		<div id="app"></div>
+		<script type="module">
+			import { createApp, h, ref } from "vue";
+			import { OfdViewer } from "../dist/vue/index.js";
+			import { ofd } from "./fixtures.mjs";
+			const samples = { OFD: ofd() };
+			createApp({
+				setup() {
+					const selected = ref("OFD");
+					return () =>
+						h("main", [
+							h(
+								"nav",
+								{
+									"aria-label": "Sample format",
+									style: "padding:8px;display:flex;gap:8px",
+								},
+								Object.keys(samples).map((format) =>
+									h(
+										"button",
+										{ onClick: () => (selected.value = format) },
+										format,
+									),
+								),
+							),
+							h(OfdViewer, {
+								source: samples[selected.value],
+								fileName: `sample.${selected.value.toLowerCase()}`,
+								style: "height:calc(100vh - 48px)",
+							}),
+						]);
+				},
+			}).mount("#app");
+		</script>
+	</body>
+</html>
