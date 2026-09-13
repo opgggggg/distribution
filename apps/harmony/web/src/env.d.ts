@@ -1,6 +1,7 @@
 interface AuroraHarmonyHost {
 	appReady(): boolean;
 	getPlatform?(): "harmonyos" | "android";
+	hasWindowControls?(): boolean;
 	beginSave(fileName: string): string;
 	appendSaveChunk(sessionId: string, base64: string): boolean;
 	finishSave(sessionId: string): Promise<string>;

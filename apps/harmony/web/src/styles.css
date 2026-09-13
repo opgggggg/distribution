@@ -501,14 +501,16 @@ button:focus-visible,
 		height: 38px;
 		min-height: 38px;
 		gap: 10px;
-		padding: 6px 0 0 12px;
+		padding: 6px 12px 0 12px;
 		background: rgb(222 226 233 / 88%);
 		backdrop-filter: blur(18px);
 		box-shadow: none;
 		user-select: none;
 	}
 
-	.harmony-chrome.is-harmony-host {
+	/* 2in1 把最小化/最大化/关闭画在窗口右上角，标题栏右侧要给它们留出位置。
+	   平板和手机没有这三个按钮，见 harmonyHasWindowControls()。 */
+	.harmony-chrome.has-window-controls {
 		padding-right: 132px;
 	}
 

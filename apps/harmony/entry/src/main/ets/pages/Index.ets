@@ -104,6 +104,7 @@ struct Index {
           methodList: [
             'appReady',
             'getPlatform',
+            'hasWindowControls',
             'consumePendingIntent',
             'readOpenDocumentChunk',
             'finishOpenDocument',

@@ -2,6 +2,7 @@ import { common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
+import deviceInfo from '@ohos.deviceInfo';
 
 interface SaveSession {
   id: string;
@@ -50,6 +51,13 @@ export class HarmonyDocumentBridge {
 
   getPlatform(): string {
     return 'harmonyos';
+  }
+
+  // 2in1 上 EntryAbility 隐藏了原生标题栏，但系统仍然把最小化/最大化/关闭三个
+  // 按钮画在窗口右上角，自绘标题栏必须给它们让出右侧的位置。平板和手机没有这
+  // 三个按钮，让位只会在标题栏右边留下一块空白。
+  hasWindowControls(): boolean {
+    return deviceInfo.deviceType === '2in1';
   }
 
   consumePendingIntent(): string {

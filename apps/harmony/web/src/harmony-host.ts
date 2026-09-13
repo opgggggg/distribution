@@ -35,6 +35,14 @@ export function isAndroidHost(): boolean {
 	return nativeHostPlatform() === "android";
 }
 
+/**
+ * 宿主窗口右上角是否由系统画着最小化/最大化/关闭三个按钮。只有 2in1 是这样，
+ * 自绘标题栏要给它们让出位置；平板和手机上让位只会留下一块空白。
+ */
+export function harmonyHasWindowControls(): boolean {
+	return window.auroraHarmonyHost?.hasWindowControls?.() === true;
+}
+
 export function nativeHostLabel(): string {
 	switch (nativeHostPlatform()) {
 		case "harmonyos":

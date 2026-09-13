@@ -62,6 +62,7 @@ import {
 } from "../../../../als-office/apps/desktop/src/preferences";
 import {
 	consumeHarmonyIntent,
+	harmonyHasWindowControls,
 	isAndroidHost,
 	isHarmonyHost,
 	nativeHostLabel,
@@ -2894,7 +2895,7 @@ onBeforeUnmount(() => {
 		<header
 			v-if="!nativeMobileLayout"
 			class="harmony-chrome"
-			:class="{ 'is-harmony-host': isHarmonyHost() }"
+			:class="{ 'has-window-controls': harmonyHasWindowControls() }"
 			@pointerdown="prepareHarmonyWindowMove"
 			@pointermove="moveHarmonyWindow"
 			@pointerup="cancelHarmonyWindowMove"
