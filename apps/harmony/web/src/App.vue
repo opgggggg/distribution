@@ -172,8 +172,22 @@ interface MobileMarkdownEditor {
 	focus(): void;
 }
 
-const androidLayout =
+// 手机形态判定。onMounted 里的 phoneMediaQuery 复用同一个条件，两者必须保持一致。
+const PHONE_MEDIA_QUERY = "(max-width: 600px), (max-height: 600px) and (pointer: coarse)";
+
+// HarmonyOS 与 Android 共用同一套原生移动端工作区 UI（src/android/ 下的组件内部
+// 不做平台判断，数据全部由本文件通过 props 传入）。
+//
+// Android 宿主只分发到手机，可以无条件启用；HarmonyOS 一个包同时覆盖
+// phone / tablet / 2in1（见 module.json5 的 deviceTypes），所以必须再判一次手机
+// 形态，否则平板和 PC/2in1 会被塞进手机工作区。浏览器始终走桌面布局。
+//
+// 注意：这里是模块加载时求值一次。折叠屏展开后形态变化不会即时切换工作区，
+// 需要重新加载页面。要做到即时切换，得把下面这些 nativeMobileLayout 的读取点
+// 改成响应式（或由宿主通过 bridge 上报设备类型），那是更大的改动。
+const nativeMobileLayout =
 	isAndroidHost() ||
+	(isHarmonyHost() && window.matchMedia(PHONE_MEDIA_QUERY).matches) ||
 	(import.meta.env.DEV && new URLSearchParams(location.search).get("platform") === "android");
 const androidWorkspace = ref<InstanceType<typeof AndroidWorkspace> | null>(null);
 const HOME_TAB_ID = "home";
@@ -416,7 +430,7 @@ watch(mobileInsertMenuOpen, async (open) => {
 });
 const mobileInsertLinkOpen = ref(false);
 const mobileInsertLinkUrl = ref("");
-const mobileLayout = ref(androidLayout);
+const mobileLayout = ref(nativeMobileLayout);
 const mobileTextEditing = ref(false);
 const mobilePptxViewing = ref(false);
 const mobilePptxSingleView = ref(false);
@@ -699,7 +713,7 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 				...binding.props,
 				// Source mode is the keyboard-native editing surface on phones. The
 				// richer visual and preview modes remain unchanged on larger screens.
-				viewMode: androidLayout && tab.mobileMode === "reading" ? "preview" : "source",
+				viewMode: nativeMobileLayout && tab.mobileMode === "reading" ? "preview" : "source",
 				leftPanel: false,
 				rightPanel: false,
 				statusBar: false,
@@ -836,7 +850,7 @@ async function persistAutosave(
 	blob: Blob,
 	revision: string,
 ): Promise<void> {
-	if (androidLayout && !tab.preview && tab.loaded && tab.id === activeId.value) {
+	if (nativeMobileLayout && !tab.preview && tab.loaded && tab.id === activeId.value) {
 		const surface = activeDocumentSurface();
 		if (surface) {
 			try {
@@ -985,7 +999,7 @@ function historyTimeLabel(savedAt: number): string {
 }
 
 async function createDocument(format: EditorArtifactFormat): Promise<void> {
-	if (androidLayout && format === "pptx" && templateSource?.formats.includes(format)) {
+	if (nativeMobileLayout && format === "pptx" && templateSource?.formats.includes(format)) {
 		if (!opening.value) templatePickerOpen.value = true;
 		return;
 	}
@@ -1243,7 +1257,7 @@ async function closeTab(id: string): Promise<void> {
 }
 
 async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
-	if (!androidLayout || !tab.editor || tab.previewPending || tab.previewCaptured) return;
+	if (!nativeMobileLayout || !tab.editor || tab.previewPending || tab.previewCaptured) return;
 	tab.previewPending = true;
 	try {
 		await tab.editor?.ready();
@@ -1463,7 +1477,7 @@ async function openMobileRibbonTab(tabId?: "home" | "insert"): Promise<void> {
 	mobileInsertMenuOpen.value = false;
 	mobileInsertLinkOpen.value = false;
 	await nextTick();
-	if (androidLayout && activeTab.value?.format === "docx") {
+	if (nativeMobileLayout && activeTab.value?.format === "docx") {
 		const editor = activeDocxEditor();
 		if (editor) ensureMobileDocxTextSelection(editor);
 	}
@@ -2455,7 +2469,7 @@ function handleMobileFocusOut(): void {
 
 function handleMobileDocumentAreaClick(event: MouseEvent, tab: HarmonyDocumentTab): void {
 	if (!mobileLayout.value || tab.id !== activeId.value) return;
-	if (androidLayout && tab.mobileMode === "reading" && tab.format !== "pptx") return;
+	if (nativeMobileLayout && tab.mobileMode === "reading" && tab.format !== "pptx") return;
 	const target = event.target;
 	if (!(target instanceof Element)) return;
 	if (tab.mobileMode === "reading" && tab.format === "pptx" && mobilePptxViewing.value) {
@@ -2631,7 +2645,7 @@ function handleNativeBack(): boolean {
 		showMobileHome();
 		return true;
 	}
-	if (androidLayout) {
+	if (nativeMobileLayout) {
 		const unsaved = tabs.value.find(
 			(tab) => tab.editor?.getState().dirty && !autosaveIsCurrent(tab),
 		);
@@ -2646,7 +2660,7 @@ function handleNativeBack(): boolean {
 }
 
 function syncMobileLayout(event?: MediaQueryListEvent): void {
-	mobileLayout.value = androidLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false);
+	mobileLayout.value = nativeMobileLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false);
 	mobilePortrait.value = window.innerHeight >= window.innerWidth;
 	for (const tab of tabs.value) refreshTabSurface(tab);
 	if (mobileLayout.value) void restoreAutosaves();
@@ -2737,7 +2751,7 @@ function handleAndroidEscape(event: KeyboardEvent): void {
 		(event.target as Element | null)?.closest?.(".als-ofs-ui-dropdown__menu")
 	)
 		return;
-	if (!androidLayout || event.key !== "Escape" || document.querySelector("dialog[open]")) return;
+	if (!nativeMobileLayout || event.key !== "Escape" || document.querySelector("dialog[open]")) return;
 	if (handleNativeBack()) event.preventDefault();
 }
 
@@ -2756,9 +2770,7 @@ onMounted(() => {
 	document.addEventListener("focusin", handleMobileFocusIn);
 	document.addEventListener("focusout", handleMobileFocusOut);
 	window.addEventListener("als-office-editor-keep-ime", handleEditorKeepIme);
-	phoneMediaQuery = window.matchMedia(
-		"(max-width: 600px), (max-height: 600px) and (pointer: coarse)",
-	);
+	phoneMediaQuery = window.matchMedia(PHONE_MEDIA_QUERY);
 	syncMobileLayout();
 	document.addEventListener("visibilitychange", handleVisibilityChange);
 	window.addEventListener("pagehide", flushAutosaves);
@@ -2830,7 +2842,7 @@ onBeforeUnmount(() => {
 		:style="{ '--harmony-pptx-background': mobilePptxBackground }"
 		:class="{
 			'has-document': !homeActive,
-			'android-app': androidLayout,
+			'android-app': nativeMobileLayout,
 			'is-mobile-layout': mobileLayout,
 			'is-mobile-ribbon-open': mobileRibbonOpen,
 			'is-mobile-ribbon-insert': mobileRibbonOpen && mobileRibbonSection === 'insert',
@@ -2841,7 +2853,7 @@ onBeforeUnmount(() => {
 		}"
 	>
 		<AndroidWorkspace
-			v-if="androidLayout"
+			v-if="nativeMobileLayout"
 			ref="androidWorkspace"
 			:documents="tabs"
 			:history="restorableAutosaves"
@@ -2880,7 +2892,7 @@ onBeforeUnmount(() => {
 			@motion="preferences.reduceMotion = $event"
 		/>
 		<header
-			v-if="!androidLayout"
+			v-if="!nativeMobileLayout"
 			class="harmony-chrome"
 			:class="{ 'is-harmony-host': isHarmonyHost() }"
 			@pointerdown="prepareHarmonyWindowMove"
@@ -3203,12 +3215,12 @@ onBeforeUnmount(() => {
 		/>
 
 		<div
-			v-show="!androidLayout || !homeActive"
+			v-show="!nativeMobileLayout || !homeActive"
 			class="harmony-body"
 			:class="{ 'has-activity': activityOpen }"
 		>
 			<div class="harmony-workspace">
-				<section v-if="!androidLayout" v-show="homeActive" class="harmony-home">
+				<section v-if="!nativeMobileLayout" v-show="homeActive" class="harmony-home">
 					<div class="harmony-home__hero">
 						<span class="harmony-home__eyebrow">与小艺协同工作</span>
 						<h1>小艺的文档好助手</h1>
@@ -3380,7 +3392,7 @@ onBeforeUnmount(() => {
 			@click="closeMobileRibbon"
 		/>
 		<button
-			v-if="!androidLayout && mobileRibbonOpen && activeTab"
+			v-if="!nativeMobileLayout && mobileRibbonOpen && activeTab"
 			type="button"
 			class="harmony-mobile-ribbon-done"
 			@click="closeMobileRibbon"
@@ -3388,7 +3400,7 @@ onBeforeUnmount(() => {
 			完成
 		</button>
 
-		<header v-if="androidLayout && mobileRibbonOpen && activeTab" class="android-ribbon-header">
+		<header v-if="nativeMobileLayout && mobileRibbonOpen && activeTab" class="android-ribbon-header">
 			<span aria-hidden="true" />
 			<strong>{{ mobileRibbonSection === "insert" ? "插入" : "格式" }}</strong>
 			<button class="android-icon-button" aria-label="关闭面板" @click="closeMobileRibbon">
@@ -3396,7 +3408,7 @@ onBeforeUnmount(() => {
 			</button>
 		</header>
 		<nav
-			v-if="!androidLayout && activeTab && activeMobileEditing"
+			v-if="!nativeMobileLayout && activeTab && activeMobileEditing"
 			class="harmony-mobile-toolbar"
 			:class="{
 				'is-input-toolbar': activeTab.format === 'docx' || activeTab.format === 'markdown',
