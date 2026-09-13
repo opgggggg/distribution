@@ -1,67 +1,13 @@
 {
-	"insightIntents": [
+	"insightIntentsSrcEntry": [
 		{
-			"intentName": "JumpFunctionPage",
-			"domain": "ToolsDomain",
-			"intentVersion": "1.0.1",
-			"srcEntry": "./ets/entryability/InsightIntentExecutorImpl.ets",
-			"uiAbility": {
-				"ability": "EntryAbility",
-				"executeMode": ["foreground"]
-			},
-			"inputParams": [
-				{
-					"properties": {
-						"pageId": {
-							"type": "string",
-							"enum": [
-								{
-									"value": "home",
-									"displayName": "文档工作区首页",
-									"keywords": ["首页", "文档工作区"],
-									"displayDescription": "打开 CubeOffice 文档工作区"
-								},
-								{
-									"value": "activity",
-									"displayName": "AI 活动",
-									"keywords": ["小艺活动", "AI 活动", "助手连接"],
-									"displayDescription": "打开 AI 助手调用记录与连接状态"
-								},
-								{
-									"value": "new-docx",
-									"displayName": "新建 Word 文档",
-									"keywords": ["新建文档", "写文档", "Word"],
-									"displayDescription": "在工作区中创建可编辑的 Word 文档"
-								},
-								{
-									"value": "new-pptx",
-									"displayName": "新建演示文稿",
-									"keywords": ["新建 PPT", "做演示", "PowerPoint"],
-									"displayDescription": "在工作区中创建可编辑的演示文稿"
-								},
-								{
-									"value": "new-xlsx",
-									"displayName": "新建 Excel 工作簿",
-									"keywords": ["新建表格", "做表格", "Excel"],
-									"displayDescription": "在工作区中创建可编辑的 Excel 工作簿"
-								},
-								{
-									"value": "new-vsdx",
-									"displayName": "新建 Visio 绘图",
-									"keywords": ["新建绘图", "画流程图", "Visio"],
-									"displayDescription": "在工作区中创建可编辑的 Visio 绘图"
-								},
-								{
-									"value": "new-markdown",
-									"displayName": "新建 Markdown 文档",
-									"keywords": ["新建笔记", "Markdown", "写笔记"],
-									"displayDescription": "在工作区中创建可编辑的 Markdown 文档"
-								}
-							]
-						}
-					}
-				}
-			]
+			"srcEntry": "./ets/insightintents/CreateDocumentImpl.ets"
+		},
+		{
+			"srcEntry": "./ets/insightintents/OpenWorkspaceImpl.ets"
+		},
+		{
+			"srcEntry": "./ets/insightintents/ViewAssistantActivityImpl.ets"
 		}
 	]
 }
