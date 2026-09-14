@@ -10,6 +10,7 @@ interface AuroraHarmonyHost {
 	readOpenDocumentChunk?(id: string, offset: number, length: number): string;
 	finishOpenDocument?(id: string): boolean;
 	keepSoftKeyboard?(): boolean;
+	exitApp?(): boolean;
 	setPresentationLandscape?(enabled: boolean): boolean;
 	startWindowMove(): boolean;
 	toggleMaximizeWindow(): boolean;

@@ -134,6 +134,7 @@ struct Index {
             'appReady',
             'getPlatform',
             'hasWindowControls',
+            'exitApp',
             'consumePendingIntent',
             'readOpenDocumentChunk',
             'finishOpenDocument',

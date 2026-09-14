@@ -304,7 +304,7 @@ const pageCopy = {
 	},
 	privacy: {
 		title: "Privacy Policy | CubeOffice",
-		description: "CubeOffice Privacy Policy for macOS, Windows, Linux, and Android",
+		description: "CubeOffice Privacy Policy for HarmonyOS, Android, macOS, Windows, and Linux",
 		text: {
 			...sharedText,
 			返回首页: "Back to home",
@@ -314,7 +314,7 @@ const pageCopy = {
 			隐私与数据保护: "Privacy and data protection",
 			"CubeOffice 隐私政策": "CubeOffice Privacy Policy",
 			"我们重视您的隐私。本政策适用于 CubeOffice 的 macOS、Windows、Linux 与 Android 版本，并说明应用如何处理数据。CubeOffice 当前无需注册或登录，文档主要在您的设备本地处理。":
-				"We value your privacy. This policy applies to the macOS, Windows, Linux, and Android versions of CubeOffice and explains how the app handles data. CubeOffice currently requires no registration or sign-in, and documents are primarily processed on your device.",
+				"We value your privacy. This policy applies to the HarmonyOS, Android, macOS, Windows, and Linux versions of CubeOffice and explains how the app handles data. CubeOffice currently requires no registration or sign-in, and documents are primarily processed on your device.",
 			"1. 我们处理的信息": "1. Information we process",
 			"当您主动选择打开、导入、创建或编辑文档时，应用会在您的设备上处理相应文件及其内容，以提供文档查看、编辑、保存、撤销和多标签工作区等功能。":
 				"When you choose to open, import, create, or edit a document, the app processes that file and its contents on your device to provide viewing, editing, saving, undo, and multi-tab workspace features.",

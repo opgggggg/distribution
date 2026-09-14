@@ -60,6 +60,16 @@ export class HarmonyDocumentBridge {
     return deviceInfo.deviceType === '2in1';
   }
 
+  // Declining the privacy policy has to close the app: nothing may run before
+  // the policy is accepted.
+  exitApp(): boolean {
+    if (!this.context) return false;
+    this.context.terminateSelf().catch((cause: Error) => {
+      console.warn(`Could not close CubeOffice after the privacy policy was declined: ${cause.message}`);
+    });
+    return true;
+  }
+
   consumePendingIntent(): string {
     const pending = this.pendingIntent ? this.pendingIntent() : '';
     if (!pending) return '';
