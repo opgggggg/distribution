@@ -93,6 +93,19 @@ public final class MainActivity extends Activity {
     "application/x-emf",
     "application/x-wmf",
     "application/x-msmetafile",
+    "application/ofd",
+    "text/x-java-source",
+    "text/javascript",
+    "application/javascript",
+    "application/json",
+    "text/html",
+    "text/css",
+    "text/x-python",
+    "text/x-shellscript",
+    "application/yaml",
+    "text/yaml",
+    "application/xml",
+    "text/xml",
     "application/octet-stream"
   };
 

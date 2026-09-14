@@ -6,6 +6,10 @@ import { webview } from '@kit.ArkWeb';
 import { HarmonyDocumentBridge } from '../bridge/HarmonyDocumentBridge';
 import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
 
+// Kept in step with TEXT_EXTENSIONS in @cubexp/text; ArkTS cannot import the
+// web package, so the picker carries its own copy.
+const TEXT_FILE_SUFFIXES: string = '.txt,.log,.java,.js,.mjs,.cjs,.jsx,.ts,.mts,.cts,.tsx,.json,.jsonl,.jsonc,.xml,.html,.htm,.css,.scss,.less,.vue,.py,.pyw,.rb,.sh,.bash,.zsh,.yml,.yaml,.toml,.ini,.conf,.cfg,.properties,.env,.c,.h,.cpp,.hpp,.cc,.cxx,.cs,.go,.rs,.sql,.php,.swift,.kt,.kts,.diff,.patch,.gradle,.groovy,.dockerfile,.makefile';
+
 @Entry
 @Component
 struct Index {
@@ -151,8 +155,12 @@ struct Index {
         .onShowFileSelector((event) => {
           const options = new picker.DocumentSelectOptions();
           options.maxSelectNumber = 1;
+          // Mirrors OPEN_ACCEPT in the web shell and OFFICE_MIME_TYPES on Android.
+          // A suffix missing here cannot be picked even though the engine reads it.
           options.fileSuffixFilters = [
-            'Office documents|.docx,.pptx,.xlsx,.jmp,.vsdx,.md,.markdown,.pdf,.drawio'
+            'Office documents|.docx,.doc,.dot,.pptx,.ppt,.pps,.pot,.xlsx,.xls,.xlt,.csv,.vsdx,.drawio,.jmp',
+            'Documents and images|.pdf,.ofd,.md,.markdown,.png,.jpg,.jpeg,.webp,.emf,.wmf',
+            'Text and source code|' + TEXT_FILE_SUFFIXES
           ];
           const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
           const documentPicker = new picker.DocumentViewPicker(context);
