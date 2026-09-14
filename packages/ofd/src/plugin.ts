@@ -1,4 +1,5 @@
-import { artifactSourceToUint8Array, type ArtifactPlugin } from "@yaochn/als-office-editor-core";
+import { readSource } from "./source.js";
+import { type ArtifactPlugin } from "@yaochn/als-office-editor-core";
 import { readOfdDocument } from "./read.js";
 import { exportDocument } from "./convert.js";
 import { OFD_MIME_TYPES, blob, type OfdFormat, type ConversionFormat } from "./types.js";
@@ -15,17 +16,14 @@ function plugin(format: OfdFormat): ArtifactPlugin {
 		async canOpen(input) {
 			if (input.source === undefined) return false;
 			try {
-				return (
-					(await readOfdDocument(await artifactSourceToUint8Array(input.source)))
-						.format === format
-				);
+				return (await readOfdDocument(await readSource(input.source))).format === format;
 			} catch {
 				return false;
 			}
 		},
 		async open(input, context) {
 			if (input.source === undefined) throw new Error("A document source is required.");
-			const bytes = await artifactSourceToUint8Array(input.source),
+			const bytes = await readSource(input.source, { signal: context?.signal }),
 				document = await readOfdDocument(bytes, { signal: context?.signal });
 			if (document.format !== format)
 				throw new Error("The document content does not match the selected format.");

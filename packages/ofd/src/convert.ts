@@ -1,3 +1,4 @@
+import { svgAtDeviceScale } from "./strokes.js";
 import { PDFDocument } from "pdf-lib";
 import { readOfdDocument } from "./read.js";
 import {
@@ -12,7 +13,7 @@ import { writeDocx, extension } from "./write.js";
 export const conversionTargets: Readonly<
 	Partial<Record<ConversionFormat, readonly ConversionFormat[]>>
 > = {
-	ofd: ["pdf", "png", "jpeg", "txt", "docx"],
+	ofd: ["pdf", "png", "jpeg", "txt", "docx", "svg", "html", "md"],
 	pdf: ["ofd"],
 	png: ["ofd"],
 	jpeg: ["ofd"],
@@ -44,7 +45,10 @@ export async function convertDocument(
 	if (!conversionTargets[from]?.includes(to))
 		throw new Error(`Unsupported conversion: ${from} → ${to}.`);
 	if (from === "ofd") {
-		const document = await readOfdDocument(source, options);
+		const document = await readOfdDocument(source, {
+			...options,
+			paintScale: options.paintScale ?? (96 / 25.4) * Math.max(2, options.scale ?? 1.5),
+		});
 		if (document.format !== from)
 			throw new Error("Source format does not match its document content.");
 		return exportDocument(document, to, options);
@@ -58,19 +62,25 @@ export async function exportDocument(
 ): Promise<ConversionResult> {
 	abort(options.signal);
 	const name = baseName(options),
-		diagnostics = [...document.diagnostics];
+		diagnostics = [...document.diagnostics],
+		pages = selected(document.pages, options.page),
+		text = pages.map((page) => page.text).join("\n\f\n");
 	const one = (data: Blob): ConversionResult => ({
 		files: [{ name: `${name}.${extension(to)}`, blob: data }],
 		diagnostics,
 	});
-	if (to === "txt") return one(new Blob([document.text], { type: "text/plain;charset=utf-8" }));
+	if (to === "txt") return one(new Blob([text], { type: "text/plain;charset=utf-8" }));
 	if (to === "md")
-		return one(new Blob([document.markdown], { type: "text/markdown;charset=utf-8" }));
+		return one(
+			new Blob([options.page === undefined ? document.markdown : text], {
+				type: "text/markdown;charset=utf-8",
+			}),
+		);
 	if (to === "html")
 		return one(
 			new Blob(
 				[
-					`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:"><title>Document</title></head><body>${document.html}</body></html>`,
+					`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:"><title>Document</title></head><body>${pages.map((page) => `<section>${page.svg}</section>`).join("")}</body></html>`,
 				],
 				{ type: "text/html;charset=utf-8" },
 			),
@@ -81,9 +91,8 @@ export async function exportDocument(
 			message:
 				"DOCX export reconstructs editable text with page breaks; source graphics and exact placement are not preserved.",
 		});
-		return one(writeDocx(document.pages));
+		return one(writeDocx(pages));
 	}
-	const pages = selected(document.pages, options.page);
 	if (to === "svg")
 		return {
 			diagnostics,
@@ -113,6 +122,7 @@ export async function exportDocument(
 		if (to === "pdf") {
 			const pdf = await PDFDocument.create();
 			for (let i = 0; i < pages.length; i++) {
+				abort(options.signal);
 				const image = await pdf.embedPng(await images[i].arrayBuffer());
 				const page = pdf.addPage([pages[i].width * 0.75, pages[i].height * 0.75]);
 				page.drawImage(image, {
@@ -146,6 +156,8 @@ export function rasterSize(
 	height: number,
 	options: ConvertOptions,
 ): { width: number; height: number } {
+	if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0)
+		throw new RangeError("Raster dimensions must be positive finite numbers.");
 	const scale = options.scale ?? 1.5;
 	if (!Number.isFinite(scale) || scale <= 0 || scale > 8)
 		throw new RangeError("Raster scale must be greater than zero and at most 8.");
@@ -173,7 +185,11 @@ async function rasterizeBrowser(
 	canvas.height = size.height;
 	const ctx = canvas.getContext("2d");
 	if (!ctx) throw new Error("Canvas 2D is unavailable.");
-	const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+	const url = URL.createObjectURL(
+		new Blob([svgAtDeviceScale(svg, Math.min(size.width / width, size.height / height))], {
+			type: "image/svg+xml",
+		}),
+	);
 	try {
 		const image = new Image();
 		image.src = url;

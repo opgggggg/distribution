@@ -33,11 +33,7 @@ export function createDocumentConverters(
 	for (const [source, targets] of Object.entries(conversionTargets))
 		for (const target of targets ?? []) {
 			const from = source as ConversionFormat;
-			const native = from === "ofd";
-			const local =
-				(native && !["docx", "xlsx", "pptx"].includes(target)) ||
-				(from === "ofd" && target === "docx");
-			if (!node && !local) continue;
+			if (!node && from !== "ofd") continue;
 			const endpoint = (format: ConversionFormat) => ({
 				format,
 				extensions:
@@ -67,7 +63,26 @@ export function createDocumentConverters(
 					const page = context?.options?.page;
 					if (page !== undefined && typeof page !== "number")
 						throw new TypeError("The page/sheet option must be a number.");
+					const settings: ConvertOptions = {};
+					for (const key of [
+						"scale",
+						"quality",
+						"maxSourceBytes",
+						"maxExpandedBytes",
+						"maxEntries",
+						"maxPages",
+						"maxObjects",
+						"maxSvgBytes",
+					] as const) {
+						const value = context?.options?.[key];
+						if (value !== undefined) {
+							if (typeof value !== "number")
+								throw new TypeError(`${key} must be a number.`);
+							settings[key] = value;
+						}
+					}
 					const result = await backend(input.blob, from, target, {
+						...settings,
 						fileName: input.fileName,
 						signal: context?.signal,
 						...(page !== undefined ? { page } : {}),

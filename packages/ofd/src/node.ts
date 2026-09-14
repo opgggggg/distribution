@@ -1,4 +1,6 @@
-import { escapeXml as escapeSvg } from "./archive.js";
+import { svgAtDeviceScale } from "./strokes.js";
+import { renderNativeSvg } from "./render-node.js";
+import { fileURLToPath } from "node:url";
 /** Node-only conversion backend. Never import this entry point into a browser bundle. */
 import { PDFDocument } from "pdf-lib";
 import { readOfdDocument } from "./read.js";
@@ -21,25 +23,28 @@ async function canvasModule() {
 		});
 	}
 }
-interface NativePage extends OfdImagePage {
-	text: string;
-	textSvg: string;
-}
-async function pdfImages(source: Blob, options: NodeConvertOptions): Promise<NativePage[]> {
+async function pdfImages(source: Blob, options: NodeConvertOptions): Promise<OfdImagePage[]> {
 	const canvas = await canvasModule();
 	// PDF.js needs these web geometry globals in a headless process.
 	for (const name of ["DOMMatrix", "Path2D", "ImageData"] as const)
 		if (!(name in globalThis))
 			Object.defineProperty(globalThis, name, { value: canvas[name], configurable: true });
 	const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+	abort(options.signal);
+	const pdfjsRoot = new URL("../../", import.meta.resolve("pdfjs-dist/legacy/build/pdf.mjs"));
 	const task = pdfjs.getDocument({
 		data: new Uint8Array(await source.arrayBuffer()),
 		useSystemFonts: true,
+		cMapUrl: fileURLToPath(new URL("cmaps/", pdfjsRoot)),
+		cMapPacked: true,
+		standardFontDataUrl: fileURLToPath(new URL("standard_fonts/", pdfjsRoot)),
+		wasmUrl: fileURLToPath(new URL("wasm/", pdfjsRoot)),
 	});
 	const onAbort = () => {
-		void task.destroy();
+		void task.destroy().catch(() => {});
 	};
 	options.signal?.addEventListener("abort", onAbort, { once: true });
+	if (options.signal?.aborted) onAbort();
 	try {
 		const pdf = await task.promise;
 		if (pdf.numPages > (options.maxPages ?? 1000)) throw new RangeError("Too many PDF pages.");
@@ -47,7 +52,7 @@ async function pdfImages(source: Blob, options: NodeConvertOptions): Promise<Nat
 				Array.from({ length: pdf.numPages }, (_, i) => i + 1),
 				options.page,
 			),
-			result: NativePage[] = [];
+			result: OfdImagePage[] = [];
 		for (const index of indices) {
 			abort(options.signal);
 			const page = await pdf.getPage(index),
@@ -60,19 +65,8 @@ async function pdfImages(source: Blob, options: NodeConvertOptions): Promise<Nat
 				canvasContext: surface.getContext("2d") as never,
 				viewport,
 			}).promise;
-			const textContent = await page.getTextContent();
-			const strings: string[] = [];
-			let textSvg = "";
-			for (const item of textContent.items) {
-				if (!("str" in item)) continue;
-				strings.push(item.str + (item.hasEOL ? "\n" : " "));
-				const transform = pdfjs.Util.transform(base.transform, item.transform);
-				const size = Math.hypot(transform[0], transform[1]);
-				textSvg += `<text x="${transform[4]}" y="${transform[5]}" font-size="${size}" fill="transparent" textLength="${(item.width * 96) / 72}" lengthAdjust="spacingAndGlyphs">${escapeSvg(item.str)}</text>`;
-			}
+			abort(options.signal);
 			result.push({
-				text: strings.join(""),
-				textSvg,
 				bytes: surface.toBuffer("image/png"),
 				width: base.width,
 				height: base.height,
@@ -80,6 +74,9 @@ async function pdfImages(source: Blob, options: NodeConvertOptions): Promise<Nat
 			page.cleanup();
 		}
 		return result;
+	} catch (error) {
+		abort(options.signal);
+		throw error;
 	} finally {
 		options.signal?.removeEventListener("abort", onAbort);
 		await task.destroy();
@@ -89,14 +86,38 @@ async function nativeImages(
 	source: Blob,
 	options: NodeConvertOptions,
 ): Promise<{ pages: OfdImagePage[]; diagnostics: ConversionResult["diagnostics"] }> {
-	const document = await readOfdDocument(source, options),
+	const document = await readOfdDocument(source, {
+			...options,
+			paintScale: options.paintScale ?? (96 / 25.4) * Math.max(2, options.scale ?? 1.5),
+		}),
 		canvas = await canvasModule(),
 		pages: OfdImagePage[] = [];
 	for (const page of selected(document.pages, options.page)) {
 		abort(options.signal);
 		const size = rasterSize(page.width, page.height, options),
 			surface = canvas.createCanvas(size.width, size.height);
-		const image = await canvas.loadImage(Buffer.from(page.svg));
+
+		const families = new Set(canvas.GlobalFonts.families.map((font) => font.family));
+		const fallback =
+			[
+				"Noto Sans CJK SC",
+				"Source Han Sans SC",
+				"PingFang SC",
+				"Microsoft YaHei",
+				"Songti SC",
+				"Arial Unicode MS",
+			].find((name) => families.has(name)) ?? "sans-serif";
+		const rendered = await renderNativeSvg(
+			svgAtDeviceScale(
+				page.svg,
+				Math.min(size.width / page.width, size.height / page.height),
+			),
+			size.width,
+			fallback,
+			options.signal,
+		);
+		abort(options.signal);
+		const image = await canvas.loadImage(Buffer.from(rendered));
 		surface.getContext("2d").drawImage(image, 0, 0, size.width, size.height);
 		pages.push({
 			bytes: surface.toBuffer("image/png"),
@@ -184,8 +205,10 @@ export async function convertDocumentNode(
 			},
 		]);
 	if ((from === "png" || from === "jpeg") && to === "ofd") {
+		selected([source], options.page);
 		const canvas = await canvasModule(),
 			image = await canvas.loadImage(Buffer.from(await source.arrayBuffer()));
+		abort(options.signal);
 		rasterSize(image.width, image.height, { ...options, scale: 1 });
 		return one(
 			writeImageOfd([
@@ -205,3 +228,9 @@ export async function convertDocumentNode(
 	}
 	return convertDocument(source, from, to, options);
 }
+export {
+	verifyOfdSignaturesNode,
+	signOfdDocumentNode,
+	nodeOfdDigest,
+	rawSignatureVerifier,
+} from "./signatures-node.js";

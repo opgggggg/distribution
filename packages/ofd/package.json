@@ -8,7 +8,9 @@
 	"files": [
 		"dist",
 		"README.md",
-		"LICENSE"
+		"LICENSE",
+		"LICENSE_QCMS",
+		"CONFORMANCE.md"
 	],
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -35,23 +37,31 @@
 		"./office-vue": {
 			"types": "./dist/office-vue.d.ts",
 			"import": "./dist/office-vue.js"
+		},
+		"./validate": {
+			"types": "./dist/validate.d.ts",
+			"import": "./dist/validate.js"
 		}
 	},
 	"scripts": {
 		"build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
 		"check:types": "tsc -p tsconfig.json",
 		"test": "npm run build && npm run test:built",
-		"test:built": "node --test tests/document.mjs tests/node-conversion.mjs",
+		"test:built": "node --test tests/document.mjs tests/node-conversion.mjs tests/regressions.mjs tests/viewer.mjs tests/standard.mjs",
 		"prepack": "npm run build"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
 		"fflate": "^0.8.2",
-		"pdf-lib": "^1.17.1"
+		"pdf-lib": "^1.17.1",
+		"@pdf-lib/fontkit": "^1.1.1",
+		"utif": "^3.1.0",
+		"libxml2-wasm": "^0.7.2"
 	},
 	"optionalDependencies": {
 		"@napi-rs/canvas": "1.0.3",
-		"pdfjs-dist": "^6.2.108"
+		"pdfjs-dist": "^6.2.108",
+		"@resvg/resvg-js": "^2.6.2"
 	},
 	"peerDependencies": {
 		"vue": "^3.5.0",

@@ -1,12 +1,14 @@
-import { unzipSync, zipSync, strToU8, strFromU8 } from "fflate";
+import { unzipSync, zipSync, strToU8 } from "fflate";
 import { DOMParser, type Element } from "@xmldom/xmldom";
 import { abort, type ReadOptions } from "./types.js";
 export type XmlElement = Element;
 export function escapeXml(value: unknown): string {
-	return String(value ?? "").replace(
-		/[&<>"']/g,
-		(c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!,
-	);
+	return String(value ?? "")
+		.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "\ufffd")
+		.replace(
+			/[&<>"']/g,
+			(c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!,
+		);
 }
 export function children(node: XmlElement, local?: string): XmlElement[] {
 	return Array.from(node.childNodes).filter(
@@ -20,8 +22,37 @@ export function descendants(node: XmlElement, local: string): XmlElement[] {
 export function first(node: XmlElement, local: string): XmlElement | undefined {
 	return descendants(node, local)[0];
 }
+const booleanAttributes = new Set([
+	"Fill",
+	"Stroke",
+	"Visible",
+	"Italic",
+	"Bold",
+	"Serif",
+	"FixedWidth",
+	"Current",
+	"Expanded",
+	"Print",
+	"NoZoom",
+	"NoRotate",
+	"ReadOnly",
+	"NewWindow",
+	"Repeat",
+	"Synchronous",
+	"HideToolbar",
+	"HideMenubar",
+	"HideWindowUI",
+]);
 export function attr(node: XmlElement, name: string, fallback = ""): string {
-	for (const a of Array.from(node.attributes)) if (a.localName === name) return a.value;
+	for (const a of Array.from(node.attributes))
+		if (a.localName === name)
+			return booleanAttributes.has(name)
+				? a.value === "1"
+					? "true"
+					: a.value === "0"
+						? "false"
+						: a.value
+				: a.value;
 	return fallback;
 }
 export function parseXml(source: string): XmlElement {
@@ -49,12 +80,26 @@ export function resolvePath(base: string, reference: string): string {
 	return parts.join("/");
 }
 export class Archive {
-	constructor(readonly files: Record<string, Uint8Array>) {}
+	constructor(readonly files: Record<string, Uint8Array>) {
+		this.files = Object.assign(Object.create(null), files);
+	}
 	static async open(
 		input: Blob | Uint8Array | ArrayBuffer,
 		options: ReadOptions = {},
 	): Promise<Archive> {
 		abort(options.signal);
+		for (const key of [
+			"maxSourceBytes",
+			"maxExpandedBytes",
+			"maxEntries",
+			"maxPages",
+			"maxObjects",
+			"maxSvgBytes",
+		] as const) {
+			const value = options[key];
+			if (value !== undefined && (!Number.isSafeInteger(value) || value <= 0))
+				throw new RangeError(`${key} must be a positive safe integer.`);
+		}
 		const size = input instanceof Blob ? input.size : input.byteLength;
 		if (size > (options.maxSourceBytes ?? 64 * 1024 * 1024))
 			throw new RangeError("Document exceeds the source size budget.");
@@ -88,7 +133,14 @@ export class Archive {
 	text(path: string): string {
 		const data = this.files[path];
 		if (!data) throw new Error(`Missing document part: ${path}`);
-		return strFromU8(data);
+		// OFD XML commonly uses UTF-8, but XML also permits UTF-16 BOMs.
+		const encoding =
+			data[0] === 0xff && data[1] === 0xfe
+				? "utf-16le"
+				: data[0] === 0xfe && data[1] === 0xff
+					? "utf-16be"
+					: "utf-8";
+		return new TextDecoder(encoding, { fatal: true }).decode(data);
 	}
 	xml(path: string): XmlElement {
 		return parseXml(this.text(path));
