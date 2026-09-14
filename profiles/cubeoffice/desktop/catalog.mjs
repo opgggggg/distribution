@@ -146,23 +146,20 @@ const cubeOfficeProfile = {
 		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
+			// Text/source and OFD both extend the upstream associations, and they have
+			// to share one key: a second `fileAssociations` property would silently
+			// replace this one and unregister the text file types.
 			fileAssociations: [
 				...(officeProfile.tauriConfig.bundle?.fileAssociations ??
-					JSON.parse(
-						readFileSync(
-							new URL(
-								"../../../als-office/apps/desktop/src-tauri/tauri.conf.json",
-								import.meta.url,
-							),
-							"utf8",
-						),
-					).bundle.fileAssociations),
+					baseTauri.bundle.fileAssociations ??
+					[]),
 				{
 					ext: [...TEXT_EXTENSIONS],
 					name: "Text and source code",
 					role: "Editor",
 					rank: "Alternate",
 				},
+				{ ext: ["ofd"], mimeType: "application/ofd", role: "Viewer", rank: "Alternate" },
 			],
 			shortDescription: "Open, edit, and read Office documents with AI",
 			externalBin: [
@@ -181,12 +178,6 @@ const cubeOfficeProfile = {
 						}
 					: {}),
 			},
-			fileAssociations: [
-				...(officeProfile.tauriConfig.bundle.fileAssociations ??
-					baseTauri.bundle.fileAssociations ??
-					[]),
-				{ ext: ["ofd"], mimeType: "application/ofd", role: "Viewer", rank: "Alternate" },
-			],
 			icon: [
 				icon("32x32.png"),
 				icon("128x128.png"),
