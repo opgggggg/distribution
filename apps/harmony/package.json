@@ -11,15 +11,17 @@
 		"build:web:android": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode android"
 	},
 	"dependencies": {
+		"@cubexp/ofd": "*",
+		"@cubexp/text": "*",
 		"@yaochn/als-office-docx": "*",
 		"@yaochn/als-office-editor-ui": "*",
+		"@yaochn/als-office-image": "*",
 		"@yaochn/als-office-markdown": "*",
 		"@yaochn/als-office-pdf": "*",
 		"@yaochn/als-office-pptx": "*",
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
-		"vue": "3.5.32",
-		"@yaochn/als-office-image": "*"
+		"vue": "3.5.32"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^5.2.0",

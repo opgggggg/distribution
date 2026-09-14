@@ -39,6 +39,7 @@ const AndroidTextFormatPanel = defineAsyncComponent(
 );
 const androidFormatOpen = ref(false);
 const androidTextFormat = ref<AndroidTextFormat>({});
+import { TEXT_EXTENSIONS } from "@cubexp/text/formats";
 import { OPEN_ACCEPT } from "./open-formats";
 import type { DocumentTemplateSource } from "../../../../als-office/apps/desktop/src/document-templates";
 const AndroidTemplatePicker = defineAsyncComponent(
@@ -106,6 +107,8 @@ interface HarmonyFormatOption {
 	extension: string;
 	baseName: string;
 	editable: boolean;
+	/** Opens when the system hands us the file, but is not offered in the UI. */
+	hidden?: boolean;
 }
 
 interface HarmonyDocumentTab {
@@ -268,6 +271,28 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 		editable: false,
 	},
 	{
+		format: "ofd",
+		label: "OFD",
+		documentLabel: "OFD 文档（只读）",
+		shortLabel: "OFD",
+		icon: "OFD",
+		extension: "ofd",
+		baseName: "Document",
+		editable: false,
+		hidden: true,
+	},
+	{
+		format: "text",
+		label: "文本与源代码",
+		documentLabel: "文本文档",
+		shortLabel: "TXT",
+		icon: "T",
+		extension: "txt",
+		baseName: "Notes",
+		editable: true,
+		hidden: true,
+	},
+	{
 		format: "image",
 		label: "图片",
 		documentLabel: "图片",
@@ -280,7 +305,8 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 ];
 const formats = new UiArtifactFormatRegistry();
 
-type FormatEngineModule = "docx" | "pptx" | "xlsx" | "vsdx" | "markdown" | "pdf" | "image";
+type FormatEngineModule =
+	"docx" | "pptx" | "xlsx" | "vsdx" | "markdown" | "pdf" | "image" | "ofd" | "text";
 const FORMAT_ENGINE_MODULES: Readonly<
 	Record<FormatEngineModule, () => Promise<readonly UiArtifactFormatContribution[]>>
 > = {
@@ -298,6 +324,11 @@ const FORMAT_ENGINE_MODULES: Readonly<
 		(await import("@yaochn/als-office-image/vue")).IMAGE_VUE_FORMAT_CONTRIBUTION,
 	],
 	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
+	ofd: async () => [(await import("@cubexp/ofd/office-vue")).OFD_VUE_FORMAT_CONTRIBUTION],
+	text: async () => {
+		await import("@cubexp/text/style.css");
+		return [(await import("@cubexp/text/office-vue")).TEXT_VUE_FORMAT_CONTRIBUTION];
+	},
 };
 const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, FormatEngineModule>>> =
 	{
@@ -309,6 +340,8 @@ const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, For
 		markdown: "markdown",
 		pdf: "pdf",
 		image: "image",
+		ofd: "ofd",
+		text: "text",
 	};
 const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> = {
 	doc: "docx",
@@ -320,7 +353,6 @@ const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> =
 	xlt: "xlsx",
 	csv: "xlsx",
 	drawio: "vsdx",
-	txt: "markdown",
 	png: "image",
 	jpg: "image",
 	jpeg: "image",
@@ -335,6 +367,15 @@ const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> =
 	md: "markdown",
 	markdown: "markdown",
 	pdf: "pdf",
+	ofd: "ofd",
+	// .xml stays out: the drawio importer claims application/xml, so an extension
+	// shortcut here would open a diagram as source text instead.
+	...Object.fromEntries(
+		TEXT_EXTENSIONS.filter((extension) => extension !== "xml").map((extension) => [
+			extension,
+			"text" as const,
+		]),
+	),
 };
 const formatEngineLoads = new Map<FormatEngineModule, Promise<void>>();
 
@@ -366,8 +407,10 @@ async function ensureAllFormats(): Promise<void> {
 }
 
 const formatOptions = new Map(FORMAT_OPTIONS.map((option) => [option.format, option]));
-const editableFormats = FORMAT_OPTIONS.filter((option) => option.editable);
-const welcomePanelFormats = FORMAT_OPTIONS.map((option) => ({ label: option.shortLabel }));
+const editableFormats = FORMAT_OPTIONS.filter((option) => option.editable && !option.hidden);
+const welcomePanelFormats = FORMAT_OPTIONS.filter((option) => !option.hidden).map((option) => ({
+	label: option.shortLabel,
+}));
 const welcomePanelCopy = {
 	title: "一句话交给小艺，直接修改文档",
 	subtitle: "小艺会直接处理你当前打开的文件。",
@@ -1171,7 +1214,7 @@ async function addFile(file: File): Promise<void> {
 	if (engine) await loadFormatEngine(engine);
 	else await ensureAllFormats();
 	const direct =
-		formats.get((extension === "txt" ? "markdown" : extension) as EditorArtifactFormat) ??
+		formats.get(extension as EditorArtifactFormat) ??
 		formats.list().find(({ plugin }) => plugin.manifest.mimeTypes.includes(file.type));
 	if (direct) {
 		await addDocument(direct.plugin.manifest.id, file.name, file);
@@ -2685,7 +2728,8 @@ function handleNativeBack(): boolean {
 }
 
 function syncMobileLayout(event?: MediaQueryListEvent): void {
-	mobileLayout.value = nativeMobileLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false);
+	mobileLayout.value =
+		nativeMobileLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false);
 	mobilePortrait.value = window.innerHeight >= window.innerWidth;
 	for (const tab of tabs.value) refreshTabSurface(tab);
 	if (mobileLayout.value) void restoreAutosaves();
@@ -2776,7 +2820,8 @@ function handleAndroidEscape(event: KeyboardEvent): void {
 		(event.target as Element | null)?.closest?.(".als-ofs-ui-dropdown__menu")
 	)
 		return;
-	if (!nativeMobileLayout || event.key !== "Escape" || document.querySelector("dialog[open]")) return;
+	if (!nativeMobileLayout || event.key !== "Escape" || document.querySelector("dialog[open]"))
+		return;
 	if (handleNativeBack()) event.preventDefault();
 }
 
@@ -3425,7 +3470,10 @@ onBeforeUnmount(() => {
 			完成
 		</button>
 
-		<header v-if="nativeMobileLayout && mobileRibbonOpen && activeTab" class="android-ribbon-header">
+		<header
+			v-if="nativeMobileLayout && mobileRibbonOpen && activeTab"
+			class="android-ribbon-header"
+		>
 			<span aria-hidden="true" />
 			<strong>{{ mobileRibbonSection === "insert" ? "插入" : "格式" }}</strong>
 			<button class="android-icon-button" aria-label="关闭面板" @click="closeMobileRibbon">
