@@ -111,7 +111,10 @@ interface HarmonyFormatOption {
 interface HarmonyDocumentTab {
 	preview?: string;
 	previewPending?: boolean;
-	previewCaptured?: boolean;
+	// Editor revision the current thumbnail was captured at. A thumbnail restored
+	// from the autosave store carries none, so opening the document refreshes it.
+	previewRevision?: string;
+	previewStale?: boolean;
 	loaded?: boolean;
 	id: string;
 	autosaveId: string;
@@ -869,7 +872,7 @@ async function persistAutosave(
 	tab.autosavedAt = savedAt;
 	tab.autosaveStatus = "saved";
 	// Preview capture is best effort and must never delay committing document bytes.
-	if (!tab.preview) void prepareDocumentPreview(tab);
+	void prepareDocumentPreview(tab);
 }
 
 function runAutosave(tab: HarmonyDocumentTab): Promise<void> {
@@ -1220,7 +1223,7 @@ async function open(event: Event): Promise<void> {
 function selectTab(id: string): void {
 	if (id === HOME_TAB_ID || tabs.value.some((tab) => tab.id === id)) activeId.value = id;
 	const tab = tabs.value.find((item) => item.id === id);
-	if (tab?.editor && !tab.previewCaptured) void nextTick(() => prepareDocumentPreview(tab));
+	if (tab?.editor) void nextTick(() => prepareDocumentPreview(tab));
 }
 
 const dialogs = useUiDialogs(() => ({ locale: "zh-CN" }));
@@ -1251,7 +1254,14 @@ async function closeTab(id: string): Promise<void> {
 }
 
 async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
-	if (!nativeMobileLayout || !tab.editor || tab.previewPending || tab.previewCaptured) return;
+	if (!nativeMobileLayout || !tab.editor) return;
+	if (tab.previewPending) {
+		// A capture is already running against an older revision. Refresh once more
+		// when it finishes rather than dropping this request.
+		tab.previewStale = true;
+		return;
+	}
+	if (tab.previewRevision === revisionToken(tab.editor.getState().revision)) return;
 	tab.previewPending = true;
 	try {
 		await tab.editor?.ready();
@@ -1275,20 +1285,26 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 		const surface = document.querySelector<HTMLElement>(
 			`.harmony-documents__surface[data-document-id="${tab.id}"]`,
 		);
-		if (tab.preview) {
-			tab.previewCaptured = true;
-		} else if (surface && tab.id === activeId.value) {
+		if (surface && tab.id === activeId.value) {
 			// Let the opening frame and input paint before starting DOM capture.
 			await new Promise<void>((resolve) => {
 				if (window.requestIdleCallback)
 					window.requestIdleCallback(() => resolve(), { timeout: 1500 });
 				else window.setTimeout(resolve, 100);
 			});
-			if (tab.id !== activeId.value || !surface.isConnected) return;
-			const preview = await captureDocumentPreview(surface);
-			if (preview) {
-				tab.preview = preview;
-				tab.previewCaptured = true;
+			// A tab switch or unmount during that wait leaves the existing thumbnail
+			// in place; the record below still needs writing.
+			if (tab.id === activeId.value && surface.isConnected) {
+				const preview = await captureDocumentPreview(surface);
+				if (preview) {
+					tab.preview = preview;
+					// Read the revision back: editing may have moved on while
+					// html-to-image walked the document. A surface unmounted in the
+					// meantime leaves it unset, so the next mount captures again.
+					tab.previewRevision = tab.editor
+						? revisionToken(tab.editor.getState().revision)
+						: undefined;
+				}
 			}
 		}
 		const record = autosaveHistory.value.find((item) => item.id === tab.autosaveId);
@@ -1300,6 +1316,10 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 		console.warn("Document preview unavailable", cause);
 	} finally {
 		tab.previewPending = false;
+	}
+	if (tab.previewStale) {
+		tab.previewStale = false;
+		void prepareDocumentPreview(tab);
 	}
 }
 
