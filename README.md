@@ -9,6 +9,7 @@ Platform distribution shells for AuroraPrime Office:
   hosts also render the same mobile workspace UI (`apps/harmony/web/src/android/`);
   only the browser falls back to the desktop layout.
 - `als-office`: pinned upstream editor engine dependency.
+- `packages/text`: text reader, Vue viewer and CodeMirror editor with highlight.js syntax highlighting and CubeOffice Ribbon file actions (`npm run build:text`, `npm run test:text`).
 
 The dependency direction is intentionally one-way: this repository consumes
 `als-office`; the `als-office` repository does not contain or reference these

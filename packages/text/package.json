@@ -1,0 +1,88 @@
+{
+	"name": "@cubexp/text",
+	"version": "0.1.0",
+	"description": "Text file reader, Vue viewer and CodeMirror editor with highlight.js syntax highlighting",
+	"license": "Apache-2.0",
+	"type": "module",
+	"sideEffects": [
+		"**/*.css"
+	],
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./vue": {
+			"types": "./dist/vue/index.d.ts",
+			"import": "./dist/vue/index.js"
+		},
+		"./style.css": "./dist/style.css",
+		"./thumbnail": {
+			"types": "./dist/thumbnail.d.ts",
+			"import": "./dist/thumbnail.js"
+		},
+		"./formats": {
+			"types": "./dist/formats.d.ts",
+			"import": "./dist/formats.js"
+		},
+		"./office": {
+			"types": "./dist/office.d.ts",
+			"import": "./dist/office.js"
+		},
+		"./office-vue": {
+			"types": "./dist/office-vue.d.ts",
+			"import": "./dist/office-vue.js"
+		},
+		"./large-file": {
+			"types": "./dist/large-file.d.ts",
+			"import": "./dist/large-file.js"
+		}
+	},
+	"scripts": {
+		"build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/style.css', 'dist/style.css')\"",
+		"check:types": "tsc -p tsconfig.json",
+		"test": "npm run build && node --test tests/*.mjs",
+		"prepack": "npm run build"
+	},
+	"dependencies": {
+		"@codemirror/autocomplete": "^6.20.3",
+		"@codemirror/commands": "^6.11.0",
+		"@codemirror/language": "^6.12.4",
+		"@codemirror/language-data": "^6.5.2",
+		"@codemirror/search": "^6.7.2",
+		"@codemirror/state": "^6.7.4",
+		"@codemirror/view": "^6.43.11",
+		"highlight.js": "^11.11.1"
+	},
+	"peerDependencies": {
+		"@yaochn/als-office-editor-core": "^0.57.10",
+		"@yaochn/als-office-editor-ui": "^0.57.10",
+		"vue": "^3.5.0"
+	},
+	"peerDependenciesMeta": {
+		"vue": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-core": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-ui": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@napi-rs/canvas": "^1.0.3",
+		"jsdom": "^30.0.1",
+		"typescript": "^5.0.3",
+		"vue": "3.5.32"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

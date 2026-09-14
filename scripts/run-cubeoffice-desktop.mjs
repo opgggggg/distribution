@@ -5,6 +5,13 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
+const textBuild = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build:text"], {
+	cwd: repositoryRoot,
+	// Keep --print-config stdout parseable as JSON.
+	stdio: ["inherit", process.stderr, process.stderr],
+});
+if (textBuild.error) throw textBuild.error;
+if (textBuild.status !== 0) process.exit(textBuild.status ?? 1);
 const upstreamRoot = path.join(repositoryRoot, "als-office");
 const desktopRoot = path.join(upstreamRoot, "apps", "desktop");
 const profileCatalog = path.join(
@@ -16,8 +23,10 @@ const profileCatalog = path.join(
 );
 const args = process.argv.slice(2);
 const rendererOnly = args[0] === "--renderer-only";
-const command = rendererOnly
-	? [process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build"]]
+const rendererDev = args[0] === "--renderer-dev";
+const rendererConfig = path.join(repositoryRoot, "profiles/cubeoffice/desktop/vite.config.ts");
+const command = rendererOnly || rendererDev
+	? [process.platform === "win32" ? "npm.cmd" : "npm", ["run", rendererDev ? "dev" : "build", "--", "--config", rendererConfig]]
 	: [
 			process.execPath,
 			[

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>文本文件查看器</title>
+	<style>
+		body {
+			margin: 24px;
+			font-family: system-ui;
+		}
+		header {
+			display: flex;
+			gap: 16px;
+			flex-wrap: wrap;
+			margin-bottom: 16px;
+		}
+		#viewer {
+			height: 75vh;
+			border: 1px solid #ddd;
+		}
+	</style>
+	<div id="app"></div>
+	<script type="module">
+		import { createApp, h, ref } from "vue";
+		import { TextViewer } from "../dist/vue/index.js";
+		import "../dist/style.css";
+		import "highlight.js/styles/github.css";
+		createApp({
+			setup() {
+				const source = ref('// 打开本地文本文件\nconst message = "你好，世界";\n');
+				const name = ref("example.js"),
+					wrap = ref(false),
+					encoding = ref("utf-8");
+				return () => [
+					h("header", [
+						h("label", [
+							"打开文件 ",
+							h("input", {
+								type: "file",
+								onChange: (e) => {
+									const file = e.target.files[0];
+									if (file) {
+										source.value = file;
+										name.value = file.name;
+									}
+								},
+							}),
+						]),
+						h("label", [
+							"编码 ",
+							h(
+								"select",
+								{
+									value: encoding.value,
+									onChange: (e) => (encoding.value = e.target.value),
+								},
+								["utf-8", "gb18030", "utf-16le", "windows-1252"].map((value) =>
+									h("option", { value }, value),
+								),
+							),
+						]),
+						h("label", [
+							h("input", {
+								type: "checkbox",
+								checked: wrap.value,
+								onChange: (e) => (wrap.value = e.target.checked),
+							}),
+							"自动换行",
+						]),
+					]),
+					h("div", { id: "viewer" }, [
+						h(TextViewer, {
+							source: source.value,
+							fileName: name.value,
+							encoding: encoding.value,
+							wrap: wrap.value,
+						}),
+					]),
+				];
+			},
+		}).mount("#app");
+	</script>
+</html>

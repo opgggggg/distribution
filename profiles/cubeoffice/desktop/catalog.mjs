@@ -1,6 +1,8 @@
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { TEXT_EXTENSIONS } from "../../../packages/text/dist/formats.js";
 
 const profilePackageEnv = "DESKTOP_APP_PROFILES_PACKAGE";
 const configuredProfilePackage = process.env[profilePackageEnv];
@@ -28,6 +30,9 @@ const icon = (fileName) => path.join(fromHere("./icons/"), fileName);
 
 const cubeOfficeProfile = {
 	...officeProfile,
+	supportedExtensions: [...new Set([...officeProfile.supportedExtensions, ...TEXT_EXTENSIONS])],
+	openDocumentExtensions: [...new Set([...officeProfile.openDocumentExtensions, ...TEXT_EXTENSIONS])],
+	supportedFormatLabels: [...officeProfile.supportedFormatLabels, "TXT", "JAVA", "JS", "TS", "JSON", "XML", "PY"],
 	id: "cubeoffice",
 	cliBinaryName: "cubeoffice",
 	name: "CubeOffice",
@@ -105,10 +110,21 @@ const cubeOfficeProfile = {
 	},
 	tauriConfig: {
 		...officeProfile.tauriConfig,
+		build: {
+			...officeProfile.tauriConfig.build,
+			beforeBuildCommand: "node ../../../scripts/run-cubeoffice-desktop.mjs --renderer-only",
+			beforeDevCommand: "node ../../../scripts/run-cubeoffice-desktop.mjs --renderer-dev",
+		},
 		version: "1.4.2",
 		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
+			fileAssociations: [
+				...(officeProfile.tauriConfig.bundle?.fileAssociations ?? JSON.parse(readFileSync(
+					new URL("../../../als-office/apps/desktop/src-tauri/tauri.conf.json", import.meta.url), "utf8",
+				)).bundle.fileAssociations),
+				{ ext: [...TEXT_EXTENSIONS], name: "Text and source code", role: "Editor", rank: "Alternate" },
+			],
 			shortDescription: "Open, edit, and read Office documents with AI",
 			externalBin: ["binaries/cubeoffice"],
 			icon: [
@@ -124,6 +140,11 @@ const cubeOfficeProfile = {
 			windows: [{ title: "CubeOffice" }],
 			security: {
 				...officeProfile.tauriConfig.app.security,
+				capabilities: ["desktop", {
+					identifier: "cubeoffice-large-text-ranges", windows: ["main"],
+					description: "Read bounded ranges from user-selected text files; existing file scope still applies.",
+					permissions: ["fs:allow-open", "fs:allow-fstat", "fs:allow-read", "fs:allow-seek"],
+				}],
 				csp: "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost blob: https://cubexp.com; img-src 'self' asset: http://asset.localhost blob: data:; font-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:",
 			},
 		},
