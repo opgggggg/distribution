@@ -20,3 +20,8 @@ apps/android/local.properties
 
 # Reproducible optional font releases (prepared from the pinned upstream catalog)
 website/fonts/releases/
+
+# CubeOffice OFD host development and packaged sidecars
+packages/ofd-host/native/target/
+profiles/cubeoffice/desktop/generated/
+.cache/ofd-media/

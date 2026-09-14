@@ -1,0 +1,26 @@
+{
+  "x264": {
+    "url": "https://codeload.github.com/mirror/x264/tar.gz/31e19f92f00c7003fa115047ce50978bc98c3a0d",
+    "sha256": "d053c9d86988d6bc78237ca5205865c5ddf99c98ef4cd9927eec8f6d388f6dd9",
+    "revision": "31e19f92f00c7003fa115047ce50978bc98c3a0d",
+    "archive": "x264.tar.gz"
+  },
+  "davs2": {
+    "url": "https://codeload.github.com/pkuvcl/davs2/tar.gz/b41cf117452e2d73d827f02d3e30aa20f1c721ac",
+    "sha256": "efa1d5080a42c6fe4a74177111bc20c82dd1cef7adfc5ed2ca997f4b03c8dd9c",
+    "revision": "b41cf117452e2d73d827f02d3e30aa20f1c721ac",
+    "archive": "davs2.tar.gz"
+  },
+  "uavs3d": {
+    "url": "https://codeload.github.com/uavs3/uavs3d/tar.gz/0e20d2c291853f196c68922a264bcd8471d75b68",
+    "sha256": "1c1eb778b6080bc01493180ea7ae671c6444ce3aa760b5d021ba882eb0f9e3a0",
+    "revision": "0e20d2c291853f196c68922a264bcd8471d75b68",
+    "archive": "uavs3d.tar.gz"
+  },
+  "ffmpeg": {
+    "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/894da5ca7d742e4429ffb2af534fcda0103ef593",
+    "sha256": "9dad3557314f1b7923b61aff15e30079e964c3b41276bbd43dd8bb15b8028b5f",
+    "revision": "8.0.1/894da5ca7d742e4429ffb2af534fcda0103ef593",
+    "archive": "ffmpeg.tar.gz"
+  }
+}

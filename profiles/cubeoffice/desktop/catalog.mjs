@@ -1,7 +1,7 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
 import { TEXT_EXTENSIONS } from "../../../packages/text/dist/formats.js";
 
 const profilePackageEnv = "DESKTOP_APP_PROFILES_PACKAGE";
@@ -26,14 +26,41 @@ try {
 }
 
 const fromHere = (relativePath) => fileURLToPath(new URL(relativePath, import.meta.url));
+const baseTauri = JSON.parse(
+	readFileSync(fromHere("../../../als-office/apps/desktop/src-tauri/tauri.conf.json"), "utf8"),
+);
 const icon = (fileName) => path.join(fromHere("./icons/"), fileName);
 
+const bundleOfdMedia = process.env.CUBEOFFICE_BUNDLE_MEDIA === "1";
 const cubeOfficeProfile = {
 	...officeProfile,
-	supportedExtensions: [...new Set([...officeProfile.supportedExtensions, ...TEXT_EXTENSIONS])],
-	openDocumentExtensions: [...new Set([...officeProfile.openDocumentExtensions, ...TEXT_EXTENSIONS])],
-	supportedFormatLabels: [...officeProfile.supportedFormatLabels, "TXT", "JAVA", "JS", "TS", "JSON", "XML", "PY"],
+	supportedExtensions: [
+		...new Set([...officeProfile.supportedExtensions, ...TEXT_EXTENSIONS, "ofd"]),
+	],
+	openDocumentExtensions: [
+		...new Set([...officeProfile.openDocumentExtensions, ...TEXT_EXTENSIONS, "ofd"]),
+	],
+	supportedFormatLabels: [
+		...officeProfile.supportedFormatLabels,
+		"TXT",
+		"JAVA",
+		"JS",
+		"TS",
+		"JSON",
+		"XML",
+		"PY",
+	],
 	id: "cubeoffice",
+	readonlyConversionExtensions: [...(officeProfile.readonlyConversionExtensions ?? []), "ofd"],
+	formatContributions: [
+		{
+			format: "OFD",
+			specifier: fromHere("../../../packages/ofd-host/src/desktop-contribution.ts"),
+			binding: "CUBEOFFICE_OFD_CONTRIBUTION",
+			extensions: ["ofd"],
+		},
+	],
+	settingsExtensionModule: fromHere("../../../packages/ofd-host/src/TrustSettings.vue"),
 	cliBinaryName: "cubeoffice",
 	name: "CubeOffice",
 	identifier: "com.cubexp.office",
@@ -120,13 +147,46 @@ const cubeOfficeProfile = {
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
 			fileAssociations: [
-				...(officeProfile.tauriConfig.bundle?.fileAssociations ?? JSON.parse(readFileSync(
-					new URL("../../../als-office/apps/desktop/src-tauri/tauri.conf.json", import.meta.url), "utf8",
-				)).bundle.fileAssociations),
-				{ ext: [...TEXT_EXTENSIONS], name: "Text and source code", role: "Editor", rank: "Alternate" },
+				...(officeProfile.tauriConfig.bundle?.fileAssociations ??
+					JSON.parse(
+						readFileSync(
+							new URL(
+								"../../../als-office/apps/desktop/src-tauri/tauri.conf.json",
+								import.meta.url,
+							),
+							"utf8",
+						),
+					).bundle.fileAssociations),
+				{
+					ext: [...TEXT_EXTENSIONS],
+					name: "Text and source code",
+					role: "Editor",
+					rank: "Alternate",
+				},
 			],
 			shortDescription: "Open, edit, and read Office documents with AI",
-			externalBin: ["binaries/cubeoffice"],
+			externalBin: [
+				"binaries/cubeoffice",
+				"binaries/cubeoffice-ofd-service",
+				...(bundleOfdMedia
+					? ["binaries/cubeoffice-ffmpeg", "binaries/cubeoffice-ffprobe"]
+					: []),
+			],
+			resources: {
+				...(officeProfile.tauriConfig.bundle.resources ?? {}),
+				...(bundleOfdMedia
+					? {
+							[fromHere("./generated/ofd-engines.json")]: "ofd-engines.json",
+							[fromHere("./generated/media-source/")]: "ofd-media-source/",
+						}
+					: {}),
+			},
+			fileAssociations: [
+				...(officeProfile.tauriConfig.bundle.fileAssociations ??
+					baseTauri.bundle.fileAssociations ??
+					[]),
+				{ ext: ["ofd"], mimeType: "application/ofd", role: "Viewer", rank: "Alternate" },
+			],
 			icon: [
 				icon("32x32.png"),
 				icon("128x128.png"),
@@ -140,12 +200,23 @@ const cubeOfficeProfile = {
 			windows: [{ title: "CubeOffice" }],
 			security: {
 				...officeProfile.tauriConfig.app.security,
-				capabilities: ["desktop", {
-					identifier: "cubeoffice-large-text-ranges", windows: ["main"],
-					description: "Read bounded ranges from user-selected text files; existing file scope still applies.",
-					permissions: ["fs:allow-open", "fs:allow-fstat", "fs:allow-read", "fs:allow-seek"],
-				}],
-				csp: "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost blob: https://cubexp.com; img-src 'self' asset: http://asset.localhost blob: data:; font-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:",
+				capabilities: [
+					"desktop",
+					{
+						identifier: "cubeoffice-large-text-ranges",
+						windows: ["main"],
+						description:
+							"Read bounded ranges from user-selected text files; existing file scope still applies.",
+						permissions: [
+							"fs:allow-open",
+							"fs:allow-fstat",
+							"fs:allow-read",
+							"fs:allow-seek",
+						],
+					},
+				],
+				assetProtocol: { enable: true, scope: [] },
+				csp: "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost blob: https://cubexp.com; img-src 'self' asset: http://asset.localhost blob: data:; font-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; media-src 'self' asset: http://asset.localhost blob: data:; worker-src 'self' blob:",
 			},
 		},
 	},

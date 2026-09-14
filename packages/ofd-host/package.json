@@ -1,0 +1,24 @@
+{
+	"name": "@cubexp/ofd-host",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"check:types": "vue-tsc -p tsconfig.json --noEmit",
+		"test": "node --test tests/*.mjs",
+		"test:native": "cargo test --manifest-path native/Cargo.toml"
+	},
+	"dependencies": {
+		"@cubexp/ofd": "0.1.0",
+		"@tauri-apps/api": "^2.8.0",
+		"@tauri-apps/plugin-dialog": "^2.4.0",
+		"@tauri-apps/plugin-fs": "^2.4.0",
+		"vue": "^3.5.0",
+		"@yaochn/als-office-editor-ui": "^0.57.10",
+		"@yaochn/als-office-editor-core": "^0.57.10"
+	},
+	"devDependencies": {
+		"typescript": "^5.0.3",
+		"vue-tsc": "^3.3.8"
+	}
+}

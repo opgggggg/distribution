@@ -148,3 +148,26 @@ test("Goto remains in the current document when page IDs repeat across bodies", 
 	]);
 	assert.equal(mounted.viewer.value.getCurrentPage(), 3);
 });
+
+test("a host callback does not enable automatic external actions", async (t) => {
+	const opened = [];
+	const mounted = mountViewer(ofd(), { actionHost: { openUri: (uri) => opened.push(uri) } });
+	t.after(() => mounted.app.unmount());
+	await tick();
+	const actions = [
+		{
+			event: "DO",
+			type: "URI",
+			parameters: {
+				name: "ofd:URI",
+				namespace: "http://www.ofdspec.org/2016",
+				attributes: { URI: "https://example.invalid/document-link" },
+				children: [],
+			},
+		},
+	];
+	await mounted.viewer.value.executeActions(actions, false);
+	assert.deepEqual(opened, []);
+	await mounted.viewer.value.executeActions(actions, true);
+	assert.deepEqual(opened, ["https://example.invalid/document-link"]);
+});

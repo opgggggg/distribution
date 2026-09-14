@@ -46,6 +46,7 @@ export const OfdViewer = defineComponent({
 		respectPermissions: { type: Boolean, default: true },
 		convert: { type: Function as PropType<OfdConverter> },
 		actionHost: { type: Object as PropType<OfdActionHost> },
+		allowAutomaticExternalActions: { type: Boolean, default: false },
 		preview: {
 			type: Function as PropType<
 				(source: Blob, options: ConvertOptions) => Promise<OfdDocument>
@@ -304,7 +305,7 @@ export const OfdViewer = defineComponent({
 				if (actionCount > 10000)
 					throw new Error("Document action execution budget exceeded.");
 				const selected =
-					props.actionHost || userGesture
+					props.allowAutomaticExternalActions || userGesture
 						? actions
 						: actions.filter((a) => a.type === "Goto");
 				await executeOfdActions(

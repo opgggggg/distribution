@@ -94,7 +94,7 @@ exports and browser media controls. It exposes attachment reading and honors rea
 export permission declarations by default. `actionHost` can override navigation,
 attachments, links and media playback. `preferences`, `permissions` and `action`
 events let an application implement its window, print and platform policy. Automatic
-external actions require an explicit host; parsing itself never executes actions.
+external actions require `allowAutomaticExternalActions`; parsing itself never executes actions.
 
 ## Signatures
 
