@@ -211,8 +211,17 @@ export async function setMobilePresentationLandscape(enabled: boolean): Promise<
 		unlock?: () => void;
 	};
 	try {
-		if (enabled) await orientation.lock?.("landscape");
-		else orientation.unlock?.();
+		if (enabled) {
+			// 浏览器只允许全屏文档锁定方向，所以先进全屏再转横屏；两步都失败也不
+			// 影响沉浸式阅读，用户仍可自己转动手机。
+			if (!document.fullscreenElement) {
+				await document.documentElement.requestFullscreen?.({ navigationUI: "hide" });
+			}
+			await orientation.lock?.("landscape");
+		} else {
+			orientation.unlock?.();
+			if (document.fullscreenElement) await document.exitFullscreen?.();
+		}
 	} catch {
 		// Browser previews and some embedded WebViews do not permit orientation
 		// locking. The immersive viewer remains usable in the current orientation.

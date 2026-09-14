@@ -129,6 +129,27 @@ export class HarmonyDocumentBridge {
     return true;
   }
 
+  // 手机播放 PPTX 时旋转到横屏并进入沉浸式全屏，退出播放时恢复。ArkWeb 不实现
+  // screen.orientation.lock()，网页端只能请宿主代劳（Android 侧对应
+  // MainActivity.setPresentationLandscape）。
+  setPresentationLandscape(enabled: boolean): boolean {
+    const appWindow = this.appWindow;
+    if (!appWindow) return false;
+    const bars: Array<'status' | 'navigation'> = enabled ? [] : ['status', 'navigation'];
+    appWindow.setPreferredOrientation(
+      enabled ? window.Orientation.AUTO_ROTATION_LANDSCAPE : window.Orientation.UNSPECIFIED
+    ).catch((cause: Error) => {
+      console.warn(`Could not rotate the app window: ${cause.message}`);
+    });
+    appWindow.setWindowLayoutFullScreen(enabled).catch((cause: Error) => {
+      console.warn(`Could not lay the app window out full screen: ${cause.message}`);
+    });
+    appWindow.setWindowSystemBarEnable(bars).catch((cause: Error) => {
+      console.warn(`Could not change the system bars: ${cause.message}`);
+    });
+    return true;
+  }
+
   beginSave(fileName: string): string {
     const context = this.requireContext();
     const id = `${Date.now()}-${this.sequence++}`;

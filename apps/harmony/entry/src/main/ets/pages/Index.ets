@@ -10,6 +10,7 @@ import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
 @Component
 struct Index {
   @State private webReady: boolean = false;
+  private backPending: boolean = false;
   @StorageLink('harmonyIntent') private harmonyIntent: string = '';
   private controller: webview.WebviewController = new webview.WebviewController();
   private clientServices: HarmonyClientServices = new HarmonyClientServices();
@@ -53,6 +54,34 @@ struct Index {
 
   aboutToDisappear(): void {
     emitter.off('aurora-native-document', this.documentEventCallback);
+  }
+
+  // 文档打开时系统返回（侧滑）应当回到首页，而不是退出应用。onBackPress 必须同步
+  // 返回，而问网页要花一次 runJavaScript，所以先一律吃掉这次返回，等网页回话；
+  // 网页说它没处理（已经在首页），再按系统默认那样把应用切到后台。
+  onBackPress(): boolean {
+    if (!this.webReady) return false;
+    if (this.backPending) return true;
+    this.backPending = true;
+    this.controller.runJavaScript('Boolean(window.auroraHandleBack && window.auroraHandleBack())')
+      .then((handled: string) => {
+        this.backPending = false;
+        if (handled === 'true') return;
+        this.moveToBackground();
+      })
+      .catch((cause: Error) => {
+        this.backPending = false;
+        console.warn(`Could not ask the web shell to handle back: ${cause.message}`);
+        this.moveToBackground();
+      });
+    return true;
+  }
+
+  private moveToBackground(): void {
+    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    context.moveAbilityToBackground().catch((cause: Error) => {
+      console.warn(`Could not move the app to the background: ${cause.message}`);
+    });
   }
 
   build() {
@@ -110,6 +139,7 @@ struct Index {
             'finishOpenDocument',
             'startWindowMove',
             'toggleMaximizeWindow',
+            'setPresentationLandscape',
             'beginSave',
             'appendSaveChunk',
             'abortSave'
