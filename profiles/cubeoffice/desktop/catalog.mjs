@@ -225,13 +225,57 @@ const cubeOfficeProfile = {
 	},
 };
 
-export const profiles = { cubeoffice: cubeOfficeProfile };
+// The Huawei AppGallery (Windows) channel. The store distributes and upgrades
+// the app, so this build carries no updater of its own: two upgrade paths would
+// fight over the same installation, and the HarmonyOS build already upgrades
+// through the store alone. Everything else stays identical to the direct build
+// on purpose — AppGallery binds the listing to the registry DisplayName that
+// Tauri writes from `productName`, and rejects a package whose version differs
+// from the one configured in the app.
+const huaweiWindowsProfile = {
+	...cubeOfficeProfile,
+	id: "cubeoffice-huawei",
+	autoUpdate: false,
+	windowsConfig: {
+		...cubeOfficeProfile.windowsConfig,
+		bundle: {
+			...cubeOfficeProfile.windowsConfig.bundle,
+			windows: {
+				...(cubeOfficeProfile.windowsConfig.bundle?.windows ?? {}),
+				nsis: {
+					...(cubeOfficeProfile.windowsConfig.bundle?.windows?.nsis ?? {}),
+					// Huawei's installer spec: land on a data disk, put the
+					// disk choice and the shortcut / startup checkboxes on the
+					// first page. See the template for the marked changes.
+					template: fromHere("./nsis/installer.nsi"),
+					// A mainland-China-only channel, and the template's own
+					// labels are Chinese, so the installer speaks one language.
+					languages: ["SimpChinese"],
+					displayLanguageSelector: false,
+				},
+			},
+		},
+	},
+};
+
+export const profiles = {
+	cubeoffice: cubeOfficeProfile,
+	"cubeoffice-huawei": huaweiWindowsProfile,
+};
 export const defaultProfile = "cubeoffice";
+
+// Distribution channel names the build scripts accept, and the profile each one
+// selects. `--channel huawei` reads better on a build command than the profile id.
+const channelProfiles = { direct: "cubeoffice", huawei: "cubeoffice-huawei" };
 
 export function resolveDesktopAppProfileId(profileId) {
 	const normalized = typeof profileId === "string" ? profileId.trim().toLowerCase() : "";
-	if (!normalized || normalized === "cubeoffice") return "cubeoffice";
-	throw new Error(`Unknown CubeOffice desktop profile "${normalized}".`);
+	if (!normalized) return defaultProfile;
+	const resolved = channelProfiles[normalized] ?? normalized;
+	if (resolved in profiles) return resolved;
+	throw new Error(
+		`Unknown CubeOffice desktop profile "${normalized}". Profiles: ${Object.keys(profiles).join(", ")}; channels: ${Object.keys(channelProfiles).join(", ")}.`,
+	);
 }
 
 export function getDesktopAppProfile(profileId) {

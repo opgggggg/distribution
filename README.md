@@ -113,6 +113,19 @@ Use `npm run desktop:build:linux-x64` or `npm run desktop:build:win-x64` on the
 corresponding build host. `npm run desktop:config` prints the resolved Tauri
 configuration for inspection without building an installer.
 
+`npm run desktop:build:win-x64:huawei` packages the Windows installer for the
+Huawei AppGallery channel. It keeps the name, identifier and version of the direct
+download — AppGallery registers the app by the NSIS `DisplayName`, which is the
+product name — and drops the updater, because the store distributes and upgrades
+the app the way AppGallery already upgrades the HarmonyOS build. Any build command
+takes `--channel huawei` (or `CUBEOFFICE_CHANNEL=huawei`); `direct` is the default.
+The channel also installs differently, because Huawei's installer spec asks for
+it: `profiles/cubeoffice/desktop/nsis/installer.nsi` is Tauri's own NSIS template
+with marked changes that default the install directory to the first non-system
+fixed disk and put the desktop-shortcut and start-with-Windows checkboxes on the
+first page. The listing fields, installer arguments and what is still missing are
+in [docs/huawei-windows-release.md](docs/huawei-windows-release.md).
+
 CubeOffice packages its main executable as `cubeoffice-app` and its CLI as
 `cubeoffice` (`.exe` on Windows). The upstream Cargo target names remain unchanged.
 Run `node --test scripts/tests/desktop-binary-name.test.mjs` to check the desktop

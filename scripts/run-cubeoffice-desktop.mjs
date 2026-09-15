@@ -2,7 +2,7 @@
 import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 for (const script of ["build:text", "build:ofd"]) {
@@ -23,7 +23,36 @@ const profileCatalog = path.join(
 	"desktop",
 	"catalog.mjs",
 );
-const args = process.argv.slice(2);
+const { defaultProfile, profiles, resolveDesktopAppProfileId } = await import(
+	pathToFileURL(profileCatalog).href
+);
+const rawArgs = process.argv.slice(2);
+const args = [];
+let channel = "";
+for (let index = 0; index < rawArgs.length; index += 1) {
+	const argument = rawArgs[index];
+	if (argument === "--channel") {
+		channel = rawArgs[index + 1] ?? "";
+		index += 1;
+		continue;
+	}
+	if (argument.startsWith("--channel=")) {
+		channel = argument.slice("--channel=".length);
+		continue;
+	}
+	args.push(argument);
+}
+// Tauri runs `beforeBuildCommand` inside the environment of the build that
+// spawned it, and that environment already names the profile being packaged.
+// Honouring it keeps a Huawei build from compiling the direct renderer, which
+// would ship the market package with its own updater still enabled.
+const inheritedProfile = process.env.DESKTOP_APP_PROFILE;
+const profileId = resolveDesktopAppProfileId(
+	channel ||
+		process.env.CUBEOFFICE_CHANNEL ||
+		(inheritedProfile && inheritedProfile in profiles ? inheritedProfile : "") ||
+		defaultProfile,
+);
 const rendererOnly = args[0] === "--renderer-only";
 const rendererDev = args[0] === "--renderer-dev";
 const rendererConfig = path.join(repositoryRoot, "profiles/cubeoffice/desktop/vite.config.ts");
@@ -52,7 +81,7 @@ const command =
 				[
 					path.join(desktopRoot, "scripts", "build-desktop.mjs"),
 					"--profile",
-					"cubeoffice",
+					profileId,
 					...args,
 				],
 			];
@@ -62,7 +91,7 @@ const result = spawnSync(command[0], command[1], {
 	stdio: "inherit",
 	env: {
 		...process.env,
-		DESKTOP_APP_PROFILE: "cubeoffice",
+		DESKTOP_APP_PROFILE: profileId,
 		DESKTOP_PROFILE_SERVICE_BINARY: "cubeoffice-ofd-service",
 		OFFICE_FONTS_CONFIG: path.join(
 			repositoryRoot,

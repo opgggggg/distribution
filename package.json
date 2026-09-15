@@ -30,6 +30,8 @@
 		"desktop:build": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs",
 		"desktop:build:linux-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-unknown-linux-gnu --bundles appimage,deb",
 		"desktop:build:win-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-pc-windows-msvc --bundles nsis",
+		"desktop:build:win-x64:huawei": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --channel huawei --target x86_64-pc-windows-msvc --bundles nsis",
+		"desktop:config:huawei": "node scripts/run-cubeoffice-desktop.mjs --channel huawei --print-config --target x86_64-pc-windows-msvc",
 		"build:ofd": "npm run build -w @cubexp/ofd",
 		"test:ofd": "npm test -w @cubexp/ofd",
 		"build:text": "npm run build -w @cubexp/text",
