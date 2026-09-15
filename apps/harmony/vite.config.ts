@@ -16,9 +16,17 @@ const fromHere = (path: string): string => fileURLToPath(new URL(path, import.me
  * home screen then parses the entry chunk instead of one 84 MB inline
  * script; the format engines load when a document opens and the icon libraries
  * when a picker asks for them.
+ *
+ * iOS (`vite build --mode ios`): the same code-split output, written into the Xcode
+ * project. WKWebView has no `file://` escape hatch, so the shell serves the payload
+ * through a custom scheme handler, which gives the page a real origin.
  */
 export default defineConfig(({ mode }) => {
 	const android = mode === "android";
+	const ios = mode === "ios";
+	// Both native shells load the payload as chunks over a normal origin; only
+	// HarmonyOS takes the inlined build.
+	const codeSplit = android || ios;
 	return {
 		root: fromHere("./web"),
 		base: "./",
@@ -34,12 +42,14 @@ export default defineConfig(({ mode }) => {
 		build: {
 			outDir: android
 				? fromHere("../android/app/src/main/assets/web")
-				: fromHere("./entry/src/main/resources/rawfile/web"),
+				: ios
+					? fromHere("../ios/App/Resources/web")
+					: fromHere("./entry/src/main/resources/rawfile/web"),
 			emptyOutDir: true,
 			assetsInlineLimit: 4096,
-			// Android should load only workspace styles at startup, then each
-			// editor's styles with its lazy JavaScript chunk.
-			cssCodeSplit: android,
+			// The native shells should load only workspace styles at startup, then
+			// each editor's styles with its lazy JavaScript chunk.
+			cssCodeSplit: codeSplit,
 			chunkSizeWarningLimit: 4_000,
 			rollupOptions: {
 				output: {

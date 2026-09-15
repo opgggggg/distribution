@@ -3,8 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
-const profileName =
-	process.env.APP_PROFILE || (process.argv.includes("--android") ? "cubeoffice" : "default");
+// HarmonyOS builds AuroraPrime Office by default; the Android and iOS shells are the
+// CubeOffice distribution. An explicit APP_PROFILE overrides either default.
+const mobileDistribution = process.argv.includes("--android") || process.argv.includes("--ios");
+const profileName = process.env.APP_PROFILE || (mobileDistribution ? "cubeoffice" : "default");
 
 if (!/^[a-zA-Z0-9._-]+$/.test(profileName)) {
 	throw new Error(`Invalid APP_PROFILE: ${profileName}`);

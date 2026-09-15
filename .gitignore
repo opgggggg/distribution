@@ -18,6 +18,16 @@ apps/android/app/build/
 apps/android/app/src/main/assets/web/
 apps/android/local.properties
 
+# iOS build products, generated project, and local signing settings
+apps/ios/App/Config/Generated.xcconfig
+apps/ios/App/Config/Signing.xcconfig
+apps/ios/App/Resources/web/
+apps/ios/App/Resources/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png
+apps/ios/App/Resources/Assets.xcassets/AppMark.imageset/app-mark.png
+apps/ios/AuroraPrimeOffice.xcodeproj/
+apps/ios/build/
+apps/ios/DerivedData/
+
 # Reproducible optional font releases (prepared from the pinned upstream catalog)
 website/fonts/releases/
 

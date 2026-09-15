@@ -15,11 +15,11 @@ export interface NativeAssistantCommandDescriptor {
 	command: "home" | "activity" | "recent" | "open-recent" | "new-document" | "set-mode";
 	format?: "docx" | "pptx" | "xlsx" | "vsdx" | "markdown";
 	mode?: "reading" | "editing";
-	source: "android" | "harmonyos";
+	source: "android" | "harmonyos" | "ios";
 	requestId?: string;
 }
 
-export type AuroraNativePlatform = "harmonyos" | "android" | "browser";
+export type AuroraNativePlatform = "harmonyos" | "android" | "ios" | "browser";
 
 export function nativeHostPlatform(): AuroraNativePlatform {
 	const host = window.auroraHarmonyHost;
@@ -33,6 +33,18 @@ export function isHarmonyHost(): boolean {
 
 export function isAndroidHost(): boolean {
 	return nativeHostPlatform() === "android";
+}
+
+export function isIosHost(): boolean {
+	return nativeHostPlatform() === "ios";
+}
+
+/**
+ * 三个原生宿主都用同一套触屏工作区；浏览器才走桌面布局。HarmonyOS 一个包覆盖
+ * phone / tablet / 2in1，所以它还要再判一次形态（见 App.vue）。
+ */
+export function isNativeMobileHost(): boolean {
+	return isAndroidHost() || isIosHost();
 }
 
 /**
@@ -49,6 +61,8 @@ export function nativeHostLabel(): string {
 			return "HarmonyOS";
 		case "android":
 			return "Android";
+		case "ios":
+			return "iOS";
 		default:
 			return "浏览器";
 	}
@@ -139,7 +153,10 @@ export function parseNativeAssistantCommand(
 			...(candidate.mode === "reading" || candidate.mode === "editing"
 				? { mode: candidate.mode }
 				: {}),
-			source: candidate.source === "harmonyos" ? "harmonyos" : "android",
+			source:
+				candidate.source === "harmonyos" || candidate.source === "ios"
+					? candidate.source
+					: "android",
 			...(typeof candidate.requestId === "string" ? { requestId: candidate.requestId } : {}),
 		};
 	} catch {

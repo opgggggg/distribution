@@ -1,0 +1,47 @@
+# The Xcode project is generated, not committed: a pbxproj is unreviewable in a diff
+# and merges badly, and the identity it would hardcode already lives in
+# profiles/<profile>/app.json. Regenerate with `npm run project` (XcodeGen).
+name: AuroraPrimeOffice
+
+options:
+    minimumXcodeGenVersion: "2.38.0"
+    deploymentTarget:
+        iOS: "15.0"
+    createIntermediateGroups: true
+    groupSortPosition: none
+
+fileGroups:
+    - README.md
+
+targets:
+    AuroraPrimeOffice:
+        type: application
+        platform: iOS
+
+        configFiles:
+            Debug: App/Config/Base.xcconfig
+            Release: App/Config/Base.xcconfig
+
+        sources:
+            - path: App/Sources
+            - path: App/Resources/Assets.xcassets
+            - path: App/Resources/bridge.js
+              buildPhase: resources
+            # A folder reference, so the code-split payload lands in the bundle with its
+            # `assets/` subdirectory and hashed chunk names intact — the entry chunk imports
+            # its siblings by exact name.
+            - path: App/Resources/web
+              type: folder
+              buildPhase: resources
+              optional: true
+
+        settings:
+            base:
+                SUPPORTS_MACCATALYST: NO
+                SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+
+        preBuildScripts:
+            - name: Sync app profile and mobile Web payload
+              path: scripts/xcode-prebuild.sh
+              basedOnDependencyAnalysis: false
+              showEnvVarsInLog: false

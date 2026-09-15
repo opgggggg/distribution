@@ -1,0 +1,13 @@
+{
+	"name": "@cubexp/office-ios",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"profile:sync": "npm --prefix ../.. run profile:sync -- --ios && node scripts/sync-app-profile.mjs",
+		"sync:web": "node scripts/sync-web.mjs",
+		"project": "npm run profile:sync && mkdir -p App/Resources/web && xcodegen generate --spec project.yml",
+		"open": "npm run project && open AuroraPrimeOffice.xcodeproj",
+		"prebuild": "npm run project && npm run sync:web",
+		"build": "xcodebuild -project AuroraPrimeOffice.xcodeproj -scheme AuroraPrimeOffice -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO AURORA_SKIP_WEB_SYNC=1 build"
+	}
+}

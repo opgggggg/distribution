@@ -66,7 +66,9 @@ import {
 	harmonyHasWindowControls,
 	isAndroidHost,
 	isHarmonyHost,
+	isNativeMobileHost,
 	nativeHostLabel,
+	nativeHostPlatform,
 	parseNativeAssistantCommand,
 	readNativeOpenDocument,
 	saveBlobWithHost,
@@ -183,20 +185,55 @@ interface MobileMarkdownEditor {
 // 手机形态判定。onMounted 里的 phoneMediaQuery 复用同一个条件，两者必须保持一致。
 const PHONE_MEDIA_QUERY = "(max-width: 600px), (max-height: 600px) and (pointer: coarse)";
 
-// HarmonyOS 与 Android 共用同一套原生移动端工作区 UI（src/android/ 下的组件内部
-// 不做平台判断，数据全部由本文件通过 props 传入）。
+// HarmonyOS、Android 与 iOS 共用同一套原生移动端工作区 UI（src/android/ 下的组件
+// 内部不做平台判断，数据全部由本文件通过 props 传入）。
 //
-// Android 宿主只分发到手机，可以无条件启用；HarmonyOS 一个包同时覆盖
-// phone / tablet / 2in1（见 module.json5 的 deviceTypes），所以必须再判一次手机
-// 形态，否则平板和 PC/2in1 会被塞进手机工作区。浏览器始终走桌面布局。
+// Android 和 iOS 宿主本身就是触屏形态，可以无条件启用（iPad 也走这套工作区）；
+// HarmonyOS 一个包同时覆盖 phone / tablet / 2in1（见 module.json5 的 deviceTypes），
+// 所以必须再判一次手机形态，否则平板和 PC/2in1 会被塞进手机工作区。浏览器始终走
+// 桌面布局。
 //
 // 注意：这里是模块加载时求值一次。折叠屏展开后形态变化不会即时切换工作区，
 // 需要重新加载页面。要做到即时切换，得把下面这些 nativeMobileLayout 的读取点
 // 改成响应式（或由宿主通过 bridge 上报设备类型），那是更大的改动。
 const nativeMobileLayout =
-	isAndroidHost() ||
+	isNativeMobileHost() ||
 	(isHarmonyHost() && window.matchMedia(PHONE_MEDIA_QUERY).matches) ||
-	(import.meta.env.DEV && new URLSearchParams(location.search).get("platform") === "android");
+	(import.meta.env.DEV &&
+		["android", "ios"].includes(
+			new URLSearchParams(location.search).get("platform") ?? "",
+		));
+
+// 活动面板里的宿主桥接标识。浏览器预览没有原生桥接，其余三个宿主各有自己的名字。
+const NATIVE_CLIENTS = {
+	harmonyos: {
+		id: "xiaoyi",
+		label: "小艺",
+		connection: "Intents Kit 已就绪",
+		detail: "通过 HarmonyOS Intents Kit 调用",
+	},
+	android: {
+		id: "android",
+		label: "Android",
+		connection: "Android 文件桥接已就绪",
+		detail: "支持系统文件选择、保存与本地自动保存",
+	},
+	ios: {
+		id: "ios",
+		label: "iOS",
+		connection: "iOS 文件桥接已就绪",
+		detail: "支持系统文件选择、保存与本地自动保存",
+	},
+	// 浏览器预览沿用原来上报的 Android 身份：面板用 clientId 是否为空决定默认标签页，
+	// 清空会让预览打不开活动列表。
+	browser: {
+		id: "android",
+		label: "Android",
+		connection: "浏览器预览模式",
+		detail: "未连接移动端原生桥接",
+	},
+} as const;
+const nativeClient = NATIVE_CLIENTS[nativeHostPlatform()];
 const androidWorkspace = ref<InstanceType<typeof AndroidWorkspace> | null>(null);
 const HOME_TAB_ID = "home";
 const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
@@ -1083,6 +1120,13 @@ function updateActivity(entry: CliActivityEntry): void {
 	lastActivity.value = new Date(entry.at).toLocaleTimeString("zh-CN");
 }
 
+// 每个宿主用自己的调用机制分发助手指令，活动条目要如实写明是哪一种。
+const ASSISTANT_SOURCE_SUMMARY: Record<NativeAssistantCommandDescriptor["source"], string> = {
+	harmonyos: "Intents Kit · JumpFunctionPage",
+	android: "Android Intent · Assistant action",
+	ios: "URL Scheme · Assistant action",
+};
+
 function assistantCommandTitle(command: NativeAssistantCommandDescriptor): string {
 	const assistant = command.source === "harmonyos" ? "小艺" : "系统助手";
 	switch (command.command) {
@@ -1111,10 +1155,7 @@ async function executeNativeAssistantCommand(
 		at: new Date().toISOString(),
 		op: "intent.execute",
 		title: assistantCommandTitle(command),
-		summary:
-			command.source === "harmonyos"
-				? "Intents Kit · JumpFunctionPage"
-				: "Android Intent · Assistant action",
+		summary: ASSISTANT_SOURCE_SUMMARY[command.source],
 		status: "running",
 		detail: JSON.stringify(command, null, 2),
 	};
@@ -3431,25 +3472,13 @@ onBeforeUnmount(() => {
 				:entries="activityEntries"
 				:status="harmonyControlStatus"
 				:last-poll="lastActivity"
-				:client-id="isHarmonyHost() ? 'xiaoyi' : 'android'"
-				:client-label="isHarmonyHost() ? '小艺' : 'Android'"
+				:client-id="nativeClient.id"
+				:client-label="nativeClient.label"
 				:document-open="Boolean(activeTab)"
-				:connection-label="
-					isHarmonyHost()
-						? 'Intents Kit 已就绪'
-						: isAndroidHost()
-							? 'Android 文件桥接已就绪'
-							: '浏览器预览模式'
-				"
+				:connection-label="nativeClient.connection"
 				:connection-tone="isHarmonyHost() ? 'live' : 'warn'"
 				:show-connect-tab="false"
-				:connection-detail="
-					isHarmonyHost()
-						? '通过 HarmonyOS Intents Kit 调用'
-						: isAndroidHost()
-							? '支持系统文件选择、保存与本地自动保存'
-							: '未连接移动端原生桥接'
-				"
+				:connection-detail="nativeClient.detail"
 				@clear="activityEntries = []"
 				@close="activityOpen = false"
 			/>

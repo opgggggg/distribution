@@ -1,0 +1,11 @@
+// Copy to Signing.xcconfig (gitignored) and fill in your own values.
+//
+// AURORA_DEVELOPMENT_TEAM is the ten-character team id. A free Apple ID has one too:
+// Xcode > Settings > Accounts > your Apple ID > the "Personal Team" row, or read it
+// back from the project after you pick the team once in Signing & Capabilities.
+AURORA_DEVELOPMENT_TEAM = ABCDE12345
+
+// Optional. Identifiers are globally unique on Apple's side, so if free provisioning
+// refuses the profile's identifier as taken, set your own here as well as in
+// IOS_BUNDLE_ID when you run the profile sync.
+// PRODUCT_BUNDLE_IDENTIFIER = com.example.office

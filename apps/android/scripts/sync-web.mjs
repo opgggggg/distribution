@@ -9,7 +9,7 @@ const androidWeb = new URL("../app/src/main/assets/web/", import.meta.url);
 // written straight into the Android assets directory. Unlike the HarmonyOS payload it
 // is not inlined into one file: the WebView loads the entry chunk and fetches the
 // on-demand icon and SmartArt libraries only when a picker opens them.
-const build = spawnSync("npm", ["run", "build:web:android", "-w", "@yaochn/als-office-harmony"], {
+const build = spawnSync("npm", ["run", "build:web:android", "-w", "@cubexp/office-harmony"], {
 	cwd: repositoryRoot,
 	stdio: "inherit",
 	env: { ...process.env, APP_PROFILE: process.env.APP_PROFILE || "cubeoffice" },

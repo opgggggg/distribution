@@ -5,11 +5,15 @@ Platform distribution shells for AuroraPrime Office:
 - `apps/harmony`: HarmonyOS application and the shared mobile Web host.
 - `apps/android`: Android WebView application that packages the shared mobile host
   as a code-split payload. HarmonyOS uses the same code-split output, served from
-  packaged rawfile resources through the ArkWeb request interceptor. Both native
-  hosts also render the same mobile workspace UI (`apps/harmony/web/src/android/`);
-  only the browser falls back to the desktop layout.
+  packaged rawfile resources through the ArkWeb request interceptor.
+- `apps/ios`: iOS / iPadOS `WKWebView` application, packaging the same code-split
+  payload and serving it through a custom URL scheme handler. The Xcode project is
+  generated from `project.yml` (XcodeGen) rather than committed.
 - `als-office`: pinned upstream editor engine dependency.
 - `packages/text`: text reader, Vue viewer and CodeMirror editor with highlight.js syntax highlighting and CubeOffice Ribbon file actions (`npm run build:text`, `npm run test:text`).
+
+All three native hosts render the same mobile workspace UI
+(`apps/harmony/web/src/android/`); only the browser falls back to the desktop layout.
 
 The dependency direction is intentionally one-way: this repository consumes
 `als-office`; the `als-office` repository does not contain or reference these
@@ -53,6 +57,8 @@ the display name, HarmonyOS bundle name / Android application ID, vendor, versio
 scheme, and icon path. HarmonyOS defaults to `profiles/default/`; Android defaults to
 the CubeOffice desktop identity and icon in `profiles/cubeoffice/`. An explicit
 `APP_PROFILE` overrides either default.
+
+HarmonyOS defaults to `profiles/default/`; Android and iOS default to `profiles/cubeoffice/`.
 
 The normal npm builds synchronize the selected profile automatically. To prepare the
 HarmonyOS project before opening or building it directly in DevEco Studio, run:
@@ -230,3 +236,11 @@ test `als-office/apps/desktop/tests/client-services-ui.mjs` uses Playwright (ava
 outside the `als-office` submodule. Build with `npm run build:ofd`, test with
 `npm run test:ofd`, and see [its README](packages/ofd/README.md) for browser, Vue
 and Node APIs. It is not automatically installed into a distribution app profile.
+
+## Building the mobile Web payload
+
+`npm run build:packages` builds the pinned upstream packages **and** this repository's own
+`@cubexp/ofd` and `@cubexp/text`. The latter two are not optional: `apps/harmony/web`
+imports `@cubexp/text/formats` and `@cubexp/text/office-vue`, whose subpath exports resolve
+to `dist/`, so on a fresh clone `build:web`, `build:android`, and `build:ios` all fail
+`vue-tsc` with `TS2307` until those packages have been built once.

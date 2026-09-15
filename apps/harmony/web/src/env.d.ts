@@ -1,6 +1,6 @@
 interface AuroraHarmonyHost {
 	appReady(): boolean;
-	getPlatform?(): "harmonyos" | "android";
+	getPlatform?(): "harmonyos" | "android" | "ios";
 	hasWindowControls?(): boolean;
 	beginSave(fileName: string): string;
 	appendSaveChunk(sessionId: string, base64: string): boolean;

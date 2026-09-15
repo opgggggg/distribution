@@ -1,0 +1,19 @@
+# Generated from profiles/<profile>/app.json
+App/Config/Generated.xcconfig
+App/Resources/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png
+App/Resources/Assets.xcassets/AppMark.imageset/app-mark.png
+
+# Generated from apps/harmony/web
+App/Resources/web/
+
+# Generated from project.yml
+*.xcodeproj/
+*.xcworkspace/
+
+# Local signing, never committed
+App/Config/Signing.xcconfig
+
+# Xcode
+build/
+DerivedData/
+xcuserdata/
