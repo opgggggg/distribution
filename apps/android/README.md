@@ -68,6 +68,12 @@ an opt-in automatic check once per 24 hours on app launch, and a feedback form w
 category, optional contact/system version, and server-issued reference number.
 The private client ID file lives in Android noBackupFilesDir and survives an APK
 upgrade but is not transferred by backup. Clearing application data creates a new ID.
+The reported platform carries the device type — `android-phone`, `android-tablet` or
+`android-pc` (`android.hardware.type.pc`, i.e. desktop-mode and ChromeOS devices);
+600dp smallest width is the tablet threshold — so the three are counted separately in
+the statistics. Builds released before this reported plain `android`. The system version
+(`Android 15`, from `Build.VERSION.RELEASE`) rides along as `os_version`; the security
+patch level is not sent.
 
 Native background networking calls fixed HTTPS endpoints:
 

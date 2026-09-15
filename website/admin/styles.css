@@ -651,7 +651,8 @@ button:focus-visible {
 	}
 }
 
-.platforms-panel {
+.platforms-panel,
+.systems-panel {
 	margin: 20px 0;
 }
 .platforms-panel > header {

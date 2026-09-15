@@ -25,6 +25,16 @@ persistence; the editing surfaces remain browser-native and do not import Tauri.
   There is no website package-download fallback for Harmony or unknown channels.
   Successful checks report the client ID to the existing update-checks/DAU API;
   a statistics failure does not prevent a store update.
+- The reported platform carries the device type from `deviceInfo.deviceType`:
+  `harmonyos-phone`, `harmonyos-tablet` or `harmonyos-2in1`, so phone, tablet and
+  computer installations are counted separately — the same `<system>-<device type>`
+  scheme the Android and iOS shells report. Other form factors, and builds released
+  before this, report plain `harmonyos`; the AppGallery update channel accepts every
+  `harmonyos` device type.
+- The rest of the anonymous identity now comes from the device instead of being stubbed:
+  `os_version` is `HarmonyOS <M>.<S>.<F>` from `deviceInfo` (the build number B is left
+  out), `arch` is the first entry of `deviceInfo.abiList`, `locale` is
+  `i18n.System.getSystemLanguage()`, and `sdk` is `deviceInfo.sdkApiVersion` rather than 0.
 
 ### Client-services integration status
 

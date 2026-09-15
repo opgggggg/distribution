@@ -30,17 +30,25 @@
 	var assistantCommands = [];
 	var saveSettlers = Object.create(null);
 
-	function post(name, payload) {
+	function send(handler, name, payload) {
 		var message = { name: name };
 		for (var key in payload) {
 			if (Object.prototype.hasOwnProperty.call(payload, key)) message[key] = payload[key];
 		}
 		try {
-			window.webkit.messageHandlers.auroraHost.postMessage(message);
+			window.webkit.messageHandlers[handler].postMessage(message);
 			return true;
 		} catch (cause) {
 			return false;
 		}
+	}
+
+	function post(name, payload) {
+		return send("auroraHost", name, payload);
+	}
+
+	function postService(name, payload) {
+		return send("auroraServices", name, payload);
 	}
 
 	function bytesToBase64(bytes) {
@@ -158,6 +166,56 @@
 		},
 	};
 
+	/**
+	 * `window.cubeofficeServices` — the settings panel's client services, backed by
+	 * `ClientServices.swift`. The identity is injected before this script runs, so
+	 * `getInfo` answers synchronously like Android's `@JavascriptInterface`; a request is
+	 * posted to the host and settled back through `__auroraIosServices`, and the caller
+	 * polls `takeResult` exactly as it does on the other platforms.
+	 */
+	var clientInfo = window.__auroraIosClientInfo || null;
+	var serviceResults = Object.create(null);
+	var serviceOperations = Object.create(null);
+
+	if (clientInfo) {
+		window.cubeofficeServices = {
+			getInfo: function () {
+				return JSON.stringify(clientInfo);
+			},
+
+			setAutomatic: function (enabled) {
+				clientInfo.automatic = enabled === true;
+				postService("setAutomatic", { enabled: clientInfo.automatic });
+			},
+
+			copyClientId: function () {
+				postService("copyClientId");
+			},
+
+			// An empty id means "busy" to the caller, which is also how one request per
+			// operation at a time is enforced: the host never sees the second one.
+			request: function (operation, input) {
+				if (typeof input !== "string" || input.length > 12000) return "";
+				for (var running in serviceOperations) {
+					if (serviceOperations[running] === operation) return "";
+				}
+				var id = uuid();
+				serviceOperations[id] = operation;
+				if (!postService("request", { id: id, operation: operation, input: input })) {
+					delete serviceOperations[id];
+					return "";
+				}
+				return id;
+			},
+
+			takeResult: function (id) {
+				var result = serviceResults[id];
+				delete serviceResults[id];
+				return result || "";
+			},
+		};
+	}
+
 	/** Private surface for WorkspaceViewController; the Web shell never calls it. */
 	window.__auroraIosHost = {
 		beginStagedDocument: function (id, size) {
@@ -197,6 +255,25 @@
 		enqueueAssistantCommand: function (json) {
 			assistantCommands.push(json);
 			window.dispatchEvent(new Event("aurora-native-document"));
+			return true;
+		},
+
+		/** Delivers a client-services result; `takeResult` hands it to the caller. */
+		settleServiceRequest: function (id, json) {
+			if (!serviceOperations[id]) return false;
+			if (serviceOperations[id] === "updates") {
+				var settled = null;
+				try {
+					settled = JSON.parse(json);
+				} catch (cause) {
+					settled = null;
+				}
+				// The host recorded the check at the same moment; the panel reads the
+				// timestamp straight back out of getInfo().
+				if (settled && settled.ok === true) clientInfo.lastCheck = Date.now();
+			}
+			delete serviceOperations[id];
+			serviceResults[id] = json;
 			return true;
 		},
 

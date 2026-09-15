@@ -25,7 +25,9 @@ APK remains available. Publish updates/android/latest.json only after verifying
 the APK's hash and signature. This feed is independent of desktop latest.json.
 
 The admin/ directory contains the full admin UI. Platform distribution shows count
-and share for cumulative or 30-day active installations. Update hashed asset queries
+and share for cumulative or 30-day active installations, split by device type for
+Android, iOS and HarmonyOS. System-version distribution ranks installations by the
+major version the client reports. Update hashed asset queries
 in admin/index.html whenever admin/app.js or admin/styles.css changes.
 
 The privacy policy includes Android file access, local drafts, client IDs, update checks, and feedback. Rebuild the shared admin controls with `npx vite build --config website/admin/vite.controls.config.mjs`. Refresh the hashed asset queries when publishing controls.js, controls.css, app.js, styles.css, or i18n.js.

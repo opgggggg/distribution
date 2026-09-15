@@ -5,6 +5,8 @@ import { preferences } from '@kit.ArkData';
 import { util } from '@kit.ArkTS';
 import { http } from '@kit.NetworkKit';
 import { pasteboard } from '@kit.BasicServicesKit';
+import deviceInfo from '@ohos.deviceInfo';
+import { i18n } from '@kit.LocalizationKit';
 
 interface FeedbackInput {
   category: string;
@@ -21,6 +23,10 @@ export class HarmonyClientServices {
   private context?: common.UIAbilityContext;
   private store?: preferences.Preferences;
   private clientId: string = '';
+  private platform: string = 'harmonyos';
+  private osVersion: string = '';
+  private arch: string = '';
+  private locale: string = '';
   private version: string = '';
   private versionCode: number = 0;
   private results: Map<string, string> = new Map();
@@ -35,14 +41,31 @@ export class HarmonyClientServices {
       this.store.putSync('clientId', this.clientId);
       this.store.flush().catch(() => {});
     }
+    this.platform = HarmonyClientServices.platformFor(deviceInfo.deviceType);
+    // M.S.F of the HarmonyOS M.S.F.B version; the build number identifies a device
+    // far more closely than it explains anything about compatibility.
+    this.osVersion = `HarmonyOS ${deviceInfo.majorVersion}.${deviceInfo.seniorVersion}.${deviceInfo.featureVersion}`;
+    this.arch = deviceInfo.abiList.split(',')[0];
+    this.locale = i18n.System.getSystemLanguage();
     const info = bundleManager.getBundleInfoForSelfSync(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT);
     this.version = info.versionName;
     this.versionCode = info.versionCode;
   }
 
+  // Phones, tablets and 2in1 computers install the same package, so the platform
+  // reported with update checks and feedback carries the device type; otherwise
+  // they cannot be told apart in the statistics. Other form factors stay plain
+  // harmonyos, as do builds released before this.
+  private static platformFor(deviceType: string): string {
+    if (deviceType === 'phone' || deviceType === 'tablet' || deviceType === '2in1')
+      return 'harmonyos-' + deviceType;
+    return 'harmonyos';
+  }
+
   getInfo(): string {
     return JSON.stringify({ client_id: this.clientId, version: this.version,
-      versionCode: this.versionCode, sdk: 0, platform: 'harmonyos',
+      versionCode: this.versionCode, sdk: deviceInfo.sdkApiVersion, platform: this.platform,
+      os_version: this.osVersion, arch: this.arch, locale: this.locale,
       updateChannel: 'appgallery', automatic: this.store?.getSync('automatic', false),
       lastCheck: this.store?.getSync('lastCheck', 0) });
   }
@@ -102,7 +125,8 @@ export class HarmonyClientServices {
       this.store?.flush().catch(() => {});
       // Statistics failure must never prevent an AppGallery update.
       this.post('update-checks', JSON.stringify({ client_id: this.clientId,
-        version: this.version, platform: 'harmonyos', arch: 'unknown', locale: ''
+        version: this.version, platform: this.platform, os_version: this.osVersion,
+        arch: this.arch, locale: this.locale
       })).catch(() => {});
       const response: StoreUpdateResponse = { ok: true, data: { channel: 'appgallery',
         available: result.updateAvailable === updateManager.UpdateAvailableCode.LATER_VERSION_EXIST } };
@@ -120,9 +144,9 @@ export class HarmonyClientServices {
     if (typeof feedback.message !== 'string' || feedback.message.trim().length < 10 ||
       feedback.message.length > 8000) throw new Error('Invalid feedback');
     const response = await this.post('feedback', JSON.stringify({
-      client_id: this.clientId, version: this.version, platform: 'harmonyos',
-      arch: 'unknown', locale: '', category: feedback.category,
-      message: feedback.message, contact: feedback.contact
+      client_id: this.clientId, version: this.version, platform: this.platform,
+      os_version: this.osVersion, arch: this.arch, locale: this.locale,
+      category: feedback.category, message: feedback.message, contact: feedback.contact
     }));
     return '{"ok":true,"data":' + response + '}';
   }

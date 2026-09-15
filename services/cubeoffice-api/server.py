@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS clients (
   last_version TEXT,
   platform TEXT,
   arch TEXT,
-  locale TEXT
+  locale TEXT,
+  os_version TEXT
 );
 CREATE TABLE IF NOT EXISTS daily_activity (
   day TEXT NOT NULL,
@@ -168,21 +169,32 @@ def database():
     return Database()
 
 
+# Columns added to tables that already exist in production. Additive only: an
+# installation recorded before a column existed keeps NULL there.
+ADDED_COLUMNS = {
+    "feedback": (
+        ("reply", "TEXT NOT NULL DEFAULT ''"),
+        ("fixed_version", "TEXT NOT NULL DEFAULT ''"),
+        ("updated_at", "TEXT"),
+        ("revision", "INTEGER NOT NULL DEFAULT 0"),
+    ),
+    "clients": (("os_version", "TEXT"),),
+}
+
+
 def migrate():
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     with database() as connection:
         connection.execute(SCHEMA)
-        columns = {row[0] for row in connection.execute(
-            "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'feedback'"
-        ).fetchall()}
-        for name, definition in (
-            ("reply", "TEXT NOT NULL DEFAULT ''"),
-            ("fixed_version", "TEXT NOT NULL DEFAULT ''"),
-            ("updated_at", "TEXT"),
-            ("revision", "INTEGER NOT NULL DEFAULT 0"),
-        ):
-            if name not in columns:
-                connection.execute("ALTER TABLE feedback ADD COLUMN " + name + " " + definition)
+        for table, additions in ADDED_COLUMNS.items():
+            columns = {row[0] for row in connection.execute(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = ?", (table,)
+            ).fetchall()}
+            for name, definition in additions:
+                if name not in columns:
+                    connection.execute(
+                        "ALTER TABLE " + table + " ADD COLUMN " + name + " " + definition)
         existing = {
             row[0]
             for row in connection.execute(
@@ -212,18 +224,66 @@ def platform_distribution(connection, day_30):
            GROUP BY c.platform""", (day_30,)
     ).fetchall()
     counts = {key: {"platform": key, "clients": 0, "active_30d": 0}
-              for key in ("macos", "windows", "linux", "android", "other", "unknown")}
+              for key in ("macos", "windows", "linux",
+                          "android_phone", "android_tablet", "android_pc", "android",
+                          "ios_iphone", "ios_ipad", "ios",
+                          "harmonyos_phone", "harmonyos_tablet", "harmonyos_pc", "harmonyos",
+                          "other", "unknown")}
     aliases = {"darwin": "macos", "mac": "macos", "macos": "macos", "osx": "macos", "macintel": "macos", "macppc": "macos",
                "macarm": "macos",
                "win32": "windows", "win64": "windows", "windows": "windows",
-               "linux": "linux", "android": "android"}
+               "linux": "linux"}
+    # Mobile clients report their device type after the system name (android-tablet,
+    # ios-ipad, harmonyos-2in1); desktop platforms are computers by definition. The bare
+    # system name keeps one bucket of its own: builds released before this report it, as
+    # do device types that are not charted separately.
+    devices = {"android": {"phone": "android_phone", "tablet": "android_tablet", "pc": "android_pc"},
+               "ios": {"iphone": "ios_iphone", "ipad": "ios_ipad"},
+               "harmonyos": {"phone": "harmonyos_phone", "tablet": "harmonyos_tablet", "2in1": "harmonyos_pc"}}
     for row in rows:
         raw = (row["platform"] or "").strip().lower()
-        key = aliases.get(raw, "other" if raw else "unknown")
+        system, _, device = raw.partition("-")
+        if system in devices:
+            key = devices[system].get(device, system)
+        else:
+            key = aliases.get(raw, "other" if raw else "unknown")
         counts[key]["clients"] += row["clients"]
         counts[key]["active_30d"] += row["active_30d"]
+    # Rows that only exist for unclassified or uncommon clients stay hidden until one
+    # reports; the charted device types remain visible at zero.
     return [item for key, item in counts.items()
-            if key not in ("other", "unknown") or item["clients"]]
+            if key not in ("other", "unknown", "android", "android_pc", "ios", "harmonyos")
+            or item["clients"]]
+
+
+def system_version_distribution(connection, day_30, limit=12):
+    """Installations by reported system version, bucketed to the major version.
+
+    The shells report a display string ("Android 15", "iOS 18.2", "HarmonyOS 5.0.0",
+    "Mac OS 15.3.1"); the minor and patch parts answer no question the major version does
+    not, so they are folded in here rather than sprayed across the chart. Installations
+    recorded before their shell reported a version are simply absent.
+    """
+    rows = connection.execute(
+        """SELECT c.os_version, COUNT(*) AS clients,
+                  COUNT(a.client_id) AS active_30d
+           FROM clients c
+           LEFT JOIN (SELECT DISTINCT client_id FROM daily_activity WHERE day >= ?) a
+             ON a.client_id = c.client_id
+           WHERE c.os_version IS NOT NULL AND c.os_version <> ''
+           GROUP BY c.os_version""", (day_30,)
+    ).fetchall()
+    counts = {}
+    for row in rows:
+        raw = (row["os_version"] or "").strip()
+        if not raw:
+            continue
+        system, _, release = raw.rpartition(" ")
+        key = (system + " " + release.split(".")[0]).strip() if system else release
+        item = counts.setdefault(key, {"system": key, "clients": 0, "active_30d": 0})
+        item["clients"] += row["clients"]
+        item["active_30d"] += row["active_30d"]
+    return sorted(counts.values(), key=lambda item: (-item["clients"], item["system"]))[:limit]
 
 
 def touch_client(connection, payload, now):
@@ -232,22 +292,27 @@ def touch_client(connection, payload, now):
     platform = text(payload.get("platform"), 40)
     arch = text(payload.get("arch"), 40)
     locale = text(payload.get("locale"), 40)
+    os_version = text(payload.get("os_version"), 40)
     connection.execute("SELECT pg_advisory_xact_lock(hashtext(?))", (client_id,))
     connection.execute(
         """
         INSERT INTO clients (
-          client_id, first_seen, last_seen, first_version, last_version, platform, arch, locale
-        ) SELECT ?, ?, ?, ?, ?, ?, ?, ?
+          client_id, first_seen, last_seen, first_version, last_version, platform, arch, locale,
+          os_version
+        ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
         WHERE NOT EXISTS (SELECT 1 FROM clients WHERE client_id = ?)
         """,
-        (client_id, now, now, version, version, platform, arch, locale, client_id),
+        (client_id, now, now, version, version, platform, arch, locale, os_version, client_id),
     )
+    # A client that reports no system version must not erase one already recorded:
+    # only the shells that collect it send the field at all.
     connection.execute(
         """
-        UPDATE clients SET last_seen = ?, last_version = ?, platform = ?, arch = ?, locale = ?
+        UPDATE clients SET last_seen = ?, last_version = ?, platform = ?, arch = ?, locale = ?,
+                           os_version = COALESCE(NULLIF(?, ''), os_version)
         WHERE client_id = ?
         """,
-        (now, version, platform, arch, locale, client_id),
+        (now, version, platform, arch, locale, os_version, client_id),
     )
     return client_id, version, platform, arch, locale
 
@@ -618,6 +683,7 @@ class Handler(BaseHTTPRequestHandler):
                 (day_30,),
             ).fetchall()
             platforms = platform_distribution(connection, day_30)
+            systems = system_version_distribution(connection, day_30)
             versions = connection.execute(
                 "SELECT last_version AS version, COUNT(*) AS clients FROM clients GROUP BY last_version ORDER BY clients DESC LIMIT 8"
             ).fetchall()
@@ -628,6 +694,7 @@ class Handler(BaseHTTPRequestHandler):
                 "daily": [dict(row) for row in rows],
                 "versions": [dict(row) for row in versions],
                 "platforms": platforms,
+                "systems": systems,
             },
         )
 

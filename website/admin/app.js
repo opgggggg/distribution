@@ -18,6 +18,7 @@ const detailTitle = document.querySelector("[data-detail-title]");
 const detailContent = document.querySelector("[data-detail-content]");
 
 const platforms = document.querySelector("[data-platforms]");
+const systems = document.querySelector("[data-systems]");
 const platformPeriod = document.querySelector("[data-platform-period]");
 const platformSummary = document.querySelector("[data-platform-summary]");
 let platformItems = [];
@@ -30,7 +31,17 @@ function renderPlatforms() {
 		macos: "macOS",
 		windows: "Windows",
 		linux: "Linux",
-		android: "Android",
+		android_phone: "Android 手机",
+		android_tablet: "Android 平板",
+		android_pc: "Android 电脑",
+		android: "Android（未区分）",
+		ios_iphone: "iPhone",
+		ios_ipad: "iPad",
+		ios: "iOS（未区分）",
+		harmonyos_phone: "HarmonyOS 手机",
+		harmonyos_tablet: "HarmonyOS 平板",
+		harmonyos_pc: "HarmonyOS 电脑",
+		harmonyos: "HarmonyOS（未区分）",
 		other: "其他",
 		unknown: "未知",
 	};
@@ -146,6 +157,21 @@ function renderOverview(payload) {
 		versionList.append(row);
 	}
 	versions.replaceChildren(versionList);
+
+	const systemList = element("div", "version-list");
+	for (const item of payload.systems || []) {
+		const row = element("div", "version-row");
+		row.append(
+			element("span", "", item.system),
+			element("strong", "", `${item.clients}（近 30 天活跃 ${item.active_30d}）`),
+		);
+		systemList.append(row);
+	}
+	systems.replaceChildren(
+		systemList.childElementCount
+			? systemList
+			: element("p", "platform-summary", "暂无系统版本数据，等待客户端上报"),
+	);
 	updated.textContent = `更新于 ${new Date().toLocaleTimeString("zh-CN")}`;
 }
 

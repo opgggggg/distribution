@@ -46,6 +46,20 @@ public final class CubeOfficeServices {
     }
   }
 
+  /**
+   * Phones, tablets and desktop-mode devices install the same package, so the reported platform
+   * carries the device type; otherwise they cannot be told apart in the statistics. 600dp is the
+   * platform's own tablet threshold.
+   */
+  private String deviceType() {
+    // "android.hardware.type.pc" is PackageManager.FEATURE_PC, added in API 27; the
+    // literal keeps this free of a version guard on the minSdk 26 build.
+    if (activity.getPackageManager().hasSystemFeature("android.hardware.type.pc")) return "pc";
+    return activity.getResources().getConfiguration().smallestScreenWidthDp >= 600
+        ? "tablet"
+        : "phone";
+  }
+
   private JSONObject identity() throws Exception {
     android.content.pm.PackageInfo info =
         activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
@@ -55,7 +69,10 @@ public final class CubeOfficeServices {
         .put(
             "versionCode",
             Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode)
-        .put("platform", "android")
+        .put("platform", "android-" + deviceType())
+        // The release name, not the security patch level: the major version is what
+        // decides API availability and which reports still apply.
+        .put("os_version", "Android " + Build.VERSION.RELEASE)
         .put("arch", Build.SUPPORTED_ABIS[0])
         .put("locale", Locale.getDefault().toLanguageTag())
         .put("sdk", Build.VERSION.SDK_INT);

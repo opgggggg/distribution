@@ -12,6 +12,7 @@ final class WorkspaceViewController: UIViewController {
 
 	private(set) var webView: WKWebView!
 	private let bridge = DocumentBridge()
+	private let services = ClientServices()
 	private var splash: StartupSplashView?
 	private var splashTimeout: DispatchWorkItem?
 	private var presentationLandscape = false
@@ -43,6 +44,9 @@ final class WorkspaceViewController: UIViewController {
 
 		let controller = configuration.userContentController
 		controller.add(bridge, name: DocumentBridge.messageHandlerName)
+		controller.add(services, name: ClientServices.messageHandlerName)
+		// The identity goes in first: bridge.js reads it while it builds the host object.
+		controller.addUserScript(services.identityUserScript)
 		if let bridgeScript = Self.loadBridgeScript() {
 			controller.addUserScript(
 				WKUserScript(source: bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -64,6 +68,7 @@ final class WorkspaceViewController: UIViewController {
 
 		bridge.webView = webView
 		bridge.presenter = self
+		services.webView = webView
 		bridge.onReady = { [weak self] in self?.hideSplash() }
 		bridge.onPresentationLandscape = { [weak self] enabled in
 			self?.applyPresentationLandscape(enabled)
@@ -204,8 +209,9 @@ final class WorkspaceViewController: UIViewController {
 	// shell handles it there, so the shell needs no native entry point for it.
 
 	deinit {
-		webView?.configuration.userContentController.removeScriptMessageHandler(
-			forName: DocumentBridge.messageHandlerName)
+		let controller = webView?.configuration.userContentController
+		controller?.removeScriptMessageHandler(forName: DocumentBridge.messageHandlerName)
+		controller?.removeScriptMessageHandler(forName: ClientServices.messageHandlerName)
 		bridge.dispose()
 	}
 }

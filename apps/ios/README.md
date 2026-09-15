@@ -176,11 +176,41 @@ text. An assistant therefore cannot reason over the document, only act on it. Im
 the schemas would also need new commands on the Web side; the shared `assistant-command`
 vocabulary is currently five verbs wide.
 
+## Client services
+
+`ClientServices.swift` is the iOS half of the shared settings panel: a persistent random
+client id, native clipboard copy, the opt-in daily statistics ping, and the feedback form
+with its server-issued reference number. The identity is injected at document start as
+`window.__auroraIosClientInfo`, which is how `bridge.js` answers the shell's synchronous
+`getInfo()`; a request is posted to the host and settled back through
+`__auroraIosHost.settleServiceRequest`, and the caller polls `takeResult` exactly as it
+does on Android and HarmonyOS. Fixed endpoints only, `POST` to
+`https://cubexp.com/api/v1/update-checks` and `/feedback`; nothing here reports a hardware
+identifier, and no document, screenshot, or automatic log is ever uploaded.
+
+The client id lives in Application Support with `isExcludedFromBackup`, mirroring
+Android's no-backup directory: it survives an app update, is not carried into a restored
+or migrated installation, and deleting the app creates a new one.
+
+The reported platform carries the device type — `ios-iphone` or `ios-ipad` — so iPhone and
+iPad installations are counted separately, the same `<system>-<device type>` scheme the
+Android and HarmonyOS shells report. Mac is not among them: `project.yml` turns off
+Catalyst and "Designed for iPad". `os_version` is `iOS` plus
+`UIDevice.current.systemVersion` (no build number), and `arch` comes from the compiled
+target, so a simulator build reports `x86_64` on an Intel Mac.
+
+`node apps/ios/tests/services.cjs` drives the shim against a fake message handler: the
+identity round-trip, one request per operation at a time, single delivery of a settled
+result, and the update check moving `lastCheck` only when it succeeded.
+
+**There is no in-app update check.** The App Store exposes no API for one, so the
+`updates` operation only records the check and the panel tells the user to look in the App
+Store; the update channel is `appstore`. A real version comparison (Apple's
+`itunes.apple.com/lookup`, which needs no account) is worth adding once the app is
+actually published — until then it could only report "not found".
+
 ## Not implemented yet
 
-- **Client services.** Android's `CubeOfficeServices` — persistent client id, update feed,
-  feedback form, native clipboard — has no iOS counterpart. The Settings panel's update and
-  feedback entries fall back to their browser behaviour.
 - **Home-screen quick actions.** Android ships `shortcuts.xml`; the equivalent
   `UIApplicationShortcutItems` are not declared.
 - **Multi-window.** `UIApplicationSupportsMultipleScenes` is `false`, so iPadOS offers no
@@ -234,3 +264,10 @@ Also not yet verified: opening a document _into_ the app through the picker or a
 staging path in `DocumentBridge`), and **installation on a physical iPad** — so free
 provisioning, Developer Mode, and the certificate-trust flow described above are all still
 on paper.
+
+**Client services have not been run natively.** `ClientServices.swift` type-checks
+against the iOS SDK and the JavaScript shim passes `apps/ios/tests/services.cjs`, but
+nothing has been exercised through a real `WKWebView`: neither the statistics ping nor a
+feedback submission has left a simulator, and no test feedback was sent to production. The
+settings panel, the clipboard copy, the backup-excluded client id, and both requests still
+need a pass on a device or simulator.

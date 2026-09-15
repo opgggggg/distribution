@@ -10,8 +10,8 @@
 		<title>CubeOffice Admin</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="/admin/controls.css?v=ec57b504de42" />
-		<link rel="stylesheet" href="/admin/styles.css?v=e6893c12a82b" />
-		<script type="module" src="/admin/app.js?v=927fba1b5797" defer></script>
+		<link rel="stylesheet" href="/admin/styles.css?v=4dfb6c9ce043" />
+		<script type="module" src="/admin/app.js?v=8e8970c8b9c8" defer></script>
 	</head>
 	<body>
 		<header class="admin-header">
@@ -94,8 +94,23 @@
 					<p class="platform-summary" data-platform-summary aria-live="polite"></p>
 					<div data-platforms></div>
 					<p class="platform-help">
-						按匿名安装 ID 去重，归入客户端最近上报的平台。近 30
-						天活跃来自更新检查记录；尚未上报的安装不计入。
+						按匿名安装 ID 去重，归入客户端最近上报的平台。Android、iOS 和 HarmonyOS
+						按设备形态分为手机、平板和电脑；未上报设备形态的旧版本计入对应的“（未区分）”一行。近
+						30 天活跃来自更新检查记录；尚未上报的安装不计入。
+					</p>
+				</section>
+
+				<section class="panel systems-panel" aria-labelledby="systems-title">
+					<header>
+						<div>
+							<p class="eyebrow">OS VERSIONS</p>
+							<h2 id="systems-title">系统版本分布</h2>
+						</div>
+					</header>
+					<div data-systems></div>
+					<p class="platform-help">
+						按匿名安装 ID 去重，只保留主版本号（iOS 18.2 计入 iOS
+						18）。桌面版仅在提交反馈或上报错误时记录；尚未上报系统版本的客户端不在此列。
 					</p>
 				</section>
 

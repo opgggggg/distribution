@@ -6,6 +6,7 @@ import {
 	nativeServices,
 	requestService,
 	validateRelease,
+	clientSystem,
 	updateChannel,
 	type AndroidRelease,
 	type NativeServices,
@@ -16,6 +17,20 @@ const info = ref(clientInfo(service));
 const request = <T,>(operation: "updates" | "install-update" | "feedback", payload = {}) => requestService<T>(operation, payload, service);
 const channel = updateChannel(info.value);
 const storeChannel = channel === "appgallery";
+// iOS ships through the App Store, which has no in-app update check: the check only
+// records the anonymous statistics ping the other stores' checks also send.
+const appStoreChannel = channel === "appstore";
+const channelHelp = appStoreChannel
+	? "此版本通过 App Store 更新，应用内不下载更新包。检查时会向 cubexp.com 发送客户端编号、应用版本、平台与设备形态、系统版本、架构和语言用于使用统计。"
+	: storeChannel
+		? "此版本通过华为应用市场检查和安装更新，不从网站下载更新包。检查时会另外向 cubexp.com 发送客户端编号、应用版本、平台与设备形态、系统版本、架构和语言用于使用统计，该统计失败不影响更新。"
+		: "此版本通过 cubexp.com 检查更新，会发送客户端编号、应用版本、平台与设备形态、系统版本、架构和语言，用于版本比对和使用统计。";
+// Only the hosts that can collect a system version offer to attach one.
+const systemInfoLabels: Record<string, string> = {
+	android: "附带 Android 系统版本",
+	ios: "附带 iOS 系统版本",
+};
+const systemInfoLabel = systemInfoLabels[clientSystem(info.value?.platform)];
 const storeUpdateAvailable = ref(false);
 const checking = ref(false);
 const updateStatus = ref("");
@@ -36,6 +51,13 @@ async function check() {
 	release.value = null;
 	try {
 		if (channel === "unavailable") throw new Error("当前发行渠道尚未配置更新服务");
+		if (appStoreChannel) {
+			const result = await request<{ channel: string }>("updates");
+			if (result.channel !== "appstore") throw new Error("客户端返回了无效的更新信息");
+			info.value = clientInfo(service);
+			updateStatus.value = "此版本通过 App Store 发布，请在 App Store 中查看是否有新版本。";
+			return;
+		}
 		if (storeChannel) {
 			const result = await request<{ channel: string; available: boolean }>("updates");
 			if (result.channel !== "appgallery" || typeof result.available !== "boolean")
@@ -138,11 +160,7 @@ onMounted(() => {
 				><UiCheckbox label="" :model-value="info.automatic" @change="automatic"
 			/></label>
 			<p class="android-service-help">
-				{{
-					storeChannel
-						? "此版本通过华为应用市场检查和安装更新，不从网站下载更新包。检查时会另外向 cubexp.com 发送客户端编号、应用版本及平台信息用于使用统计，该统计失败不影响更新。"
-						: "此版本通过 cubexp.com 检查更新，会发送客户端编号、应用版本及平台信息，用于版本比对和使用统计。"
-				}}
+				{{ channelHelp }}
 				不发送文档内容。
 			</p>
 			<button type="button" :disabled="checking" @click="check">
@@ -201,11 +219,11 @@ onMounted(() => {
 					placeholder="邮箱或其他联系方式"
 			/></label>
 			<label class="android-setting"
-				v-if="info?.platform === 'android'"><span>附带 Android 系统版本</span
+				v-if="systemInfoLabel"><span>{{ systemInfoLabel }}</span
 				><UiCheckbox label="" v-model="includeSystem" :disabled="submitting"
 			/></label>
 			<p class="android-service-help">
-				提交内容及 clientId、应用版本、平台、架构和语言将发送至
+				提交内容及 clientId、应用版本、平台与设备形态、系统版本、架构和语言将发送至
 				CubeXP。不会自动上传文档或截图。
 			</p>
 			<button type="submit" :disabled="submitting || !info">

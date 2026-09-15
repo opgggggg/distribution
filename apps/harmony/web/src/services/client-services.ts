@@ -6,15 +6,25 @@ export interface ClientInfo {
 	automatic: boolean;
 	lastCheck: number;
 	platform?: string;
-	updateChannel?: "appgallery" | "website";
+	updateChannel?: "appgallery" | "appstore" | "website";
 }
-// Unknown channels fail closed. Platform identity also guards older Harmony
-// hosts from accidentally taking the website-download branch.
-export function updateChannel(info: ClientInfo | null): "appgallery" | "website" | "unavailable" {
-	if (info?.platform === "harmonyos") return "appgallery";
+export type UpdateChannel = "appgallery" | "appstore" | "website" | "unavailable";
+// The platform carries the device type after the system name — android-tablet,
+// ios-ipad, harmonyos-2in1 — so installations can be counted per client type.
+// Builds released before that report the bare system name.
+export function clientSystem(platform?: string): string {
+	return (platform ?? "").split("-")[0];
+}
+// Unknown channels fail closed. Platform identity also guards older Harmony and
+// iOS hosts from accidentally taking the website-download branch.
+export function updateChannel(info: ClientInfo | null): UpdateChannel {
+	const system = clientSystem(info?.platform);
+	if (system === "harmonyos") return "appgallery";
+	if (system === "ios") return "appstore";
 	if (info?.updateChannel === "appgallery") return "appgallery";
+	if (info?.updateChannel === "appstore") return "appstore";
 	if (info?.updateChannel === "website") return "website";
-	if (info?.platform === "android" && !info.updateChannel) return "website";
+	if (system === "android" && !info?.updateChannel) return "website";
 	return "unavailable";
 }
 export interface NativeServices {

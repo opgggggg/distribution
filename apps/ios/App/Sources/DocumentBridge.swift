@@ -262,8 +262,9 @@ final class DocumentBridge: NSObject {
 		webView.evaluateJavaScript(script) { _, _ in completion?() }
 	}
 
-	/// Renders a Swift string as a JavaScript string literal.
-	private static func jsString(_ value: String) -> String {
+	/// Renders a Swift string as a JavaScript string literal. `ClientServices` builds its
+	/// own `evaluateJavaScript` calls with it too.
+	static func jsString(_ value: String) -> String {
 		guard let data = try? JSONSerialization.data(withJSONObject: [value]),
 			let json = String(data: data, encoding: .utf8), json.count >= 2
 		else { return "\"\"" }
