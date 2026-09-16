@@ -19,6 +19,12 @@ const downloading = ref(false);
 const error = ref("");
 let controller = new AbortController();
 let previousFocus: HTMLElement | null = null;
+// Without a connection the gallery simply has nothing to show: the sheet keeps
+// the blank presentation and says nothing about templates, instead of putting a
+// network error in front of someone who only wanted to start a deck.
+function offline() {
+	return typeof navigator !== "undefined" && navigator.onLine === false;
+}
 function releasePreviews() {
 	Object.values(previews.value).forEach(URL.revokeObjectURL);
 	previews.value = {};
@@ -28,8 +34,13 @@ async function load() {
 	controller = new AbortController();
 	const { signal } = controller;
 	releasePreviews();
-	loading.value = true;
 	error.value = "";
+	if (offline()) {
+		templates.value = [];
+		loading.value = false;
+		return;
+	}
+	loading.value = true;
 	try {
 		const found = await fetchDocumentTemplates(props.source, {
 			format: "pptx",
@@ -52,8 +63,11 @@ async function load() {
 			}),
 		);
 	} catch {
-		if (!signal.aborted)
-			error.value = "模板加载失败，请检查网络后重试，也可以新建空白演示文稿。";
+		// A request that fails because the connection dropped is the offline case
+		// again; only a reachable server that misbehaves is worth reporting.
+		if (signal.aborted) return;
+		templates.value = [];
+		if (!offline()) error.value = "模板加载失败，请检查网络后重试，也可以新建空白演示文稿。";
 	} finally {
 		if (!signal.aborted) loading.value = false;
 	}
@@ -76,14 +90,26 @@ async function choose(template: DocumentTemplate) {
 		if (!signal.aborted) downloading.value = false;
 	}
 }
+// Coming back online while the sheet is open fills the gallery in; losing the
+// connection takes the stale error away rather than leaving it on screen.
+function handleOnline() {
+	if (!templates.value.length && !downloading.value) void load();
+}
+function handleOffline() {
+	error.value = "";
+}
 onMounted(() => {
 	previousFocus = document.activeElement as HTMLElement;
 	dialog.value?.showModal();
+	window.addEventListener("online", handleOnline);
+	window.addEventListener("offline", handleOffline);
 	void load();
 });
 onBeforeUnmount(() => {
 	controller.abort();
 	releasePreviews();
+	window.removeEventListener("online", handleOnline);
+	window.removeEventListener("offline", handleOffline);
 	dialog.value?.close();
 	previousFocus?.focus({ preventScroll: true });
 });
@@ -125,6 +151,18 @@ onBeforeUnmount(() => {
 					<span class="android-template-preview"><Icon name="plus" /></span
 					><strong>空白演示文稿</strong>
 				</button>
+				<template v-if="loading">
+					<div
+						v-for="placeholder in 2"
+						:key="`template-placeholder-${placeholder}`"
+						class="android-template-card android-template-skeleton"
+						aria-hidden="true"
+					>
+						<span class="android-template-preview"></span>
+						<strong></strong>
+						<small></small>
+					</div>
+				</template>
 				<button
 					v-for="template in templates"
 					:key="template.id"

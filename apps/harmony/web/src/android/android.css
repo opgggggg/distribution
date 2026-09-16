@@ -1071,6 +1071,45 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	height: 100%;
 	object-fit: contain;
 }
+.android-template-skeleton {
+	pointer-events: none;
+}
+.android-template-skeleton .android-template-preview,
+.android-template-skeleton strong,
+.android-template-skeleton small {
+	color: transparent;
+	border-radius: 6px;
+	background: linear-gradient(
+		90deg,
+		var(--android-container) 25%,
+		var(--android-outline) 37%,
+		var(--android-container) 63%
+	);
+	background-size: 400% 100%;
+	animation: android-template-shimmer 1.4s ease infinite;
+}
+.android-template-skeleton strong {
+	height: 16px;
+}
+.android-template-skeleton small {
+	height: 12px;
+	width: 70%;
+}
+@keyframes android-template-shimmer {
+	from {
+		background-position: 100% 50%;
+	}
+	to {
+		background-position: 0 50%;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.android-template-skeleton .android-template-preview,
+	.android-template-skeleton strong,
+	.android-template-skeleton small {
+		animation: none;
+	}
+}
 .android-template-error {
 	display: flex;
 	flex-wrap: wrap;

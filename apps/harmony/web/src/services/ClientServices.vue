@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { UiCheckbox, UiSelect } from "@yaochn/als-office-editor-ui/vue";
-import { onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import {
 	clientInfo,
 	nativeServices,
@@ -14,7 +14,8 @@ import {
 const props = defineProps<{ service?: NativeServices; hideUpdates?: boolean }>();
 const service = props.service ?? nativeServices();
 const info = ref(clientInfo(service));
-const request = <T,>(operation: "updates" | "install-update" | "feedback", payload = {}) => requestService<T>(operation, payload, service);
+const request = <T,>(operation: "updates" | "install-update" | "feedback", payload = {}) =>
+	requestService<T>(operation, payload, service);
 const channel = updateChannel(info.value);
 const storeChannel = channel === "appgallery";
 // iOS ships through the App Store, which has no in-app update check: the check only
@@ -44,6 +45,18 @@ const submitting = ref(false);
 const feedbackStatus = ref("");
 const feedbackError = ref(false);
 const feedbackOpen = ref(false);
+// Sending feedback needs a connection, so an offline client hides the entry
+// instead of letting someone write a report that can only fail on submit.
+const online = ref(typeof navigator === "undefined" || navigator.onLine !== false);
+function handleOnline() {
+	online.value = true;
+}
+function handleOffline() {
+	online.value = false;
+	feedbackOpen.value = false;
+	feedbackStatus.value = "";
+	feedbackError.value = false;
+}
 async function check() {
 	if (checking.value) return;
 	checking.value = true;
@@ -64,7 +77,9 @@ async function check() {
 				throw new Error("应用市场返回了无效的更新信息");
 			storeUpdateAvailable.value = result.available;
 			info.value = clientInfo(service);
-			updateStatus.value = result.available ? "华为应用市场有新版本可用" : "当前已是应用市场最新版本";
+			updateStatus.value = result.available
+				? "华为应用市场有新版本可用"
+				: "当前已是应用市场最新版本";
 			return;
 		}
 		const latest = validateRelease(await request("updates"));
@@ -90,7 +105,9 @@ async function installFromStore() {
 		updateStatus.value = result.shown ? "请在华为应用市场弹窗中确认更新" : "当前没有可用更新";
 	} catch (error) {
 		updateStatus.value = error instanceof Error ? error.message : "打开应用市场失败，请重试";
-	} finally { checking.value = false; }
+	} finally {
+		checking.value = false;
+	}
 }
 function automatic(enabled: boolean) {
 	service?.setAutomatic(enabled);
@@ -136,8 +153,20 @@ defineExpose({
 	},
 });
 onMounted(() => {
-	if (!props.hideUpdates && info.value?.automatic && Date.now() - info.value.lastCheck >= 24 * 60 * 60 * 1000)
+	if (
+		!props.hideUpdates &&
+		info.value?.automatic &&
+		Date.now() - info.value.lastCheck >= 24 * 60 * 60 * 1000
+	)
 		void check();
+});
+onMounted(() => {
+	window.addEventListener("online", handleOnline);
+	window.addEventListener("offline", handleOffline);
+});
+onBeforeUnmount(() => {
+	window.removeEventListener("online", handleOnline);
+	window.removeEventListener("offline", handleOffline);
 });
 </script>
 <template>
@@ -155,39 +184,53 @@ onMounted(() => {
 				此随机编号用于版本检查和反馈定位，不包含硬件标识。清除应用数据后会重新生成。
 			</p>
 			<template v-if="!hideUpdates">
-			<label class="android-setting"
-				><span><strong>自动检查更新</strong><small>每天首次打开应用时检查</small></span
-				><UiCheckbox label="" :model-value="info.automatic" @change="automatic"
-			/></label>
-			<p class="android-service-help">
-				{{ channelHelp }}
-				不发送文档内容。
-			</p>
-			<button type="button" :disabled="checking" @click="check">
-				{{ checking ? "正在检查…" : "检查更新" }}
-			</button>
-			<p v-if="info.lastCheck">上次检查：{{ new Date(info.lastCheck).toLocaleString() }}</p>
-			<p v-if="updateStatus" role="status">{{ updateStatus }}</p>
-			<button v-if="storeChannel && storeUpdateAvailable" type="button" :disabled="checking" @click="installFromStore">通过华为应用市场更新</button>
-			<template v-if="channel === 'website' && release">
-				<p v-if="release.notes">{{ release.notes }}</p>
-				<a class="android-service-download" :href="release.url"
-					>下载 {{ release.versionName }} APK</a
-				>
+				<label class="android-setting"
+					><span><strong>自动检查更新</strong><small>每天首次打开应用时检查</small></span
+					><UiCheckbox label="" :model-value="info.automatic" @change="automatic"
+				/></label>
 				<p class="android-service-help">
-					在浏览器中下载后，按系统提示安装，保留现有应用以延续草稿。
+					{{ channelHelp }}
+					不发送文档内容。
 				</p>
-			</template>
+				<button type="button" :disabled="checking" @click="check">
+					{{ checking ? "正在检查…" : "检查更新" }}
+				</button>
+				<p v-if="info.lastCheck">
+					上次检查：{{ new Date(info.lastCheck).toLocaleString() }}
+				</p>
+				<p v-if="updateStatus" role="status">{{ updateStatus }}</p>
+				<button
+					v-if="storeChannel && storeUpdateAvailable"
+					type="button"
+					:disabled="checking"
+					@click="installFromStore"
+				>
+					通过华为应用市场更新
+				</button>
+				<template v-if="channel === 'website' && release">
+					<p v-if="release.notes">{{ release.notes }}</p>
+					<a class="android-service-download" :href="release.url"
+						>下载 {{ release.versionName }} APK</a
+					>
+					<p class="android-service-help">
+						在浏览器中下载后，按系统提示安装，保留现有应用以延续草稿。
+					</p>
+				</template>
 			</template>
 		</template>
 		<p v-else>当前客户端尚未提供服务，请安装新版应用。</p>
 	</section>
 	<section class="android-settings-card android-services">
 		<h2>帮助与反馈</h2>
-		<button type="button" :aria-expanded="feedbackOpen" @click="feedbackOpen = !feedbackOpen">
+		<button
+			v-if="online"
+			type="button"
+			:aria-expanded="feedbackOpen"
+			@click="feedbackOpen = !feedbackOpen"
+		>
 			{{ feedbackOpen ? "收起反馈表单" : "意见反馈" }}
 		</button>
-		<form v-if="feedbackOpen" @submit.prevent="submit">
+		<form v-if="online && feedbackOpen" @submit.prevent="submit">
 			<label
 				>反馈类型<UiSelect
 					v-model="category"
@@ -218,8 +261,8 @@ onMounted(() => {
 					:disabled="submitting"
 					placeholder="邮箱或其他联系方式"
 			/></label>
-			<label class="android-setting"
-				v-if="systemInfoLabel"><span>{{ systemInfoLabel }}</span
+			<label class="android-setting" v-if="systemInfoLabel"
+				><span>{{ systemInfoLabel }}</span
 				><UiCheckbox label="" v-model="includeSystem" :disabled="submitting"
 			/></label>
 			<p class="android-service-help">
