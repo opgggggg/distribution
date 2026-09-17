@@ -276,6 +276,6 @@ onBeforeUnmount(() => {
 				{{ feedbackStatus }}
 			</p>
 		</form>
-		<a href="https://cubexp.com/privacy">隐私政策</a>
+		<a href="https://ai.kumaoyun.cc/cubeoffice/privacy">隐私政策</a>
 	</section>
 </template>

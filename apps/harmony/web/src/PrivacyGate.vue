@@ -114,7 +114,7 @@ function decline(): void {
 				<h2>9. 联系我们</h2>
 				<p>如对本政策或数据处理有疑问，请通过 cubexp.com 联系我们。</p>
 			</section>
-			<p class="privacy-gate-online">完整条款也可访问 https://cubexp.com/privacy 查看。</p>
+			<p class="privacy-gate-online">完整条款也可访问 https://ai.kumaoyun.cc/cubeoffice/privacy 查看。</p>
 			</div>
 			<div class="privacy-gate-actions">
 				<button type="button" @click="decline">不同意并退出</button>

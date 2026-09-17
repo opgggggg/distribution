@@ -119,7 +119,7 @@ const cubeOfficeProfile = {
 		feedbackEndpoint: "https://cubexp.com/api/v1/feedback",
 		logEndpoint: "https://cubexp.com/api/v1/logs",
 		clientIdStorageKey: "cubeoffice.client-id",
-		privacyPolicyUrl: "https://cubexp.com/privacy",
+		privacyPolicyUrl: "https://ai.kumaoyun.cc/cubeoffice/privacy",
 		feedbackCategories: ["bug", "suggestion", "question", "other"],
 	},
 	updaterEndpoint: "https://cubexp.com/updates/latest.json",
