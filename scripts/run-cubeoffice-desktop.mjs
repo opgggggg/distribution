@@ -8,6 +8,9 @@ const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 for (const script of ["build:text", "build:ofd"]) {
 	const build = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", script], {
 		cwd: repositoryRoot,
+		// Node refuses to spawn a .cmd without a shell, so a Windows build dies
+		// on `npm.cmd` with EINVAL without this.
+		shell: process.platform === "win32",
 		// Keep --print-config stdout parseable as JSON.
 		stdio: ["inherit", process.stderr, process.stderr],
 	});
@@ -88,6 +91,10 @@ const command =
 
 const result = spawnSync(command[0], command[1], {
 	cwd: desktopRoot,
+	// Only the renderer branch spawns `npm.cmd`, which Node will not start
+	// without a shell; the other branch runs node itself and must stay unshelled
+	// so its arguments are not re-parsed.
+	shell: process.platform === "win32" && (rendererOnly || rendererDev),
 	stdio: "inherit",
 	env: {
 		...process.env,

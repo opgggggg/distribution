@@ -27,6 +27,13 @@ const sourceRoot = path.join(root, "packages/ofd-host"),
 	native = path.join(sourceRoot, "native"),
 	destination = path.join(root, "als-office/apps/desktop/src-tauri/binaries");
 mkdirSync(destination, { recursive: true });
+const preparedService = path.join(destination, `cubeoffice-ofd-service-${target}${extension}`);
+// Building the OFD host again is the slowest part of a Windows rebuild and it
+// only depends on the sidecar sources, so let a repeat build reuse it.
+if (process.env.CUBEOFFICE_REUSE_OFD_BINARY === "1" && existsSync(preparedService)) {
+	console.log(`Reusing prepared CubeOffice OFD host for ${target}`);
+	process.exit(0);
+}
 const run = (cmd, argv, options = {}) => {
 	const r = spawnSync(cmd, argv, { cwd: root, stdio: "inherit", ...options });
 	if (r.error) throw r.error;
@@ -47,7 +54,7 @@ const service = path.join(
 	debug ? "debug" : "release",
 	`cubeoffice-ofd-service${extension}`,
 );
-copyFileSync(service, path.join(destination, `cubeoffice-ofd-service-${target}${extension}`));
+copyFileSync(service, preparedService);
 if (!args.includes("--with-media") && process.env.CUBEOFFICE_BUNDLE_MEDIA !== "1") {
 	console.log(`Prepared CubeOffice OFD host for ${target}; optional media transcoder omitted`);
 	process.exit(0);
