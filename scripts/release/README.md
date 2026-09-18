@@ -59,7 +59,7 @@ bash scripts/release-cubeoffice.sh verify
 
 - 编排主机：Apple Silicon macOS，Bash 3.2+、Node 20+、npm、Python 3.7+、Git、SSH、Docker CLI，以及 macOS 开发工具。使用 Homebrew Rust 时会从本次进程 PATH 中移除 `~/.cargo/bin`，避免旧 rustup 覆盖它；不会修改系统配置。
 - Android：完整 JDK 21+，必须包含 `javac` 和 `jlink`；Android SDK 35、Build Tools 35；现有 APK 签名证书。发布前会下载上一版 APK、核对其 feed 哈希并比较签名证书。
-- Windows：可通过 SSH 访问的现有 UTM 主机，Node、Rust/MSVC x64 工具链和 updater 密钥。脚本在需要时启动配置的 VM，但不自动关机。默认要求至少 4 GB 空间；不足时停止，不删除或压缩其他工作目录。网络代理须提前运行，只为构建进程设置 npm 代理。
+- Windows：可通过 SSH 访问的现有 UTM 主机，Node、Rust/MSVC x64 工具链和 updater 密钥。虚拟机没有外网路由，靠宿主机上的 CONNECT 代理（`~/cubexp.com/windows-connect-proxy.py`，监听 `192.168.64.1:8898`）访问 registry；**发布前先把它跑起来**，否则 Windows 预检会以 `ECONNREFUSED` 失败。脚本在需要时启动配置的 VM，但不自动关机。默认要求至少 4 GB 空间；不足时停止，不删除或压缩其他工作目录。网络代理须提前运行，只为构建进程设置 npm 代理。
 - Linux：现有 `colima-rosetta` 的 `cubeoffice-linux-rosetta` 容器，已安装 Cargo、Linux 依赖、FUSE，以及按[发布技能](../../.agents/skills/cubeoffice-release/references/release-process.md)修正过的 linuxdeploy 工具。容器需配置可读的 `OFFICE_UPDATER_SIGNING_PRIVATE_KEY` 和显式的 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`。脚本使用 `bash -c` 保留 Cargo 路径，以独立目录和受锁保护的缓存构建。不会删除或重建现有容器。
 - 服务器：SSH 密钥可访问站点目录，具有 Python 3.6+、文件写入权限，HTTPS 下载支持字节范围请求。只修改明确列出的版本文件和网站文件，保留旧版本及回滚备份。
 

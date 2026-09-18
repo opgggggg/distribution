@@ -20,7 +20,7 @@ WINDOWS_VM=Windows # empty to require an already-running host
 WINDOWS_ROOT=C:/src
 WINDOWS_UPDATER_KEY=C:/Users/ALS/auroraprime-office.key
 WINDOWS_MIN_FREE_GB=4
-WINDOWS_PROXY=http://192.168.64.1:8899 # existing host-only CONNECT proxy; empty for direct access
+WINDOWS_PROXY=http://192.168.64.1:8898 # existing host-only CONNECT proxy; empty for direct access
 # Optional existing cache. This script locks the cache; other builders must not use it concurrently.
 WINDOWS_TARGET_CACHE=''
 

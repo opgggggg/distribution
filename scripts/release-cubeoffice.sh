@@ -90,7 +90,7 @@ set +x
 : "${WINDOWS_UPDATER_KEY:=C:/Users/ALS/auroraprime-office.key}"
 : "${WINDOWS_TARGET_CACHE:=}"
 : "${WINDOWS_MIN_FREE_GB:=4}"
-: "${WINDOWS_PROXY:=http://192.168.64.1:8899}"
+: "${WINDOWS_PROXY:=http://192.168.64.1:8898}"
 : "${LINUX_DOCKER_CONTEXT:=colima-rosetta}"
 : "${LINUX_CONTAINER:=cubeoffice-linux-rosetta}"
 : "${ANDROID_HOME:=/opt/homebrew/share/android-commandlinetools}"
