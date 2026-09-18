@@ -148,6 +148,13 @@ prepare() {
     cd "$SOURCE"
     npm install --package-lock-only --ignore-scripts
     npm ci
+    # The font package materializes its assets rather than committing them, and
+    # a worktree created for this release has none of them yet.
+    npm run prepare:assets -w @yaochn/als-office-fonts
+    # The profile catalog imports the built @cubexp/text, so the merged Tauri
+    # config below cannot be printed until the bundled packages exist. A fresh
+    # worktree has none; the build phase reuses what this produces.
+    npm run build:packages
     npx --no-install prettier --write profiles/cubeoffice/desktop/catalog.mjs profiles/cubeoffice/app.json website/index.html website/i18n.js website/templates.html website/visio.html "releases/v$VERSION.md" package-lock.json
     meta cache-bust "$SOURCE"
     node scripts/run-cubeoffice-desktop.mjs --print-config > "$WORK/config.json"
