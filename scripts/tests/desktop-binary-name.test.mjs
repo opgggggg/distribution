@@ -26,7 +26,12 @@ for (const target of targets) {
 			),
 		);
 		assert.equal(config.mainBinaryName, "cubeoffice-app");
-		assert.deepEqual(config.bundle.externalBin, ["binaries/cubeoffice"]);
+		// The OFD sidecar ships with every build; the media pair is opt-in through
+		// CUBEOFFICE_BUNDLE_MEDIA and is deliberately not part of the default bundle.
+		assert.deepEqual(config.bundle.externalBin, [
+			"binaries/cubeoffice",
+			"binaries/cubeoffice-ofd-service",
+		]);
 		assert.equal(config.identifier, "com.cubexp.office");
 	});
 }
