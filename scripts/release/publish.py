@@ -10,7 +10,50 @@ import shlex
 import subprocess
 import sys
 import urllib.request
-from release import ORIGIN, PAGES, FEEDS, canonical, fetch, require, validate_stage, run, write
+from release import ORIGIN, PAGES, FEEDS, canonical, fetch, info, notes_file, notes_text, read, require, validate_stage, run, write
+
+
+def notes(repo, version, helpers, stage=None):
+    """Republish the notes of an already-published release, and nothing else.
+
+    The updater dialog shows this string, and the client that shows it is always
+    the older one - so notes that are too long can leave users unable to reach
+    the update button. Correcting them must not require rebuilding or replacing
+    artifacts that are already public and immutable.
+    """
+    text = notes_text(notes_file(repo, version))
+    host, key, root = (os.environ[k] for k in ['CUBEXP_SSH_HOST', 'CUBEXP_SSH_KEY', 'CUBEXP_WEB_ROOT'])
+    require(re.fullmatch(r'[A-Za-z0-9_.@:-]+', host) and not host.startswith('-'), 'Invalid SSH host')
+    require(re.fullmatch(r'/[A-Za-z0-9_./-]+', root) and '..' not in Path(root).parts and root != '/', 'Invalid web root')
+    payload = {}
+    for name in FEEDS:
+        live = json.loads(fetch(name).decode())
+        field = 'versionName' if '/android/' in name else 'version'
+        require(live[field] == version, name + ' publishes ' + live[field] + ', not ' + version)
+        payload[name] = json.dumps({**live, 'notes': text}, ensure_ascii=False, indent='\t') + '\n'
+    server = (helpers / 'server.py').read_text()
+    run('ssh', '-i', key, '-o', 'BatchMode=yes', host, 'python3 -c ' + shlex.quote(server),
+        input=json.dumps({'root': root, 'action': 'notes', 'notes': payload}), text=True)
+    for name in FEEDS:
+        published = json.loads(fetch(name).decode())
+        require(published['notes'] == text, 'Live notes did not change: ' + name)
+        field = 'versionName' if '/android/' in name else 'version'
+        require(published[field] == version, 'Live feed moved: ' + name)
+    # The staged copy is the record of what is public, so bring it along:
+    # otherwise `verify` compares the live feeds against notes nobody serves.
+    if stage and stage.is_dir():
+        record = read(stage / 'release.json')
+        if record['version'] == version:
+            record['notes'] = text
+            write(stage / 'release.json', record)
+            inventory = read(stage / 'inventory.json')
+            for name in FEEDS:
+                (stage / name).write_text(payload[name], encoding='utf-8')
+                inventory[name] = info(stage / name)
+            inventory['release.json'] = info(stage / 'release.json')
+            write(stage / 'inventory.json', inventory)
+            print('Staged record updated to match the live notes')
+    print('Notes republished for', version)
 
 
 def publish(action, stage, source, helpers):
@@ -79,4 +122,8 @@ def publish(action, stage, source, helpers):
 
 
 if __name__ == '__main__':
-    publish(sys.argv[1], *map(Path, sys.argv[2:5]))
+    if sys.argv[1] == 'notes':
+        notes(Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4]),
+              Path(sys.argv[5]) if len(sys.argv) > 5 else None)
+    else:
+        publish(sys.argv[1], *map(Path, sys.argv[2:5]))

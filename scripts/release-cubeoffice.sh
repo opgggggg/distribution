@@ -24,6 +24,7 @@ Commands:
   stage     validate all outputs and create both feeds, checksums and website
   publish   upload immutable artifacts, verify HTTPS, then atomically switch feeds
   verify    read-only verification of local artifacts and the live release
+  notes     republish only the release notes of an already-published version
 
 Options:
   --version X.Y.Z       default: the highest releases/v<version>.md
@@ -42,7 +43,7 @@ die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    all|prepare|build|stage|publish|verify) COMMAND="$1"; shift ;;
+    all|prepare|build|stage|publish|verify|notes) COMMAND="$1"; shift ;;
     --version|--android-code|--notes|--work-dir|--config)
       [ "$#" -ge 2 ] || die "$1 needs a value"
       case "$1" in
@@ -291,6 +292,11 @@ publish() {
   python3 "$HELPERS/publish.py" publish "$WORK/stage" "$SOURCE" "$HELPERS" | tee "$WORK/logs/publish.log"
   meta report "$WORK"
 }
+# Correcting published copy must not need a rebuild: the artifacts stay exactly
+# as they were, and the server refuses anything but the notes field.
+notes() {
+  python3 "$HELPERS/publish.py" notes "$REPO" "$VERSION" "$HELPERS" "$WORK/stage"
+}
 verify() {
   require_state
   meta validate-stage "$WORK/stage" "$SOURCE" "$HELPERS"
@@ -298,6 +304,6 @@ verify() {
 }
 case "$COMMAND" in
   all) prepare; build; stage; publish ;;
-  prepare) prepare ;; build) build ;; stage) stage ;; publish) publish ;; verify) verify ;;
+  prepare) prepare ;; build) build ;; stage) stage ;; publish) publish ;; verify) verify ;; notes) notes ;;
 esac
 log "Completed $COMMAND. Work directory: $WORK"

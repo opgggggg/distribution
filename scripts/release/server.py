@@ -33,7 +33,49 @@ def no_lock():
     yield None
 
 
+FEED_NAMES = ['updates/latest.json', 'updates/android/latest.json']
+
+
+def update_notes(root, payload):
+    """Rewrite only the notes of a published feed.
+
+    The artifacts a release published are immutable, but the notes shown in the
+    updater dialog are editable copy. Every other field is compared and must be
+    identical, so this can never move a version, url, signature or checksum.
+    """
+    with (root / '.cubeoffice-release.lock').open('a') as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        for name in sorted(payload):
+            require(name in FEED_NAMES, 'Only the update feeds carry notes: ' + name)
+            dst = root / name
+            require(dst.is_file() and not dst.is_symlink(), 'Missing feed: ' + name)
+            # The server's locale is not UTF-8, so every text read and write here
+            # names its encoding, as the rest of this script already does.
+            live = json.loads(dst.read_text(encoding='utf-8'))
+            new = json.loads(payload[name])
+            require(set(live) == set(new), 'Feed fields changed: ' + name)
+            for field in sorted(live):
+                require(field == 'notes' or live[field] == new[field],
+                        'Only the notes may change; ' + field + ' differs in ' + name)
+            require(isinstance(new['notes'], str) and new['notes'].strip(), 'Empty notes: ' + name)
+            if live['notes'] == new['notes']:
+                print('Notes unchanged:', name)
+                continue
+            backup = dst.with_name(dst.name + '.notes-backup')
+            if not backup.exists():
+                shutil.copyfile(dst, backup)
+            temp = dst.with_name(dst.name + '.notes.tmp')
+            temp.write_text(payload[name], encoding='utf-8')
+            temp.chmod(0o644)
+            os.replace(temp, dst)
+            print('Notes republished:', name)
+
+
 def main(request):
+    if request['action'] == 'notes':
+        root = Path(request['root'])
+        require(root.is_absolute() and root.is_dir(), 'Invalid web root')
+        return update_notes(root, request['notes'])
     root = Path(request['root']); stage = root / '.release-staging' / request['run']
     inventory = request['inventory']; action = request['action']; s = request['release']
     artifacts, metadata = request['artifacts'], request['metadata']
