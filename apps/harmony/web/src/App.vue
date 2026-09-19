@@ -1765,6 +1765,14 @@ function stepMobilePptxSlide(direction: MobilePptxSlideDirection, animate = true
 		)
 		.find(Boolean);
 	if (!button || button.disabled) return;
+	const frames = Array.from(
+		activeDocumentSurface()?.querySelectorAll<HTMLElement>(
+			'#dropzone[data-editor-view="single"] .als-ofs-pptx-slide-frame',
+		) ?? [],
+	);
+	const currentIndex = frames.findIndex((frame) => frame.dataset.editorActiveSlide === "true");
+	if (currentIndex >= 0)
+		syncMobilePptxBackground(frames[currentIndex + (direction === "next" ? 1 : -1)]);
 	button.click();
 	if (animate) animateMobilePptxSlideEntry(direction);
 }
@@ -1809,14 +1817,23 @@ function mobilePptxZoomControls(): HTMLElement | null {
 	);
 }
 
-function syncMobilePptxZoomLabel(): void {
-	const slide = activeDocumentSurface()?.querySelector<HTMLElement>(
-		"#viewer .als-ofs-pptx-slide-frame[data-editor-active-slide='true'] .als-ofs-pptx-slide",
-	);
+function syncMobilePptxBackground(frame?: HTMLElement): void {
+	const slide = (
+		frame ??
+		activeDocumentSurface()?.querySelector<HTMLElement>(
+			"#viewer .als-ofs-pptx-slide-frame[data-editor-active-slide='true']",
+		)
+	)?.querySelector<HTMLElement>(".als-ofs-pptx-slide");
 	if (slide) {
 		const color = getComputedStyle(slide).backgroundColor;
 		mobilePptxBackground.value = color === "rgba(0, 0, 0, 0)" ? "#ffffff" : color;
 	}
+}
+
+function syncMobilePptxZoomLabel(): void {
+	// A drag previews its destination before the editor changes the active slide.
+	// Zoom/DOM updates must not restore the outgoing slide's background meanwhile.
+	if (!mobilePptxGesture?.slideDrag && !mobilePptxSlideSettling) syncMobilePptxBackground();
 	const zoom = Number.parseFloat(
 		mobilePptxZoomControls()
 			?.querySelector<HTMLElement>(".als-ofs-pptx-mobile-zoom-controls__output")
@@ -1870,6 +1887,7 @@ async function startMobilePptxViewing(): Promise<void> {
 	mobileMoreOpen.value = false;
 	activityOpen.value = false;
 	setMobilePptxView("single");
+	syncMobilePptxBackground();
 	mobilePptxViewing.value = true;
 	mobilePptxSingleView.value = true;
 	showMobilePptxControls();
@@ -1941,6 +1959,9 @@ function prepareMobilePptxSlideDrag(
 	);
 	currentFrame.classList.add("harmony-pptx-slide-drag-current");
 	if (adjacentFrame) {
+		// Fill the viewport as soon as the destination starts entering, rather than
+		// waiting for the active-slide mutation after the settling animation.
+		syncMobilePptxBackground(adjacentFrame);
 		adjacentFrame.hidden = false;
 		adjacentFrame.setAttribute("aria-hidden", "true");
 		adjacentFrame.classList.add("harmony-pptx-slide-drag-adjacent");
@@ -1970,6 +1991,7 @@ function setMobilePptxSlideDragOffset(
 }
 
 function clearMobilePptxSlideDrag(drag: MobilePptxSlideDrag, restoreAdjacent = true): void {
+	if (restoreAdjacent) syncMobilePptxBackground(drag.currentFrame);
 	for (const frame of [drag.currentFrame, drag.adjacentFrame]) {
 		if (!frame) continue;
 		frame.classList.remove(
@@ -1997,6 +2019,7 @@ function settleMobilePptxSlideDrag(drag: MobilePptxSlideDrag, commit: boolean): 
 	const token = ++mobilePptxSlideSettleToken;
 	mobilePptxSlideSettling = true;
 	mobilePptxSettlingDrag = drag;
+	if (!commit) syncMobilePptxBackground(drag.currentFrame);
 	const target = commit ? (drag.direction === "next" ? -drag.travel : drag.travel) : 0;
 	setMobilePptxSlideDragOffset(drag, target, true);
 	const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
