@@ -47,8 +47,12 @@ function setup(index = 1, reducedMotion = false) {
 	const surface = {
 		querySelectorAll: () => frames,
 		querySelector: (selector) => {
-			if (!selector.includes("aria-label"))
-				return frames.find((f) => f.dataset.editorActiveSlide === "true");
+			if (!selector.includes("aria-label")) {
+				const current = frames.find((f) => f.dataset.editorActiveSlide === "true");
+				return selector.endsWith(" .als-ofs-pptx-slide")
+					? current?.querySelector(".als-ofs-pptx-slide")
+					: current;
+			}
 			const direction = selector.includes("Previous") || selector.includes("上一") ? -1 : 1;
 			const current = frames.findIndex((f) => f.dataset.editorActiveSlide === "true");
 			return {
