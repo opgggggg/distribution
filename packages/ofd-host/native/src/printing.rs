@@ -5,11 +5,12 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+#[cfg(not(windows))]
+use std::time::Duration;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
     sync::{atomic::AtomicBool, Mutex},
-    time::Duration,
 };
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -306,7 +307,10 @@ pub fn submit(
 mod windows {
     use super::*;
     use std::sync::atomic::Ordering;
-    use windows_sys::Win32::Graphics::{Gdi::*, Printing::GetDefaultPrinterW};
+    use windows_sys::Win32::{
+        Graphics::{Gdi::*, Printing::GetDefaultPrinterW},
+        Storage::Xps::{AbortDoc, EndDoc, EndPage, StartDocW, StartPage, DOCINFOW},
+    };
     fn wide(s: &str) -> Vec<u16> {
         s.encode_utf16().chain(Some(0)).collect()
     }
@@ -368,8 +372,8 @@ mod windows {
                         if StartPage(dc) <= 0 {
                             return Err("无法开始打印页".into());
                         }
-                        let pw = GetDeviceCaps(dc, HORZRES);
-                        let ph = GetDeviceCaps(dc, VERTRES);
+                        let pw = GetDeviceCaps(dc, HORZRES as i32);
+                        let ph = GetDeviceCaps(dc, VERTRES as i32);
                         let scale = (pw as f64 / w as f64).min(ph as f64 / h as f64);
                         let dw = (w as f64 * scale) as i32;
                         let dh = (h as f64 * scale) as i32;
