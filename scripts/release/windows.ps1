@@ -4,8 +4,18 @@ $ProgressPreference = 'SilentlyContinue'
 $c = Get-Content $Config -Raw | ConvertFrom-Json
 $work = $c.work.Replace('/', '\')
 $root = [IO.Path]::GetPathRoot($work)
+# A retried release leaves its previous attempt's tree behind, and each one is a
+# full checkout with node_modules. Reclaim only the superseded attempts at this
+# same version - never another version, and never this attempt.
+$parent = Split-Path $work -Parent
+$current = Split-Path $work -Leaf
+foreach ($stale in Get-ChildItem $parent -Filter "cubeoffice-auto-$($c.version)-*" -ErrorAction SilentlyContinue) {
+  if ($stale.Name -eq $current -or $stale.Name -like "$current.*") { continue }
+  Remove-Item -LiteralPath $stale.FullName -Recurse -Force -ErrorAction Continue
+  Write-Output "Reclaimed superseded attempt $($stale.Name)"
+}
 $disk = Get-PSDrive -Name $root.Substring(0,1)
-if ($disk.Free -lt ($c.minFreeGB * 1GB)) { throw "Windows build drive needs $($c.minFreeGB) GB free; available $([math]::Round($disk.Free/1GB,2)) GB. No files were deleted." }
+if ($disk.Free -lt ($c.minFreeGB * 1GB)) { throw "Windows build drive needs $($c.minFreeGB) GB free; available $([math]::Round($disk.Free/1GB,2)) GB. Only superseded attempts at this version were removed." }
 if (-not (Test-Path $c.key)) { throw 'Updater key is missing on Windows' }
 $vcvars = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat'
 if (-not (Test-Path $vcvars)) { throw 'MSVC Build Tools vcvars64.bat is missing' }
