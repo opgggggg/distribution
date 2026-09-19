@@ -148,6 +148,13 @@ prepare() {
     cd "$SOURCE"
     npm install --package-lock-only --ignore-scripts
     npm ci
+    # The HarmonyOS app metadata and the shared web profile are generated from
+    # profiles/cubeoffice/app.json and committed, so the version change above
+    # has to be regenerated into them here. Otherwise the first build that syncs
+    # the profile rewrites tracked files and the source check rejects the tree
+    # it is protecting. APP_PROFILE is mandatory: the HarmonyOS default profile
+    # would rewrite the app identity and invalidate the signing profile.
+    APP_PROFILE=cubeoffice npm run profile:sync
     # The font package materializes its assets rather than committing them, and
     # a worktree created for this release has none of them yet.
     npm run prepare:assets -w @yaochn/als-office-fonts
@@ -160,7 +167,7 @@ prepare() {
     node scripts/run-cubeoffice-desktop.mjs --print-config > "$WORK/config.json"
     node "$HELPERS/validate.mjs" config "$WORK/config.json" "$VERSION" "$UPDATER_PUBLIC_KEY"
     git diff --check
-    git add als-office profiles/cubeoffice/desktop/catalog.mjs profiles/cubeoffice/app.json website/index.html website/i18n.js website/templates.html website/visio.html "releases/v$VERSION.md" package-lock.json
+    git add als-office profiles/cubeoffice/desktop/catalog.mjs profiles/cubeoffice/app.json apps/harmony/AppScope/app.json5 apps/harmony/build-profile.json5 apps/harmony/entry/src/main/resources/base/element/string.json apps/harmony/web/src/app-profile.generated.ts website/index.html website/i18n.js website/templates.html website/visio.html "releases/v$VERSION.md" package-lock.json
     git commit -m "chore: prepare CubeOffice $VERSION four-platform release"
   ) > "$WORK/logs/prepare.log" 2>&1
   meta snapshot "$WORK" "$VERSION" "$ANDROID_CODE"
