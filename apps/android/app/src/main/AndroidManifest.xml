@@ -3,6 +3,9 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools">
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- The WebView needs this to report the network state to the page; without it
+	     navigator.onLine cannot be trusted. Normal permission, no runtime prompt. -->
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
 	<application
 		android:allowBackup="true"

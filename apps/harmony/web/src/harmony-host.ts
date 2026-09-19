@@ -27,6 +27,22 @@ export function nativeHostPlatform(): AuroraNativePlatform {
 	return host.getPlatform?.() ?? "harmonyos";
 }
 
+/**
+ * Whether the device is known to have no network.
+ *
+ * `navigator.onLine` cannot carry this on its own: an embedded WebView reports the
+ * page offline whenever the app is not allowed to read the system network state, and
+ * a HarmonyOS build without `ohos.permission.GET_NETWORK_INFO` did exactly that — the
+ * page believed it was offline forever. The native hosts answer from the system, and
+ * the browser fallback is only for the development shell. Unknown means online: a
+ * wrong answer must never take a feature away.
+ */
+export function isOffline(): boolean {
+	const native = window.auroraHarmonyHost?.hasNetwork?.();
+	if (typeof native === "boolean") return !native;
+	return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+
 export function isHarmonyHost(): boolean {
 	return nativeHostPlatform() === "harmonyos";
 }

@@ -11,6 +11,7 @@ import {
 	type AndroidRelease,
 	type NativeServices,
 } from "./client-services";
+import { isOffline } from "../harmony-host";
 const props = defineProps<{ service?: NativeServices; hideUpdates?: boolean }>();
 const service = props.service ?? nativeServices();
 const info = ref(clientInfo(service));
@@ -45,17 +46,17 @@ const submitting = ref(false);
 const feedbackStatus = ref("");
 const feedbackError = ref(false);
 const feedbackOpen = ref(false);
-// Sending feedback needs a connection, so an offline client hides the entry
-// instead of letting someone write a report that can only fail on submit.
-const online = ref(typeof navigator === "undefined" || navigator.onLine !== false);
-function handleOnline() {
-	online.value = true;
+// Sending feedback needs a connection, so an offline client hides the entry instead
+// of letting someone write a report that can only fail on submit. isOffline() asks
+// the native host rather than the page, and the entry comes back on its own: the
+// browser events cover the development shell, and re-reading it when the app returns
+// to the foreground covers a WebView that dispatches neither.
+const online = ref(!isOffline());
+function readNetwork() {
+	online.value = !isOffline();
 }
-function handleOffline() {
-	online.value = false;
-	feedbackOpen.value = false;
-	feedbackStatus.value = "";
-	feedbackError.value = false;
+function handleVisibility() {
+	if (!document.hidden) readNetwork();
 }
 async function check() {
 	if (checking.value) return;
@@ -161,12 +162,14 @@ onMounted(() => {
 		void check();
 });
 onMounted(() => {
-	window.addEventListener("online", handleOnline);
-	window.addEventListener("offline", handleOffline);
+	window.addEventListener("online", readNetwork);
+	window.addEventListener("offline", readNetwork);
+	document.addEventListener("visibilitychange", handleVisibility);
 });
 onBeforeUnmount(() => {
-	window.removeEventListener("online", handleOnline);
-	window.removeEventListener("offline", handleOffline);
+	window.removeEventListener("online", readNetwork);
+	window.removeEventListener("offline", readNetwork);
+	document.removeEventListener("visibilitychange", handleVisibility);
 });
 </script>
 <template>
@@ -269,7 +272,7 @@ onBeforeUnmount(() => {
 				提交内容及 clientId、应用版本、平台与设备形态、系统版本、架构和语言将发送至
 				CubeXP。不会自动上传文档或截图。
 			</p>
-			<button type="submit" :disabled="submitting || !info">
+			<button type="submit" :disabled="submitting || !info || !online">
 				{{ submitting ? "正在提交…" : "提交反馈" }}
 			</button>
 			<p v-if="feedbackStatus" :role="feedbackError ? 'alert' : 'status'">

@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { connection } from '@kit.NetworkKit';
 import { window } from '@kit.ArkUI';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
@@ -51,6 +52,19 @@ export class HarmonyDocumentBridge {
 
   getPlatform(): string {
     return 'harmonyos';
+  }
+
+  // ArkWeb answers navigator.onLine from the network state the app is allowed to read,
+  // so the page cannot ask the browser: without ohos.permission.GET_NETWORK_INFO it is
+  // told it is offline whether or not there is a network. Unknown counts as online —
+  // a wrong answer here must never take a feature away from the user.
+  hasNetwork(): boolean {
+    try {
+      return connection.hasDefaultNetSync();
+    } catch (cause) {
+      console.warn(`Could not read the HarmonyOS network state: ${String(cause)}`);
+      return true;
+    }
   }
 
   // 2in1 上 EntryAbility 隐藏了原生标题栏，但系统仍然把最小化/最大化/关闭三个

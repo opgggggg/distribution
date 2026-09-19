@@ -563,6 +563,24 @@ public final class MainActivity extends Activity {
       return "android";
     }
 
+    /**
+     * The WebView answers navigator.onLine from the network state the app is allowed to read, so
+     * the page asks the host instead. Unknown counts as online: a wrong answer here must never take
+     * a feature away from the user.
+     */
+    @JavascriptInterface
+    public boolean hasNetwork() {
+      android.net.ConnectivityManager manager =
+          (android.net.ConnectivityManager)
+              MainActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+      if (manager == null) return true;
+      android.net.Network active = manager.getActiveNetwork();
+      if (active == null) return false;
+      android.net.NetworkCapabilities capabilities = manager.getNetworkCapabilities(active);
+      return capabilities == null
+          || capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    }
+
     @JavascriptInterface
     public boolean keepSoftKeyboard() {
       WebView activeWebView = webView;
