@@ -48,6 +48,11 @@ try {
   Set-Location $work
   & npm.cmd ci
   if ($LASTEXITCODE -ne 0) { throw 'npm ci failed' }
+  # The font package downloads its assets instead of committing them, so a tree
+  # unpacked from `git archive` has none of them and the package build stops on
+  # the first missing face.
+  & npm.cmd run prepare:assets -w '@yaochn/als-office-fonts'
+  if ($LASTEXITCODE -ne 0) { throw 'font asset preparation failed' }
   # Native stderr is redirected by cmd, not PowerShell 5.1's ErrorActionPreference.
   $js = "process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD='';const r=require('child_process').spawnSync('npm.cmd',['run','desktop:build:win-x64'],{shell:true,stdio:'inherit',env:process.env});process.exit(r.status??1)"
   Set-Content -Encoding UTF8 "$work\run-release.cjs" $js

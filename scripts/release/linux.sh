@@ -28,6 +28,10 @@ fi
 [ -x /root/.cache/tauri/linuxdeploy-x86_64.AppImage ]
 export NODE_OPTIONS=--max-old-space-size=8192
 npm ci
+# The font package downloads its assets instead of committing them, so a tree
+# unpacked from `git archive` has none of them and the package build stops on
+# the first missing face.
+npm run prepare:assets -w @yaochn/als-office-fonts
 npm run desktop:build:linux-x64
 base=als-office/apps/desktop/src-tauri/target/x86_64-unknown-linux-gnu/release
 file "$base/cubeoffice-app" | grep -q 'x86-64'
