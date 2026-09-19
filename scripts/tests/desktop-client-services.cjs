@@ -6,11 +6,15 @@ const ts = require("typescript");
 	const { resolveProfileRuntimeEnv } =
 		await import("../../als-office/apps/desktop/scripts/desktop-profiles.mjs");
 	const profile = getDesktopAppProfile("cubeoffice");
-	assert.equal(
+	// The settings extension carries the OFD trust panel. The guarantee this
+	// check exists for is that it is not the mobile feedback form, which the
+	// desktop stopped embedding when it moved to the shared feedback dialog.
+	assert.match(
 		profile.settingsExtensionModule,
-		undefined,
-		"desktop no longer embeds the mobile feedback form",
+		/packages\/ofd-host\/src\/TrustSettings\.vue$/,
+		"desktop settings extend with the OFD trust panel",
 	);
+	assert.doesNotMatch(profile.settingsExtensionModule, /feedback/iu);
 	const env = resolveProfileRuntimeEnv(profile);
 	assert.equal(env.DESKTOP_FEEDBACK_BACKEND, "rest");
 	assert.equal(env.DESKTOP_FEEDBACK_ENDPOINT, "https://cubexp.com/api/v1/feedback");
