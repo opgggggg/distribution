@@ -2,8 +2,10 @@
 
 ## 中文
 
-修复了有网络时看不到演示模板和意见反馈入口的问题。
+1. Markdown 文档支持流程图显示。
+2. 改进了 EMF 图片的展示效果。
 
 ## English
 
-Fixes the presentation templates and the feedback entry being hidden while the device was online.
+1. Markdown documents render flowcharts.
+2. EMF images display better.
