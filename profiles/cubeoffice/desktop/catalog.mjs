@@ -142,7 +142,7 @@ const cubeOfficeProfile = {
 			beforeBuildCommand: "node ../../../scripts/run-cubeoffice-desktop.mjs --renderer-only",
 			beforeDevCommand: "node ../../../scripts/run-cubeoffice-desktop.mjs --renderer-dev",
 		},
-		version: "1.4.6",
+		version: "1.4.7",
 		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
