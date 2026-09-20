@@ -16,7 +16,11 @@ import {
 	useUiDialogs,
 	UiEditorI18nProvider,
 	UiRibbonModeProvider,
+	UiWorkspaceTabStrip,
+	reorderUiWorkspaceTabs,
 	setUiEditorFileSink,
+	type UiWorkspaceTabItem,
+	type UiWorkspaceTabReorderRequest,
 	type EditorArtifactFormat,
 	type UiArtifactFormatContribution,
 	type UiArtifactSurfaceBinding,
@@ -25,6 +29,12 @@ import {
 } from "@yaochn/als-office-editor-ui/vue";
 
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
+import {
+	openNativeDocument,
+	readNativeDocumentRequest,
+	deleteNativeDocumentRequest,
+	type NativeTabCommand,
+} from "./native-tabs";
 import { captureDocumentPreview } from "./document-preview";
 import { updateHarmonyPreview, ensureHarmonyRecent } from "./autosave-store";
 import AndroidIcon from "./android/AndroidIcon.vue";
@@ -184,6 +194,7 @@ interface MobileMarkdownEditor {
 
 // 手机形态判定。onMounted 里的 phoneMediaQuery 复用同一个条件，两者必须保持一致。
 const PHONE_MEDIA_QUERY = "(max-width: 600px), (max-height: 600px) and (pointer: coarse)";
+const nativeTabSession = window.auroraHarmonyHost?.getNativeTabSession?.() ?? "";
 
 // HarmonyOS、Android 与 iOS 共用同一套原生移动端工作区 UI（src/android/ 下的组件
 // 内部不做平台判断，数据全部由本文件通过 props 传入）。
@@ -197,12 +208,13 @@ const PHONE_MEDIA_QUERY = "(max-width: 600px), (max-height: 600px) and (pointer:
 // 需要重新加载页面。要做到即时切换，得把下面这些 nativeMobileLayout 的读取点
 // 改成响应式（或由宿主通过 bridge 上报设备类型），那是更大的改动。
 const nativeMobileLayout =
-	isNativeMobileHost() ||
-	(isHarmonyHost() && window.matchMedia(PHONE_MEDIA_QUERY).matches) ||
-	(import.meta.env.DEV &&
-		["android", "ios"].includes(
-			new URLSearchParams(location.search).get("platform") ?? "",
-		));
+	!nativeTabSession &&
+	(isNativeMobileHost() ||
+		(isHarmonyHost() && window.matchMedia(PHONE_MEDIA_QUERY).matches) ||
+		(import.meta.env.DEV &&
+			["android", "ios"].includes(
+				new URLSearchParams(location.search).get("platform") ?? "",
+			)));
 
 // 活动面板里的宿主桥接标识。浏览器预览没有原生桥接，其余三个宿主各有自己的名字。
 const NATIVE_CLIENTS = {
@@ -343,7 +355,15 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 const formats = new UiArtifactFormatRegistry();
 
 type FormatEngineModule =
-	"docx" | "pptx" | "xlsx" | "vsdx" | "markdown" | "pdf" | "image" | "ofd" | "text";
+	| "docx"
+	| "pptx"
+	| "xlsx"
+	| "vsdx"
+	| "markdown"
+	| "pdf"
+	| "image"
+	| "ofd"
+	| "text";
 const FORMAT_ENGINE_MODULES: Readonly<
 	Record<FormatEngineModule, () => Promise<readonly UiArtifactFormatContribution[]>>
 > = {
@@ -841,12 +861,24 @@ async function addDocument(
 	fileName: string,
 	source?: Blob,
 	options: {
+		nativeLocal?: boolean;
 		autosaveId?: string;
 		autosavedAt?: number;
 		activate?: boolean;
 		mobileMode?: "reading" | "editing";
 	} = {},
 ): Promise<void> {
+	if (nativeTabSession && !options.nativeLocal) {
+		await openNativeDocument({
+			format,
+			fileName,
+			source,
+			autosaveId: options.autosaveId,
+			autosavedAt: options.autosavedAt,
+			mobileMode: options.mobileMode,
+		});
+		return;
+	}
 	const id = `harmony-artifact-${++tabCounter}`;
 	openingLabel.value = "正在读取文件…";
 	await nextTick();
@@ -1310,6 +1342,133 @@ function selectTab(id: string): void {
 	if (tab?.editor) void nextTick(() => prepareDocumentPreview(tab));
 }
 
+const workspaceTabItems = computed<UiWorkspaceTabItem[]>(() => [
+	{ id: HOME_TAB_ID, label: "Home", icon: "home", fixed: true },
+	...tabs.value.map((tab) => ({
+		id: tab.id,
+		label: tab.fileName,
+		kind: optionFor(tab.format).shortLabel,
+		closable: true,
+	})),
+]);
+
+function reorderWorkspaceTabs(request: UiWorkspaceTabReorderRequest): void {
+	// Reorder the existing objects: editor instances, selections and undo history
+	// stay mounted in the same ArkWeb. Home is not part of this document array.
+	tabs.value = reorderUiWorkspaceTabs(
+		tabs.value,
+		request.draggedId,
+		request.targetId,
+		request.position,
+	);
+}
+
+let nativeTabUnsubscribe: (() => void) | undefined;
+let nativeTabTimer: ReturnType<typeof setInterval> | undefined;
+let nativeCommandRunning = false;
+let lastNativeTabState = "";
+
+function publishNativeTab(ready = true): void {
+	if (!nativeTabSession) return;
+	const tab = tabs.value[0];
+	const state = JSON.stringify({
+		title: tab?.fileName ?? (nativeTabSession.startsWith("home-") ? "Home" : ""),
+		dirty: Boolean(tab?.editor?.getState().dirty),
+		ready,
+	});
+	if (state === lastNativeTabState) return;
+	lastNativeTabState = state;
+	window.auroraHarmonyHost?.publishNativeTab?.(state);
+}
+
+function bindNativeTabState(tab: HarmonyDocumentTab): void {
+	if (!nativeTabSession) return;
+	nativeTabUnsubscribe?.();
+	nativeTabUnsubscribe = tab.editor?.subscribe(() => publishNativeTab());
+	publishNativeTab();
+}
+
+async function pollNativeTabCommands(): Promise<void> {
+	if (nativeCommandRunning) return;
+	nativeCommandRunning = true;
+	try {
+		const encoded = window.auroraHarmonyHost?.takeNativeTabCommand?.();
+		if (encoded) {
+			const command = JSON.parse(encoded) as NativeTabCommand;
+			switch (command.action) {
+				case "new":
+					if (
+						FORMAT_OPTIONS.some(
+							(option) => option.format === command.argument && option.editable,
+						)
+					)
+						await createDocument(command.argument as EditorArtifactFormat);
+					break;
+				case "open":
+					document.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+					break;
+				case "activity":
+					activityOpen.value = !activityOpen.value;
+					break;
+				case "settings":
+					settingsDialogOpen.value = true;
+					break;
+				case "services":
+					clientServicesOpen.value = true;
+					break;
+				case "about":
+					aboutDialogOpen.value = true;
+					break;
+				case "can-close": {
+					let accepted = false;
+					try {
+						const tab = tabs.value[0];
+						accepted =
+							!opening.value &&
+							!saving.value &&
+							(!tab?.editor?.getState().dirty ||
+								(await dialogs.confirm(
+									`关闭“${tab.fileName}”并放弃未保存的更改？`,
+									{ destructive: true },
+								)));
+					} finally {
+						window.auroraHarmonyHost?.respondNativeTab?.(command.request, accepted);
+					}
+					break;
+				}
+			}
+		}
+		await consumePendingNativeIntent();
+	} catch (cause) {
+		reportError(cause);
+	} finally {
+		nativeCommandRunning = false;
+		publishNativeTab();
+	}
+}
+
+async function startNativeTabSession(): Promise<void> {
+	if (!nativeTabSession) return;
+	try {
+		if (nativeTabSession.startsWith("document-")) {
+			opening.value = true;
+			const request = await readNativeDocumentRequest(nativeTabSession);
+			if (!request) throw new Error("未找到文档窗口的打开请求，请重新打开文档。");
+			await addDocument(request.format, request.fileName, request.source, {
+				...request,
+				nativeLocal: true,
+			});
+			await deleteNativeDocumentRequest(nativeTabSession);
+		}
+	} catch (cause) {
+		reportError(cause);
+	} finally {
+		opening.value = false;
+		publishNativeTab();
+		nativeTabTimer = setInterval(() => void pollNativeTabCommands(), 120);
+	}
+}
+
 const dialogs = useUiDialogs(() => ({ locale: "zh-CN" }));
 
 async function closeTab(id: string): Promise<void> {
@@ -1425,6 +1584,7 @@ function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
 	tab.editor = mounted ? markRaw(mounted) : null;
 	void prepareDocumentPreview(tab);
 	bindAutosave(tab);
+	bindNativeTabState(tab);
 	if (tab.mobileAutofocusPending && tab.id === activeId.value) {
 		tab.mobileAutofocusPending = false;
 		void nextTick(() => enterMobileEditing(tab, { focusText: true }));
@@ -2793,7 +2953,8 @@ function handleNativeBack(): boolean {
 
 function syncMobileLayout(event?: MediaQueryListEvent): void {
 	mobileLayout.value =
-		nativeMobileLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false);
+		!nativeTabSession &&
+		(nativeMobileLayout || (event?.matches ?? phoneMediaQuery?.matches ?? false));
 	mobilePortrait.value = window.innerHeight >= window.innerWidth;
 	for (const tab of tabs.value) refreshTabSurface(tab);
 	if (mobileLayout.value) void restoreAutosaves();
@@ -2890,15 +3051,17 @@ function handleAndroidEscape(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+	void startNativeTabSession();
 	// Let the workspace paint before optional network work; failure stays silent
 	// here, while the explicit check in settings reports actionable errors.
-	window.setTimeout(() => {
-		void import("./services/client-services")
-			.then(async ({ checkAutomaticStoreUpdate }) => {
-				if (await checkAutomaticStoreUpdate()) clientServicesOpen.value = true;
-			})
-			.catch(() => {});
-	}, 1500);
+	if (!nativeTabSession || nativeTabSession === "home-main")
+		window.setTimeout(() => {
+			void import("./services/client-services")
+				.then(async ({ checkAutomaticStoreUpdate }) => {
+					if (await checkAutomaticStoreUpdate()) clientServicesOpen.value = true;
+				})
+				.catch(() => {});
+		}, 1500);
 	document.addEventListener("keydown", handleAndroidEscape);
 	document.addEventListener("pointerdown", closeMenus);
 	document.addEventListener("focusin", handleMobileFocusIn);
@@ -2931,10 +3094,12 @@ onMounted(() => {
 			saving.value = false;
 		}
 	});
-	void consumePendingNativeIntent();
+	if (!nativeTabSession) void consumePendingNativeIntent();
 });
 
 onBeforeUnmount(() => {
+	clearInterval(nativeTabTimer);
+	nativeTabUnsubscribe?.();
 	document.removeEventListener("keydown", handleAndroidEscape);
 	mobilePptxZoomObserver?.disconnect();
 	mobilePptxZoomObserver = undefined;
@@ -2975,6 +3140,7 @@ onBeforeUnmount(() => {
 		class="harmony-app"
 		:style="{ '--harmony-pptx-background': mobilePptxBackground }"
 		:class="{
+			'has-native-tabs': Boolean(nativeTabSession),
 			'has-document': !homeActive,
 			'android-app': nativeMobileLayout,
 			'is-mobile-layout': mobileLayout,
@@ -2986,6 +3152,7 @@ onBeforeUnmount(() => {
 			'is-pptx-viewing': mobilePptxViewing,
 		}"
 	>
+		<input v-if="nativeTabSession" type="file" :accept="OPEN_ACCEPT" hidden @change="open" />
 		<AndroidWorkspace
 			v-if="nativeMobileLayout"
 			ref="androidWorkspace"
@@ -3026,7 +3193,7 @@ onBeforeUnmount(() => {
 			@motion="preferences.reduceMotion = $event"
 		/>
 		<header
-			v-if="!nativeMobileLayout"
+			v-if="!nativeMobileLayout && !nativeTabSession"
 			class="harmony-chrome"
 			:class="{ 'has-window-controls': harmonyHasWindowControls() }"
 			@pointerdown="prepareHarmonyWindowMove"
@@ -3080,7 +3247,21 @@ onBeforeUnmount(() => {
 				</span>
 			</span>
 			<strong class="harmony-chrome__brand">{{ APP_PROFILE.name }}</strong>
-			<nav class="harmony-tabs" aria-label="打开的文档">
+			<UiWorkspaceTabStrip
+				v-if="!mobileLayout"
+				class="harmony-workspace-tabs"
+				data-no-drag
+				:items="workspaceTabItems"
+				:active-id="activeId"
+				:detachable="false"
+				aria-label="打开的文档"
+				overflow-label="更多打开的文档"
+				unsaved-label="未保存更改"
+				@activate="selectTab"
+				@close="closeTab"
+				@reorder="reorderWorkspaceTabs"
+			/>
+			<nav v-else class="harmony-tabs" aria-label="打开的文档">
 				<button
 					type="button"
 					class="harmony-tabs__home"
@@ -3385,7 +3566,7 @@ onBeforeUnmount(() => {
 						</small>
 					</div>
 
-					<aside class="harmony-home__documents">
+					<aside v-if="!nativeTabSession" class="harmony-home__documents">
 						<header>
 							<span><b>打开的文档</b><small>当前会话 · 所有格式</small></span>
 							<strong>{{ tabs.length }}</strong>

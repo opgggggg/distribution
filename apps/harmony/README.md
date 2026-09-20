@@ -36,6 +36,51 @@ persistence; the editing surfaces remain browser-native and do not import Tauri.
   out), `arch` is the first entry of `deviceInfo.abiList`, `locale` is
   `i18n.System.getSystemLanguage()`, and `sdk` is `deviceInfo.sdkApiVersion` rather than 0.
 
+### Document tab compatibility
+
+PC/2in1 devices use native live document tabs. Each document owns a persistent
+ArkWeb `WebviewController` and `BuilderNode`, managed by `tabs/NativeTabs.ets`.
+The native tab strip in `pages/NativeWorkspace.ets` supports switching, closing,
+dragging to reorder, dragging outside the strip into a new window, and dropping
+onto another window's tab strip to merge. The system shows a tab preview during
+drag; the document stays in its source window until the drop completes.
+
+A detach/merge moves the existing Web component, preserving its JavaScript state,
+selection and editor undo history. It does not export and reload the document.
+The old NodeContainer must release the component before the destination mounts
+it, and failed transfers restore the original ownership. Save and window commands
+are rebound to the current window. Closing a tab or a window checks unsaved
+changes; closing the main window also checks documents in its child windows.
+The initial file is handed to its WebView through local IndexedDB; no file data
+is put in system drag-and-drop payloads.
+
+This uses the platform's documented
+[Web component migration](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/web-component-migrate-V5)
+capability. New windows are application subwindows owned by the main window,
+so their native minimize/lifecycle behavior follows HarmonyOS rather than macOS.
+
+Phone/tablet devices and hosts where native window setup is unavailable retain
+the single-WebView workspace in `pages/Index.ets`. The desktop/tablet layout uses
+the shared `UiWorkspaceTabStrip` with detaching disabled, including local drag
+sorting, overflow handling and Alt+Shift+ArrowLeft/ArrowRight sorting. Phone
+layouts keep the mobile document switcher. Local sorting reorders the existing
+objects and keeps editor surfaces mounted.
+
+Targeted validation:
+
+```sh
+node --test scripts/tests/harmony-native-tabs.test.mjs
+# Connected PC/2in1 emulator; builds and installs an isolated unsigned test app.
+node scripts/test-harmony-native-tabs-device.mjs
+# Build the current Web payload first; also checks the real Markdown editor.
+node scripts/test-harmony-native-tabs-device.mjs --editors
+```
+
+The device tests cover live Web state/selection through switch, detach and merge,
+cancellation, close confirmation, and real editor dirty/undo state. They invoke
+the native operations directly; manual pointer-drag, multi-monitor/mixed-DPI and
+physical-device checks remain separate acceptance tests.
+
 ### Client-services integration status
 
 This is not yet feature parity with the full planned client-services design.

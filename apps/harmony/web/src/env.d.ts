@@ -1,4 +1,9 @@
 interface AuroraHarmonyHost {
+	getNativeTabSession?(): string;
+	openNativeTab?(request: string): Promise<string>;
+	publishNativeTab?(state: string): boolean;
+	takeNativeTabCommand?(): string;
+	respondNativeTab?(request: string, accepted: boolean): boolean;
 	appReady(): boolean;
 	getPlatform?(): "harmonyos" | "android" | "ios";
 	hasNetwork?(): boolean;

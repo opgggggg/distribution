@@ -219,6 +219,15 @@ button:focus-visible,
 	font-weight: 450;
 }
 
+.harmony-workspace-tabs {
+	align-self: stretch;
+	user-select: none;
+}
+
+.harmony-app.has-native-tabs .harmony-home {
+	grid-template-columns: minmax(0, 1fr);
+}
+
 .harmony-tabs {
 	display: flex;
 	min-width: 0;

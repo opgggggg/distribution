@@ -21,7 +21,16 @@ interface PendingOpenDocument {
   path: string;
 }
 
+export interface NativeTabsHost {
+  sessionId(): string;
+  open(request: string): Promise<string>;
+  publish(state: string): boolean;
+  takeCommand(): string;
+  respond(request: string, accepted: boolean): boolean;
+}
+
 export class HarmonyDocumentBridge {
+  private nativeTabs?: NativeTabsHost;
   private context?: common.UIAbilityContext;
   private appWindow?: window.Window;
   private onReady?: () => void;
@@ -36,13 +45,45 @@ export class HarmonyDocumentBridge {
     this.pendingIntent = pendingIntent;
   }
 
-  initialize(context: common.UIAbilityContext): void {
+  initialize(context: common.UIAbilityContext, appWindow?: window.Window): void {
     this.context = context;
+    if (appWindow) {
+      this.appWindow = appWindow;
+      return;
+    }
     window.getLastWindow(context).then((appWindow: window.Window) => {
       this.appWindow = appWindow;
     }).catch((cause: Error) => {
       console.warn(`Could not obtain the HarmonyOS app window: ${cause.message}`);
     });
+  }
+
+  setAppWindow(appWindow: window.Window): void {
+    this.appWindow = appWindow;
+  }
+
+  setNativeTabs(host: NativeTabsHost): void {
+    this.nativeTabs = host;
+  }
+
+  getNativeTabSession(): string {
+    return this.nativeTabs?.sessionId() ?? '';
+  }
+
+  openNativeTab(request: string): Promise<string> {
+    return this.nativeTabs ? this.nativeTabs.open(request) : Promise.reject(new Error('Native tabs unavailable'));
+  }
+
+  publishNativeTab(state: string): boolean {
+    return this.nativeTabs?.publish(state) ?? false;
+  }
+
+  takeNativeTabCommand(): string {
+    return this.nativeTabs?.takeCommand() ?? '';
+  }
+
+  respondNativeTab(request: string, accepted: boolean): boolean {
+    return this.nativeTabs?.respond(request, accepted) ?? false;
   }
 
   appReady(): boolean {

@@ -1,14 +1,10 @@
 import { common } from '@kit.AbilityKit';
 import { emitter } from '@kit.BasicServicesKit';
-import { picker } from '@kit.CoreFileKit';
 import { webview } from '@kit.ArkWeb';
+import { HarmonyWeb, HarmonyWebParams } from './HarmonyWeb';
 
 import { HarmonyDocumentBridge } from '../bridge/HarmonyDocumentBridge';
 import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
-
-// Kept in step with TEXT_EXTENSIONS in @cubexp/text; ArkTS cannot import the
-// web package, so the picker carries its own copy.
-const TEXT_FILE_SUFFIXES: string = '.txt,.log,.java,.js,.mjs,.cjs,.jsx,.ts,.mts,.cts,.tsx,.json,.jsonl,.jsonc,.xml,.html,.htm,.css,.scss,.less,.vue,.py,.pyw,.rb,.sh,.bash,.zsh,.yml,.yaml,.toml,.ini,.conf,.cfg,.properties,.env,.c,.h,.cpp,.hpp,.cc,.cxx,.cs,.go,.rs,.sql,.php,.swift,.kt,.kts,.diff,.patch,.gradle,.groovy,.dockerfile,.makefile';
 
 @Entry
 @Component
@@ -90,91 +86,8 @@ struct Index {
 
   build() {
     Stack() {
-      Web({ src: 'https://cubeoffice.invalid/index.html', controller: this.controller })
-        .width('100%')
-        .height('100%')
-        .javaScriptAccess(true)
-        .domStorageAccess(true)
-        .fileAccess(true)
-        .onControllerAttached(() => {
-          this.controller.registerJavaScriptProxy(this.clientServices, 'cubeofficeServices',
-            ['getInfo', 'setAutomatic', 'copyClientId', 'request', 'takeResult']);
-        })
-        .onInterceptRequest((event) => {
-          if (!event) return null;
-          const prefix = 'https://cubeoffice.invalid/';
-          const url = event.request.getRequestUrl();
-          if (!url.startsWith(prefix)) return null;
-          const path = url.substring(prefix.length).split('?')[0].split('#')[0];
-          const response = new WebResourceResponse();
-          // Only packaged assets are served. Never fall back to the network for
-          // our reserved origin, and never allow access outside web/.
-          if (!/^[a-zA-Z0-9_./-]+$/.test(path) || path.split('/').includes('..')) {
-            response.setResponseData('');
-            response.setResponseCode(404);
-            response.setReasonMessage('Not Found');
-          } else {
-            response.setResponseData($rawfile('web/' + path));
-            response.setResponseCode(200);
-            response.setReasonMessage('OK');
-          }
-          const extension = path.split('.').pop() || '';
-          const types = new Map<string, string>([
-            ['html', 'text/html'], ['js', 'text/javascript'], ['css', 'text/css'],
-            ['json', 'application/json'], ['svg', 'image/svg+xml'],
-            ['png', 'image/png'], ['jpg', 'image/jpeg'], ['webp', 'image/webp'],
-            ['woff', 'font/woff'], ['woff2', 'font/woff2'], ['ttf', 'font/ttf'],
-            ['wasm', 'application/wasm']
-          ]);
-          response.setResponseMimeType(types.get(extension) || 'application/octet-stream');
-          response.setResponseEncoding('utf-8');
-          response.setResponseIsReady(true);
-          return response;
-        })
-        .javaScriptProxy({
-          object: this.bridge,
-          name: 'auroraHarmonyHost',
-          methodList: [
-            'appReady',
-            'getPlatform',
-            'hasWindowControls',
-            'exitApp',
-            'consumePendingIntent',
-            'readOpenDocumentChunk',
-            'finishOpenDocument',
-            'startWindowMove',
-            'toggleMaximizeWindow',
-            'setPresentationLandscape',
-            'beginSave',
-            'appendSaveChunk',
-            'abortSave'
-          ],
-          asyncMethodList: ['finishSave'],
-          controller: this.controller
-        })
-        .onShowFileSelector((event) => {
-          const options = new picker.DocumentSelectOptions();
-          options.maxSelectNumber = 1;
-          // Mirrors OPEN_ACCEPT in the web shell and OFFICE_MIME_TYPES on Android.
-          // A suffix missing here cannot be picked even though the engine reads it.
-          options.fileSuffixFilters = [
-            'Office documents|.docx,.doc,.dot,.pptx,.ppt,.pps,.pot,.xlsx,.xls,.xlt,.csv,.vsdx,.drawio,.jmp',
-            'Documents and images|.pdf,.ofd,.md,.markdown,.png,.jpg,.jpeg,.webp,.emf,.wmf',
-            'Text and source code|' + TEXT_FILE_SUFFIXES
-          ];
-          const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-          const documentPicker = new picker.DocumentViewPicker(context);
-          documentPicker.select(options).then((uris: Array<string>) => {
-            event.result.handleFileList(uris);
-          }).catch((cause: Error) => {
-            console.error(`Document selection failed: ${cause.message}`);
-          });
-          return true;
-        })
-        .onConsole((event) => {
-          console.info(`[ArkWeb] ${event.message.getMessage()}`);
-          return false;
-        })
+      HarmonyWeb(new HarmonyWebParams(this.controller, this.bridge, this.clientServices,
+        this.getUIContext().getHostContext() as common.UIAbilityContext))
 
       if (!this.webReady) {
         Column({ space: 18 }) {
