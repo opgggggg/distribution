@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { withNativeBranding } from "./cubeoffice-branding.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 for (const script of ["build:text", "build:ofd"]) {
@@ -89,24 +90,30 @@ const command =
 				],
 			];
 
-const result = spawnSync(command[0], command[1], {
-	cwd: desktopRoot,
-	// Only the renderer branch spawns `npm.cmd`, which Node will not start
-	// without a shell; the other branch runs node itself and must stay unshelled
-	// so its arguments are not re-parsed.
-	shell: process.platform === "win32" && (rendererOnly || rendererDev),
-	stdio: "inherit",
-	env: {
-		...process.env,
-		DESKTOP_APP_PROFILE: profileId,
-		DESKTOP_PROFILE_SERVICE_BINARY: "cubeoffice-ofd-service",
-		OFFICE_FONTS_CONFIG: path.join(
-			repositoryRoot,
-			"profiles/cubeoffice/desktop/font-source.json",
-		),
-		DESKTOP_APP_PROFILES_PACKAGE: profileCatalog,
-	},
-});
+const run = (environment) =>
+	spawnSync(command[0], command[1], {
+		cwd: desktopRoot,
+		// Only the renderer branch spawns `npm.cmd`, which Node will not start
+		// without a shell; the other branch runs node itself and must stay unshelled
+		// so its arguments are not re-parsed.
+		shell: process.platform === "win32" && (rendererOnly || rendererDev),
+		stdio: "inherit",
+		env: {
+			...environment,
+			DESKTOP_APP_PROFILE: profileId,
+			DESKTOP_PROFILE_SERVICE_BINARY: "cubeoffice-ofd-service",
+			OFFICE_FONTS_CONFIG: path.join(
+				repositoryRoot,
+				"profiles/cubeoffice/desktop/font-source.json",
+			),
+			DESKTOP_APP_PROFILES_PACKAGE: profileCatalog,
+		},
+	});
+
+const result =
+	rendererOnly || rendererDev || args.includes("--print-config")
+		? run(process.env)
+		: withNativeBranding(repositoryRoot, run);
 
 if (result.error) throw result.error;
 process.exitCode = result.status ?? 1;

@@ -219,6 +219,7 @@ macos_build() {
   hdiutil verify "$bundle/dmg/CubeOffice_${VERSION}_aarch64.dmg"
   meta mac-check "$bundle/macos/CubeOffice.app" "$VERSION"
   "$SOURCE/als-office/apps/desktop/src-tauri/binaries/cubeoffice-aarch64-apple-darwin" help
+  node "$SOURCE/scripts/check-desktop-branding.mjs" "$bundle/macos/CubeOffice.app/Contents/MacOS/cubeoffice"
   mkdir -p "$WORK/artifacts/macos"
   cp "$bundle/dmg/CubeOffice_${VERSION}_aarch64.dmg" "$bundle/macos/CubeOffice.app.tar.gz" "$bundle/macos/CubeOffice.app.tar.gz.sig" "$WORK/artifacts/macos/"
   meta receipt "$WORK" macos
@@ -256,6 +257,7 @@ local_build() {
   npm ci
   npm run build:packages
   node --test scripts/tests/desktop-binary-name.test.mjs
+  npm run test:desktop-branding
   node apps/android/tests/services.cjs
   node scripts/tests/desktop-client-services.cjs
   node als-office/packages/vsdx/tests/editor-session.mjs

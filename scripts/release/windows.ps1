@@ -78,6 +78,8 @@ try {
   }
   & $binaries[1] help
   if ($LASTEXITCODE -ne 0) { throw 'CLI smoke check failed' }
+  & node.exe "$work\scripts\check-desktop-branding.mjs" $binaries[1]
+  if ($LASTEXITCODE -ne 0) { throw 'Packaged MCP branding check failed' }
   New-Item -ItemType Directory -Force "$work\out" | Out-Null
   Copy-Item $installer, "$installer.sig" -Destination "$work\out"
   @{distribution=$id.distribution;upstream=$id.upstream;version=$c.version;machine='0x8664';sha256=(Get-FileHash $installer -Algorithm SHA256).Hash.ToLower()} | ConvertTo-Json | Set-Content -Encoding UTF8 "$work\out\verification.json"

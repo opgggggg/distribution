@@ -67,7 +67,18 @@ bash scripts/release-cubeoffice.sh verify
 
 ## 测试脚本本身
 
+桌面构建入口统一处理 CubeOffice 品牌：Vite 转换前端文案并在产物含旧品牌时失败，
+原生源码在编译期间应用发行仓库的品牌替换，正常结束或构建失败后恢复原文。
+AI 连接配置的历史识别标记保持兼容。并发构建会拒绝共享源码；若进程被强制终止，
+先确认其 Cargo 子进程已停止，再检查 `profiles/cubeoffice/desktop/generated/native-branding.json`
+中的原文并恢复，不能直接删除该恢复记录后继续构建。
+
+三个桌面平台在产物生成后都会启动 CLI 的隔离 MCP 握手，检查服务名、使用说明和
+工具描述。该检查不读取用户 AI 配置、不打开文档。品牌回归测试还覆盖真实上游文案、
+直接发行和华为渠道、嵌套构建、失败恢复及连接配置兼容性。
+
 ```bash
+npm run test:desktop-branding
 bash -n scripts/release-cubeoffice.sh scripts/release/linux.sh
 python3 -m unittest discover -s scripts/release/tests -v
 ```

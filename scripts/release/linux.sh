@@ -39,5 +39,6 @@ file als-office/apps/desktop/src-tauri/binaries/cubeoffice-x86_64-unknown-linux-
 [ "$(dpkg-deb -f "$base/bundle/deb/CubeOffice_${version}_amd64.deb" Version)" = "$version" ]
 [ "$(dpkg-deb -f "$base/bundle/deb/CubeOffice_${version}_amd64.deb" Architecture)" = amd64 ]
 als-office/apps/desktop/src-tauri/binaries/cubeoffice-x86_64-unknown-linux-gnu help
+node scripts/check-desktop-branding.mjs als-office/apps/desktop/src-tauri/binaries/cubeoffice-x86_64-unknown-linux-gnu
 mkdir -p "$root/out"
 cp "$base/bundle/appimage/CubeOffice_${version}_amd64.AppImage" "$base/bundle/appimage/CubeOffice_${version}_amd64.AppImage.sig" "$base/bundle/deb/CubeOffice_${version}_amd64.deb" "$root/out/"

@@ -27,6 +27,7 @@
 		"desktop:web": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --renderer-only",
 		"desktop:dev": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --command dev",
 		"desktop:config": "node scripts/run-cubeoffice-desktop.mjs --print-config",
+		"test:desktop-branding": "node --test scripts/tests/desktop-branding.test.mjs",
 		"desktop:build": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs",
 		"desktop:build:linux-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-unknown-linux-gnu --bundles appimage,deb",
 		"desktop:build:win-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-pc-windows-msvc --bundles nsis",
