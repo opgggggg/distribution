@@ -258,6 +258,7 @@ local_build() {
   npm run build:packages
   node --test scripts/tests/desktop-binary-name.test.mjs
   npm run test:desktop-branding
+  node als-office/apps/desktop/tests/native-menu-routing.mjs
   node apps/android/tests/services.cjs
   node scripts/tests/desktop-client-services.cjs
   node als-office/packages/vsdx/tests/editor-session.mjs
