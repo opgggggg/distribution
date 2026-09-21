@@ -322,8 +322,9 @@ def main():
         # Compare with the currently distributed APK certificate before allowing upgrade publication.
         feed = json.loads(fetch(FEEDS[0])); require(feed['url'].startswith(ORIGIN + '/downloads/'), 'Invalid previous APK URL')
         apk = work / 'previous-android.apk'
-        with urllib.request.urlopen(feed['url'], timeout=120) as response, apk.open('wb') as f:
-            shutil.copyfileobj(response, f)
+        if not apk.is_file() or digest(apk) != feed['sha256']:
+            with urllib.request.urlopen(feed['url'], timeout=120) as response, apk.open('wb') as f:
+                shutil.copyfileobj(response, f)
         require(digest(apk) == feed['sha256'], 'Previous APK checksum mismatch')
         tool = Path(os.environ['ANDROID_HOME']) / 'build-tools' / os.environ.get('ANDROID_BUILD_TOOLS', '35.0.0') / 'apksigner'
         previous = output(tool, 'verify', '--print-certs', apk)
