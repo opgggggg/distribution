@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, mkdtempSync, rmSync } from "node:fs";
+import { chmodSync, copyFileSync, mkdtempSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -19,7 +20,7 @@ export function assertMcpBranding(replies) {
 	);
 }
 
-export function checkDesktopBranding(binary) {
+export async function checkDesktopBranding(binary) {
 	const home = mkdtempSync(path.join(os.tmpdir(), "cubeoffice-mcp-branding-"));
 	try {
 		// Keep the protocol probe away from real AI settings and open documents.
@@ -62,12 +63,13 @@ export function checkDesktopBranding(binary) {
 		assertMcpBranding(replies);
 		console.log("Packaged CubeOffice MCP branding and handshake passed");
 	} finally {
-		rmSync(home, { recursive: true, force: true });
+		// Yield while cleaning up so Windows can release the exited probe's handles.
+		await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 	}
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
 	if (!process.argv[2])
 		throw new Error("Usage: node scripts/check-desktop-branding.mjs /path/to/cubeoffice[.exe]");
-	checkDesktopBranding(path.resolve(process.argv[2]));
+	await checkDesktopBranding(path.resolve(process.argv[2]));
 }
