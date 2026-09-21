@@ -262,14 +262,10 @@ local_build() {
   node apps/android/tests/services.cjs
   node scripts/tests/desktop-client-services.cjs
   node als-office/packages/vsdx/tests/editor-session.mjs
-  # Separate logs: the two run concurrently into one file otherwise, and a
-  # platform that fails in its first second leaves no attributable trace.
-  macos_build > "$WORK/logs/macos-build.log" 2>&1 & local mac_pid=$!
-  android_build > "$WORK/logs/android-build.log" 2>&1 & local android_pid=$!
-  local failed=0
-  wait "$mac_pid" || failed=1
-  wait "$android_pid" || failed=1
-  [ "$failed" = 0 ]
+  # The desktop launcher rebuilds shared OFD/text outputs. Finish it before
+  # Android's type checker reads those outputs from the same checkout.
+  macos_build > "$WORK/logs/macos-build.log" 2>&1
+  android_build > "$WORK/logs/android-build.log" 2>&1
 }
 build() {
   require_state
