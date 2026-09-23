@@ -2,7 +2,7 @@
 export const APP_PROFILE = {
 	"name": "CubeOffice 文档",
 	"packageName": "com.cubexp.office",
-	"versionName": "1.4.7",
+	"versionName": "1.4.12",
 	"urlScheme": "cubeoffice",
 	"documentTemplates": {
 		"endpoint": "https://cubexp.com/templates/index.json",
