@@ -745,6 +745,19 @@ dialog.harmony-mobile-insert-backdrop {
 dialog.harmony-mobile-insert-backdrop::backdrop {
 	background: transparent;
 }
+.android-app .als-ofs-xlsx-grid-scroll {
+	touch-action: pan-x pan-y;
+}
+
+body:has(.android-app) .als-ofs-ui-context-menu .als-ofs-ui-menu__item {
+	min-height: 44px;
+}
+
+.android-app .als-ofs-xlsx-filter-header {
+	width: 28px;
+	height: 28px;
+}
+
 .android-app .als-ofs-xlsx-formula-bar {
 	height: 56px;
 	min-height: 56px;

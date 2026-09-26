@@ -522,7 +522,7 @@ const aboutDialogOpen = ref(false);
 const settingsDialogOpen = ref(false);
 const activityOpen = ref(false);
 const mobileRibbonOpen = ref(false);
-const mobileRibbonSection = ref<"format" | "insert">("format");
+const mobileRibbonSection = ref<"format" | "insert" | "view" | "data">("format");
 const mobileSearchOpen = ref(false);
 const mobileMoreOpen = ref(false);
 const mobileInsertMenuOpen = ref(false);
@@ -1731,13 +1731,13 @@ async function openActiveSearch(): Promise<void> {
 	reportError("当前文档格式暂不提供页面内查找。");
 }
 
-async function openMobileRibbonTab(tabId?: "home" | "insert"): Promise<void> {
+async function openMobileRibbonTab(tabId?: "home" | "insert" | "view" | "data"): Promise<void> {
 	if (!activeTab.value || !activeMobileEditing.value) return;
 	const activeElement = document.activeElement;
 	if (activeElement instanceof HTMLElement && activeDocumentSurface()?.contains(activeElement)) {
 		activeElement.blur();
 	}
-	mobileRibbonSection.value = tabId === "insert" ? "insert" : "format";
+	mobileRibbonSection.value = tabId === "insert" ? "insert" : tabId === "view" || tabId === "data" ? tabId : "format";
 	mobileRibbonOpen.value = true;
 	mobileSearchOpen.value = false;
 	mobileMoreOpen.value = false;
@@ -3181,6 +3181,7 @@ onBeforeUnmount(() => {
 			@redo="redoActive"
 			@search="openActiveSearch"
 			@format="openAndroidFormat"
+			@xlsx-tools="openMobileRibbonTab"
 			@insert="
 				activeTab?.format === 'docx'
 					? openMobileInsertMenu()
@@ -3708,7 +3709,7 @@ onBeforeUnmount(() => {
 			class="android-ribbon-header"
 		>
 			<span aria-hidden="true" />
-			<strong>{{ mobileRibbonSection === "insert" ? "插入" : "格式" }}</strong>
+			<strong>{{ { insert: "插入", view: "视图与列宽", data: "数据与筛选", format: "格式" }[mobileRibbonSection] }}</strong>
 			<button class="android-icon-button" aria-label="关闭面板" @click="closeMobileRibbon">
 				<AndroidIcon name="close" />
 			</button>
