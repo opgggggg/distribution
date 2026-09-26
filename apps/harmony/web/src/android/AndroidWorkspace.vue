@@ -53,6 +53,7 @@ const emit = defineEmits<{
 	redo: [];
 	search: [];
 	format: [];
+	xlsxTools: [tab: "view" | "data" | "home"];
 	insert: [];
 	keyboard: [];
 	newSlide: [];
@@ -75,7 +76,7 @@ watch(destination, async (value, previous) => {
 });
 const query = ref("");
 const filter = ref("all");
-const sheet = ref<"" | "new" | "more" | "format" | "documents">("");
+const sheet = ref<"" | "new" | "more" | "format" | "documents" | "xlsxTools">("");
 const dialog = ref<HTMLDialogElement>();
 const picker = ref<HTMLInputElement>();
 const formats = [
@@ -95,7 +96,7 @@ const visibleDocuments = computed(() =>
 );
 const sheetTitle = computed(
 	() =>
-		({ "": "", new: "新建", more: "文档操作", format: "文字格式", documents: "切换文档" })[
+		({ "": "", new: "新建", more: "文档操作", format: "文字格式", documents: "切换文档", xlsxTools: "表格工具" })[
 			sheet.value
 		] || "",
 );
@@ -432,7 +433,10 @@ function previewLabel(item: DocumentItem): string {
 			>
 				<Icon name="file" /><span>新幻灯片</span>
 			</button>
-			<button v-else aria-label="收起键盘" @pointerdown.prevent @click="emit('keyboard')">
+			<button v-if="active.format === 'xlsx'" aria-label="表格工具" @pointerdown.prevent @click="sheet = 'xlsxTools'">
+				<Icon name="format" /><span>表格</span>
+			</button>
+			<button v-if="active.format !== 'pptx'" aria-label="收起键盘" @pointerdown.prevent @click="emit('keyboard')">
 				<Icon name="keyboard" /><span>收起键盘</span>
 			</button>
 		</template>
@@ -545,6 +549,21 @@ function previewLabel(item: DocumentItem): string {
 					>
 				</button></template
 			>
+			<template v-else-if="sheet === 'xlsxTools'">
+				<button
+					v-for="item in [
+						{ tab: 'view', title: '视图与列宽', detail: '冻结或取消冻结、设置列宽、自动适应' },
+						{ tab: 'data', title: '数据与筛选', detail: '筛选、排序、清除筛选条件' },
+						{ tab: 'home', title: '单元格格式', detail: '字体、对齐、数字格式' },
+					] as const"
+					:key="item.tab"
+					class="android-sheet-row"
+					@click="sheet = ''; emit('xlsxTools', item.tab)"
+				>
+					<span><strong>{{ item.title }}</strong><small>{{ item.detail }}</small></span>
+					<Icon name="chevron" />
+				</button>
+			</template>
 			<template v-else-if="sheet === 'format'"
 				><div class="android-format-grid">
 					<button
@@ -577,4 +596,4 @@ function previewLabel(item: DocumentItem): string {
 			></template>
 		</div>
 	</dialog>
-</template>
+			</template>
