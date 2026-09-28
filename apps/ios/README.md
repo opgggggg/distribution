@@ -260,10 +260,22 @@ execution is known to be unreliable in the Simulator; that is the likely cause, 
 cannot be separated from a declaration the system rejects at run time without trying it on
 a device. Treat Siri and Shortcuts invocation as unverified until then.
 
-Also not yet verified: opening a document _into_ the app through the picker or a share (the
-staging path in `DocumentBridge`), and **installation on a physical iPad** — so free
-provisioning, Developer Mode, and the certificate-trust flow described above are all still
-on paper.
+It installs and runs on a physical iPad. An iPad mini (iPad14,1) on iOS 27.0 was built for,
+signed under a free personal team, installed with `xcrun devicectl device install app`, and
+launched; the process stays alive. Worth knowing: the Mac's Xcode was 26.6 with the iOS 26.5
+SDK, a major version behind the device, and `devicectl` installed anyway — it needs no debug
+symbols, so it sidesteps Xcode's version check and saved an Xcode upgrade.
+
+Two things that flow from free provisioning and bit us:
+
+- The certificate expires **7 days** after it is issued. The app then refuses to launch
+  until it is rebuilt and reinstalled.
+- Free provisioning registers the App ID with Apple for real. Building under the profile's
+  own `com.cubexp.office` put the production identifier on a personal team, and a free team
+  is not visible in the developer portal, so it cannot be released from there. Use a
+  throwaway identifier for personal-team builds —
+  `IOS_BUNDLE_ID=com.cubexp.office.dev npm run ios:project` — and keep the real one for the
+  organisation's team.
 
 **Client services have not been run natively.** `ClientServices.swift` type-checks
 against the iOS SDK and the JavaScript shim passes `apps/ios/tests/services.cjs`, but
@@ -271,3 +283,8 @@ nothing has been exercised through a real `WKWebView`: neither the statistics pi
 feedback submission has left a simulator, and no test feedback was sent to production. The
 settings panel, the clipboard copy, the backup-excluded client id, and both requests still
 need a pass on a device or simulator.
+
+Still not verified: opening a document _into_ the app through the picker or a share (the
+staging path in `DocumentBridge`), and everything on the device beyond launching — document
+open and save were exercised only in the simulator. Siri and Shortcuts invocation remains
+open, and a device is the only place it can be settled.: record the physical iPad install)
