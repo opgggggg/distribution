@@ -1180,7 +1180,13 @@ function assistantCommandTitle(command: NativeAssistantCommandDescriptor): strin
 async function executeNativeAssistantCommand(
 	command: NativeAssistantCommandDescriptor,
 ): Promise<void> {
-	if (preferences.value.openAiActivityAutomatically) activityOpen.value = true;
+	// 桌面端由 CLI agent 驱动，自动弹出活动流是有用的——你想看着它干活。移动端这个
+	// 面板是全屏接管，而用户说"新建表格"要的是表格不是日志；而且移动端设置里根本
+	// 没有这个开关（只在桌面 SettingsDialog 里），关都关不掉。显式的 activity 指令
+	// 和工具栏按钮仍然能打开它。
+	if (!nativeMobileLayout && preferences.value.openAiActivityAutomatically) {
+		activityOpen.value = true;
+	}
 	const startedAt = performance.now();
 	const entry: CliActivityEntry = {
 		id: `assistant-intent-${Date.now()}-${++activityCounter}`,
