@@ -2862,3 +2862,63 @@ html[data-reduce-motion="true"] *::after {
 		transition-duration: 0.01ms !important;
 	}
 }
+
+.harmony-home__create {
+	display: flex;
+	position: relative;
+}
+.harmony-home__create > .is-primary {
+	border-radius: 10px 0 0 10px;
+	box-shadow: none;
+}
+.harmony-home__create-dropdown > summary {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 42px;
+	height: 100%;
+	box-sizing: border-box;
+	cursor: pointer;
+	list-style: none;
+	border: 1px solid #08705f;
+	border-left: 1px solid rgb(255 255 255 / 30%);
+	border-radius: 0 10px 10px 0;
+	color: white;
+	background: linear-gradient(180deg, #12bfa2, #0a987f);
+}
+.harmony-home__create-dropdown > summary::-webkit-details-marker {
+	display: none;
+}
+.harmony-home__create-dropdown svg {
+	width: 14px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+}
+.harmony-home__create-menu {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	min-width: 230px;
+	padding: 6px;
+	border: 1px solid #d0dfdb;
+	border-radius: 10px;
+	background: white;
+	box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+	z-index: 20;
+}
+.harmony-home__create-menu > button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	border: 0;
+	background: transparent;
+	color: #17483f;
+}
+.harmony-home__create-menu > button:hover {
+	background: #e7f5ef;
+}
+.harmony-home__create :focus-visible {
+	outline: 2px solid #08705f;
+	outline-offset: 3px;
+}

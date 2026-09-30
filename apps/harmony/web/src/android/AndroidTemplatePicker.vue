@@ -173,3 +173,53 @@ onBeforeUnmount(() => {
 		</div>
 	</dialog>
 </template>
+
+<style scoped>
+.android-template-sheet {
+	--android-primary: #08705f;
+	--android-card: #fff;
+	--android-surface: #f6f8f7;
+	--android-container: #eef4f1;
+	--android-text: #202624;
+	--android-secondary: #68716d;
+	--android-outline: #dce6e1;
+	box-sizing: border-box;
+	overflow-y: auto;
+}
+.android-template-card {
+	cursor: pointer;
+}
+.android-template-card:hover:not(:disabled) {
+	border-color: var(--android-primary);
+	background: #f0f8f4;
+}
+.android-template-card:focus-visible {
+	outline: 2px solid var(--android-primary);
+	outline-offset: 2px;
+}
+.android-template-card:disabled {
+	cursor: wait;
+	opacity: 0.65;
+}
+@media (min-width: 768px) {
+	.android-template-sheet {
+		inset: 0;
+		margin: auto;
+		width: min(880px, calc(100vw - 64px));
+		max-width: 880px;
+		max-height: calc(100dvh - 64px);
+		border-radius: 20px;
+		box-shadow: 0 20px 80px rgb(11 31 27 / 28%);
+	}
+	.android-template-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 16px;
+	}
+	.android-sheet-content {
+		padding: 0 24px 24px;
+	}
+	.android-sheet header {
+		margin: 0 -24px 20px;
+	}
+}
+</style>

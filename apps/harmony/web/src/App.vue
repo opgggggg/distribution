@@ -517,6 +517,7 @@ const opening = ref(false);
 const openingLabel = ref("正在读取文件…");
 const error = ref("");
 const newMenuOpen = ref(false);
+const homeNewMenu = ref<HTMLDetailsElement | null>(null);
 const appMenuOpen = ref(false);
 const aboutDialogOpen = ref(false);
 const settingsDialogOpen = ref(false);
@@ -1108,7 +1109,7 @@ function historyTimeLabel(savedAt: number): string {
 }
 
 async function createDocument(format: EditorArtifactFormat): Promise<void> {
-	if (nativeMobileLayout && format === "pptx" && templateSource?.formats.includes(format)) {
+	if (format === "pptx" && templateSource?.formats.includes(format)) {
 		if (!opening.value) templatePickerOpen.value = true;
 		return;
 	}
@@ -1631,6 +1632,7 @@ function surfaceRef(tab: HarmonyDocumentTab): (instance: unknown) => void {
 }
 
 function closeMenus(event: PointerEvent): void {
+	if (homeNewMenu.value && !homeNewMenu.value.contains(event.target as Node)) homeNewMenu.value.open = false;
 	if (!newMenuHost.value?.contains(event.target as Node)) newMenuOpen.value = false;
 	if (!appMenuHost.value?.contains(event.target as Node)) appMenuOpen.value = false;
 }
@@ -3550,13 +3552,21 @@ onBeforeUnmount(() => {
 							文件会保留在多标签工作区中，所有修改都可继续编辑或撤销。
 						</p>
 						<div class="harmony-home__actions">
-							<button
-								type="button"
-								class="is-primary"
-								@click="createDocument('docx')"
-							>
-								新建 Word 文档
-							</button>
+							<div class="harmony-home__create">
+								<button type="button" class="is-primary" :disabled="opening" @click="createDocument('docx')">
+									新建 Word 文档
+								</button>
+								<details ref="homeNewMenu" class="harmony-home__create-dropdown" @keydown.esc="homeNewMenu && (homeNewMenu.open = false)">
+									<summary aria-label="新建其他类型文档" :aria-disabled="opening">
+										<svg viewBox="0 0 12 12" aria-hidden="true"><path d="m2.5 4.25 3.5 3.5 3.5-3.5" /></svg>
+									</summary>
+									<div class="harmony-home__create-menu">
+										<button v-for="option in editableFormats.filter(item => item.format !== 'docx')" :key="option.format" type="button" :disabled="opening" @click="homeNewMenu && (homeNewMenu.open = false); createDocument(option.format)">
+											新建 {{ option.documentLabel }}
+										</button>
+									</div>
+								</details>
+							</div>
 							<label class="harmony-open is-secondary" :aria-disabled="opening">
 								<span>{{ opening ? "打开中…" : "打开任意支持文件" }}</span>
 								<input
@@ -3568,7 +3578,7 @@ onBeforeUnmount(() => {
 							</label>
 						</div>
 						<small class="harmony-home__hint">
-							支持 DOCX、PPTX、XLSX、VSDX、Markdown、PDF、JMP 与 draw.io 导入。
+							支持 DOCX、PPTX、XLSX、VSDX、Markdown、PDF 与 draw.io 导入。
 						</small>
 					</div>
 
