@@ -31,7 +31,7 @@ Options:
   --android-code N      default: derived from the version (1.4.6 -> 1004006)
   --notes FILE          default: releases/v<version>.md
   --work-dir DIR        default: ~/cubexp.com/releases/X.Y.Z/automation
-  --config FILE         trusted Bash config; see scripts/release/config.example.sh
+  --config FILE         default: ~/cubexp.com/release.conf if present
   --dry-run            show the plan; do not fetch, build, commit or publish
   --help
 
@@ -67,6 +67,7 @@ if [ "$COMMAND" = prepare ] || [ "$COMMAND" = all ]; then
   [ -f "$NOTES" ] && [ -s "$NOTES" ] || die 'Use --notes FILE with reviewed release notes'
 fi
 WORK="${WORK:-$HOME/cubexp.com/releases/$VERSION/automation}"
+[ -n "$CONFIG" ] || { [ ! -f "$HOME/cubexp.com/release.conf" ] || CONFIG="$HOME/cubexp.com/release.conf"; }
 # Dry-run deliberately does not execute a config file, which is arbitrary shell code.
 if [ "$DRY_RUN" = 1 ]; then
   printf 'Plan: %s CubeOffice %s (Android %s)\nWork: %s\nConfig: %s\n' "$COMMAND" "$VERSION" "${ANDROID_CODE:-from release.json}" "$WORK" "${CONFIG:-defaults}"
@@ -86,14 +87,15 @@ set +x
 : "${UPDATER_PUBLIC_KEY:=$HOME/.tauri/auroraprime-office.key.pub}"
 : "${WINDOWS_HOST:=ALS@192.168.64.2}"
 : "${WINDOWS_SSH_KEY:=$HOME/.ssh/utm_win_build}"
-: "${WINDOWS_VM:=Windows}"
+: "${WINDOWS_VM=Windows}"
 : "${WINDOWS_ROOT:=C:/src}"
 : "${WINDOWS_UPDATER_KEY:=C:/Users/ALS/auroraprime-office.key}"
 : "${WINDOWS_TARGET_CACHE:=}"
 : "${WINDOWS_MIN_FREE_GB:=4}"
-: "${WINDOWS_PROXY:=http://192.168.64.1:8898}"
+: "${WINDOWS_PROXY=http://192.168.64.1:8898}"
 : "${LINUX_DOCKER_CONTEXT:=colima-rosetta}"
 : "${LINUX_CONTAINER:=cubeoffice-linux-rosetta}"
+: "${LINUX_COLIMA_PROFILE:=}"
 : "${ANDROID_HOME:=/opt/homebrew/share/android-commandlinetools}"
 : "${ANDROID_BUILD_TOOLS:=35.0.0}"
 : "${ANDROID_KEYSTORE:=$HOME/.android/cubeoffice-signing/release.jks}"
@@ -136,14 +138,28 @@ prepare() {
     meta notes-check "$WORK" "$NOTES"
     log 'Reusing immutable prepared source'; return
   fi
-  [ ! -e "$SOURCE" ] || die "Incomplete preparation exists at $SOURCE; inspect it or choose another --work-dir"
-  meta check-new "$VERSION" "$ANDROID_CODE"
-  log 'Fetching latest distribution and upstream sources into an isolated worktree'
-  git -C "$REPO" fetch origin
-  git -C "$REPO" worktree add -b "codex/release-$VERSION" "$SOURCE" origin/main
-  git -C "$SOURCE" submodule update --init --recursive
-  git -C "$SOURCE/als-office" fetch origin
-  git -C "$SOURCE/als-office" switch --detach origin/master
+  if [ -e "$SOURCE" ]; then
+    [ -f "$WORK/preparation.json" ] || die "Unrecorded preparation exists at $SOURCE; inspect it before continuing"
+    local phase
+    phase="$(meta prepare-check "$WORK" "$VERSION" "$ANDROID_CODE" "$NOTES")"
+    if [ "$phase" = committed ]; then
+      meta snapshot "$WORK" "$VERSION" "$ANDROID_CODE"
+      log 'Recovered committed preparation'; return
+    fi
+    log 'Resuming recorded preparation'
+  else
+    meta check-new "$VERSION" "$ANDROID_CODE"
+    log 'Fetching latest distribution and upstream sources into an isolated worktree'
+    git -C "$REPO" fetch origin
+    git -C "$REPO" worktree add -b "codex/release-$VERSION" "$SOURCE" origin/main
+    meta prepare-init "$WORK" "$VERSION" "$ANDROID_CODE" "$NOTES"
+  fi
+  if [ "$(meta get "$WORK/preparation.json" upstream)" = None ]; then
+    git -C "$SOURCE" submodule update --init --recursive
+    git -C "$SOURCE/als-office" fetch origin
+    git -C "$SOURCE/als-office" switch --detach origin/master
+    meta prepare-pin "$WORK"
+  fi
   meta prepare "$SOURCE" "$VERSION" "$ANDROID_CODE" "$NOTES"
   (
     cd "$SOURCE"
@@ -196,6 +212,11 @@ preflight_build() {
   fi
   rustc --version; cargo --version
   if ! receipt_ok linux; then
+    if ! docker_run info >/dev/null 2>&1; then
+      [ -n "$LINUX_COLIMA_PROFILE" ] || die 'Linux Docker runtime unavailable; start it or set LINUX_COLIMA_PROFILE'
+      colima start "$LINUX_COLIMA_PROFILE"
+    fi
+    docker_run start "$LINUX_CONTAINER" >/dev/null || die 'Configure the maintained Linux container; see release README'
     docker_run exec "$LINUX_CONTAINER" bash -c 'command -v cargo; test -r "$OFFICE_UPDATER_SIGNING_PRIVATE_KEY"; test "${TAURI_SIGNING_PRIVATE_KEY_PASSWORD+x}" = x' >/dev/null || die 'Start/configure the maintained Linux container; see release README'
   fi
   if receipt_ok windows; then return; fi

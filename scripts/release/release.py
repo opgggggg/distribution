@@ -202,6 +202,41 @@ def validate_stage(stage, source, helpers):
     return s, inventory
 
 
+def preparation_check(work, v, code, notes):
+    state = read(work / 'preparation.json')
+    require(state['version'] == v and state['androidVersionCode'] == int(code), 'Preparation version changed')
+    require(state['notes'].split() == notes_text(notes).split(), 'Preparation notes changed')
+    src = work / 'source'
+    head = output('git', '-C', src, 'rev-parse', 'HEAD')
+    if state.get('upstream'):
+        require(output('git', '-C', src / 'als-office', 'rev-parse', 'HEAD') == state['upstream'], 'Preparation upstream changed')
+    if head != state['distribution']:
+        require(output('git', '-C', src, 'log', '-1', '--format=%s') == 'chore: prepare CubeOffice ' + v + ' four-platform release', 'Preparation source revision changed')
+        require(output('git', '-C', src, 'rev-parse', 'HEAD:als-office') == state['upstream'], 'Preparation recorded upstream changed')
+        run('git', '-C', src, 'diff', '--quiet', 'HEAD', '--ignore-submodules=untracked')
+        require(notes_text(notes_file(src, v)).split() == state['notes'].split(), 'Committed preparation notes changed')
+        return 'committed'
+    return 'pending'
+
+
+def copy_font_assets(src, dest):
+    """Ship verified locked assets so remote builders need no font-server access."""
+    root = src / 'als-office/packages/fonts'
+    target = dest / 'als-office/packages/fonts'
+    lock = read(root / 'sources.lock.json')
+    for entry in lock['files']:
+        relative = Path(entry['path'])
+        require(not relative.is_absolute() and '..' not in relative.parts and '\\' not in entry['path'], 'Unsafe font asset path')
+        path = root / relative
+        require(os.path.commonpath([str(path.resolve()), str(root.resolve())]) == str(root.resolve()), 'Font asset escapes package')
+        require(path.stat().st_size == entry['bytes'], 'Font asset size mismatch: ' + entry['path'])
+        expected = 'sha256-' + base64.b64encode(bytes.fromhex(digest(path))).decode()
+        require(expected == entry['integrity'], 'Font asset hash mismatch: ' + entry['path'])
+        output_path = target / relative
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, output_path)
+
+
 def windows(work, helper, mode):
     s = read(work / 'release.json')
     if mode == 'build' and receipt_check(work, 'windows'):
@@ -221,6 +256,7 @@ def windows(work, helper, mode):
         run(*ssh, 'powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + encoded)
     def q(x):
         return "'" + x.replace("'", "''") + "'"
+    ps("New-Item -ItemType Directory -Force " + q(root) + " | Out-Null")
     # Control files have release-specific names; never overwrite another release's scripts.
     script = remote + '.ps1'
     config = remote + '.json'
@@ -273,6 +309,16 @@ def main():
             t = re.sub(r'CubeOffice-\d+\.\d+\.\d+-Android-b\d+\.apk', f'CubeOffice-{v}-Android-b{code}.apk', t)
             p.write_text(t)
         notes_file(src, v).write_text('# CubeOffice ' + v + '\n\n' + notes_text(notes))
+    elif cmd == 'prepare-init':
+        work, v, code, notes = args; work = Path(work)
+        write(work / 'preparation.json', {'version': v, 'androidVersionCode': int(code),
+              'notes': notes_text(notes), 'distribution': output('git', '-C', work / 'source', 'rev-parse', 'HEAD'), 'upstream': None})
+    elif cmd == 'prepare-pin':
+        work = Path(args[0]); p = work / 'preparation.json'; state = read(p)
+        state['upstream'] = output('git', '-C', work / 'source/als-office', 'rev-parse', 'HEAD'); write(p, state)
+    elif cmd == 'prepare-check':
+        work, v, code, notes = args
+        print(preparation_check(Path(work), v, code, notes))
     elif cmd == 'cache-bust':
         src = Path(args[0]); h = digest(src / 'website/i18n.js')[:12]
         for f in ['index.html', 'templates.html', 'visio.html']:
@@ -289,6 +335,7 @@ def main():
                 p = subprocess.Popen(['git', '-C', str(repo), 'archive', 'HEAD'], stdout=subprocess.PIPE)
                 run('tar', '-x', '-C', target, stdin=p.stdout); p.stdout.close()
                 require(p.wait() == 0, 'git archive failed')
+            copy_font_assets(src, dest)
             write(dest / 'BUILD-IDENTITY.json', s)
             with tarfile.open(work / 'source.tar.gz', 'w:gz') as tar:
                 for p in sorted(dest.iterdir()):
@@ -301,6 +348,7 @@ def main():
         require(read(Path(args[0]) / 'release.json')['notes'].split() == notes_text(args[1]).split(), 'Notes differ from saved release')
     elif cmd == 'find-java':
         candidates = sorted((Path.home() / 'Library/Java/JavaVirtualMachines').glob('*/Contents/Home'), reverse=True)
+        candidates += [Path('/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home')]
         match = next((p for p in candidates if (p / 'bin/jlink').is_file() and (p / 'bin/javac').is_file()), None)
         require(match is not None, 'No complete JDK found'); print(match)
     elif cmd == 'rust-path':

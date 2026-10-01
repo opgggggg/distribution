@@ -37,5 +37,8 @@
 		"test:ofd": "npm test -w @cubexp/ofd",
 		"build:text": "npm run build -w @cubexp/text",
 		"test:text": "npm test -w @cubexp/text"
+	},
+	"devDependencies": {
+		"prettier": "3.6.2"
 	}
 }

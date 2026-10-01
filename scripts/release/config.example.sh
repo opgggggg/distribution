@@ -28,3 +28,6 @@ WINDOWS_TARGET_CACHE=''
 # linuxdeploy tools. The existing release machine already has this container.
 LINUX_DOCKER_CONTEXT=colima-rosetta
 LINUX_CONTAINER=cubeoffice-linux-rosetta
+
+# Optional: start this existing Colima profile when its Docker daemon is stopped.
+LINUX_COLIMA_PROFILE=rosetta

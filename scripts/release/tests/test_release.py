@@ -213,10 +213,6 @@ fs.writeFileSync(p+'/artifact.sig',Buffer.from(text).toString('base64'));
             self.assertNotEqual(subprocess.run(cmd, capture_output=True).returncode, 0)
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class ReleaseInput(unittest.TestCase):
     """A release is asked for by writing one notes file; nothing else names it."""
 
@@ -283,3 +279,84 @@ class ReleaseInput(unittest.TestCase):
         result = self.helper('input-notes', root, '1.4.6')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Chinese and English', result.stderr)
+
+class PreparationAndFonts(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def font_fixture(self):
+        src = self.root / 'source'
+        fonts = src / 'als-office/packages/fonts'
+        (fonts / 'fonts').mkdir(parents=True)
+        content = b'locked font bytes'
+        (fonts / 'fonts/sample.ttf').write_bytes(content)
+        entry = {'path': 'fonts/sample.ttf', 'bytes': len(content),
+                 'integrity': 'sha256-' + base64.b64encode(hashlib.sha256(content).digest()).decode()}
+        release.write(fonts / 'sources.lock.json', {'files': [entry]})
+        return src, fonts, entry
+
+    def test_locked_fonts_are_available_to_offline_builders(self):
+        src, _, _ = self.font_fixture()
+        dest = self.root / 'archive'
+        release.copy_font_assets(src, dest)
+        self.assertEqual((dest / 'als-office/packages/fonts/fonts/sample.ttf').read_bytes(), b'locked font bytes')
+
+    def test_corrupt_font_cannot_enter_source_archive(self):
+        src, fonts, _ = self.font_fixture()
+        (fonts / 'fonts/sample.ttf').write_bytes(b'wrong font bytes!')
+        with self.assertRaisesRegex(ValueError, 'mismatch'):
+            release.copy_font_assets(src, self.root / 'archive')
+
+    def test_font_traversal_is_rejected(self):
+        src, fonts, entry = self.font_fixture()
+        entry['path'] = '../outside.ttf'
+        release.write(fonts / 'sources.lock.json', {'files': [entry]})
+        with self.assertRaisesRegex(ValueError, 'Unsafe'):
+            release.copy_font_assets(src, self.root / 'archive')
+
+    def preparation(self):
+        notes = self.root / 'notes.md'
+        notes.write_text('# CubeOffice 9.1.0\n\n## 中文\n修复分页。\n\n## English\nFixed pagination.\n')
+        release.write(self.root / 'preparation.json', {'version': '9.1.0', 'androidVersionCode': 9001000,
+                      'distribution': 'a' * 40, 'upstream': 'b' * 40, 'notes': release.notes_text(notes)})
+        return notes
+
+    def test_retry_keeps_pinned_sources(self):
+        notes = self.preparation()
+        with patch.object(release, 'output', side_effect=['a' * 40, 'b' * 40]):
+            self.assertEqual(release.preparation_check(self.root, '9.1.0', '9001000', notes), 'pending')
+
+    def test_retry_rejects_changed_notes_or_upstream(self):
+        notes = self.preparation()
+        with patch.object(release, 'output', side_effect=['a' * 40, 'c' * 40]):
+            with self.assertRaisesRegex(ValueError, 'upstream changed'):
+                release.preparation_check(self.root, '9.1.0', '9001000', notes)
+        notes.write_text('中文 new notes')
+        with self.assertRaisesRegex(ValueError, 'notes changed'):
+            release.preparation_check(self.root, '9.1.0', '9001000', notes)
+
+    def test_commit_before_snapshot_is_recoverable(self):
+        notes = self.preparation()
+        p = release.notes_file(self.root / 'source', '9.1.0')
+        p.parent.mkdir(parents=True); p.write_text(notes.read_text())
+        with patch.object(release, 'output', side_effect=['c' * 40, 'b' * 40,
+             'chore: prepare CubeOffice 9.1.0 four-platform release', 'b' * 40]), patch.object(release, 'run'):
+            self.assertEqual(release.preparation_check(self.root, '9.1.0', '9001000', notes), 'committed')
+
+    def test_default_config_is_discovered_but_not_executed_in_dry_run(self):
+        home = self.root / 'home'; config = home / 'cubexp.com/release.conf'
+        config.parent.mkdir(parents=True)
+        marker = self.root / 'executed'
+        config.write_text('touch "' + str(marker) + '"\n')
+        notes = self.preparation()
+        result = subprocess.run(['bash', str(REPO / 'scripts/release-cubeoffice.sh'), '--dry-run',
+             '--version', '9.1.0', '--notes', str(notes)], env={**os.environ, 'HOME': str(home)},
+             check=True, text=True, capture_output=True)
+        self.assertIn(str(config), result.stdout)
+        self.assertFalse(marker.exists())
+
+
+if __name__ == '__main__':
+    unittest.main()

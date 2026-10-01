@@ -18,7 +18,20 @@ $disk = Get-PSDrive -Name $root.Substring(0,1)
 if ($disk.Free -lt ($c.minFreeGB * 1GB)) { throw "Windows build drive needs $($c.minFreeGB) GB free; available $([math]::Round($disk.Free/1GB,2)) GB. Only superseded attempts at this version were removed." }
 if (-not (Test-Path $c.key)) { throw 'Updater key is missing on Windows' }
 $vcvars = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat'
+if (-not (Test-Path $vcvars)) { $vcvars = 'C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat' }
+$vswhere = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+# A host may have a newer Visual Studio installed at a custom location.
+if (Test-Path $vswhere) {
+  $found = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'VC\Auxiliary\Build\vcvars64.bat'
+  if ($found) { $vcvars = @($found)[0] }
+}
 if (-not (Test-Path $vcvars)) { throw 'MSVC Build Tools vcvars64.bat is missing' }
+if (Test-Path 'C:\Strawberry\perl\bin') { $env:PATH = "C:\Strawberry\perl\bin;$env:PATH" }
+foreach ($tool in @('perl','cargo','rustc','node','npm.cmd','tar.exe')) {
+  if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { throw "Missing Windows build tool: $tool" }
+}
+& perl -e 'exit 0'
+if ($LASTEXITCODE -ne 0) { throw 'Perl cannot run; install Strawberry Perl for OpenSSL builds' }
 # Process-scoped proxy only; the existing host-only CONNECT proxy must be running.
 if ($c.proxy) { $env:npm_config_proxy=$c.proxy; $env:npm_config_https_proxy=$c.proxy }
 & npm.cmd ping --fetch-timeout=15000 --fetch-retries=0

@@ -1,6 +1,6 @@
 ---
 name: cubeoffice-release
-description: Build, sign, stage, and publish CubeOffice desktop binaries and updater metadata for macOS, Windows, and Linux to cubexp.com. Use for CubeOffice desktop releases, binary rebuilds, or update-feed publication; do not use for als-office releases or HarmonyOS/mobile packaging.
+description: Build, sign, stage, and publish CubeOffice desktop binaries and updater metadata for macOS, Windows, and Linux to cubexp.com. Use for CubeOffice desktop releases, binary rebuilds, or update-feed publication; includes Android in the standard four-platform release; do not use for als-office releases or HarmonyOS/iOS packaging.
 ---
 
 # CubeOffice Release
@@ -11,19 +11,36 @@ Read [references/release-process.md](references/release-process.md) before chang
 
 ## Scope and invariants
 
-- Release only macOS, Windows, and Linux desktop builds.
+- The standard script releases macOS, Windows, Linux, and Android together. Separate HarmonyOS/iOS packaging is outside this workflow.
 - Keep CubeOffice identity, version, website copy, and release metadata in the distribution repository. Do not put CubeOffice-only changes into the `als-office` submodule.
 - Treat `profiles/cubeoffice/desktop/catalog.mjs` → `tauriConfig.version` as the desktop version source of truth. The root `package.json` and `profiles/cubeoffice/app.json` are not desktop release version sources.
 - Build all platforms from the same committed repository SHA and the same recorded submodule SHA.
 - Build each target on a native host unless a maintained, already-configured runner is available. Do not claim a platform is released from an untested cross-build.
-- A complete release requires four user downloads, three updater artifacts, three non-empty `.sig` files, `SHA256SUMS.txt`, and `updates/latest.json`.
+- A complete standard release requires four desktop downloads and a signed Android APK, three desktop updater artifacts and non-empty `.sig` files, `SHA256SUMS.txt`, and both desktop/Android feeds.
 - Never expose, print, commit, or upload the updater private key or its password. Signatures and the updater public key are safe release data.
 - Write public release notes for end users: emphasize visible features, improvements, and fixes in plain language, and omit implementation details. Keep build identities, hashes, signing status, and other technical evidence in the internal release report instead.
 - Do not overwrite an existing version on the server unless the user explicitly requests replacement. Prefer issuing a new version.
 - Publish versioned files before atomically replacing `updates/latest.json`; the feed must never point at missing files.
 - Never type or manually copy a feed checksum. Generate SHA-256 from the exact final artifact, assert it is exactly 64 lowercase hexadecimal characters, and validate the complete feed locally and again after fetching it from the live server before declaring the release complete.
 
-## Release workflow
+## Default: notes file then release script
+
+For an authorized full release, determine the new version from the user's request and the live feeds, verify changes since the previous release, and write `releases/v<version>.md` with Chinese and English sections. The filename is the version input; Android versionCode is derived automatically. Do not ask again when the user already supplied the version or authorized its selection.
+
+Read [the script guide](../../../scripts/release/README.md) and run from the repository root:
+
+```bash
+bash scripts/release-cubeoffice.sh --dry-run
+bash scripts/release-cubeoffice.sh
+```
+
+The default command loads `~/cubexp.com/release.conf` if present, prepares latest sources in an isolated worktree, commits an immutable build revision, builds/signs all four platforms, stages, publishes, and verifies. Required keys and native build environments must be configured once; the script does not manufacture credentials or install host tools. After failure, fix the stated environment problem and rerun the same command/work directory. Do not bypass checks with ad-hoc remote scripts or replace immutable source state.
+
+Keep publishing fixes committed in the distribution repository before the next release: preparation starts from `origin/main`, so uncommitted implementation changes are excluded. Only the requested notes file is copied from the caller. A published release's local branch still needs a separate authorized merge/push if repository publication is requested.
+
+The detailed desktop procedure below is for diagnosing script failures or an explicitly requested desktop-only operation.
+
+## Desktop diagnostic workflow
 
 1. Inspect the repository, current desktop version, submodule revision, branch, dirty files, and existing server version. Preserve unrelated user changes.
 2. Before changing the version or starting any build, fetch the distribution repository and the `als-office` submodule. Ensure the release branch includes the latest distribution default branch (currently `origin/main`) and update the submodule to its latest `origin/master`, unless the user explicitly requests another revision. Do not use an unconstrained plain `git pull`, and stop for manual resolution if synchronization conflicts with user changes.
