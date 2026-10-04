@@ -59,6 +59,17 @@ CREATE TABLE IF NOT EXISTS daily_activity (
   checks INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (day, client_id)
 );
+CREATE TABLE IF NOT EXISTS usage_activity (
+  day TEXT NOT NULL,
+  client_id TEXT NOT NULL,
+  first_seen TEXT NOT NULL,
+  last_seen TEXT NOT NULL,
+  PRIMARY KEY (day, client_id)
+);
+CREATE TABLE IF NOT EXISTS telemetry_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS update_checks (
   id BIGSERIAL PRIMARY KEY,
   client_id TEXT NOT NULL,
@@ -186,6 +197,8 @@ def migrate():
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     with database() as connection:
         connection.execute(SCHEMA)
+        connection.execute("SELECT pg_advisory_xact_lock(hashtext('cubeoffice-usage-migration'))")
+        connection.execute("INSERT INTO telemetry_settings (key, value) SELECT 'usage_started', ? WHERE NOT EXISTS (SELECT 1 FROM telemetry_settings WHERE key = 'usage_started')", (utc_day(),))
         for table, additions in ADDED_COLUMNS.items():
             columns = {row[0] for row in connection.execute(
                 "SELECT column_name FROM information_schema.columns "
@@ -219,7 +232,7 @@ def platform_distribution(connection, day_30):
         """SELECT c.platform, COUNT(*) AS clients,
                   COUNT(a.client_id) AS active_30d
            FROM clients c
-           LEFT JOIN (SELECT DISTINCT client_id FROM daily_activity WHERE day >= ?) a
+           LEFT JOIN (SELECT DISTINCT client_id FROM usage_activity WHERE day >= ?) a
              ON a.client_id = c.client_id
            GROUP BY c.platform""", (day_30,)
     ).fetchall()
@@ -268,7 +281,7 @@ def system_version_distribution(connection, day_30, limit=12):
         """SELECT c.os_version, COUNT(*) AS clients,
                   COUNT(a.client_id) AS active_30d
            FROM clients c
-           LEFT JOIN (SELECT DISTINCT client_id FROM daily_activity WHERE day >= ?) a
+           LEFT JOIN (SELECT DISTINCT client_id FROM usage_activity WHERE day >= ?) a
              ON a.client_id = c.client_id
            WHERE c.os_version IS NOT NULL AND c.os_version <> ''
            GROUP BY c.os_version""", (day_30,)
@@ -407,6 +420,9 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == "/api/v1/admin/feedback/status":
                 self.require_admin()
                 return self.admin_feedback_status()
+            if parsed.path == "/api/v1/activity":
+                self.rate_limit("activity", 90, 60)
+                return self.record_activity()
             if parsed.path == "/api/v1/update-checks":
                 self.rate_limit("update", 90, 60)
                 return self.record_update_check()
@@ -454,6 +470,24 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(payload, dict):
             raise ApiError(400, "invalid_json", "A JSON object is required.")
         return payload
+
+    def record_activity(self):
+        payload = self.read_json()
+        now = utc_now()
+        day = now[:10]
+        with database() as connection:
+            client_id, _version, _platform, _arch, _locale = touch_client(connection, payload, now)
+            connection.execute(
+                """INSERT INTO usage_activity (day, client_id, first_seen, last_seen)
+                   SELECT ?, ?, ?, ? WHERE NOT EXISTS (
+                     SELECT 1 FROM usage_activity WHERE day = ? AND client_id = ?
+                   )""",
+                (day, client_id, now, now, day, client_id),
+            )
+            # touch_client holds the per-installation transaction lock, so concurrent
+            # reports cannot insert the same (day, client_id) twice, including on PG 9.4.
+            connection.execute("UPDATE usage_activity SET last_seen = ? WHERE day = ? AND client_id = ?", (now, day, client_id))
+        self.write_json(202, {"ok": True, "recorded_day": day}, public=True)
 
     def record_update_check(self):
         payload = self.read_json()
@@ -661,13 +695,13 @@ class Handler(BaseHTTPRequestHandler):
         with database() as connection:
             totals = {
                 "dau_today": connection.execute(
-                    "SELECT COUNT(*) FROM daily_activity WHERE day = ?", (today.isoformat(),)
+                    "SELECT COUNT(*) FROM usage_activity WHERE day = ?", (today.isoformat(),)
                 ).fetchone()[0],
                 "active_7d": connection.execute(
-                    "SELECT COUNT(DISTINCT client_id) FROM daily_activity WHERE day >= ?", (day_7,)
+                    "SELECT COUNT(DISTINCT client_id) FROM usage_activity WHERE day >= ?", (day_7,)
                 ).fetchone()[0],
                 "active_30d": connection.execute(
-                    "SELECT COUNT(DISTINCT client_id) FROM daily_activity WHERE day >= ?", (day_30,)
+                    "SELECT COUNT(DISTINCT client_id) FROM usage_activity WHERE day >= ?", (day_30,)
                 ).fetchone()[0],
                 "clients": connection.execute("SELECT COUNT(*) FROM clients").fetchone()[0],
                 "feedback_new": connection.execute(
@@ -679,9 +713,13 @@ class Handler(BaseHTTPRequestHandler):
                 ).fetchone()[0],
             }
             rows = connection.execute(
-                "SELECT day, COUNT(*) AS active FROM daily_activity WHERE day >= ? GROUP BY day ORDER BY day",
+                "SELECT day, COUNT(*) AS active FROM usage_activity WHERE day >= ? GROUP BY day ORDER BY day",
                 (day_30,),
             ).fetchall()
+            update_rows = connection.execute(
+                "SELECT day, COUNT(*) AS active FROM daily_activity WHERE day >= ? GROUP BY day ORDER BY day", (day_30,)
+            ).fetchall()
+            usage_started = connection.execute("SELECT value FROM telemetry_settings WHERE key = 'usage_started'").fetchone()[0]
             platforms = platform_distribution(connection, day_30)
             systems = system_version_distribution(connection, day_30)
             versions = connection.execute(
@@ -692,6 +730,9 @@ class Handler(BaseHTTPRequestHandler):
             {
                 "totals": totals,
                 "daily": [dict(row) for row in rows],
+                "update_daily": [dict(row) for row in update_rows],
+                "usage_started": usage_started,
+                "today": today.isoformat(),
                 "versions": [dict(row) for row in versions],
                 "platforms": platforms,
                 "systems": systems,

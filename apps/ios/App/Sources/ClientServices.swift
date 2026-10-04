@@ -29,6 +29,22 @@ final class ClientServices: NSObject {
 	private let clientId = ClientServices.persistentClientId()
 	private let defaults = UserDefaults.standard
 
+    private var activityPending = false
+
+    func reportActivity() {
+        let formatter = ISO8601DateFormatter()
+        let day = String(formatter.string(from: Date()).prefix(10))
+        guard !activityPending, defaults.string(forKey: "cubeoffice-services.activityDay") != day else { return }
+        activityPending = true
+        post("activity", identity) { [weak self] result in
+            guard let self else { return }
+            self.activityPending = false
+            if case .success(let data) = result, let recordedDay = data["recorded_day"] as? String {
+                self.defaults.set(recordedDay, forKey: "cubeoffice-services.activityDay")
+            }
+        }
+    }
+
 	// MARK: - Identity
 
 	/// Excluded from backup, mirroring Android's no-backup directory: a restored or

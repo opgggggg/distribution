@@ -8,6 +8,8 @@ import { pasteboard } from '@kit.BasicServicesKit';
 import deviceInfo from '@ohos.deviceInfo';
 import { i18n } from '@kit.LocalizationKit';
 
+interface ActivityResponse { recorded_day: string; }
+
 interface FeedbackInput {
   category: string;
   message: string;
@@ -60,6 +62,23 @@ export class HarmonyClientServices {
     if (deviceType === 'phone' || deviceType === 'tablet' || deviceType === '2in1')
       return 'harmonyos-' + deviceType;
     return 'harmonyos';
+  }
+
+  private activityPending: boolean = false;
+
+  reportActivity(): void {
+    const day = new Date().toISOString().slice(0, 10);
+    if (!this.context || this.activityPending || this.store?.getSync('activityDay', '') === day) return;
+    this.activityPending = true;
+    this.post('activity', JSON.stringify({ client_id: this.clientId, version: this.version,
+      platform: this.platform, os_version: this.osVersion, arch: this.arch, locale: this.locale
+    })).then((raw: string) => {
+      const response = JSON.parse(raw) as ActivityResponse;
+      if (response.recorded_day) {
+        this.store?.putSync('activityDay', response.recorded_day);
+        this.store?.flush().catch(() => {});
+      }
+    }).catch(() => {}).finally(() => { this.activityPending = false; });
   }
 
   getInfo(): string {

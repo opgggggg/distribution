@@ -10,8 +10,8 @@
 		<title>CubeOffice Admin</title>
 		<link rel="icon" href="/assets/cubeoffice-mark.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="/admin/controls.css?v=ec57b504de42" />
-		<link rel="stylesheet" href="/admin/styles.css?v=4dfb6c9ce043" />
-		<script type="module" src="/admin/app.js?v=8e8970c8b9c8" defer></script>
+		<link rel="stylesheet" href="/admin/styles.css?v=db27f8b914b5" />
+		<script type="module" src="/admin/app.js?v=c1269605386a" defer></script>
 	</head>
 	<body>
 		<header class="admin-header">
@@ -46,7 +46,7 @@
 					<div>
 						<p class="eyebrow">PRODUCT HEALTH</p>
 						<h1>运行概览</h1>
-						<p>所有活跃数据均以匿名安装 ID 去重，不保存原始 IP。</p>
+						<p>活跃安装按客户端前台事件和匿名安装 ID 去重，不保存原始 IP。</p>
 					</div>
 					<time data-updated></time>
 				</div>
@@ -58,7 +58,7 @@
 						<header>
 							<div>
 								<p class="eyebrow">LAST 30 DAYS</p>
-								<h2>每日活跃</h2>
+								<h2>每日前台活跃（新版客户端）</h2>
 							</div>
 						</header>
 						<div
@@ -66,6 +66,18 @@
 							data-chart
 							aria-label="最近 30 天每日活跃趋势"
 						></div>
+						<p class="chart-help" data-usage-help>
+							新统计尚未采集，历史更新检查不计入前台活跃。
+						</p>
+						<h3 class="chart-subtitle">每日更新检查安装数（历史口径）</h3>
+						<div
+							class="activity-chart"
+							data-update-chart
+							aria-label="最近 30 天更新检查安装数"
+						></div>
+						<p class="chart-help">
+							仅统计更新检查，不代表实际使用人数；无上报日期显示 0。
+						</p>
 					</section>
 					<section class="panel versions-panel">
 						<header>
@@ -96,7 +108,7 @@
 					<p class="platform-help">
 						按匿名安装 ID 去重，归入客户端最近上报的平台。Android、iOS 和 HarmonyOS
 						按设备形态分为手机、平板和电脑；未上报设备形态的旧版本计入对应的“（未区分）”一行。近
-						30 天活跃来自更新检查记录；尚未上报的安装不计入。
+						30 天活跃来自新版客户端前台事件；旧版或尚未上报的安装不计入。
 					</p>
 				</section>
 
@@ -110,7 +122,7 @@
 					<div data-systems></div>
 					<p class="platform-help">
 						按匿名安装 ID 去重，只保留主版本号（iOS 18.2 计入 iOS
-						18）。桌面版仅在提交反馈或上报错误时记录；尚未上报系统版本的客户端不在此列。
+						18）。仅统计已上报系统版本的安装；未上报的客户端不在此列。
 					</p>
 				</section>
 

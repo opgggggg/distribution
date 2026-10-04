@@ -1,3 +1,4 @@
+import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { emitter } from '@kit.BasicServicesKit';
@@ -18,8 +19,25 @@ export default class EntryAbility extends UIAbility {
   private static readonly DOCUMENT_QUEUE_KEY: string = 'harmonyDocumentIntents';
   private static readonly DOCUMENT_EVENT: string = 'aurora-native-document';
   private sequence: number = 0;
+  private activityServices: HarmonyClientServices = new HarmonyClientServices();
+  private activityTimer: number = -1;
+
+  onForeground(): void {
+    this.activityServices.reportActivity();
+    if (this.activityTimer !== -1) clearInterval(this.activityTimer);
+    this.activityTimer = setInterval(() => { this.activityServices.reportActivity(); }, 300000);
+  }
+
+  onBackground(): void {
+    if (this.activityTimer !== -1) clearInterval(this.activityTimer);
+    this.activityTimer = -1;
+  }
+
+  onDestroy(): void { this.onBackground(); }
 
   onCreate(want: Want, _launchParam: AbilityConstant.LaunchParam): void {
+    try { this.activityServices.initialize(this.context); }
+    catch (_) { console.warn('Activity reporting unavailable'); }
     this.captureDocuments(want, false);
   }
 

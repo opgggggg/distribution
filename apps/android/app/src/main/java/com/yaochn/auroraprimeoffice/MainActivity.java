@@ -119,6 +119,30 @@ public final class MainActivity extends Activity {
   private boolean presentationImmersive;
   private OnBackInvokedCallback backCallback;
 
+  private final android.os.Handler activityHandler =
+      new android.os.Handler(android.os.Looper.getMainLooper());
+  private final Runnable activityTick =
+      new Runnable() {
+        @Override
+        public void run() {
+          if (cubeOfficeServices != null) cubeOfficeServices.reportActivity();
+          activityHandler.postDelayed(this, 5 * 60 * 1000);
+        }
+      };
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    activityHandler.removeCallbacks(activityTick);
+    activityHandler.post(activityTick);
+  }
+
+  @Override
+  protected void onPause() {
+    activityHandler.removeCallbacks(activityTick);
+    super.onPause();
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);

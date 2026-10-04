@@ -55,3 +55,24 @@ Targeted checks: `python3 services/cubeoffice-api/tests/test_feedback.py`.
 Deployment backup: `/var/backups/cubeoffice-feedback-20260909/` (private).
 Rollback restores the backed-up server/admin assets and restarts `cubeoffice-api`;
 the additive database columns can remain in place, preserving saved replies.
+
+## Foreground activity (2026-10-04)
+
+POST `/api/v1/activity` accepts the existing anonymous client identity fields.
+It records a foreground event in `usage_activity`, deduplicated under a per-installation PostgreSQL transaction lock by
+UTC day and installation ID. Update checks continue to populate the separate
+legacy `daily_activity` table; they never count as foreground DAU.
+Overview totals and platform/system active counts now use `usage_activity`.
+`daily` is foreground activity; `update_daily` preserves the old update-check
+history. `usage_started` is persisted once at migration; earlier days must be
+shown as uncollected. No historical events are backfilled.
+
+Android, iOS, HarmonyOS and configured desktop profiles report on becoming
+foreground, then every five minutes while foreground, skipping a UTC day only
+after a successful server receipt. Failures retry later without blocking editing.
+Desktop uses its existing anonymous installation ID and a compiled HTTPS
+activity endpoint; other desktop profiles do not opt in. Existing released
+clients require a new binary before they contribute to foreground activity.
+
+Validation: `python3 services/cubeoffice-api/tests/test_activity.py`, plus
+platform, system-version and feedback regression tests.

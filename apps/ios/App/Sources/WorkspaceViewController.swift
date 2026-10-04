@@ -26,6 +26,8 @@ final class WorkspaceViewController: UIViewController {
 		AssistantCommandCenter.register(self)
 	}
 
+	func reportActivity() { services.reportActivity() }
+
 	// MARK: - Web view
 
 	private func buildWebView() {

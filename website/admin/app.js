@@ -1,3 +1,4 @@
+import { renderActivityChart } from "./activity-chart.js?v=d34a5e2915a7";
 import { createFontLibrary } from "./fonts.js?v=fb8a44e63948";
 import "./controls.js?v=022a6ee0e230";
 const login = document.querySelector("[data-login]");
@@ -126,26 +127,24 @@ function renderOverview(payload) {
 	renderPlatforms();
 	const total = payload.totals || {};
 	metrics.replaceChildren(
-		metricCard("今日活跃 DAU", total.dau_today || 0),
-		metricCard("近 7 天活跃", total.active_7d || 0),
-		metricCard("近 30 天活跃", total.active_30d || 0),
+		metricCard("今日前台活跃（新版）", total.dau_today || 0),
+		metricCard("近 7 天前台活跃", total.active_7d || 0),
+		metricCard("近 30 天前台活跃", total.active_30d || 0),
 		metricCard("累计匿名客户端", total.clients || 0),
 		metricCard("待处理反馈", total.feedback_new || 0),
 		metricCard("24h 错误", total.errors_24h || 0),
 	);
 
-	const daily = payload.daily || [];
-	const max = Math.max(1, ...daily.map((item) => Number(item.active) || 0));
-	chart.replaceChildren(
-		...daily.map((item) => {
-			const day = element("span", "chart-day");
-			day.title = `${item.day}: ${item.active}`;
-			const level = Math.max(1, Math.ceil(((Number(item.active) || 0) / max) * 20));
-			const bar = element("i", `level-${level}`);
-			day.append(bar);
-			return day;
-		}),
+	renderActivityChart(chart, payload.daily || [], payload.today, payload.usage_started);
+	renderActivityChart(
+		document.querySelector("[data-update-chart]"),
+		payload.update_daily || [],
+		payload.today,
+		undefined,
+		"更新检查安装数",
 	);
+	document.querySelector("[data-usage-help]").textContent =
+		`新活跃统计自 ${payload.usage_started || "上线后"} 起采集；此前日期为未采集。仅覆盖接入前台上报的新版客户端，旧版使用不会计入。按 UTC 日期、匿名安装 ID 去重；今日尚未结束。`;
 
 	const versionList = element("div", "version-list");
 	for (const item of payload.versions || []) {

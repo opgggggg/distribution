@@ -116,6 +116,7 @@ const cubeOfficeProfile = {
 	},
 	clientServices: {
 		backend: "rest",
+		activityEndpoint: "https://cubexp.com/api/v1/activity",
 		feedbackEndpoint: "https://cubexp.com/api/v1/feedback",
 		logEndpoint: "https://cubexp.com/api/v1/logs",
 		clientIdStorageKey: "cubeoffice.client-id",

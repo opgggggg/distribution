@@ -46,6 +46,25 @@ public final class CubeOfficeServices {
     }
   }
 
+  // Independent of update preferences; failed reports retry on the next foreground tick.
+  public void reportActivity() {
+    String day = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString();
+    if (day.equals(preferences.getString("activityDay", "")) || !pending.add("activity")) return;
+    executor.execute(
+        () -> {
+          try {
+            JSONObject response = http("https://cubexp.com/api/v1/activity", identity());
+            String recordedDay = response.optString("recorded_day");
+            if (!recordedDay.isEmpty())
+              preferences.edit().putString("activityDay", recordedDay).apply();
+          } catch (Exception ignored) {
+            // Telemetry must never block document editing.
+          } finally {
+            pending.remove("activity");
+          }
+        });
+  }
+
   /**
    * Phones, tablets and desktop-mode devices install the same package, so the reported platform
    * carries the device type; otherwise they cannot be told apart in the statistics. 600dp is the

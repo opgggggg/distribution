@@ -12,9 +12,9 @@ exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), 'exec'),
 class SystemVersionDistributionTest(unittest.TestCase):
     def distribution(self, clients, activity=(), **kwargs):
         db = sqlite3.connect(':memory:'); db.row_factory = sqlite3.Row
-        db.executescript('CREATE TABLE clients(client_id TEXT PRIMARY KEY, os_version TEXT); CREATE TABLE daily_activity(client_id TEXT, day TEXT);')
+        db.executescript('CREATE TABLE clients(client_id TEXT PRIMARY KEY, os_version TEXT); CREATE TABLE usage_activity(client_id TEXT, day TEXT);')
         db.executemany('INSERT INTO clients VALUES (?, ?)', clients)
-        db.executemany('INSERT INTO daily_activity VALUES (?, ?)', activity)
+        db.executemany('INSERT INTO usage_activity VALUES (?, ?)', activity)
         return namespace['system_version_distribution'](db, '2026-08-08', **kwargs)
 
     def test_folds_minor_versions_and_ranks_by_installations(self):
