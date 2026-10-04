@@ -52,7 +52,7 @@ AI 根据线上版本和已核实的代码变化确定新版本（用户已指�
 
 ## 源码与续跑
 
-- `prepare` 拉取 distribution 的 `origin/main`，创建独立的 `codex/release-<version>` 工作树，再拉取并记录 als-office 的最新 `origin/master`。当前工作区的未提交修改保留在原处，不会混入发布。
+- `prepare` 拉取 distribution 的 `origin/main`，创建独立的 `codex/release-<version>` 工作树，再拉取 als-office 的 `origin/master`。若 distribution 固定的上游提交领先于 master，则保留它；若落后，则更新到 master；若分叉，则停止并要求先解决集成。当前工作区的未提交修改保留在原处，不会混入发布。
 - 工作树建自 `origin/main`，因此还没提交的 `releases/v<version>.md` 不在其中；`prepare` 会把它复制进工作树并随发布提交一起提交，所以「写文件」这一个动作就足以发起发布。
 - 更新桌面和 Android 版本、网站中英文文案、下载地址及翻译资源缓存标识；同步锁文件、检查配置后创建本地构建提交。脚本不 push、不合并分支。
 - 四个平台消费同一个提交和子模块提交。字体只在编排主机下载，按上游锁文件逐项校验后随源码包发送；Windows/Linux 不必连接字体服务器。远程构建使用 `git archive` 导出的源码包，并核对完整源码包 SHA-256。

@@ -157,7 +157,17 @@ prepare() {
   if [ "$(meta get "$WORK/preparation.json" upstream)" = None ]; then
     git -C "$SOURCE" submodule update --init --recursive
     git -C "$SOURCE/als-office" fetch origin
-    git -C "$SOURCE/als-office" switch --detach origin/master
+    # A distribution may intentionally pin a newer upstream commit that has
+    # not reached master yet. Never discard that tested integration silently.
+    local pinned_upstream
+    pinned_upstream="$(git -C "$SOURCE" rev-parse HEAD:als-office)"
+    if git -C "$SOURCE/als-office" merge-base --is-ancestor origin/master "$pinned_upstream"; then
+      git -C "$SOURCE/als-office" switch --detach "$pinned_upstream"
+    elif git -C "$SOURCE/als-office" merge-base --is-ancestor "$pinned_upstream" origin/master; then
+      git -C "$SOURCE/als-office" switch --detach origin/master
+    else
+      die 'Pinned upstream and origin/master have diverged; resolve the integration before release'
+    fi
     meta prepare-pin "$WORK"
   fi
   meta prepare "$SOURCE" "$VERSION" "$ANDROID_CODE" "$NOTES"
