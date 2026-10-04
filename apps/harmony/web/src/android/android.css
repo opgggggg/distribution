@@ -1131,3 +1131,14 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	background: transparent;
 	color: inherit;
 }
+
+.android-file-entry {
+	display: flex;
+	align-items: center;
+	border-bottom: 1px solid var(--android-outline);
+}
+.android-file-entry > .android-file-row {
+	flex: 1;
+	min-width: 0;
+	border-bottom: 0;
+}

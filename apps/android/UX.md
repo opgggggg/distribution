@@ -19,7 +19,7 @@ screen keep touch controls. HarmonyOS retains its own home and chrome.
   keyboard. Sheets share the DOCX Insert surface and a right-aligned close button; advanced commands use the
   format engine's mobile ribbon. Redo lives in the document menu.
 - **Saving:** the status distinguishes a local draft from an exported file.
-  Save a copy opens the system destination picker. Closing first saves a draft;
+  Save a copy asks for a filename (preserving the format extension), then opens the system destination picker. The document menu and each Files row can rename the local document; the next exported copy uses that name. Untouched new documents also get a local record, and returning to Files clears old search/type filters. Closing first saves a draft;
   a failed or out-of-date save keeps the document open. Back from Home cannot
   close the Activity while an open editor still has unpersisted changes.
 - **Back:** dismiss the active sheet first, then presentation/search/tool layers,
@@ -128,3 +128,12 @@ Validation: the browser regression script passed for all five editors at 375×81
 XLS importer/converter regression passed. Vue type checking and Android API 35
 `assembleDebug` passed. Native picker association/Back/IME behavior still needs an
 Android device check.
+
+## File naming and recent-file validation (2026-10-04)
+
+`apps/android/tests/file-names.cjs` checks save-name cancellation and validation,
+Markdown export, active-document and closed-draft renaming, content recovery, and
+untouched Word/XLSX/PPTX/VSDX persistence after closing and reloading. Run with
+`ANDROID_PREVIEW_URL` and `PLAYWRIGHT_MODULE_PATH` when using a bundled runtime.
+The save path uses the editor's native export format (Markdown requires `md`).
+Native Android document-provider naming and picker behavior still need a device check.
