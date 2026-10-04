@@ -38,6 +38,7 @@ export type OfdConverter = (
 export const OfdViewer = defineComponent({
 	name: "OfdViewer",
 	props: {
+		editorTheme: { type: String as PropType<"classic" | "panel">, default: "classic" },
 		source: {
 			type: [Blob, ArrayBuffer, Uint8Array, String] as PropType<ArtifactSource>,
 			required: true,
@@ -462,6 +463,7 @@ export const OfdViewer = defineComponent({
 				"section",
 				{
 					class: "als-ofs-ofd",
+					"data-editor-theme": props.editorTheme,
 					style: {
 						display: "flex",
 						flexDirection: "column",
@@ -485,9 +487,9 @@ export const OfdViewer = defineComponent({
 									? "none"
 									: "flex",
 								flexWrap: "wrap",
-								gap: "8px",
+								gap: props.editorTheme === "panel" ? "4px" : "8px",
 								alignItems: "center",
-								padding: "10px",
+								padding: props.editorTheme === "panel" ? "6px 8px" : "10px",
 								background: "#f8fafc",
 								borderBottom: "1px solid #cbd5e1",
 							},

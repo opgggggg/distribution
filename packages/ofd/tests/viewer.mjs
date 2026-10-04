@@ -43,13 +43,37 @@ function mountViewer(source, extra = {}) {
 	const app = renderer.createApp({
 		setup: () => () => h(OfdViewer, { source: active.value, ref: viewer, ...extra }),
 	});
-	app.mount(node("root"));
-	return { app, active, viewer };
+	const root = node("root");
+	app.mount(root);
+	return { app, active, viewer, root };
 }
 const tick = async () => {
 	await new Promise((resolve) => setImmediate(resolve));
 	await nextTick();
 };
+
+test("theme changes preserve the loaded OFD document and viewer instance", async (t) => {
+	const theme = ref("classic");
+	const mounted = mountViewer(new Blob([ofd()]), {
+		get editorTheme() {
+			return theme.value;
+		},
+	});
+	t.after(() => mounted.app.unmount());
+	await tick();
+	const viewer = mounted.viewer.value;
+	const document = viewer.getDocument();
+	assert.ok(document);
+	theme.value = "panel";
+	await tick();
+	assert.equal(mounted.root.children[0].props["data-editor-theme"], "panel");
+	assert.equal(mounted.viewer.value, viewer);
+	assert.equal(viewer.getDocument(), document);
+	theme.value = "classic";
+	await tick();
+	assert.equal(mounted.root.children[0].props["data-editor-theme"], "classic");
+	assert.equal(viewer.getDocument(), document);
+});
 
 test("viewer drops stale loads, aborts prior fetches and uses custom export backend", async (t) => {
 	let release;

@@ -61,6 +61,8 @@
 		"highlight.js": "^11.11.1"
 	},
 	"peerDependencies": {
+		"@yaochn/als-office-editor-core": "^0.72.0",
+		"@yaochn/als-office-editor-ui": "^0.72.0",
 		"vue": "^3.5.0"
 	},
 	"peerDependenciesMeta": {

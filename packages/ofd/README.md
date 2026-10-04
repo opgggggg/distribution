@@ -140,6 +140,12 @@ parsing and the Vue viewer do not import libxml2.
 - `./vue`: `OfdViewer` (optional Vue 3 peer).
 - `./office`, `./office-node`, `./office-vue`: optional Office host adapters.
 
+The `./office-vue` adapter follows the shared Office theme:
+`setUiEditorTheme("panel")` from `@yaochn/als-office-editor-ui/vue` updates mounted
+viewers without reloading the document. The desktop signature dock follows the
+same theme. Standalone `OfdViewer` consumers can pass `editorTheme="panel"`
+without installing the Office UI adapter.
+
 Plain APIs and the standalone viewer do not require the Office packages. Node
 conversion uses optional `@napi-rs/canvas`, `@resvg/resvg-js` and `pdfjs-dist`.
 Native SVG rendering runs in a cancellable child process. PDF import requires

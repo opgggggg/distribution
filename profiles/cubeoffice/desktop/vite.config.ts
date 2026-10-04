@@ -1,5 +1,6 @@
 import { cubeOfficeLargeTextPlugin } from "./large-text-plugin.mjs";
 import { cubeOfficeBrandingPlugin } from "./branding-plugin.mjs";
+import { cubeOfficeEditorThemePlugin } from "./editor-theme-plugin.mjs";
 import { defineConfig, mergeConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import upstreamConfig from "../../../als-office/apps/desktop/vite.config";
@@ -12,6 +13,7 @@ export default defineConfig(async (environment) =>
 	mergeConfig(await upstreamConfig(environment), {
 		plugins: [
 			cubeOfficeBrandingPlugin(),
+			cubeOfficeEditorThemePlugin(),
 			cubeOfficeLargeTextPlugin(),
 			cubeOfficeTextContributionPlugin(),
 		],

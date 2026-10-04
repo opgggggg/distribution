@@ -56,6 +56,9 @@ Markdown、CSV 等现有原生格式保留原来的查看器。文本可编辑�
 系统文件关联随新构建的应用安装生效，不会自动更改系统默认应用。
 
 `./office` 提供 `TEXT_ARTIFACT_PLUGIN`；`./office-vue` 提供 Vue 注册项。
+
+Office 注册项使用共享 `UiEditorShell`，响应
+`@yaochn/als-office-editor-ui/vue` 的 `setUiEditorTheme("panel")`；无需单独设置文本包主题。
 这两个入口使用可选的 Office core/UI peer dependencies，字符串遵循 Office 的 URL 语义。
 `./formats` 可单独读取格式清单，不加载 Vue 或 highlight.js。
 `tests/HelloCubeOffice.java` 是可在桌面应用中打开的高亮示例。

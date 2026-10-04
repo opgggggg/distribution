@@ -12,6 +12,8 @@ import {
 	type OfdActionHost,
 } from "@cubexp/ofd";
 import { useUiEditorI18n } from "@yaochn/als-office-editor-ui/vue/i18n";
+import { UiEditorDock, useUiEditorTheme } from "@yaochn/als-office-editor-ui/vue";
+const editorTheme = useUiEditorTheme();
 import * as native from "./bridge";
 import { acquireSession, type SessionLease } from "./session-lease";
 import type { NativeSession, NativeCapabilities, VerificationReport, PrintStatus } from "./types";
@@ -479,7 +481,7 @@ defineExpose({
 });
 </script>
 <template>
-	<section ref="element" class="cube-ofd-host">
+	<section ref="element" class="cube-ofd-host" :data-editor-theme="editorTheme">
 		<div
 			class="cube-ofd-toolbar"
 			role="toolbar"
@@ -554,6 +556,7 @@ defineExpose({
 				:key="`${session?.id ?? 'browser'}:${documentIndex}`"
 				ref="viewer"
 				:source="source"
+				:editor-theme="editorTheme"
 				:file-name="fileName ?? 'document.ofd'"
 				:convert="convert"
 				:preview="(blob, options) => readOfdDocument(blob, { ...options, documentIndex })"
@@ -561,17 +564,32 @@ defineExpose({
 				class="cube-ofd-viewer"
 				@preferences="preferencesChanged"
 			/>
-			<SignaturePanel
-				v-if="signaturesOpen"
-				:report="report"
-				:busy="verifying"
-				:expired="stale"
-				:error="verifyError"
-				:zh="zh"
-				@verify="verify"
-				@cancel="verificationController?.abort()"
+			<UiEditorDock
+				active-tab="signatures"
+				:tabs="[
+					{
+						id: 'signatures',
+						label: zh ? '签名与证书' : 'Signatures and certificates',
+						icon: 'lock',
+					},
+				]"
+				:closed="!signaturesOpen"
+				:width="320"
+				closable
+				@open="signaturesOpen = true"
 				@close="signaturesOpen = false"
-			/>
+			>
+				<SignaturePanel
+					:report="report"
+					:busy="verifying"
+					:expired="stale"
+					:error="verifyError"
+					:zh="zh"
+					@verify="verify"
+					@cancel="verificationController?.abort()"
+					@close="signaturesOpen = false"
+				/>
+			</UiEditorDock>
 		</div>
 		<dialog ref="trustDialog" class="cube-ofd-dialog">
 			<header>
@@ -677,6 +695,15 @@ defineExpose({
 .cube-ofd-viewer {
 	flex: 1;
 	min-width: 0;
+}
+.cube-ofd-body :deep(.ofd-signatures) {
+	width: 100%;
+	box-sizing: border-box;
+	border-left: 0;
+}
+.cube-ofd-host[data-editor-theme="panel"] .cube-ofd-toolbar {
+	gap: 4px;
+	padding: 6px 8px;
 }
 .cube-ofd-message {
 	margin: 0;

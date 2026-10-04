@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { setUiEditorTheme } from "@yaochn/als-office-editor-ui/vue";
 
 import App from "./App.vue";
 import PrivacyGate from "./PrivacyGate.vue";
@@ -11,6 +12,7 @@ import "./android/panels.css";
 document.title = APP_PROFILE.name;
 
 function startWorkspace(): void {
+	setUiEditorTheme("panel");
 	createApp(App).mount("#app");
 	window.auroraHarmonyHost?.appReady();
 }
