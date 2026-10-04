@@ -1007,7 +1007,7 @@ function runAutosave(tab: HarmonyDocumentTab): Promise<void> {
 		try {
 			// Export does not clear the editor's dirty state before IndexedDB commits.
 			// The Host treats a matching persisted revision as safe when closing.
-			const blob = await editor.export({ format: tab.format });
+			const blob = await editor.export();
 			await persistAutosave(tab, blob, startingRevision);
 		} catch (cause) {
 			tab.autosaveStatus = "error";
@@ -1044,7 +1044,10 @@ function bindAutosave(tab: HarmonyDocumentTab): void {
 	});
 	autosaveUnsubscribers.set(tab.id, unsubscribe);
 	const state = tab.editor.getState();
-	if (state.dirty && revisionToken(state.revision) !== tab.autosaveRevision) {
+	if (
+		tab.autosaveRevision === undefined ||
+		(state.dirty && revisionToken(state.revision) !== tab.autosaveRevision)
+	) {
 		scheduleAutosave(tab);
 	}
 }
@@ -1056,7 +1059,10 @@ async function flushAutosaves(): Promise<void> {
 		if (!optionFor(tab.format).editable || !tab.editor) continue;
 		clearAutosaveTimer(tab.id);
 		const state = tab.editor.getState();
-		if (state.dirty && revisionToken(state.revision) !== tab.autosaveRevision) {
+		if (
+			tab.autosaveRevision === undefined ||
+			(state.dirty && revisionToken(state.revision) !== tab.autosaveRevision)
+		) {
 			pending.push(runAutosave(tab));
 		}
 	}
@@ -1067,9 +1073,14 @@ async function restoreAutosaves(): Promise<void> {
 	if (autosavesRestored) return;
 	autosavesRestored = true;
 	try {
-		autosaveHistory.value = (await listHarmonyAutosaves()).filter((record) =>
+		const records = (await listHarmonyAutosaves()).filter((record) =>
 			formatOptions.has(record.format),
 		);
+		// Opening history can overlap a new save; never replace a newer in-memory record.
+		for (const record of records) {
+			const current = autosaveHistory.value.find((item) => item.id === record.id);
+			if (!current) autosaveHistory.value.push(record);
+		}
 	} catch (cause) {
 		console.error("Could not load HarmonyOS automatic save history", cause);
 	}
@@ -1632,7 +1643,8 @@ function surfaceRef(tab: HarmonyDocumentTab): (instance: unknown) => void {
 }
 
 function closeMenus(event: PointerEvent): void {
-	if (homeNewMenu.value && !homeNewMenu.value.contains(event.target as Node)) homeNewMenu.value.open = false;
+	if (homeNewMenu.value && !homeNewMenu.value.contains(event.target as Node))
+		homeNewMenu.value.open = false;
 	if (!newMenuHost.value?.contains(event.target as Node)) newMenuOpen.value = false;
 	if (!appMenuHost.value?.contains(event.target as Node)) appMenuOpen.value = false;
 }
@@ -1683,18 +1695,94 @@ async function redoActive(): Promise<void> {
 	}
 }
 
+async function promptDocumentName(fileName: string, title: string): Promise<string | null> {
+	const extension = extensionOf(fileName);
+	const suffix = extension ? `.${extension}` : "";
+	const name = await dialogs.prompt("文件名", {
+		title,
+		value: suffix ? fileName.slice(0, -suffix.length) : fileName,
+		description: suffix ? `文件格式保持为 ${suffix}` : undefined,
+		confirmLabel: "确定",
+		required: true,
+		validate: (value) => {
+			const trimmed = value.trim();
+			if (!trimmed || trimmed === "." || trimmed === "..") return "请输入有效的文件名。";
+			if (/[\\/:*?"<>|\u0000-\u001f]/u.test(trimmed)) return "文件名不能包含路径或特殊字符。";
+			return undefined;
+		},
+	});
+	if (name === null) return null;
+	const trimmed = name.trim();
+	return suffix && !trimmed.toLocaleLowerCase().endsWith(suffix)
+		? `${trimmed}${suffix}`
+		: trimmed;
+}
+
+async function renameAndroidDocument(id: string): Promise<void> {
+	if (saving.value) return;
+	const tab = tabs.value.find((item) => item.id === id);
+	const record = autosaveHistory.value.find((item) => item.id === id);
+	if (!tab && !record) return;
+	saving.value = true;
+	try {
+		const fileName = await promptDocumentName((tab ?? record)!.fileName, "修改文件名");
+		if (fileName === null) return;
+		if (tab) {
+			clearAutosaveTimer(tab.id);
+			await autosaveOperations.get(tab.id);
+			await tab.editor?.ready();
+			const previousName = tab.fileName;
+			tab.fileName = fileName;
+			try {
+				if (tab.editor && optionFor(tab.format).editable) {
+					const revision = revisionToken(tab.editor.getState().revision);
+					const blob = await tab.editor.export();
+					await persistAutosave(tab, blob, revision);
+				} else {
+					const recent = autosaveHistory.value.find((item) => item.id === tab.autosaveId);
+					if (recent) {
+						await writeHarmonyAutosave({ ...recent, fileName });
+						recent.fileName = fileName;
+					}
+				}
+			} catch (cause) {
+				tab.fileName = previousName;
+				throw cause;
+			}
+		} else if (record) {
+			await writeHarmonyAutosave({ ...record, fileName });
+			record.fileName = fileName;
+		}
+	} catch (cause) {
+		reportError(cause);
+	} finally {
+		saving.value = false;
+	}
+}
+
 async function saveActive(): Promise<void> {
 	const tab = activeTab.value;
 	if (!tab?.editor?.save || saving.value) return;
 	saving.value = true;
 	error.value = "";
 	try {
+		const fileName = nativeMobileLayout
+			? await promptDocumentName(tab.fileName, "保存文件")
+			: tab.fileName;
+		if (fileName === null) return;
 		clearAutosaveTimer(tab.id);
 		await autosaveOperations.get(tab.id);
 		const revision = revisionToken(tab.editor.getState().revision);
-		const blob = await tab.editor.export({ format: tab.format });
-		await persistAutosave(tab, blob, revision);
-		await saveBlobWithHost(blob, tab.fileName);
+		const blob = await tab.editor.export();
+		const previousName = tab.fileName;
+		tab.fileName = fileName;
+		try {
+			await persistAutosave(tab, blob, revision);
+		} catch (cause) {
+			tab.fileName = previousName;
+			throw cause;
+		}
+		await saveBlobWithHost(blob, fileName);
 		mobileMoreOpen.value = false;
 	} catch (cause) {
 		reportError(cause);
@@ -3184,6 +3272,7 @@ onBeforeUnmount(() => {
 			@edit="activeTab && enterMobileEditing(activeTab)"
 			@finish="finishMobileEditing"
 			@save="saveActive"
+			@rename="renameAndroidDocument"
 			@close="closeAndroidDocument"
 			@undo="undoActive"
 			@redo="redoActive"

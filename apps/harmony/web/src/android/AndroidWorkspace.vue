@@ -48,6 +48,7 @@ const emit = defineEmits<{
 	edit: [];
 	finish: [];
 	save: [];
+	rename: [id: string];
 	close: [];
 	undo: [];
 	redo: [];
@@ -112,8 +113,13 @@ watch(sheet, async (value) => {
 });
 watch(
 	() => props.active?.id,
-	() => {
+	(id, previous) => {
 		sheet.value = "";
+		if (!id && previous) {
+			query.value = "";
+			filter.value = "all";
+			destination.value = "files";
+		}
 	},
 );
 onMounted(() => document.documentElement.classList.add("als-ofs-mobile-ui"));
@@ -276,36 +282,40 @@ function previewLabel(item: DocumentItem): string {
 					<span>{{ visibleDocuments.length }} 个</span>
 				</div>
 				<div v-if="visibleDocuments.length" class="android-file-list">
-					<button
-						v-for="item in visibleDocuments"
-						:key="item.id"
-						class="android-file-row"
-						:disabled="opening"
-						@click="select(item)"
-					>
-						<span
-							class="android-file-preview"
-							:data-format="item.format"
-							aria-hidden="true"
+					<div v-for="item in visibleDocuments" :key="item.id" class="android-file-entry">
+						<button class="android-file-row" :disabled="opening" @click="select(item)">
+							<span
+								class="android-file-preview"
+								:data-format="item.format"
+								aria-hidden="true"
+							>
+								<img
+									v-if="item.preview"
+									:src="item.preview"
+									alt=""
+									width="112"
+									height="128"
+									loading="lazy"
+								/>
+								<Icon v-else name="file" />
+							</span>
+							<span class="android-file-copy"
+								><strong>{{ item.fileName }}</strong
+								><small class="android-file-format" :data-format="item.format">{{
+									previewLabel(item)
+								}}</small
+								><small>{{ dateLabel(item) }}</small></span
+							><Icon name="chevron" />
+						</button>
+						<button
+							class="android-icon-button"
+							:aria-label="`修改文件名 ${item.fileName}`"
+							:disabled="opening || saving"
+							@click="emit('rename', item.id)"
 						>
-							<img
-								v-if="item.preview"
-								:src="item.preview"
-								alt=""
-								width="112"
-								height="128"
-								loading="lazy"
-							/>
-							<Icon v-else name="file" />
-						</span>
-						<span class="android-file-copy"
-							><strong>{{ item.fileName }}</strong
-							><small class="android-file-format" :data-format="item.format">{{
-								previewLabel(item)
-							}}</small
-							><small>{{ dateLabel(item) }}</small></span
-						><Icon name="chevron" />
-					</button>
+							<Icon name="edit" />
+						</button>
+					</div>
 				</div>
 				<div v-else-if="!opening" class="android-empty">
 					<span><Icon :name="query || filter !== 'all' ? 'search' : 'file'" /></span>
@@ -515,6 +525,18 @@ function previewLabel(item: DocumentItem): string {
 				>
 					<Icon name="save" /><span
 						><strong>另存到文件</strong><small>选择保存位置，保留原文件</small></span
+					></button
+				><button
+					class="android-sheet-row"
+					:disabled="saving || !ready"
+					@click="
+						sheet = '';
+						active && emit('rename', active.id);
+					"
+				>
+					<Icon name="edit" /><span
+						><strong>修改文件名</strong
+						><small>更新本地名称，下次另存时使用</small></span
 					></button
 				><button class="android-sheet-row" :disabled="!ready" @click="action('search')">
 					<Icon name="search" /><span>查找文档内容</span></button
