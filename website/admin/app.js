@@ -47,10 +47,24 @@ function renderPlatforms() {
 		unknown: "未知",
 	};
 	platformSummary.textContent = total
-		? `${field === "clients" ? "累计" : "近 30 天活跃"} ${total.toLocaleString("zh-CN")} 个客户端`
-		: "暂无平台数据，等待客户端上报";
+		? `${field === "clients" ? "累计上报" : "近 30 天前台活跃"} ${total.toLocaleString("zh-CN")} 个安装 · 按数量排序`
+		: field === "clients"
+			? "累计 0 个安装"
+			: "近 30 天前台活跃 0 个安装（仅新版客户端）";
 	const list = element("div", "platform-list");
-	for (const item of platformItems) {
+	const zeroList = element("div", "platform-list");
+	const heading = element("div", "platform-row platform-row-heading");
+	heading.append(
+		element("span", "", "平台 / 设备"),
+		element("span", "", "占总量比例"),
+		element("span", "platform-count", "安装数"),
+		element("span", "platform-share", "占比"),
+	);
+	list.append(heading);
+	const ordered = [...platformItems].sort(
+		(a, b) => Number(b[field] || 0) - Number(a[field] || 0),
+	);
+	for (const item of ordered) {
 		const count = Number(item[field] || 0);
 		const share = total ? (count / total) * 100 : 0;
 		const name = labels[item.platform] || "其他";
@@ -65,9 +79,27 @@ function renderPlatforms() {
 			element("span", "platform-count", count.toLocaleString("zh-CN")),
 			element("span", "platform-share", `${share.toFixed(1)}%`),
 		);
-		list.append(row);
+		(count ? list : zeroList).append(row);
 	}
-	platforms.replaceChildren(list);
+	const contents = [];
+	if (total) contents.push(list);
+	else
+		contents.push(
+			element(
+				"p",
+				"platform-empty",
+				field === "clients" ? "尚未收到客户端上报" : "尚未收到新版客户端的前台活跃上报",
+			),
+		);
+	if (zeroList.children.length) {
+		const details = element("details", "platform-zero");
+		details.append(
+			element("summary", "", `查看 ${zeroList.children.length} 个暂无数据的平台`),
+			zeroList,
+		);
+		contents.push(details);
+	}
+	platforms.replaceChildren(...contents);
 }
 
 const fontLibrary = createFontLibrary(document.querySelector("#font-library"));
