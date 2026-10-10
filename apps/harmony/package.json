@@ -25,7 +25,7 @@
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
 		"utif": "^3.1.0",
-		"vue": "3.5.32"
+		"vue": "3.5.43"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^5.2.0",

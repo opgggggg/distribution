@@ -42,6 +42,7 @@
 		"test:epub": "npm test -w @cubexp/epub"
 	},
 	"devDependencies": {
-		"prettier": "3.6.2"
+		"prettier": "3.6.2",
+		"vue": "3.5.43"
 	}
 }

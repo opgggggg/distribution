@@ -37,7 +37,7 @@ test("default profile preserves text and Office formats and omits optional codec
 	const selected = selectFormatContributions(p, { DOCX: ["docx"], PDF: ["pdf"] });
 	assert.deepEqual(
 		selected.map((e) => e.format),
-		["DOCX", "PDF", "OFD"],
+		["DOCX", "PDF", "OFD", "EPUB"],
 	);
 	assert.match(desktopFormatContributionModule(selected), /CUBEOFFICE_OFD_CONTRIBUTION/);
 });
