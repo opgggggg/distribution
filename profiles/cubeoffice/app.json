@@ -2,8 +2,8 @@
 	"name": "CubeOffice 文档",
 	"packageName": "com.cubexp.office",
 	"vendor": "cubexp",
-	"versionCode": 1006000,
-	"versionName": "1.6.0",
+	"versionCode": 1008001,
+	"versionName": "1.8.1",
 	"icon": "icon.png",
 	"urlScheme": "cubeoffice",
 	"documentTemplates": {
