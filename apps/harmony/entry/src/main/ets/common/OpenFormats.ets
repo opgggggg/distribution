@@ -3,7 +3,7 @@
 /** Document picker groups; a suffix missing here cannot be picked. */
 export const OPEN_FILE_SUFFIX_FILTERS: string[] = [
   'Office documents|.docx,.doc,.dot,.pptx,.ppt,.pps,.pot,.xlsx,.xlsm,.xls,.xlt,.csv,.tsv,.jmp,.vsdx,.vsd,.vss,.vst,.drawio',
-  'Documents and images|.pdf,.ofd,.md,.markdown,.png,.jpg,.jpeg,.webp,.emf,.wmf,.gif,.bmp,.dib,.svg,.tif,.tiff,.heic,.heif,.hif',
+  'Documents and images|.pdf,.ofd,.epub,.md,.markdown,.png,.jpg,.jpeg,.webp,.emf,.wmf,.gif,.bmp,.dib,.svg,.tif,.tiff,.heic,.heif,.hif',
   'Text and source code|.txt,.log,.java,.js,.mjs,.cjs,.jsx,.ts,.mts,.cts,.tsx,.json,.jsonl,.jsonc,.html,.htm,.css,.scss,.less,.vue,.py,.pyw,.rb,.sh,.bash,.zsh,.yml,.yaml,.toml,.ini,.conf,.cfg,.properties,.env,.c,.h,.cpp,.hpp,.cc,.cxx,.cs,.go,.rs,.sql,.php,.swift,.kt,.kts,.diff,.patch,.gradle,.groovy,.dockerfile,.makefile,.ps1,.psm1,.bat,.cmd,.lua,.r,.pl,.pm,.dart,.scala,.proto,.graphql,.gql,.tex,.rst,.adoc,.srt,.vtt,.ipynb,.gitignore,.gitattributes,.editorconfig,.npmrc,.xml'
 ];
 
@@ -29,6 +29,7 @@ const SAVE_LABELS: Map<string, string> = new Map<string, string>([
   ['drawio', 'draw.io diagram'],
   ['pdf', 'PDF document'],
   ['ofd', 'OFD document'],
+  ['epub', 'EPUB book'],
   ['md', 'Markdown document'],
   ['markdown', 'Markdown document'],
   ['png', 'PNG image'],

@@ -13,6 +13,7 @@
 		"build:web:ios": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode ios"
 	},
 	"dependencies": {
+		"@cubexp/epub": "*",
 		"@cubexp/ofd": "*",
 		"@cubexp/text": "*",
 		"@yaochn/als-office-docx": "*",

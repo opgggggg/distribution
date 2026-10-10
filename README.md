@@ -11,6 +11,7 @@ Platform distribution shells for AuroraPrime Office:
   generated from `project.yml` (XcodeGen) rather than committed.
 - `als-office`: pinned upstream editor engine dependency.
 - `packages/text`: text reader, Vue viewer and CodeMirror editor with highlight.js syntax highlighting and CubeOffice Ribbon file actions (`npm run build:text`, `npm run test:text`).
+- `packages/epub`: EPUB parser, paginated iframe renderer and a Vue reader with desktop (sidebar, toolbar) and touch (tap zones, swipe, bottom sheets) layouts; registered on desktop through the CubeOffice profile and on Android, iOS and HarmonyOS through the shared mobile host (`npm run build:epub`, `npm run test:epub`).
 
 All three native hosts render the same mobile workspace UI
 (`apps/harmony/web/src/android/`); only the browser falls back to the desktop layout.

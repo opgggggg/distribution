@@ -25,6 +25,7 @@ enum DocumentTypes {
 		"drawio",
 		"pdf",
 		"ofd",
+		"epub",
 		"md", "markdown",
 		"png",
 		"jpg", "jpeg",

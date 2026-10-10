@@ -7,6 +7,7 @@ export type OpenFormatEngine =
 	| "vsdx"
 	| "pdf"
 	| "ofd"
+	| "epub"
 	| "markdown"
 	| "image"
 	| "text";
@@ -33,6 +34,7 @@ export const OPEN_EXTENSIONS = [
 	"drawio",
 	"pdf",
 	"ofd",
+	"epub",
 	"md",
 	"markdown",
 	"png",
@@ -153,6 +155,7 @@ export const OPEN_FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, OpenFormat
 	drawio: "vsdx",
 	pdf: "pdf",
 	ofd: "ofd",
+	epub: "epub",
 	md: "markdown",
 	markdown: "markdown",
 	png: "image",

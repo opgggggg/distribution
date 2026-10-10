@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { TEXT_EXTENSIONS } from "../../../packages/text/dist/formats.js";
+import { EPUB_EXTENSIONS, EPUB_MIME_TYPE } from "../../../packages/epub/dist/formats.js";
 
 const profilePackageEnv = "DESKTOP_APP_PROFILES_PACKAGE";
 const configuredProfilePackage = process.env[profilePackageEnv];
@@ -35,10 +36,10 @@ const bundleOfdMedia = process.env.CUBEOFFICE_BUNDLE_MEDIA === "1";
 const cubeOfficeProfile = {
 	...officeProfile,
 	supportedExtensions: [
-		...new Set([...officeProfile.supportedExtensions, ...TEXT_EXTENSIONS, "ofd"]),
+		...new Set([...officeProfile.supportedExtensions, ...TEXT_EXTENSIONS, "ofd", ...EPUB_EXTENSIONS]),
 	],
 	openDocumentExtensions: [
-		...new Set([...officeProfile.openDocumentExtensions, ...TEXT_EXTENSIONS, "ofd"]),
+		...new Set([...officeProfile.openDocumentExtensions, ...TEXT_EXTENSIONS, "ofd", ...EPUB_EXTENSIONS]),
 	],
 	supportedFormatLabels: [
 		...officeProfile.supportedFormatLabels,
@@ -49,6 +50,7 @@ const cubeOfficeProfile = {
 		"JSON",
 		"XML",
 		"PY",
+		"EPUB",
 	],
 	id: "cubeoffice",
 	readonlyConversionExtensions: [...(officeProfile.readonlyConversionExtensions ?? []), "ofd"],
@@ -58,6 +60,12 @@ const cubeOfficeProfile = {
 			specifier: fromHere("../../../packages/ofd-host/src/desktop-contribution.ts"),
 			binding: "CUBEOFFICE_OFD_CONTRIBUTION",
 			extensions: ["ofd"],
+		},
+		{
+			format: "EPUB",
+			specifier: fromHere("./epub-contribution.ts"),
+			binding: "EPUB_VUE_FORMAT_CONTRIBUTION",
+			extensions: [...EPUB_EXTENSIONS],
 		},
 	],
 	settingsExtensionModule: fromHere("../../../packages/ofd-host/src/TrustSettings.vue"),
@@ -147,7 +155,7 @@ const cubeOfficeProfile = {
 		mainBinaryName: "cubeoffice-app",
 		bundle: {
 			...officeProfile.tauriConfig.bundle,
-			// Text/source and OFD both extend the upstream associations, and they have
+			// Text/source, OFD and EPUB all extend the upstream associations, and they have
 			// to share one key: a second `fileAssociations` property would silently
 			// replace this one and unregister the text file types.
 			fileAssociations: [
@@ -161,6 +169,13 @@ const cubeOfficeProfile = {
 					rank: "Alternate",
 				},
 				{ ext: ["ofd"], mimeType: "application/ofd", role: "Viewer", rank: "Alternate" },
+				{
+					ext: [...EPUB_EXTENSIONS],
+					name: "EPUB book",
+					mimeType: EPUB_MIME_TYPE,
+					role: "Viewer",
+					rank: "Alternate",
+				},
 			],
 			shortDescription: "Open, edit, and read Office documents with AI",
 			externalBin: [

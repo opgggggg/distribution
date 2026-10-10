@@ -28,6 +28,7 @@ final class OpenFormats {
     "application/x-drawio",
     "application/pdf",
     "application/ofd",
+    "application/epub+zip",
     "text/markdown",
     "text/x-markdown",
     "application/x-markdown",
@@ -95,6 +96,7 @@ final class OpenFormats {
     SAVE_MIME_TYPES.put("drawio", "application/vnd.jgraph.mxfile");
     SAVE_MIME_TYPES.put("pdf", "application/pdf");
     SAVE_MIME_TYPES.put("ofd", "application/ofd");
+    SAVE_MIME_TYPES.put("epub", "application/epub+zip");
     SAVE_MIME_TYPES.put("md", "text/markdown");
     SAVE_MIME_TYPES.put("markdown", "text/markdown");
     SAVE_MIME_TYPES.put("png", "image/png");

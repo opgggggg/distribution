@@ -64,6 +64,7 @@
 				<data android:mimeType="application/x-drawio" />
 				<data android:mimeType="application/pdf" />
 				<data android:mimeType="application/ofd" />
+				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="text/markdown" />
 				<data android:mimeType="text/x-markdown" />
 				<data android:mimeType="application/x-markdown" />
@@ -128,6 +129,7 @@
 				<data android:mimeType="application/x-drawio" />
 				<data android:mimeType="application/pdf" />
 				<data android:mimeType="application/ofd" />
+				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="text/markdown" />
 				<data android:mimeType="text/x-markdown" />
 				<data android:mimeType="application/x-markdown" />
@@ -192,6 +194,7 @@
 				<data android:mimeType="application/x-drawio" />
 				<data android:mimeType="application/pdf" />
 				<data android:mimeType="application/ofd" />
+				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="text/markdown" />
 				<data android:mimeType="text/x-markdown" />
 				<data android:mimeType="application/x-markdown" />

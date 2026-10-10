@@ -139,6 +139,11 @@
 							},
 							{
 								scheme: "file",
+								type: "application/epub+zip",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
 								type: "text/markdown",
 								linkFeature: "FileOpen",
 							},

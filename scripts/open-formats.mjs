@@ -167,6 +167,12 @@ export const OPEN_FORMAT_GROUPS = [
 				},
 			},
 			{
+				label: "EPUB book",
+				engine: "epub",
+				extensions: ["epub"],
+				mimeTypes: ["application/epub+zip"],
+			},
+			{
 				label: "Markdown document",
 				engine: "markdown",
 				extensions: ["md", "markdown"],

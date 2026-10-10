@@ -54,6 +54,7 @@ import {
 	OPEN_AS_FORMAT_BY_EXTENSION,
 	OPEN_FORMAT_ENGINE_BY_EXTENSION,
 } from "./open-formats.generated";
+import { handleEpubBack } from "@cubexp/epub/host";
 import type { DocumentTemplateSource } from "../../../../als-office/apps/desktop/src/document-templates";
 const AndroidTemplatePicker = defineAsyncComponent(
 	() => import("./android/AndroidTemplatePicker.vue"),
@@ -334,6 +335,17 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 		hidden: true,
 	},
 	{
+		format: "epub",
+		label: "EPUB",
+		documentLabel: "EPUB 图书（只读）",
+		shortLabel: "EPUB",
+		icon: "EPUB",
+		extension: "epub",
+		baseName: "Book",
+		editable: false,
+		hidden: true,
+	},
+	{
 		format: "text",
 		label: "文本与源代码",
 		documentLabel: "文本文档",
@@ -366,6 +378,7 @@ type FormatEngineModule =
 	| "pdf"
 	| "image"
 	| "ofd"
+	| "epub"
 	| "text";
 const FORMAT_ENGINE_MODULES: Readonly<
 	Record<FormatEngineModule, () => Promise<readonly UiArtifactFormatContribution[]>>
@@ -397,6 +410,10 @@ const FORMAT_ENGINE_MODULES: Readonly<
 	},
 	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
 	ofd: async () => [(await import("@cubexp/ofd/office-vue")).OFD_VUE_FORMAT_CONTRIBUTION],
+	epub: async () => {
+		await import("@cubexp/epub/style.css");
+		return [(await import("@cubexp/epub/office-vue")).EPUB_VUE_FORMAT_CONTRIBUTION];
+	},
 	text: async () => {
 		await import("@cubexp/text/style.css");
 		return [(await import("@cubexp/text/office-vue")).TEXT_VUE_FORMAT_CONTRIBUTION];
@@ -413,6 +430,7 @@ const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, For
 		pdf: "pdf",
 		image: "image",
 		ofd: "ofd",
+		epub: "epub",
 		text: "text",
 	};
 const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> =
@@ -583,6 +601,10 @@ const harmonyControlStatus: CliControlStatus = {
 
 const activeTab = computed(() => tabs.value.find((tab) => tab.id === activeId.value) ?? null);
 const homeActive = computed(() => activeId.value === HOME_TAB_ID);
+// EPUB is always immersive on phones: the reader draws its own bars over the page.
+const mobileEpubReading = computed(
+	() => nativeMobileLayout && activeTab.value?.format === "epub" && !homeActive.value,
+);
 const activeEditable = computed(() =>
 	activeTab.value ? optionFor(activeTab.value.format).editable : false,
 );
@@ -792,6 +814,10 @@ function surfaceInput(tab: HarmonyDocumentTab): UiArtifactSurfaceInput {
 
 function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 	const binding = formats.require(tab.format).createBinding(surfaceInput(tab));
+	// The reader takes the whole screen on phones and brings its own top bar,
+	// whose back button returns to the library like the workspace one.
+	if (tab.format === "epub" && nativeMobileLayout)
+		return { ...binding, props: { ...binding.props, exitable: true, onExit: () => handleNativeBack(true) } };
 	if (!mobileLayout.value) return binding;
 	if (tab.format === "xlsx")
 		return { ...binding, props: { ...binding.props, allowDimensionResize: true } };
@@ -2952,8 +2978,18 @@ function showMobileHome(): void {
 	selectTab(HOME_TAB_ID);
 }
 
-/** Android delegates the system Back action here before it closes the Activity. */
-function handleNativeBack(): boolean {
+/**
+ * Android delegates the system Back action here before it closes the Activity.
+ * `leaveReader` is the EPUB reader's own back button: it leaves the book instead
+ * of first closing the reader's open layers, as the system gesture does.
+ */
+function handleNativeBack(leaveReader = false): boolean {
+	if (
+		!leaveReader &&
+		activeTab.value?.format === "epub" &&
+		handleEpubBack(document.querySelector('.harmony-documents__surface[data-active="true"]'))
+	)
+		return true;
 	if (androidWorkspace.value?.handleBack()) return true;
 	if (aboutDialogOpen.value) {
 		aboutDialogOpen.value = false;
@@ -3230,6 +3266,7 @@ onBeforeUnmount(() => {
 			'is-mobile-more-open': mobileMoreOpen,
 			'is-mobile-insert-open': mobileInsertMenuOpen,
 			'is-pptx-viewing': mobilePptxViewing,
+			'is-epub-reading': mobileEpubReading,
 		}"
 	>
 		<input v-if="nativeTabSession" type="file" :accept="OPEN_ACCEPT" hidden @change="open" />
@@ -3247,7 +3284,7 @@ onBeforeUnmount(() => {
 			:status="androidDocumentStatus"
 			:editable="activeEditable"
 			:reduce-motion="preferences.reduceMotion"
-			:immersive="mobilePptxViewing"
+			:immersive="mobilePptxViewing || mobileEpubReading"
 			@open="open"
 			@select="selectTab"
 			@restore="restoreAndroidDocument"
