@@ -39,10 +39,12 @@
 		"build:text": "npm run build -w @cubexp/text",
 		"test:text": "npm test -w @cubexp/text",
 		"build:epub": "npm run build -w @cubexp/epub",
-		"test:epub": "npm test -w @cubexp/epub"
+		"test:epub": "npm test -w @cubexp/epub",
+		"test:desktop-startup": "node scripts/tests/desktop-startup.cjs"
 	},
 	"devDependencies": {
 		"prettier": "3.6.2",
-		"vue": "3.5.43"
+		"vue": "3.5.43",
+		"playwright": "1.62.1"
 	}
 }

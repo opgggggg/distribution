@@ -69,7 +69,9 @@ AI 根据线上版本和已核实的代码变化确定新版本（用户已指�
 - Linux：现有 `colima-rosetta` 的 `cubeoffice-linux-rosetta` 容器，已安装 Cargo、Linux 依赖、FUSE，以及按[发布技能](../../.agents/skills/cubeoffice-release/references/release-process.md)修正过的 linuxdeploy 工具。容器需配置可读的 `OFFICE_UPDATER_SIGNING_PRIVATE_KEY` 和显式的 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`。脚本使用 `bash -c` 保留 Cargo 路径，以独立目录和受锁保护的缓存构建。脚本会启动已配置的现有容器；配置 `LINUX_COLIMA_PROFILE` 后也会按需启动该既有 Colima profile。不会删除或重建容器。
 - 服务器：SSH 密钥可访问站点目录，具有 Python 3.6+、文件写入权限，HTTPS 下载支持字节范围请求。只修改明确列出的版本文件和网站文件，保留旧版本及回滚备份。
 
-自动检查包括原生包身份、架构、CLI、Android 签名连续性、三个桌面更新签名、服务回归、哈希与实际 Android feed 校验器。浏览器交互回归和真机 GUI 测试仍需按变更范围另行执行；脚本报告不会声称这些已完成。现有 macOS ad-hoc 签名/未公证、Windows 无 Authenticode 证书的限制不变。
+macOS 构建完成后必须通过生产前端启动回归：安装 Google Chrome，或设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` 指向现有 Chromium。检查生产入口正常挂载且无未捕获错误，失败时停止发布。
+
+自动检查包括生产前端启动、原生包身份、架构、CLI、Android 签名连续性、三个桌面更新签名、服务回归、哈希与实际 Android feed 校验器。浏览器交互回归和真机 GUI 测试仍需按变更范围另行执行；脚本报告不会声称这些已完成。现有 macOS ad-hoc 签名/未公证、Windows 无 Authenticode 证书的限制不变。
 
 ## 测试脚本本身
 

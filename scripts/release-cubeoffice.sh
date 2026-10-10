@@ -245,6 +245,7 @@ macos_build() {
   receipt_ok macos && return 0
   cd "$SOURCE"
   OFFICE_UPDATER_SIGNING_PRIVATE_KEY="$UPDATER_KEY" TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}" node scripts/run-cubeoffice-desktop.mjs --target aarch64-apple-darwin
+  npm run test:desktop-startup
   local bundle="$SOURCE/als-office/apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle"
   codesign --verify --deep --strict "$bundle/macos/CubeOffice.app"
   hdiutil verify "$bundle/dmg/CubeOffice_${VERSION}_aarch64.dmg"
