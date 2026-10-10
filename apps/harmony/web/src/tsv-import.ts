@@ -29,9 +29,8 @@ export const TSV_TO_XLSX_CONVERTER: ArtifactConverter = {
 		environment: "headless",
 		lossiness: "lossy",
 	},
-	async canConvert(input) {
-		return input.kind === "bytes" && input.blob.size <= MAX_TSV_SOURCE_BYTES;
-	},
+	// No content probe: upstream's CSV probe already claims any unnamed text, and a second
+	// claimant would make it ambiguous. TSV is recognised by its name or MIME type only.
 	async convert(input, context) {
 		if (input.kind !== "bytes") throw new TypeError("tsv-to-xlsx converts raw TSV bytes.");
 		if (input.blob.size > MAX_TSV_SOURCE_BYTES) {

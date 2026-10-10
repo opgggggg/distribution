@@ -285,6 +285,53 @@ export async function saveBlobWithHost(blob: Blob, fileName: string): Promise<vo
 	}
 }
 
+/**
+ * Decodes an image the WebView cannot (HEIC on Chromium-based WebViews) with the
+ * native host's system decoder. The bytes travel in chunks both ways, like documents
+ * do, and come back as a JPEG. Resolves null when the host has no decoder or the system
+ * cannot read the image.
+ */
+export async function decodeImageWithHost(source: Blob): Promise<Blob | null> {
+	const host = window.auroraHarmonyHost;
+	if (
+		!host?.beginImageDecode ||
+		!host.appendImageDecodeChunk ||
+		!host.finishImageDecode ||
+		!host.readImageDecodeChunk ||
+		!host.disposeImageDecode
+	) {
+		return null;
+	}
+	let id = "";
+	try {
+		id = host.beginImageDecode();
+		if (!id) return null;
+		for (let offset = 0; offset < source.size; offset += SAVE_CHUNK_BYTES) {
+			const bytes = new Uint8Array(
+				await source.slice(offset, offset + SAVE_CHUNK_BYTES).arrayBuffer(),
+			);
+			if (!host.appendImageDecodeChunk(id, bytesToBase64(bytes))) return null;
+		}
+		const size = Number(await host.finishImageDecode(id));
+		if (!Number.isSafeInteger(size) || size <= 0) return null;
+		const chunks: ArrayBuffer[] = [];
+		for (let offset = 0; offset < size; offset += OPEN_CHUNK_BYTES) {
+			const encoded = host.readImageDecodeChunk(
+				id,
+				offset,
+				Math.min(OPEN_CHUNK_BYTES, size - offset),
+			);
+			if (!encoded) return null;
+			chunks.push(base64ToBytes(encoded));
+		}
+		return new Blob(chunks, { type: "image/jpeg" });
+	} catch {
+		return null;
+	} finally {
+		if (id) host.disposeImageDecode(id);
+	}
+}
+
 function bytesToBase64(bytes: Uint8Array): string {
 	let binary = "";
 	for (let offset = 0; offset < bytes.length; offset += BINARY_STRING_CHUNK) {

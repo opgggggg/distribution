@@ -122,6 +122,12 @@
 				<string>public.png</string>
 				<string>public.jpeg</string>
 				<string>org.webmproject.webp</string>
+				<string>com.compuserve.gif</string>
+				<string>com.microsoft.bmp</string>
+				<string>public.svg-image</string>
+				<string>public.tiff</string>
+				<string>public.heic</string>
+				<string>public.heif</string>
 			</array>
 		</dict>
 		<dict>

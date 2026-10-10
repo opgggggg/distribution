@@ -15,6 +15,13 @@ interface AuroraHarmonyHost {
 	consumePendingIntent(): string;
 	readOpenDocumentChunk?(id: string, offset: number, length: number): string;
 	finishOpenDocument?(id: string): boolean;
+	/** System image decoding for formats the WebView cannot read; see decodeImageWithHost. */
+	beginImageDecode?(): string;
+	appendImageDecodeChunk?(id: string, base64: string): boolean;
+	/** Resolves the decoded JPEG's byte length as a decimal string; "" when decoding failed. */
+	finishImageDecode?(id: string): string | Promise<string>;
+	readImageDecodeChunk?(id: string, offset: number, length: number): string;
+	disposeImageDecode?(id: string): boolean;
 	keepSoftKeyboard?(): boolean;
 	exitApp?(): boolean;
 	setPresentationLandscape?(enabled: boolean): boolean;

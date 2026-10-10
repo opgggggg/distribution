@@ -387,9 +387,14 @@ const FORMAT_ENGINE_MODULES: Readonly<
 	markdown: async () => [
 		(await import("@yaochn/als-office-markdown/vue")).MARKDOWN_VUE_FORMAT_CONTRIBUTION,
 	],
-	image: async () => [
-		(await import("@yaochn/als-office-image/vue")).IMAGE_VUE_FORMAT_CONTRIBUTION,
-	],
+	image: async () => {
+		const [module, { IMAGE_IMPORT_CONVERTERS }] = await Promise.all([
+			import("@yaochn/als-office-image/vue"),
+			import("./image-import"),
+		]);
+		const image = module.IMAGE_VUE_FORMAT_CONTRIBUTION;
+		return [{ ...image, converters: [...(image.converters ?? []), ...IMAGE_IMPORT_CONVERTERS] }];
+	},
 	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
 	ofd: async () => [(await import("@cubexp/ofd/office-vue")).OFD_VUE_FORMAT_CONTRIBUTION],
 	text: async () => {
@@ -1300,7 +1305,7 @@ async function addFile(file: File): Promise<void> {
 	);
 	if (!converter)
 		throw new Error(
-			"不支持这个文件类型。请选择 Office、PDF、Markdown 或 PNG/JPEG/WebP/EMF/WMF 图片。",
+			"不支持这个文件类型。请选择 Office、PDF、Markdown、文本或图片文件。",
 		);
 	const targetFormat = converter.manifest.target.format;
 	const targetExtension = converter.manifest.target.extensions[0] ?? targetFormat;

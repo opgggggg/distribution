@@ -3,6 +3,7 @@ import { connection } from '@kit.NetworkKit';
 import { window } from '@kit.ArkUI';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
+import { image } from '@kit.ImageKit';
 import deviceInfo from '@ohos.deviceInfo';
 import { saveSuffixChoice } from '../common/OpenFormats';
 
@@ -22,6 +23,17 @@ interface PendingOpenDocument {
   path: string;
 }
 
+interface ImageDecodeSession {
+  sourcePath: string;
+  decodedPath: string;
+  file: fileIo.File;
+  closed: boolean;
+  decodedSize: number;
+}
+
+// Below the 16.7 MP canvas ceiling the Web shell re-encodes into.
+const MAX_DECODED_PIXELS = 16000000;
+
 export interface NativeTabsHost {
   sessionId(): string;
   open(request: string): Promise<string>;
@@ -39,6 +51,7 @@ export class HarmonyDocumentBridge {
   private sequence: number = 0;
   private sessions: Map<string, SaveSession> = new Map();
   private pendingOpenDocuments: Map<string, PendingOpenDocument> = new Map();
+  private imageDecodes: Map<string, ImageDecodeSession> = new Map();
   private base64: util.Base64Helper = new util.Base64Helper();
 
   constructor(onReady?: () => void, pendingIntent?: () => string) {
@@ -155,10 +168,112 @@ export class HarmonyDocumentBridge {
 
   readOpenDocumentChunk(id: string, offset: number, length: number): string {
     const pending = this.pendingOpenDocuments.get(id);
-    if (!pending || offset < 0 || length <= 0 || offset >= pending.size) return '';
-    const safeLength = Math.min(length, 256 * 1024, pending.size - offset);
+    if (!pending) return '';
+    return this.readFileChunk(pending.path, pending.size, offset, length);
+  }
+
+  // System image decoding for formats ArkWeb cannot read (HEIC); see decodeImageWithHost.
+
+  beginImageDecode(): string {
+    const context = this.requireContext();
+    const id = `image-${Date.now()}-${this.sequence++}`;
+    const sourcePath = `${context.cacheDir}/auroraprime-${id}.bin`;
+    const file = fileIo.openSync(
+      sourcePath,
+      fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC
+    );
+    this.imageDecodes.set(id, {
+      sourcePath,
+      decodedPath: `${context.cacheDir}/auroraprime-${id}.jpg`,
+      file,
+      closed: false,
+      decodedSize: 0
+    });
+    return id;
+  }
+
+  appendImageDecodeChunk(id: string, encodedChunk: string): boolean {
+    const session = this.imageDecodes.get(id);
+    if (!session || session.closed) return false;
+    const bytes = this.base64.decodeSync(encodedChunk);
+    const chunk = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    fileIo.writeSync(session.file.fd, chunk);
+    return true;
+  }
+
+  /** Resolves the decoded JPEG's length, or '' when the system cannot read the image. */
+  async finishImageDecode(id: string): Promise<string> {
+    const session = this.imageDecodes.get(id);
+    if (!session) return '';
+    this.closeImageSource(session);
+    try {
+      const source = image.createImageSource(session.sourcePath);
+      try {
+        const info = await source.getImageInfo();
+        const pixels = info.size.width * info.size.height;
+        const options: image.DecodingOptions = {};
+        if (pixels > MAX_DECODED_PIXELS) {
+          const scale = Math.sqrt(MAX_DECODED_PIXELS / pixels);
+          options.desiredSize = {
+            width: Math.max(1, Math.floor(info.size.width * scale)),
+            height: Math.max(1, Math.floor(info.size.height * scale))
+          };
+        }
+        const pixelMap = await source.createPixelMap(options);
+        const packer = image.createImagePacker();
+        try {
+          const data = await packer.packToData(pixelMap, { format: 'image/jpeg', quality: 92 });
+          const output = fileIo.openSync(
+            session.decodedPath,
+            fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC
+          );
+          try {
+            fileIo.writeSync(output.fd, data);
+          } finally {
+            fileIo.closeSync(output);
+          }
+          session.decodedSize = data.byteLength;
+          return String(data.byteLength);
+        } finally {
+          await packer.release();
+          await pixelMap.release();
+        }
+      } finally {
+        await source.release();
+      }
+    } catch (cause) {
+      console.warn(`System image decoding failed: ${(cause as Error).message}`);
+      return '';
+    }
+  }
+
+  readImageDecodeChunk(id: string, offset: number, length: number): string {
+    const session = this.imageDecodes.get(id);
+    if (!session) return '';
+    return this.readFileChunk(session.decodedPath, session.decodedSize, offset, length);
+  }
+
+  disposeImageDecode(id: string): boolean {
+    const session = this.imageDecodes.get(id);
+    if (!session) return false;
+    this.imageDecodes.delete(id);
+    this.closeImageSource(session);
+    this.removeTemporaryFile(session.sourcePath);
+    this.removeTemporaryFile(session.decodedPath);
+    return true;
+  }
+
+  private closeImageSource(session: ImageDecodeSession): void {
+    if (session.closed) return;
+    session.closed = true;
+    fileIo.closeSync(session.file);
+  }
+
+  private readFileChunk(path: string, size: number, offset: number, length: number): string {
+    if (offset < 0 || length <= 0 || offset >= size) return '';
+    const safeLength = Math.min(length, 256 * 1024, size - offset);
     const buffer = new ArrayBuffer(safeLength);
-    const source = fileIo.openSync(pending.path, fileIo.OpenMode.READ_ONLY);
+    const source = fileIo.openSync(path, fileIo.OpenMode.READ_ONLY);
     try {
       const read = fileIo.readSync(source.fd, buffer, { offset, length: safeLength });
       if (read <= 0) return '';

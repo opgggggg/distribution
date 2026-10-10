@@ -29,6 +29,7 @@
 	var openDocumentAdvertised = false;
 	var assistantCommands = [];
 	var saveSettlers = Object.create(null);
+	var imageDecodes = Object.create(null);
 
 	function send(handler, name, payload) {
 		var message = { name: name };
@@ -154,6 +155,54 @@
 					reject(new Error("原生容器没有响应保存请求。"));
 				}
 			});
+		},
+
+		// System image decoding (see ImageDecoder.swift). The chunks are buffered here and
+		// sent in one message whose reply carries the JPEG, which `readImageDecodeChunk`
+		// then serves synchronously like a staged document.
+		beginImageDecode: function () {
+			var id = uuid();
+			imageDecodes[id] = { chunks: [], bytes: null };
+			return id;
+		},
+
+		appendImageDecodeChunk: function (id, base64) {
+			var decode = imageDecodes[id];
+			if (!decode || decode.bytes) return false;
+			decode.chunks.push(String(base64));
+			return true;
+		},
+
+		finishImageDecode: function (id) {
+			var decode = imageDecodes[id];
+			var handler = window.webkit && window.webkit.messageHandlers.auroraImage;
+			if (!decode || !handler) return Promise.resolve("");
+			var chunks = decode.chunks;
+			decode.chunks = [];
+			return handler.postMessage({ chunks: chunks }).then(
+				function (encoded) {
+					if (!encoded || imageDecodes[id] !== decode) return "";
+					decode.bytes = base64ToBytes(encoded);
+					return String(decode.bytes.length);
+				},
+				function () {
+					return "";
+				},
+			);
+		},
+
+		readImageDecodeChunk: function (id, offset, length) {
+			var decode = imageDecodes[id];
+			if (!decode || !decode.bytes || offset < 0 || length <= 0) return "";
+			var end = Math.min(decode.bytes.length, offset + length);
+			if (end <= offset) return "";
+			return bytesToBase64(decode.bytes.subarray(offset, end));
+		},
+
+		disposeImageDecode: function (id) {
+			if (!imageDecodes[id]) return false;
+			delete imageDecodes[id];
+			return true;
 		},
 
 		abortSave: function (sessionId) {

@@ -31,6 +31,11 @@ enum DocumentTypes {
 		"webp",
 		"emf",
 		"wmf",
+		"gif",
+		"bmp", "dib",
+		"svg",
+		"tif", "tiff",
+		"heic", "heif", "hif",
 		"txt", "log", "java", "js", "mjs", "cjs", "jsx", "ts", "mts", "cts", "tsx", "json", "jsonl", "jsonc", "html", "htm", "css", "scss", "less", "vue", "py", "pyw", "rb", "sh", "bash", "zsh", "yml", "yaml", "toml", "ini", "conf", "cfg", "properties", "env", "c", "h", "cpp", "hpp", "cc", "cxx", "cs", "go", "rs", "sql", "php", "swift", "kt", "kts", "diff", "patch", "gradle", "groovy", "dockerfile", "makefile", "ps1", "psm1", "bat", "cmd", "lua", "r", "pl", "pm", "dart", "scala", "proto", "graphql", "gql", "tex", "rst", "adoc", "srt", "vtt", "ipynb", "gitignore", "gitattributes", "editorconfig", "npmrc",
 		"xml",
 	]

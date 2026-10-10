@@ -41,6 +41,17 @@ final class OpenFormats {
     "application/wmf",
     "application/x-wmf",
     "application/x-msmetafile",
+    "image/gif",
+    "image/bmp",
+    "image/x-bmp",
+    "image/x-ms-bmp",
+    "image/svg+xml",
+    "image/tiff",
+    "image/tiff-fx",
+    "image/heic",
+    "image/heif",
+    "image/heic-sequence",
+    "image/heif-sequence",
     "text/plain",
     "text/x-java-source",
     "text/javascript",
@@ -92,6 +103,15 @@ final class OpenFormats {
     SAVE_MIME_TYPES.put("webp", "image/webp");
     SAVE_MIME_TYPES.put("emf", "image/emf");
     SAVE_MIME_TYPES.put("wmf", "image/wmf");
+    SAVE_MIME_TYPES.put("gif", "image/gif");
+    SAVE_MIME_TYPES.put("bmp", "image/bmp");
+    SAVE_MIME_TYPES.put("dib", "image/bmp");
+    SAVE_MIME_TYPES.put("svg", "image/svg+xml");
+    SAVE_MIME_TYPES.put("tif", "image/tiff");
+    SAVE_MIME_TYPES.put("tiff", "image/tiff");
+    SAVE_MIME_TYPES.put("heic", "image/heic");
+    SAVE_MIME_TYPES.put("heif", "image/heic");
+    SAVE_MIME_TYPES.put("hif", "image/heic");
     SAVE_MIME_TYPES.put("txt", "text/plain");
     SAVE_MIME_TYPES.put("log", "text/plain");
     SAVE_MIME_TYPES.put("java", "text/plain");

@@ -529,6 +529,7 @@ public final class MainActivity extends Activity {
 
   public final class AuroraDocumentBridge {
     private final Map<String, SaveSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, ImageDecodeSession> imageDecodes = new ConcurrentHashMap<>();
     private SaveSession pendingSave;
     private final Deque<PendingOpenDocument> pendingOpenDocuments = new ArrayDeque<>();
     private final Deque<String> pendingAssistantCommands = new ArrayDeque<>();
@@ -619,9 +620,13 @@ public final class MainActivity extends Activity {
     public synchronized String readOpenDocumentChunk(String id, long offset, int length) {
       PendingOpenDocument pending = pendingOpenDocuments.peekFirst();
       if (pending == null || !pending.id.equals(id) || offset < 0 || length <= 0) return "";
+      return readChunk(pending.temporaryFile, offset, length);
+    }
+
+    private String readChunk(File file, long offset, int length) {
       int safeLength = Math.min(length, 256 * 1024);
       byte[] buffer = new byte[safeLength];
-      try (RandomAccessFile input = new RandomAccessFile(pending.temporaryFile, "r")) {
+      try (RandomAccessFile input = new RandomAccessFile(file, "r")) {
         input.seek(offset);
         int read = input.read(buffer);
         if (read <= 0) return "";
@@ -638,6 +643,66 @@ public final class MainActivity extends Activity {
       pendingOpenDocuments.removeFirst();
       pendingOpenDocumentAdvertised = false;
       deleteQuietly(pending.temporaryFile);
+      return true;
+    }
+
+    @JavascriptInterface
+    public synchronized String beginImageDecode() {
+      String id = UUID.randomUUID().toString();
+      File source = new File(getCacheDir(), "auroraprime-image-" + id);
+      try {
+        imageDecodes.put(
+            id,
+            new ImageDecodeSession(
+                source,
+                new File(getCacheDir(), "auroraprime-image-" + id + ".jpg"),
+                new FileOutputStream(source, false)));
+        return id;
+      } catch (IOException cause) {
+        deleteQuietly(source);
+        return "";
+      }
+    }
+
+    @JavascriptInterface
+    public boolean appendImageDecodeChunk(String id, String encodedChunk) {
+      ImageDecodeSession session = imageDecodes.get(id);
+      if (session == null) return false;
+      try {
+        session.output.write(Base64.decode(encodedChunk, Base64.DEFAULT));
+        return true;
+      } catch (IOException | IllegalArgumentException cause) {
+        return false;
+      }
+    }
+
+    /**
+     * Decodes on the JavaBridge thread, not the UI thread, so the page waits for it without
+     * freezing the app. Returns the JPEG's length, or "" when the system cannot read the image.
+     */
+    @JavascriptInterface
+    public String finishImageDecode(String id) {
+      ImageDecodeSession session = imageDecodes.get(id);
+      if (session == null) return "";
+      closeQuietly(session.output);
+      if (!SystemImageDecoder.decodeToJpeg(session.source, session.decoded)) return "";
+      return String.valueOf(session.decoded.length());
+    }
+
+    @JavascriptInterface
+    public String readImageDecodeChunk(String id, long offset, int length) {
+      ImageDecodeSession session = imageDecodes.get(id);
+      if (session == null || offset < 0 || length <= 0) return "";
+      return readChunk(session.decoded, offset, length);
+    }
+
+    @JavascriptInterface
+    public boolean disposeImageDecode(String id) {
+      ImageDecodeSession session = imageDecodes.remove(id);
+      if (session == null) return false;
+      closeQuietly(session.output);
+      deleteQuietly(session.source);
+      deleteQuietly(session.decoded);
       return true;
     }
 
@@ -965,6 +1030,18 @@ public final class MainActivity extends Activity {
       this.id = id;
       this.fileName = fileName;
       this.temporaryFile = temporaryFile;
+      this.output = output;
+    }
+  }
+
+  private static final class ImageDecodeSession {
+    final File source;
+    final File decoded;
+    final FileOutputStream output;
+
+    ImageDecodeSession(File source, File decoded, FileOutputStream output) {
+      this.source = source;
+      this.decoded = decoded;
       this.output = output;
     }
   }

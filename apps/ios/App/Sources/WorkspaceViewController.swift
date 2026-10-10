@@ -12,6 +12,7 @@ final class WorkspaceViewController: UIViewController {
 
 	private(set) var webView: WKWebView!
 	private let bridge = DocumentBridge()
+	private let imageDecoder = ImageDecoder()
 	private let services = ClientServices()
 	private var splash: StartupSplashView?
 	private var splashTimeout: DispatchWorkItem?
@@ -47,6 +48,8 @@ final class WorkspaceViewController: UIViewController {
 		let controller = configuration.userContentController
 		controller.add(bridge, name: DocumentBridge.messageHandlerName)
 		controller.add(services, name: ClientServices.messageHandlerName)
+		controller.addScriptMessageHandler(
+			imageDecoder, contentWorld: .page, name: ImageDecoder.messageHandlerName)
 		// The identity goes in first: bridge.js reads it while it builds the host object.
 		controller.addUserScript(services.identityUserScript)
 		if let bridgeScript = Self.loadBridgeScript() {
@@ -214,6 +217,8 @@ final class WorkspaceViewController: UIViewController {
 		let controller = webView?.configuration.userContentController
 		controller?.removeScriptMessageHandler(forName: DocumentBridge.messageHandlerName)
 		controller?.removeScriptMessageHandler(forName: ClientServices.messageHandlerName)
+		controller?.removeScriptMessageHandler(
+			forName: ImageDecoder.messageHandlerName, contentWorld: .page)
 		bridge.dispose()
 	}
 }

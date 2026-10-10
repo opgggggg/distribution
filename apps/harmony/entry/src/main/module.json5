@@ -204,6 +204,61 @@
 							},
 							{
 								scheme: "file",
+								type: "image/gif",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/bmp",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/x-bmp",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/x-ms-bmp",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/svg+xml",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/tiff",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/tiff-fx",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/heic",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/heif",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/heic-sequence",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/heif-sequence",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
 								type: "text/plain",
 								linkFeature: "FileOpen",
 							},

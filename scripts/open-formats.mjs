@@ -197,6 +197,38 @@ export const OPEN_FORMAT_GROUPS = [
 					"application/x-msmetafile",
 				],
 			},
+			// The formats below open through apps/harmony/web/src/image-import.ts, which
+			// turns them into PNG for the image editor.
+			{
+				label: "GIF image",
+				engine: "image",
+				extensions: ["gif"],
+				mimeTypes: ["image/gif"],
+			},
+			{
+				label: "BMP image",
+				engine: "image",
+				extensions: ["bmp", "dib"],
+				mimeTypes: ["image/bmp", "image/x-bmp", "image/x-ms-bmp"],
+			},
+			{
+				label: "SVG image",
+				engine: "image",
+				extensions: ["svg"],
+				mimeTypes: ["image/svg+xml"],
+			},
+			{
+				label: "TIFF image",
+				engine: "image",
+				extensions: ["tif", "tiff"],
+				mimeTypes: ["image/tiff", "image/tiff-fx"],
+			},
+			{
+				label: "HEIC photo",
+				engine: "image",
+				extensions: ["heic", "heif", "hif"],
+				mimeTypes: ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"],
+			},
 		],
 	},
 	{

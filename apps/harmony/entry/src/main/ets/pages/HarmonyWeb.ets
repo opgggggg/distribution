@@ -77,6 +77,10 @@ export function HarmonyWeb(params: HarmonyWebParams) {
             'consumePendingIntent',
             'readOpenDocumentChunk',
             'finishOpenDocument',
+            'beginImageDecode',
+            'appendImageDecodeChunk',
+            'readImageDecodeChunk',
+            'disposeImageDecode',
             'startWindowMove',
             'toggleMaximizeWindow',
             'setPresentationLandscape',
@@ -84,7 +88,7 @@ export function HarmonyWeb(params: HarmonyWebParams) {
             'appendSaveChunk',
             'abortSave'
           ],
-          asyncMethodList: ['finishSave', 'openNativeTab'],
+          asyncMethodList: ['finishSave', 'openNativeTab', 'finishImageDecode'],
           controller: params.controller
         })
         .onShowFileSelector((event) => {
