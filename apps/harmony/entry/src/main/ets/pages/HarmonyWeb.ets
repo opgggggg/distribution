@@ -98,7 +98,7 @@ export function HarmonyWeb(params: HarmonyWebParams) {
           // A suffix missing here cannot be picked even though the engine reads it.
           options.fileSuffixFilters = [
             'Office documents|.docx,.doc,.dot,.pptx,.ppt,.pps,.pot,.xlsx,.xls,.xlt,.csv,.vsdx,.drawio,.jmp',
-            'Documents and images|.pdf,.ofd,.md,.markdown,.png,.jpg,.jpeg,.webp,.emf,.wmf',
+            'Documents and images|.pdf,.ofd,.epub,.md,.markdown,.png,.jpg,.jpeg,.webp,.emf,.wmf',
             'Text and source code|' + TEXT_FILE_SUFFIXES
           ];
           const context = params.context;

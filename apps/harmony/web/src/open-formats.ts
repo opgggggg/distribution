@@ -3,6 +3,7 @@ import { TEXT_EXTENSIONS } from "@cubexp/text/formats";
 /** Extensions supported by the registered native formats and import converters. */
 export const OPEN_ACCEPT = [
 	".ofd",
+	".epub",
 	...TEXT_EXTENSIONS.map((extension) => `.${extension}`),
 	".docx",
 	".doc",

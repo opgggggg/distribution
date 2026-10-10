@@ -1,0 +1,84 @@
+{
+	"name": "@cubexp/epub",
+	"version": "0.1.0",
+	"description": "EPUB parser, paginated renderer and Vue reader",
+	"license": "Apache-2.0",
+	"type": "module",
+	"sideEffects": [
+		"**/*.css"
+	],
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./formats": {
+			"types": "./dist/formats.d.ts",
+			"import": "./dist/formats.js"
+		},
+		"./view": {
+			"types": "./dist/view.d.ts",
+			"import": "./dist/view.js"
+		},
+		"./vue": {
+			"types": "./dist/vue/index.d.ts",
+			"import": "./dist/vue/index.js"
+		},
+		"./style.css": "./dist/style.css",
+		"./host": {
+			"types": "./dist/host.d.ts",
+			"import": "./dist/host.js"
+		},
+		"./thumbnail": {
+			"types": "./dist/thumbnail.d.ts",
+			"import": "./dist/thumbnail.js"
+		},
+		"./office": {
+			"types": "./dist/office.d.ts",
+			"import": "./dist/office.js"
+		},
+		"./office-vue": {
+			"types": "./dist/office-vue.d.ts",
+			"import": "./dist/office-vue.js"
+		}
+	},
+	"scripts": {
+		"build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/style.css', 'dist/style.css')\"",
+		"check:types": "tsc -p tsconfig.json",
+		"test": "npm run build && node --test tests/*.mjs",
+		"prepack": "npm run build"
+	},
+	"dependencies": {
+		"fflate": "^0.8.2"
+	},
+	"peerDependencies": {
+		"@yaochn/als-office-editor-core": "^0.72.0 || ^0.73.0 || ^0.74.0",
+		"@yaochn/als-office-editor-ui": "^0.72.0 || ^0.73.0 || ^0.74.0",
+		"vue": "^3.5.0"
+	},
+	"peerDependenciesMeta": {
+		"vue": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-core": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-ui": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"jsdom": "^30.0.1",
+		"typescript": "^5.0.3",
+		"vue": "3.5.32"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

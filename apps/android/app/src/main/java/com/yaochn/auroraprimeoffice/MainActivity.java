@@ -94,6 +94,7 @@ public final class MainActivity extends Activity {
     "application/x-wmf",
     "application/x-msmetafile",
     "application/ofd",
+    "application/epub+zip",
     "text/x-java-source",
     "text/javascript",
     "application/javascript",

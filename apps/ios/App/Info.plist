@@ -110,6 +110,7 @@
 				<string>com.sas.jmp</string>
 				<string>com.jgraph.drawio</string>
 				<string>com.cubexp.ofd</string>
+				<string>org.idpf.epub-container</string>
 				<string>com.adobe.pdf</string>
 				<string>net.daringfireball.markdown</string>
 				<string>public.comma-separated-values-text</string>

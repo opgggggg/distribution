@@ -112,6 +112,7 @@
 							},
 							{ scheme: "file", type: "text/csv", linkFeature: "FileOpen" },
 							{ scheme: "file", type: "application/ofd", linkFeature: "FileOpen" },
+							{ scheme: "file", type: "application/epub+zip", linkFeature: "FileOpen" },
 							{ scheme: "file", type: "text/x-java-source", linkFeature: "FileOpen" },
 							{ scheme: "file", type: "text/javascript", linkFeature: "FileOpen" },
 							{

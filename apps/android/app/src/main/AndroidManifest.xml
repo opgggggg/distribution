@@ -65,6 +65,7 @@
 				<data android:mimeType="application/vnd.ms-powerpoint" />
 				<data android:mimeType="text/csv" />
 				<data android:mimeType="application/ofd" />
+				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="text/x-java-source" />
 				<data android:mimeType="text/javascript" />
 				<data android:mimeType="application/javascript" />
@@ -112,6 +113,7 @@
 				<data android:mimeType="application/vnd.ms-powerpoint" />
 				<data android:mimeType="text/csv" />
 				<data android:mimeType="application/ofd" />
+				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="text/x-java-source" />
 				<data android:mimeType="text/javascript" />
 				<data android:mimeType="application/javascript" />
@@ -159,6 +161,7 @@
 				<data android:mimeType="application/vnd.ms-powerpoint" />
 				<data android:mimeType="text/csv" />
 				<data android:mimeType="application/ofd" />
+				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="text/x-java-source" />
 				<data android:mimeType="text/javascript" />
 				<data android:mimeType="application/javascript" />

@@ -16,6 +16,7 @@ enum DocumentTypes {
 		"jmp",
 		"drawio",
 		"ofd",
+		"epub",
 		"pdf",
 		"md", "markdown",
 		"txt", "xml", "json", "html", "htm", "css", "js", "mjs", "ts",

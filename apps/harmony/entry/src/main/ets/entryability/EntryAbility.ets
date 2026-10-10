@@ -157,6 +157,7 @@ export default class EntryAbility extends UIAbility {
     if (mimeType.includes('jmp')) return '.jmp';
     if (mimeType.includes('jgraph') || mimeType.includes('drawio')) return '.drawio';
     if (mimeType === 'application/pdf') return '.pdf';
+    if (mimeType === 'application/epub+zip') return '.epub';
     if (mimeType.includes('markdown') || mimeType === 'text/plain') return '.md';
     return '.docx';
   }
