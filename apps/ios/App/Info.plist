@@ -144,6 +144,79 @@
 
 	<key>UTImportedTypeDeclarations</key>
 	<array>
+		<!-- open-formats:start -->
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.sas.jmp</string>
+			<key>UTTypeDescription</key>
+			<string>JMP Data Table</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>jmp</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/x-jmp-data-table</string>
+					<string>application/vnd.sas.jmp</string>
+					<string>application/x-jmp</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.microsoft.visio.drawing</string>
+			<key>UTTypeDescription</key>
+			<string>Visio Drawing</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>vsdx</string>
+					<string>vsd</string>
+					<string>vss</string>
+					<string>vst</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.ms-visio.drawing</string>
+					<string>application/vnd.ms-visio.drawing.main+xml</string>
+					<string>application/vnd.visio</string>
+					<string>application/x-visio</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.jgraph.drawio</string>
+			<key>UTTypeDescription</key>
+			<string>draw.io Diagram</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>drawio</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.jgraph.mxfile</string>
+					<string>application/x-drawio</string>
+				</array>
+			</dict>
+		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
 			<string>com.cubexp.ofd</string>
@@ -166,70 +239,7 @@
 				</array>
 			</dict>
 		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.microsoft.visio.drawing</string>
-			<key>UTTypeDescription</key>
-			<string>Visio Drawing</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>vsdx</string>
-					<string>vsd</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/vnd.ms-visio.drawing</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.sas.jmp</string>
-			<key>UTTypeDescription</key>
-			<string>JMP Data Table</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>jmp</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/vnd.sas.jmp</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.jgraph.drawio</string>
-			<key>UTTypeDescription</key>
-			<string>draw.io Diagram</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>drawio</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/vnd.jgraph.mxfile</string>
-				</array>
-			</dict>
-		</dict>
+		<!-- open-formats:end -->
 	</array>
 
 	<!-- The shell ships no cryptography of its own; declaring it keeps every build

@@ -36,9 +36,15 @@
 							"ohos.want.action.sendMultipleData",
 						],
 						uris: [
+							// open-formats:start
 							{
 								scheme: "file",
 								type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/msword",
 								linkFeature: "FileOpen",
 							},
 							{
@@ -48,10 +54,19 @@
 							},
 							{
 								scheme: "file",
+								type: "application/vnd.ms-powerpoint",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
 								type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 								linkFeature: "FileOpen",
 							},
-							{ scheme: "file", type: "application/msword", linkFeature: "FileOpen" },
+							{
+								scheme: "file",
+								type: "application/vnd.ms-excel.sheet.macroEnabled.12",
+								linkFeature: "FileOpen",
+							},
 							{
 								scheme: "file",
 								type: "application/vnd.ms-excel",
@@ -59,7 +74,27 @@
 							},
 							{
 								scheme: "file",
-								type: "application/vnd.ms-powerpoint",
+								type: "text/csv",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/tab-separated-values",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-jmp-data-table",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/vnd.sas.jmp",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-jmp",
 								linkFeature: "FileOpen",
 							},
 							{
@@ -74,13 +109,12 @@
 							},
 							{
 								scheme: "file",
-								type: "application/vnd.sas.jmp",
+								type: "application/vnd.visio",
 								linkFeature: "FileOpen",
 							},
-							{ scheme: "file", type: "application/x-jmp", linkFeature: "FileOpen" },
 							{
 								scheme: "file",
-								type: "application/x-jmp-data-table",
+								type: "application/x-visio",
 								linkFeature: "FileOpen",
 							},
 							{
@@ -93,52 +127,152 @@
 								type: "application/x-drawio",
 								linkFeature: "FileOpen",
 							},
-							{ scheme: "file", type: "application/xml", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/xml", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/pdf", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "image/png", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "image/jpeg", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "image/webp", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "image/emf", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/emf", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/x-emf", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "image/wmf", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/wmf", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/x-wmf", linkFeature: "FileOpen" },
 							{
 								scheme: "file",
-								type: "application/x-msmetafile",
+								type: "application/pdf",
 								linkFeature: "FileOpen",
 							},
-							{ scheme: "file", type: "text/csv", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/ofd", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/x-java-source", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/javascript", linkFeature: "FileOpen" },
 							{
 								scheme: "file",
-								type: "application/javascript",
+								type: "application/ofd",
 								linkFeature: "FileOpen",
 							},
-							{ scheme: "file", type: "application/json", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/html", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/css", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/x-python", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/x-shellscript", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "application/yaml", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/yaml", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/markdown", linkFeature: "FileOpen" },
-							{ scheme: "file", type: "text/x-markdown", linkFeature: "FileOpen" },
+							{
+								scheme: "file",
+								type: "text/markdown",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/x-markdown",
+								linkFeature: "FileOpen",
+							},
 							{
 								scheme: "file",
 								type: "application/x-markdown",
 								linkFeature: "FileOpen",
 							},
-							{ scheme: "file", type: "text/plain", linkFeature: "FileOpen" },
+							{
+								scheme: "file",
+								type: "image/png",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/jpeg",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/webp",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/emf",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/emf",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-emf",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "image/wmf",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/wmf",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-wmf",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-msmetafile",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/plain",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/x-java-source",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/javascript",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/javascript",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/json",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/html",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/css",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/x-python",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/x-shellscript",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/yaml",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/yaml",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/xml",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "text/xml",
+								linkFeature: "FileOpen",
+							},
 							{
 								scheme: "file",
 								type: "application/octet-stream",
 								linkFeature: "FileOpen",
 							},
+							// open-formats:end
 						],
 					},
 				],

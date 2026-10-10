@@ -4,6 +4,7 @@ import { window } from '@kit.ArkUI';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
 import deviceInfo from '@ohos.deviceInfo';
+import { saveSuffixChoice } from '../common/OpenFormats';
 
 interface SaveSession {
   id: string;
@@ -248,7 +249,7 @@ export class HarmonyDocumentBridge {
     try {
       const options = new picker.DocumentSaveOptions();
       options.newFileNames = [session.fileName];
-      options.fileSuffixChoices = [this.fileSuffixChoice(session.fileName)];
+      options.fileSuffixChoices = [saveSuffixChoice(session.fileName)];
       const documentPicker = new picker.DocumentViewPicker(this.requireContext());
       const destinations = await documentPicker.save(options);
       if (destinations.length === 0) throw new Error('No save destination was selected.');
@@ -290,19 +291,6 @@ export class HarmonyDocumentBridge {
     const trimmed = fileName.trim().replace(/[\\/:*?"<>|]/g, '_');
     if (!trimmed) return 'Document.docx';
     return trimmed;
-  }
-
-  private fileSuffixChoice(fileName: string): string {
-    const normalized = fileName.toLocaleLowerCase();
-    if (normalized.endsWith('.pptx')) return 'PowerPoint presentation|.pptx';
-    if (normalized.endsWith('.xlsx')) return 'Excel workbook|.xlsx';
-    if (normalized.endsWith('.vsdx')) return 'Visio drawing|.vsdx';
-    if (normalized.endsWith('.jmp')) return 'JMP data table|.jmp';
-    if (normalized.endsWith('.drawio')) return 'draw.io diagram|.drawio';
-    if (normalized.endsWith('.pdf')) return 'PDF document|.pdf';
-    if (normalized.endsWith('.md')) return 'Markdown document|.md';
-    if (normalized.endsWith('.markdown')) return 'Markdown document|.markdown';
-    return 'Word document|.docx';
   }
 
   private removeTemporaryFile(path: string): void {

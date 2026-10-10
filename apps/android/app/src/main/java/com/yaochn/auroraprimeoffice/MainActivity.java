@@ -66,48 +66,6 @@ public final class MainActivity extends Activity {
   // against a payload that never gets that far, so the user is not left behind
   // an overlay with no way to see the WebView's own error page.
   private static final long STARTUP_SPLASH_TIMEOUT_MS = 20_000;
-  private static final String[] OFFICE_MIME_TYPES = {
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-visio.drawing",
-    "application/vnd.sas.jmp",
-    "application/x-jmp",
-    "application/x-jmp-data-table",
-    "application/vnd.jgraph.mxfile",
-    "application/x-drawio",
-    "application/pdf",
-    "text/markdown",
-    "text/plain",
-    "application/msword",
-    "application/vnd.ms-excel",
-    "application/vnd.ms-powerpoint",
-    "text/csv",
-    "image/png",
-    "image/jpeg",
-    "image/webp",
-    "image/emf",
-    "image/wmf",
-    "application/emf",
-    "application/wmf",
-    "application/x-emf",
-    "application/x-wmf",
-    "application/x-msmetafile",
-    "application/ofd",
-    "text/x-java-source",
-    "text/javascript",
-    "application/javascript",
-    "application/json",
-    "text/html",
-    "text/css",
-    "text/x-python",
-    "text/x-shellscript",
-    "application/yaml",
-    "text/yaml",
-    "application/xml",
-    "text/xml",
-    "application/octet-stream"
-  };
 
   private WebView webView;
   private View startupSplash;
@@ -445,7 +403,7 @@ public final class MainActivity extends Activity {
         new Intent(Intent.ACTION_OPEN_DOCUMENT)
             .addCategory(Intent.CATEGORY_OPENABLE)
             .setType("*/*")
-            .putExtra(Intent.EXTRA_MIME_TYPES, OFFICE_MIME_TYPES)
+            .putExtra(Intent.EXTRA_MIME_TYPES, OpenFormats.MIME_TYPES)
             .addFlags(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
                     | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
@@ -532,7 +490,7 @@ public final class MainActivity extends Activity {
         }
       }
       if (mimeTypes.isEmpty()) {
-        for (String mimeType : OFFICE_MIME_TYPES) mimeTypes.add(mimeType);
+        for (String mimeType : OpenFormats.MIME_TYPES) mimeTypes.add(mimeType);
       }
       return mimeTypes.toArray(new String[0]);
     }
@@ -747,7 +705,7 @@ public final class MainActivity extends Activity {
       Intent intent =
           new Intent(Intent.ACTION_CREATE_DOCUMENT)
               .addCategory(Intent.CATEGORY_OPENABLE)
-              .setType(mimeTypeFor(session.fileName))
+              .setType(OpenFormats.mimeTypeFor(session.fileName))
               .putExtra(Intent.EXTRA_TITLE, session.fileName)
               .addFlags(
                   Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -1088,22 +1046,6 @@ public final class MainActivity extends Activity {
     if ("application/pdf".equals(mimeType)) return ".pdf";
     if (mimeType.contains("markdown") || "text/plain".equals(mimeType)) return ".md";
     return ".docx";
-  }
-
-  private static String mimeTypeFor(String fileName) {
-    String normalized = fileName.toLowerCase(Locale.ROOT);
-    if (normalized.endsWith(".pptx")) {
-      return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-    }
-    if (normalized.endsWith(".xlsx")) {
-      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    }
-    if (normalized.endsWith(".vsdx")) return "application/vnd.ms-visio.drawing";
-    if (normalized.endsWith(".jmp")) return "application/x-jmp-data-table";
-    if (normalized.endsWith(".drawio")) return "application/vnd.jgraph.mxfile";
-    if (normalized.endsWith(".pdf")) return "application/pdf";
-    if (normalized.endsWith(".md") || normalized.endsWith(".markdown")) return "text/markdown";
-    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   }
 
   private static void closeQuietly(OutputStream output) {

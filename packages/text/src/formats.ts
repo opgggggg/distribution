@@ -5,7 +5,9 @@ export const TEXT_EXTENSIONS = [
 	"py", "pyw", "rb", "sh", "bash", "zsh", "yml", "yaml", "toml", "ini", "conf",
 	"cfg", "properties", "env", "c", "h", "cpp", "hpp", "cc", "cxx", "cs", "go",
 	"rs", "sql", "php", "swift", "kt", "kts", "diff", "patch", "gradle", "groovy",
-	"dockerfile", "makefile",
+	"dockerfile", "makefile", "ps1", "psm1", "bat", "cmd", "lua", "r", "pl", "pm", "dart",
+	"scala", "proto", "graphql", "gql", "tex", "rst", "adoc", "srt", "vtt", "ipynb",
+	"gitignore", "gitattributes", "editorconfig", "npmrc",
 ] as const;
 
 export const TEXT_FORMAT_MANIFEST = {

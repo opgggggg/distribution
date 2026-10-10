@@ -31,6 +31,14 @@ test("BOM encoding detection and explicit Chinese encoding", async () => {
 test("language mapping, explicit override, HTML escaping and large-text fallback", () => {
 	assert.equal(detectTextLanguage("C:\\src\\INDEX.TS"), "typescript");
 	assert.equal(detectTextLanguage("unknown.blah"), "plaintext");
+	// Languages registered on top of highlight.js/lib/common.
+	for (const [fileName, language] of [
+		["build.ps1", "powershell"], ["run.bat", "dos"], ["main.dart", "dart"],
+		["App.scala", "scala"], ["api.proto", "protobuf"], ["paper.tex", "latex"],
+		["schema.gql", "graphql"], ["notes.ipynb", "json"], [".editorconfig", "ini"],
+	]) assert.equal(detectTextLanguage(fileName), language, fileName);
+	assert.equal(detectTextLanguage(".gitignore"), "plaintext");
+	assert.match(highlightText("Get-ChildItem -Path .", { fileName: "a.ps1" }).html, /hljs-/);
 	assert.match(highlightText('{"a":true}', { language: "json" }).html, /hljs-attr/);
 	for (const options of [{ language: "does-not-exist" }, { language: "xml" }, { language: "xml", maxHighlightLength: 0 }]) {
 		const result = highlightText('<script>alert("x")</script>', options);

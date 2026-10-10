@@ -1,4 +1,10 @@
 import hljs from "highlight.js/lib/common";
+import dart from "highlight.js/lib/languages/dart";
+import dos from "highlight.js/lib/languages/dos";
+import latex from "highlight.js/lib/languages/latex";
+import powershell from "highlight.js/lib/languages/powershell";
+import protobuf from "highlight.js/lib/languages/protobuf";
+import scala from "highlight.js/lib/languages/scala";
 export { TEXT_EXTENSIONS, TEXT_FORMAT_MANIFEST } from "./formats.js";
 export { createTextBuffer, TextBuffer, type TextSaveOptions } from "./buffer.js";
 
@@ -36,7 +42,16 @@ const extensions: Record<string, string> = {
 	less: "less", scss: "scss", diff: "diff", patch: "diff", txt: "plaintext", log: "plaintext",
 	jsonl: "json", jsonc: "json", pyw: "python", cxx: "cpp", kts: "kotlin",
 	properties: "ini", conf: "ini", cfg: "ini", env: "ini", gradle: "groovy", groovy: "groovy",
+	ps1: "powershell", psm1: "powershell", bat: "dos", cmd: "dos", lua: "lua", r: "r",
+	pl: "perl", pm: "perl", dart: "dart", scala: "scala", proto: "protobuf", graphql: "graphql",
+	gql: "graphql", tex: "latex", ipynb: "json", editorconfig: "ini", npmrc: "ini",
 };
+
+// highlight.js/lib/common leaves these out; registering them keeps the bundle to the
+// languages TEXT_EXTENSIONS actually names.
+for (const [name, language] of Object.entries({ dart, dos, latex, powershell, protobuf, scala })) {
+	if (!hljs.getLanguage(name)) hljs.registerLanguage(name, language);
+}
 
 export function detectTextLanguage(fileName = ""): string {
 	const name = fileName.split(/[\\/]/).pop()!.toLowerCase();

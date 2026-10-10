@@ -1,30 +1,4 @@
-import { TEXT_EXTENSIONS } from "@cubexp/text/formats";
+import { OPEN_EXTENSIONS } from "./open-formats.generated";
 
 /** Extensions supported by the registered native formats and import converters. */
-export const OPEN_ACCEPT = [
-	".ofd",
-	...TEXT_EXTENSIONS.map((extension) => `.${extension}`),
-	".docx",
-	".doc",
-	".dot",
-	".pptx",
-	".ppt",
-	".pps",
-	".pot",
-	".xlsx",
-	".xls",
-	".xlt",
-	".csv",
-	".jmp",
-	".vsdx",
-	".drawio",
-	".md",
-	".markdown",
-	".pdf",
-	".png",
-	".jpg",
-	".jpeg",
-	".webp",
-	".emf",
-	".wmf",
-].join(",");
+export const OPEN_ACCEPT = OPEN_EXTENSIONS.map((extension) => `.${extension}`).join(",");

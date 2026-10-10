@@ -15,7 +15,7 @@
 	],
 	"scripts": {
 		"build": "npm run build:web",
-		"profile:sync": "node scripts/sync-app-profile.mjs",
+		"profile:sync": "node scripts/sync-app-profile.mjs && node scripts/sync-open-formats.mjs",
 		"prepare:upstream": "node scripts/link-upstream-node-modules.mjs",
 		"build:packages": "npm run prepare:upstream && npm --prefix als-office run build:packages && npm run build:ofd && npm run build:text",
 		"build:web": "npm run build:packages && npm run build:web -w @cubexp/office-harmony",
@@ -27,6 +27,7 @@
 		"desktop:web": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --renderer-only",
 		"desktop:dev": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --command dev",
 		"desktop:config": "node scripts/run-cubeoffice-desktop.mjs --print-config",
+		"test:open-formats": "node --test scripts/tests/open-formats.test.mjs",
 		"test:desktop-branding": "node --test scripts/tests/desktop-branding.test.mjs",
 		"desktop:build": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs",
 		"desktop:build:linux-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-unknown-linux-gnu --bundles appimage,deb",

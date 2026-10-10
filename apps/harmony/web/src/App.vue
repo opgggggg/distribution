@@ -49,8 +49,11 @@ const AndroidTextFormatPanel = defineAsyncComponent(
 );
 const androidFormatOpen = ref(false);
 const androidTextFormat = ref<AndroidTextFormat>({});
-import { TEXT_EXTENSIONS } from "@cubexp/text/formats";
 import { OPEN_ACCEPT } from "./open-formats";
+import {
+	OPEN_AS_FORMAT_BY_EXTENSION,
+	OPEN_FORMAT_ENGINE_BY_EXTENSION,
+} from "./open-formats.generated";
 import type { DocumentTemplateSource } from "../../../../als-office/apps/desktop/src/document-templates";
 const AndroidTemplatePicker = defineAsyncComponent(
 	() => import("./android/AndroidTemplatePicker.vue"),
@@ -370,8 +373,15 @@ const FORMAT_ENGINE_MODULES: Readonly<
 	docx: async () => [(await import("@yaochn/als-office-docx/vue")).DOCX_VUE_FORMAT_CONTRIBUTION],
 	pptx: async () => [(await import("@yaochn/als-office-pptx/vue")).PPTX_VUE_FORMAT_CONTRIBUTION],
 	xlsx: async () => {
-		const module = await import("@yaochn/als-office-xlsx/vue");
-		return [module.XLSX_VUE_FORMAT_CONTRIBUTION, module.JMP_VUE_FORMAT_CONTRIBUTION];
+		const [module, { TSV_TO_XLSX_CONVERTER }] = await Promise.all([
+			import("@yaochn/als-office-xlsx/vue"),
+			import("./tsv-import"),
+		]);
+		const workbook = module.XLSX_VUE_FORMAT_CONTRIBUTION;
+		return [
+			{ ...workbook, converters: [...(workbook.converters ?? []), TSV_TO_XLSX_CONVERTER] },
+			module.JMP_VUE_FORMAT_CONTRIBUTION,
+		];
 	},
 	vsdx: async () => [(await import("@yaochn/als-office-vsdx/vue")).VSDX_VUE_FORMAT_CONTRIBUTION],
 	markdown: async () => [
@@ -400,40 +410,8 @@ const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, For
 		ofd: "ofd",
 		text: "text",
 	};
-const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> = {
-	doc: "docx",
-	dot: "docx",
-	ppt: "pptx",
-	pps: "pptx",
-	pot: "pptx",
-	xls: "xlsx",
-	xlt: "xlsx",
-	csv: "xlsx",
-	drawio: "vsdx",
-	png: "image",
-	jpg: "image",
-	jpeg: "image",
-	webp: "image",
-	emf: "image",
-	wmf: "image",
-	docx: "docx",
-	pptx: "pptx",
-	xlsx: "xlsx",
-	jmp: "xlsx",
-	vsdx: "vsdx",
-	md: "markdown",
-	markdown: "markdown",
-	pdf: "pdf",
-	ofd: "ofd",
-	// .xml stays out: the drawio importer claims application/xml, so an extension
-	// shortcut here would open a diagram as source text instead.
-	...Object.fromEntries(
-		TEXT_EXTENSIONS.filter((extension) => extension !== "xml").map((extension) => [
-			extension,
-			"text" as const,
-		]),
-	),
-};
+const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> =
+	OPEN_FORMAT_ENGINE_BY_EXTENSION;
 const formatEngineLoads = new Map<FormatEngineModule, Promise<void>>();
 
 function loadFormatEngine(module: FormatEngineModule): Promise<void> {
@@ -1304,8 +1282,9 @@ async function addFile(file: File): Promise<void> {
 	// unknown extension needs every engine before an import can be resolved.
 	if (engine) await loadFormatEngine(engine);
 	else await ensureAllFormats();
+	const directFormat = OPEN_AS_FORMAT_BY_EXTENSION[extension] ?? extension;
 	const direct =
-		formats.get(extension as EditorArtifactFormat) ??
+		formats.get(directFormat as EditorArtifactFormat) ??
 		formats.list().find(({ plugin }) => plugin.manifest.mimeTypes.includes(file.type));
 	if (direct) {
 		await addDocument(direct.plugin.manifest.id, file.name, file);
