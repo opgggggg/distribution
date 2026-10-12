@@ -129,6 +129,21 @@
 							},
 							{
 								scheme: "file",
+								type: "application/vnd.cubexp.notebook+zip",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-xopp",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
+								type: "application/x-xoj",
+								linkFeature: "FileOpen",
+							},
+							{
+								scheme: "file",
 								type: "application/pdf",
 								linkFeature: "FileOpen",
 							},

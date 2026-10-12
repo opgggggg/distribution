@@ -254,6 +254,16 @@ const androidWorkspace = ref<InstanceType<typeof AndroidWorkspace> | null>(null)
 const HOME_TAB_ID = "home";
 const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 	{
+		format: "notes",
+		label: "手写笔记",
+		documentLabel: "手写笔记本",
+		shortLabel: "笔记",
+		icon: "N",
+		extension: "cubenote",
+		baseName: "Notebook",
+		editable: true,
+	},
+	{
 		format: "docx",
 		label: "Word",
 		documentLabel: "Word 文档",
@@ -379,10 +389,15 @@ type FormatEngineModule =
 	| "image"
 	| "ofd"
 	| "epub"
-	| "text";
+	| "text"
+	| "notes";
 const FORMAT_ENGINE_MODULES: Readonly<
 	Record<FormatEngineModule, () => Promise<readonly UiArtifactFormatContribution[]>>
 > = {
+	notes: async () => {
+		await import("@cubexp/notes/style.css");
+		return [(await import("@cubexp/notes/office-vue")).NOTES_VUE_FORMAT_CONTRIBUTION];
+	},
 	docx: async () => [(await import("@yaochn/als-office-docx/vue")).DOCX_VUE_FORMAT_CONTRIBUTION],
 	pptx: async () => [(await import("@yaochn/als-office-pptx/vue")).PPTX_VUE_FORMAT_CONTRIBUTION],
 	xlsx: async () => {
@@ -406,7 +421,9 @@ const FORMAT_ENGINE_MODULES: Readonly<
 			import("./image-import"),
 		]);
 		const image = module.IMAGE_VUE_FORMAT_CONTRIBUTION;
-		return [{ ...image, converters: [...(image.converters ?? []), ...IMAGE_IMPORT_CONVERTERS] }];
+		return [
+			{ ...image, converters: [...(image.converters ?? []), ...IMAGE_IMPORT_CONVERTERS] },
+		];
 	},
 	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
 	ofd: async () => [(await import("@cubexp/ofd/office-vue")).OFD_VUE_FORMAT_CONTRIBUTION],
@@ -432,6 +449,7 @@ const FORMAT_ENGINE_BY_FORMAT: Readonly<Partial<Record<EditorArtifactFormat, For
 		ofd: "ofd",
 		epub: "epub",
 		text: "text",
+		notes: "notes",
 	};
 const FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, FormatEngineModule>> =
 	OPEN_FORMAT_ENGINE_BY_EXTENSION;
@@ -817,7 +835,10 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 	// The reader takes the whole screen on phones and brings its own top bar,
 	// whose back button returns to the library like the workspace one.
 	if (tab.format === "epub" && nativeMobileLayout)
-		return { ...binding, props: { ...binding.props, exitable: true, onExit: () => handleNativeBack(true) } };
+		return {
+			...binding,
+			props: { ...binding.props, exitable: true, onExit: () => handleNativeBack(true) },
+		};
 	if (!mobileLayout.value) return binding;
 	if (tab.format === "xlsx")
 		return { ...binding, props: { ...binding.props, allowDimensionResize: true } };
@@ -1330,9 +1351,7 @@ async function addFile(file: File): Promise<void> {
 		{ openable: (format) => formats.get(format) !== undefined },
 	);
 	if (!converter)
-		throw new Error(
-			"不支持这个文件类型。请选择 Office、PDF、Markdown、文本或图片文件。",
-		);
+		throw new Error("不支持这个文件类型。请选择 Office、PDF、Markdown、文本或图片文件。");
 	const targetFormat = converter.manifest.target.format;
 	const targetExtension = converter.manifest.target.extensions[0] ?? targetFormat;
 	const converted = await formats.engine.conversions.convert(
@@ -3267,6 +3286,7 @@ onBeforeUnmount(() => {
 			'is-mobile-insert-open': mobileInsertMenuOpen,
 			'is-pptx-viewing': mobilePptxViewing,
 			'is-epub-reading': mobileEpubReading,
+			'is-notes-document': nativeMobileLayout && activeTab?.format === 'notes',
 		}"
 	>
 		<input v-if="nativeTabSession" type="file" :accept="OPEN_ACCEPT" hidden @change="open" />
@@ -3663,15 +3683,37 @@ onBeforeUnmount(() => {
 						</p>
 						<div class="harmony-home__actions">
 							<div class="harmony-home__create">
-								<button type="button" class="is-primary" :disabled="opening" @click="createDocument('docx')">
+								<button
+									type="button"
+									class="is-primary"
+									:disabled="opening"
+									@click="createDocument('docx')"
+								>
 									新建 Word 文档
 								</button>
-								<details ref="homeNewMenu" class="harmony-home__create-dropdown" @keydown.esc="homeNewMenu && (homeNewMenu.open = false)">
+								<details
+									ref="homeNewMenu"
+									class="harmony-home__create-dropdown"
+									@keydown.esc="homeNewMenu && (homeNewMenu.open = false)"
+								>
 									<summary aria-label="新建其他类型文档" :aria-disabled="opening">
-										<svg viewBox="0 0 12 12" aria-hidden="true"><path d="m2.5 4.25 3.5 3.5 3.5-3.5" /></svg>
+										<svg viewBox="0 0 12 12" aria-hidden="true">
+											<path d="m2.5 4.25 3.5 3.5 3.5-3.5" />
+										</svg>
 									</summary>
 									<div class="harmony-home__create-menu">
-										<button v-for="option in editableFormats.filter(item => item.format !== 'docx')" :key="option.format" type="button" :disabled="opening" @click="homeNewMenu && (homeNewMenu.open = false); createDocument(option.format)">
+										<button
+											v-for="option in editableFormats.filter(
+												(item) => item.format !== 'docx',
+											)"
+											:key="option.format"
+											type="button"
+											:disabled="opening"
+											@click="
+												homeNewMenu && (homeNewMenu.open = false);
+												createDocument(option.format);
+											"
+										>
 											新建 {{ option.documentLabel }}
 										</button>
 									</div>

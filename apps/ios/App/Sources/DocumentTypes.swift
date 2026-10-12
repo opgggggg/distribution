@@ -23,6 +23,8 @@ enum DocumentTypes {
 		"vsdx",
 		"vsd", "vss", "vst",
 		"drawio",
+		"cubenote",
+		"xopp", "xoj",
 		"pdf",
 		"ofd",
 		"epub",

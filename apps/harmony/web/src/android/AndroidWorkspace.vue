@@ -80,6 +80,7 @@ const sheet = ref<"" | "new" | "more" | "format" | "documents">("");
 const dialog = ref<HTMLDialogElement>();
 const picker = ref<HTMLInputElement>();
 const formats = [
+	{ id: "notes", label: "手写笔记", detail: "手写、绘图与分页笔记本", mark: "N" },
 	{ id: "docx", label: "文字文档", detail: "写作、报告与信函", mark: "W" },
 	{ id: "xlsx", label: "电子表格", detail: "数据、清单与预算", mark: "X" },
 	{ id: "pptx", label: "演示文稿", detail: "想法与分享", mark: "P" },
@@ -203,6 +204,7 @@ function previewLabel(item: DocumentItem): string {
 				<Icon name="back" />
 			</button>
 			<button
+				v-if="active.format !== 'notes' || !editing"
 				class="android-document-title"
 				aria-label="切换文档"
 				@click="sheet = 'documents'"
@@ -211,13 +213,22 @@ function previewLabel(item: DocumentItem): string {
 				><small role="status">{{ status }}</small>
 			</button>
 			<button
-				v-if="editing"
+				v-if="editing && active.format !== 'notes'"
 				class="android-icon-button"
 				aria-label="完成编辑"
 				:disabled="saving"
 				@click="emit('finish')"
 			>
 				<Icon name="check" />
+			</button>
+			<button
+				v-if="!editing && editable && active.format === 'notes'"
+				class="android-icon-button"
+				aria-label="编辑文档"
+				:disabled="!ready"
+				@click="emit('edit')"
+			>
+				<Icon name="edit" />
 			</button>
 			<button
 				class="android-icon-button"
@@ -401,7 +412,7 @@ function previewLabel(item: DocumentItem): string {
 		</nav>
 	</section>
 	<nav
-		v-if="active && !immersive"
+		v-if="active && !immersive && active.format !== 'notes'"
 		class="android-editor-tools"
 		:aria-label="editing ? '编辑工具' : '阅读工具'"
 	>
@@ -447,7 +458,12 @@ function previewLabel(item: DocumentItem): string {
 			</button>
 		</template>
 		<template v-else>
-			<button aria-label="查找" :disabled="!ready" @click="emit('search')">
+			<button
+				v-if="active.format !== 'notes'"
+				aria-label="查找"
+				:disabled="!ready"
+				@click="emit('search')"
+			>
 				<Icon name="search" /><span>查找</span>
 			</button>
 			<button

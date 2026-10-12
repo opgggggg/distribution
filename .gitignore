@@ -35,3 +35,4 @@ website/fonts/releases/
 packages/ofd-host/native/target/
 profiles/cubeoffice/desktop/generated/
 .cache/ofd-media/
+.cache/notes-qa/

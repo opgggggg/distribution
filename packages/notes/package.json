@@ -1,0 +1,71 @@
+{
+	"name": "@cubexp/notes",
+	"version": "0.1.0",
+	"description": "CubeOffice paginated handwriting notebook and Vue editor",
+	"license": "Apache-2.0",
+	"type": "module",
+	"sideEffects": [
+		"**/*.css"
+	],
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./formats": {
+			"types": "./dist/formats.d.ts",
+			"import": "./dist/formats.js"
+		},
+		"./vue": {
+			"types": "./dist/vue/editor.d.ts",
+			"import": "./dist/vue/editor.js"
+		},
+		"./office": {
+			"types": "./dist/office.d.ts",
+			"import": "./dist/office.js"
+		},
+		"./office-vue": {
+			"types": "./dist/office-vue.d.ts",
+			"import": "./dist/office-vue.js"
+		},
+		"./thumbnail": {
+			"types": "./dist/thumbnail.d.ts",
+			"import": "./dist/thumbnail.js"
+		},
+		"./style.css": "./dist/style.css"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/style.css', 'dist/style.css')\"",
+		"check:types": "tsc -p tsconfig.json",
+		"test": "npm run build && node --test tests/*.mjs",
+		"test:browser": "node tests/browser.cjs"
+	},
+	"dependencies": {
+		"@xmldom/xmldom": "^0.9.12",
+		"fflate": "^0.8.2",
+		"pdf-lib": "^1.17.1",
+		"perfect-freehand": "^1.2.2"
+	},
+	"peerDependencies": {
+		"@yaochn/als-office-editor-core": ">=0.85.2 <1",
+		"@yaochn/als-office-editor-ui": ">=0.85.2 <1",
+		"vue": "^3.5.0"
+	},
+	"peerDependenciesMeta": {
+		"@yaochn/als-office-editor-core": {
+			"optional": true
+		},
+		"@yaochn/als-office-editor-ui": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"typescript": "^5.0.3"
+	}
+}

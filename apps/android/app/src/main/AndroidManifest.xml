@@ -62,6 +62,9 @@
 				<data android:mimeType="application/x-visio" />
 				<data android:mimeType="application/vnd.jgraph.mxfile" />
 				<data android:mimeType="application/x-drawio" />
+				<data android:mimeType="application/vnd.cubexp.notebook+zip" />
+				<data android:mimeType="application/x-xopp" />
+				<data android:mimeType="application/x-xoj" />
 				<data android:mimeType="application/pdf" />
 				<data android:mimeType="application/ofd" />
 				<data android:mimeType="application/epub+zip" />
@@ -127,6 +130,9 @@
 				<data android:mimeType="application/x-visio" />
 				<data android:mimeType="application/vnd.jgraph.mxfile" />
 				<data android:mimeType="application/x-drawio" />
+				<data android:mimeType="application/vnd.cubexp.notebook+zip" />
+				<data android:mimeType="application/x-xopp" />
+				<data android:mimeType="application/x-xoj" />
 				<data android:mimeType="application/pdf" />
 				<data android:mimeType="application/ofd" />
 				<data android:mimeType="application/epub+zip" />
@@ -192,6 +198,9 @@
 				<data android:mimeType="application/x-visio" />
 				<data android:mimeType="application/vnd.jgraph.mxfile" />
 				<data android:mimeType="application/x-drawio" />
+				<data android:mimeType="application/vnd.cubexp.notebook+zip" />
+				<data android:mimeType="application/x-xopp" />
+				<data android:mimeType="application/x-xoj" />
 				<data android:mimeType="application/pdf" />
 				<data android:mimeType="application/ofd" />
 				<data android:mimeType="application/epub+zip" />

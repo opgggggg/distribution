@@ -26,6 +26,9 @@ final class OpenFormats {
     "application/x-visio",
     "application/vnd.jgraph.mxfile",
     "application/x-drawio",
+    "application/vnd.cubexp.notebook+zip",
+    "application/x-xopp",
+    "application/x-xoj",
     "application/pdf",
     "application/ofd",
     "application/epub+zip",
@@ -94,6 +97,9 @@ final class OpenFormats {
     SAVE_MIME_TYPES.put("vss", "application/vnd.visio");
     SAVE_MIME_TYPES.put("vst", "application/vnd.visio");
     SAVE_MIME_TYPES.put("drawio", "application/vnd.jgraph.mxfile");
+    SAVE_MIME_TYPES.put("cubenote", "application/vnd.cubexp.notebook+zip");
+    SAVE_MIME_TYPES.put("xopp", "application/x-xopp");
+    SAVE_MIME_TYPES.put("xoj", "application/x-xopp");
     SAVE_MIME_TYPES.put("pdf", "application/pdf");
     SAVE_MIME_TYPES.put("ofd", "application/ofd");
     SAVE_MIME_TYPES.put("epub", "application/epub+zip");

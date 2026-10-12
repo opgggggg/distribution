@@ -109,7 +109,11 @@ export const OPEN_FORMAT_GROUPS = [
 				label: "JMP data table",
 				engine: "xlsx",
 				extensions: ["jmp"],
-				mimeTypes: ["application/x-jmp-data-table", "application/vnd.sas.jmp", "application/x-jmp"],
+				mimeTypes: [
+					"application/x-jmp-data-table",
+					"application/vnd.sas.jmp",
+					"application/x-jmp",
+				],
 				uti: {
 					identifier: "com.sas.jmp",
 					description: "JMP Data Table",
@@ -150,6 +154,23 @@ export const OPEN_FORMAT_GROUPS = [
 		label: "Documents and images",
 		formats: [
 			{
+				label: "CubeOffice notebook",
+				engine: "notes",
+				extensions: ["cubenote"],
+				mimeTypes: ["application/vnd.cubexp.notebook+zip"],
+				uti: {
+					identifier: "com.cubexp.notebook",
+					description: "CubeOffice Notebook",
+					conformsTo: ["public.data", "public.composite-content"],
+				},
+			},
+			{
+				label: "Xournal notebook",
+				engine: "notes",
+				extensions: ["xopp", "xoj"],
+				mimeTypes: ["application/x-xopp", "application/x-xoj"],
+			},
+			{
 				label: "PDF document",
 				engine: "pdf",
 				extensions: ["pdf"],
@@ -185,7 +206,12 @@ export const OPEN_FORMAT_GROUPS = [
 				extensions: ["jpg", "jpeg"],
 				mimeTypes: ["image/jpeg"],
 			},
-			{ label: "WebP image", engine: "image", extensions: ["webp"], mimeTypes: ["image/webp"] },
+			{
+				label: "WebP image",
+				engine: "image",
+				extensions: ["webp"],
+				mimeTypes: ["image/webp"],
+			},
 			{
 				label: "EMF image",
 				engine: "image",
@@ -233,7 +259,12 @@ export const OPEN_FORMAT_GROUPS = [
 				label: "HEIC photo",
 				engine: "image",
 				extensions: ["heic", "heif", "hif"],
-				mimeTypes: ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"],
+				mimeTypes: [
+					"image/heic",
+					"image/heif",
+					"image/heic-sequence",
+					"image/heif-sequence",
+				],
 			},
 		],
 	},

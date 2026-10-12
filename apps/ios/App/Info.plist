@@ -226,6 +226,28 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
+			<string>com.cubexp.notebook</string>
+			<key>UTTypeDescription</key>
+			<string>CubeOffice Notebook</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>cubenote</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.cubexp.notebook+zip</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
 			<string>com.cubexp.ofd</string>
 			<key>UTTypeDescription</key>
 			<string>OFD Document</string>

@@ -1142,3 +1142,55 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	min-width: 0;
 	border-bottom: 0;
 }
+
+/* Notes keep a single floating navigation layer over the drawing surface. */
+.harmony-app.android-app.is-notes-document {
+	position: relative;
+	grid-template-rows: minmax(0, 1fr);
+	font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.harmony-app.android-app.is-notes-document > .harmony-body {
+	grid-row: 1 / -1;
+}
+.is-notes-document .android-topbar {
+	position: absolute;
+	inset: 8px 12px auto;
+	width: auto;
+	min-height: 44px;
+	padding: 0;
+	pointer-events: none;
+	z-index: 9;
+	background: transparent;
+	justify-content: space-between;
+}
+.is-notes-document .android-topbar .android-icon-button {
+	pointer-events: auto;
+	width: 44px;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 10px;
+	background: var(--android-card);
+	box-shadow: 0 2px 16px #24324d0d;
+}
+.is-notes-document .android-document-title {
+	pointer-events: auto;
+	padding: 0 8px;
+	background: var(--android-card);
+	border-radius: 24px;
+}
+.is-notes-document .android-document-title small {
+	display: none;
+}
+.is-notes-document .android-document-title strong {
+	font-size: 15px;
+}
+.is-notes-document > .harmony-feedback {
+	position: absolute;
+	top: 60px;
+	left: 12px;
+	right: 12px;
+	z-index: 10;
+}
+.is-notes-document .android-topbar > .android-icon-button:last-child svg {
+	transform: rotate(90deg);
+}

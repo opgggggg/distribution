@@ -4,6 +4,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { TEXT_EXTENSIONS } from "../../../packages/text/dist/formats.js";
 import { EPUB_EXTENSIONS, EPUB_MIME_TYPE } from "../../../packages/epub/dist/formats.js";
+import { NOTES_EXTENSIONS, NOTES_MIME_TYPE } from "../../../packages/notes/dist/formats.js";
 
 const profilePackageEnv = "DESKTOP_APP_PROFILES_PACKAGE";
 const configuredProfilePackage = process.env[profilePackageEnv];
@@ -36,11 +37,24 @@ const bundleOfdMedia = process.env.CUBEOFFICE_BUNDLE_MEDIA === "1";
 const cubeOfficeProfile = {
 	...officeProfile,
 	supportedExtensions: [
-		...new Set([...officeProfile.supportedExtensions, ...TEXT_EXTENSIONS, "ofd", ...EPUB_EXTENSIONS]),
+		...new Set([
+			...officeProfile.supportedExtensions,
+			...TEXT_EXTENSIONS,
+			"ofd",
+			...EPUB_EXTENSIONS,
+			...NOTES_EXTENSIONS,
+		]),
 	],
 	openDocumentExtensions: [
-		...new Set([...officeProfile.openDocumentExtensions, ...TEXT_EXTENSIONS, "ofd", ...EPUB_EXTENSIONS]),
+		...new Set([
+			...officeProfile.openDocumentExtensions,
+			...TEXT_EXTENSIONS,
+			"ofd",
+			...EPUB_EXTENSIONS,
+			...NOTES_EXTENSIONS,
+		]),
 	],
+	newDocumentExtensions: [...officeProfile.newDocumentExtensions, "cubenote"],
 	supportedFormatLabels: [
 		...officeProfile.supportedFormatLabels,
 		"TXT",
@@ -51,10 +65,17 @@ const cubeOfficeProfile = {
 		"XML",
 		"PY",
 		"EPUB",
+		"CUBENOTE",
 	],
 	id: "cubeoffice",
 	readonlyConversionExtensions: [...(officeProfile.readonlyConversionExtensions ?? []), "ofd"],
 	formatContributions: [
+		{
+			format: "NOTES",
+			specifier: fromHere("./notes-contribution.ts"),
+			binding: "NOTES_VUE_FORMAT_CONTRIBUTION",
+			extensions: [...NOTES_EXTENSIONS],
+		},
 		{
 			format: "OFD",
 			specifier: fromHere("../../../packages/ofd-host/src/desktop-contribution.ts"),
@@ -159,6 +180,20 @@ const cubeOfficeProfile = {
 			// to share one key: a second `fileAssociations` property would silently
 			// replace this one and unregister the text file types.
 			fileAssociations: [
+				{
+					ext: ["cubenote"],
+					name: "CubeOffice Notebook",
+					mimeType: NOTES_MIME_TYPE,
+					role: "Editor",
+					rank: "Owner",
+				},
+				{
+					ext: ["xopp", "xoj"],
+					name: "Xournal Notebook",
+					mimeType: "application/x-xopp",
+					role: "Editor",
+					rank: "Alternate",
+				},
 				...(officeProfile.tauriConfig.bundle?.fileAssociations ??
 					baseTauri.bundle.fileAssociations ??
 					[]),

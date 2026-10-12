@@ -5,6 +5,7 @@ export type OpenFormatEngine =
 	| "pptx"
 	| "xlsx"
 	| "vsdx"
+	| "notes"
 	| "pdf"
 	| "ofd"
 	| "epub"
@@ -32,6 +33,9 @@ export const OPEN_EXTENSIONS = [
 	"vss",
 	"vst",
 	"drawio",
+	"cubenote",
+	"xopp",
+	"xoj",
 	"pdf",
 	"ofd",
 	"epub",
@@ -153,6 +157,9 @@ export const OPEN_FORMAT_ENGINE_BY_EXTENSION: Readonly<Record<string, OpenFormat
 	vss: "vsdx",
 	vst: "vsdx",
 	drawio: "vsdx",
+	cubenote: "notes",
+	xopp: "notes",
+	xoj: "notes",
 	pdf: "pdf",
 	ofd: "ofd",
 	epub: "epub",
