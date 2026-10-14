@@ -38,33 +38,33 @@ persistence; the editing surfaces remain browser-native and do not import Tauri.
 
 ### Document tab compatibility
 
-PC/2in1 devices use native live document tabs. Each document owns a persistent
-ArkWeb `WebviewController` and `BuilderNode`, managed by `tabs/NativeTabs.ets`.
-The native tab strip in `pages/NativeWorkspace.ets` supports switching, closing,
-dragging to reorder, dragging outside the strip into a new window, and dropping
-onto another window's tab strip to merge. The system shows a tab preview during
-drag; the document stays in its source window until the drop completes.
+Phone, tablet and 2in1 devices now use the same iPad-style touch workspace in
+`pages/Index.ets`: shared library, document switcher, local drafts, reading/editing
+modes and floating note tools. The 2in1 system decoration owns window controls;
+there is no extra application tab strip above the shared UI. Closing a 2in1
+window waits for draft persistence and vetoes closing if a draft could not save.
 
-A detach/merge moves the existing Web component, preserving its JavaScript state,
-selection and editor undo history. It does not export and reload the document.
-The old NodeContainer must release the component before the destination mounts
-it, and failed transfers restore the original ownership. Save and window commands
-are rebound to the current window. Closing a tab or a window checks unsaved
-changes; closing the main window also checks documents in its child windows.
-The initial file is handed to its WebView through local IndexedDB; no file data
-is put in system drag-and-drop payloads.
+The earlier native live-tab implementation is retained for development tests in
+`tabs/NativeTabs.ets` and `pages/NativeWorkspace.ets`. The dedicated device test
+explicitly mounts that shell in an isolated test package. It reuses live
+`WebviewController`/`BuilderNode` objects through switch, detach and merge, keeping
+JavaScript state, selection and editor undo history. It is not the default app UI.
 
 This uses the platform's documented
 [Web component migration](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/web-component-migrate-V5)
 capability. New windows are application subwindows owned by the main window,
 so their native minimize/lifecycle behavior follows HarmonyOS rather than macOS.
 
-Phone/tablet devices and hosts where native window setup is unavailable retain
-the single-WebView workspace in `pages/Index.ets`. The desktop/tablet layout uses
-the shared `UiWorkspaceTabStrip` with detaching disabled, including local drag
-sorting, overflow handling and Alt+Shift+ArrowLeft/ArrowRight sorting. Phone
-layouts keep the mobile document switcher. Local sorting reorders the existing
-objects and keeps editor surfaces mounted.
+Shared workspace validation:
+
+```sh
+node packages/notes/tests/shared-tablet-shell.cjs
+NOTES_MOBILE_URL='http://127.0.0.1:5179/?platform=harmonyos' node packages/notes/tests/phone.cjs
+```
+
+The first test compares iPad and Harmony UI geometry at tablet/2in1 sizes,
+including reading/editing pages, draft save/close preparation and storage failure
+recovery. Run the shared web development server on port 5179 for these tests.
 
 Targeted validation:
 

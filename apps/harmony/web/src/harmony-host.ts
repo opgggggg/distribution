@@ -56,8 +56,8 @@ export function isIosHost(): boolean {
 }
 
 /**
- * 三个原生宿主都用同一套触屏工作区；浏览器才走桌面布局。HarmonyOS 一个包覆盖
- * phone / tablet / 2in1，所以它还要再判一次形态（见 App.vue）。
+ * Android 和 iOS 的原生宿主检测；HarmonyOS 在 App.vue 同样启用共享触屏工作区，
+ * 覆盖 phone / tablet / 2in1。浏览器默认保留桌面布局。
  */
 export function isNativeMobileHost(): boolean {
 	return isAndroidHost() || isIosHost();

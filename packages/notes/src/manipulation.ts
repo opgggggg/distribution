@@ -1,3 +1,4 @@
+import { isInfinitePage } from "./board.js";
 import { bounds, shapePoints, type Bounds, type Point } from "./geometry.js";
 import {
 	pageElements,
@@ -69,7 +70,7 @@ export function resizeElements(elements: InkElement[], from: Bounds, to: Bounds)
 	for (const e of elements) {
 		if (e.kind === "stroke") {
 			if (e.connector) continue;
-			e.points.forEach((p) => {
+			[...e.points, ...(e.cutouts ?? []).flat()].forEach((p) => {
 				p.x = to.x + (p.x - from.x) * sx;
 				p.y = to.y + (p.y - from.y) * sy;
 			});
@@ -184,16 +185,26 @@ export function snapMove(
 			if (guide) guides.push(guide);
 		}
 	}
-	dx = Math.max(-box.x, Math.min(page.width - box.x - box.width, dx));
-	dy = Math.max(-box.y, Math.min(page.height - box.y - box.height, dy));
+	if (!isInfinitePage(page)) {
+		dx = Math.max(-box.x, Math.min(page.width - box.x - box.width, dx));
+		dy = Math.max(-box.y, Math.min(page.height - box.y - box.height, dy));
+	}
 	return { dx, dy, guides };
 }
 export function createConnectedShape(source: InkStroke, center: Point, page: NotePage): InkStroke {
 	const b = bounds(source),
-		w = Math.min(page.width - 4, Math.max(24, b.width - source.width)),
-		h = Math.min(page.height - 4, Math.max(24, b.height - source.width));
-	const x = Math.max(2, Math.min(page.width - w - 2, center.x - w / 2)),
-		y = Math.max(2, Math.min(page.height - h - 2, center.y - h / 2));
+		w = isInfinitePage(page)
+			? Math.max(24, b.width - source.width)
+			: Math.min(page.width - 4, Math.max(24, b.width - source.width)),
+		h = isInfinitePage(page)
+			? Math.max(24, b.height - source.width)
+			: Math.min(page.height - 4, Math.max(24, b.height - source.width));
+	const x = isInfinitePage(page)
+			? center.x - w / 2
+			: Math.max(2, Math.min(page.width - w - 2, center.x - w / 2)),
+		y = isInfinitePage(page)
+			? center.y - h / 2
+			: Math.max(2, Math.min(page.height - h - 2, center.y - h / 2));
 	return {
 		...structuredClone(source),
 		id: crypto.randomUUID(),

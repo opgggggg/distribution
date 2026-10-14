@@ -1,5 +1,15 @@
 import { clone, validateNotebook, type Notebook, type NotePage } from "./model.js";
 
+export const HISTORY_LIMITS = { steps: 200, bytes: 32 * 1024 * 1024 };
+export interface NoteHistoryState {
+	readonly past: readonly Notebook[];
+	readonly future: readonly Notebook[];
+}
+function restoredWeight(before: Notebook, after: Notebook): number {
+	const changed = before.pages.filter((page, i) => page !== after.pages[i]);
+	return JSON.stringify({ ...before, pages: changed }).length * 3;
+}
+
 /** One transaction per gesture; cancelling never commits incomplete ink. */
 export class NoteHistory {
 	private past: Notebook[] = [];
@@ -8,24 +18,62 @@ export class NoteHistory {
 	private futureWeights: number[] = [];
 	private revision = 0;
 	private cleanDocument: Notebook;
+	private cleanPast: number[];
+	private cleanFuture: number[];
+	private identities = new WeakMap<Notebook, number>();
+	private nextIdentity = 0;
 	private listeners = new Set<() => void>();
 	constructor(
 		public document: Notebook,
 		private readonly readonly = false,
+		state?: NoteHistoryState,
 	) {
+		this.past = [...(state?.past ?? [])];
+		this.future = [...(state?.future ?? [])];
+		this.pastWeights = this.past.map((before, i) =>
+			restoredWeight(before, this.past[i + 1] ?? document),
+		);
+		this.futureWeights = this.future.map((after, i) =>
+			restoredWeight(this.future[i + 1] ?? document, after),
+		);
 		this.cleanDocument = document;
+		this.cleanPast = this.past.map((d) => this.identity(d));
+		this.cleanFuture = this.future.map((d) => this.identity(d));
+	}
+	private identity(document: Notebook): number {
+		let id = this.identities.get(document);
+		if (id === undefined) {
+			id = ++this.nextIdentity;
+			this.identities.set(document, id);
+		}
+		return id;
+	}
+	private sameStack(stack: readonly Notebook[], saved: readonly number[]): boolean {
+		return (
+			stack.length === saved.length && stack.every((d, i) => this.identity(d) === saved[i])
+		);
 	}
 	getRevision() {
 		return this.revision;
 	}
 	isDirty() {
-		return this.document !== this.cleanDocument;
+		return (
+			this.document !== this.cleanDocument ||
+			!this.sameStack(this.past, this.cleanPast) ||
+			!this.sameStack(this.future, this.cleanFuture)
+		);
 	}
 	canUndo() {
 		return this.past.length > 0;
 	}
 	canRedo() {
 		return this.future.length > 0;
+	}
+	/** Snapshot references are immutable; a pending text edit is one extra transaction. */
+	capture(document?: Notebook): NoteHistoryState {
+		if (document && JSON.stringify(document) !== JSON.stringify(this.document))
+			return { past: [...this.past, this.document].slice(-HISTORY_LIMITS.steps), future: [] };
+		return { past: [...this.past], future: [...this.future] };
 	}
 	subscribe(listener: () => void) {
 		this.listeners.add(listener);
@@ -54,6 +102,20 @@ export class NoteHistory {
 		change(page);
 		const before = JSON.stringify(this.document.pages[index]);
 		if (JSON.stringify(page) === before) return false;
+		// Preserve immutable ink references across page transactions. Adding one pen
+		// stroke should not invalidate the renderer's geometry for all older strokes.
+		const originals = new Map(
+			this.document.pages[index].layers.flatMap((layer) =>
+				layer.elements.map((element) => [element.id, element] as const),
+			),
+		);
+		for (const layer of page.layers)
+			layer.elements = layer.elements.map((element) => {
+				const original = originals.get(element.id);
+				return original && JSON.stringify(original) === JSON.stringify(element)
+					? original
+					: element;
+			});
 		const pages = [...this.document.pages];
 		pages[index] = page;
 		const next: Notebook = { ...this.document, pages };
@@ -67,8 +129,8 @@ export class NoteHistory {
 		// gesture undoable even when a single page exceeds the history budget.
 		while (
 			this.past.length > 1 &&
-			(this.past.length > 60 ||
-				this.pastWeights.reduce((a, b) => a + b, 0) > 32 * 1024 * 1024)
+			(this.past.length > HISTORY_LIMITS.steps ||
+				this.pastWeights.reduce((a, b) => a + b, 0) > HISTORY_LIMITS.bytes)
 		) {
 			this.past.shift();
 			this.pastWeights.shift();
@@ -100,6 +162,8 @@ export class NoteHistory {
 	markSaved(revision: number) {
 		if (revision === this.revision) {
 			this.cleanDocument = this.document;
+			this.cleanPast = this.past.map((d) => this.identity(d));
+			this.cleanFuture = this.future.map((d) => this.identity(d));
 			this.notify();
 		}
 	}
@@ -109,5 +173,7 @@ export class NoteHistory {
 		this.future = [];
 		this.pastWeights = [];
 		this.futureWeights = [];
+		this.cleanPast = [];
+		this.cleanFuture = [];
 	}
 }

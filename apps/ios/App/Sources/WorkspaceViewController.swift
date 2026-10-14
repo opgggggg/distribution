@@ -42,6 +42,7 @@ final class WorkspaceViewController: UIViewController {
 		configuration.setURLSchemeHandler(
 			WebAssetSchemeHandler(rootDirectory: payloadRoot), forURLScheme: WebAssetSchemeHandler.scheme)
 		configuration.allowsInlineMediaPlayback = true
+		configuration.ignoresViewportScaleLimits = false
 		configuration.mediaTypesRequiringUserActionForPlayback = []
 		configuration.defaultWebpagePreferences.allowsContentJavaScript = true
 
@@ -65,6 +66,10 @@ final class WorkspaceViewController: UIViewController {
 		webView.scrollView.backgroundColor = StartupSplashView.surfaceColor
 		webView.scrollView.contentInsetAdjustmentBehavior = .never
 		webView.scrollView.bounces = false
+		// Native chrome stays fixed; document surfaces handle their own pinch gestures.
+		webView.scrollView.pinchGestureRecognizer?.isEnabled = false
+		webView.scrollView.bouncesZoom = false
+		if #available(iOS 14.0, *) { webView.pageZoom = 1 }
 		webView.allowsBackForwardNavigationGestures = false
 		if #available(iOS 16.4, *) {
 			// Lets Safari's Web Inspector attach to a development build on a connected Mac.

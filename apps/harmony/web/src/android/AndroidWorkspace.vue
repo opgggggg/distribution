@@ -13,6 +13,7 @@ import { APP_PROFILE } from "../app-profile.generated";
 import appMark from "../../../AppScope/resources/base/media/app_icon.png";
 import { UiCheckbox } from "@yaochn/als-office-editor-ui/vue";
 import { OPEN_ACCEPT } from "../open-formats";
+import { unframeNotesPreview } from "@cubexp/notes/thumbnail";
 import Icon from "./AndroidIcon.vue";
 const AndroidServices = defineAsyncComponent(() => import("./AndroidServices.vue"));
 interface DocumentItem {
@@ -52,6 +53,8 @@ const emit = defineEmits<{
 	close: [];
 	undo: [];
 	redo: [];
+	notePages: [];
+	noteView: [];
 	search: [];
 	format: [];
 	insert: [];
@@ -195,6 +198,21 @@ function dateLabel(item: DocumentItem) {
 function previewLabel(item: DocumentItem): string {
 	return item.format === "markdown" ? "MD" : item.format.toUpperCase();
 }
+const notePreviews = ref<Record<string, { source: string; image: string }>>({});
+function previewSource(item: DocumentItem) {
+	const cached = notePreviews.value[item.id];
+	return cached?.source === item.preview ? cached.image : item.preview;
+}
+function previewLoaded(event: Event, item: DocumentItem) {
+	if (
+		item.format !== "notes" ||
+		!item.preview ||
+		notePreviews.value[item.id]?.source === item.preview
+	)
+		return;
+	const image = unframeNotesPreview(event.target as HTMLImageElement);
+	notePreviews.value[item.id] = { source: item.preview, image: image ?? item.preview };
+}
 </script>
 
 <template>
@@ -202,6 +220,15 @@ function previewLabel(item: DocumentItem): string {
 		<template v-if="active">
 			<button class="android-icon-button" aria-label="返回" @click="emit('back')">
 				<Icon name="back" />
+			</button>
+			<button
+				v-if="active.format === 'notes'"
+				class="android-icon-button android-notes-pages"
+				aria-label="页面"
+				:disabled="!ready"
+				@click="emit('notePages')"
+			>
+				<Icon name="pages" />
 			</button>
 			<button
 				v-if="active.format !== 'notes' || !editing"
@@ -302,7 +329,8 @@ function previewLabel(item: DocumentItem): string {
 							>
 								<img
 									v-if="item.preview"
-									:src="item.preview"
+									:src="previewSource(item)"
+									@load="previewLoaded($event, item)"
 									alt=""
 									width="112"
 									height="128"
@@ -534,6 +562,17 @@ function previewLabel(item: DocumentItem): string {
 			></template>
 			<template v-else-if="sheet === 'more'"
 				><p class="android-sheet-description">{{ active?.fileName }}</p>
+				<button
+					v-if="active?.format === 'notes'"
+					class="android-sheet-row"
+					:disabled="!ready"
+					@click="
+						sheet = '';
+						emit('noteView');
+					"
+				>
+					<Icon name="file" /><span>页面与缩放</span>
+				</button>
 				<button
 					class="android-sheet-row"
 					:disabled="!editable || !ready || saving"

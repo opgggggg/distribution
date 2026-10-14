@@ -109,7 +109,7 @@ export function translate(element: InkElement, dx: number, dy: number): void {
 		element.x += dx;
 		element.y += dy;
 	} else
-		for (const p of element.points) {
+		for (const p of [...element.points, ...(element.cutouts ?? []).flat()]) {
 			p.x += dx;
 			p.y += dy;
 		}

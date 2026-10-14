@@ -1,5 +1,7 @@
 import { h } from "vue";
 const paths: Record<string, string[]> = {
+	eyedropper: ["M16 3l5 5-3 3-2-2-9 9H4v-3l9-9-2-2 3-3 2 2z", "M4 18l-1 3 3-1M12 5l7 7"],
+	tape: ["M5 9h14v7H5z", "M5 9l-2 2 2 2-2 3M19 9l2 2-2 2 2 3"],
 	scene: ["M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4", "M8 8h8v8H8z"],
 	snap: ["M4 4h6v6H4zM14 14h6v6h-6z", "M17 4v6M14 7h6M4 17h6M7 14v6"],
 	connector: ["M3 3h6v6H3zM15 15h6v6h-6z", "M9 6h9v9M15 12l3 3 3-3"],

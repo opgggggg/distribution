@@ -79,6 +79,7 @@ import {
 	consumeHarmonyIntent,
 	harmonyHasWindowControls,
 	isAndroidHost,
+	isIosHost,
 	isHarmonyHost,
 	isNativeMobileHost,
 	nativeHostLabel,
@@ -200,23 +201,14 @@ interface MobileMarkdownEditor {
 const PHONE_MEDIA_QUERY = "(max-width: 600px), (max-height: 600px) and (pointer: coarse)";
 const nativeTabSession = window.auroraHarmonyHost?.getNativeTabSession?.() ?? "";
 
-// HarmonyOS、Android 与 iOS 共用同一套原生移动端工作区 UI（src/android/ 下的组件
-// 内部不做平台判断，数据全部由本文件通过 props 传入）。
-//
-// Android 和 iOS 宿主本身就是触屏形态，可以无条件启用（iPad 也走这套工作区）；
-// HarmonyOS 一个包同时覆盖 phone / tablet / 2in1（见 module.json5 的 deviceTypes），
-// 所以必须再判一次手机形态，否则平板和 PC/2in1 会被塞进手机工作区。浏览器始终走
-// 桌面布局。
-//
-// 注意：这里是模块加载时求值一次。折叠屏展开后形态变化不会即时切换工作区，
-// 需要重新加载页面。要做到即时切换，得把下面这些 nativeMobileLayout 的读取点
-// 改成响应式（或由宿主通过 bridge 上报设备类型），那是更大的改动。
+// All native devices share the iPad touch workspace, including HarmonyOS tablet
+// and 2in1. Only explicit native-tab development sessions use the desktop shell.
 const nativeMobileLayout =
 	!nativeTabSession &&
 	(isNativeMobileHost() ||
-		(isHarmonyHost() && window.matchMedia(PHONE_MEDIA_QUERY).matches) ||
+		isHarmonyHost() ||
 		(import.meta.env.DEV &&
-			["android", "ios"].includes(
+			["android", "ios", "harmonyos"].includes(
 				new URLSearchParams(location.search).get("platform") ?? "",
 			)));
 
@@ -838,6 +830,16 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 		return {
 			...binding,
 			props: { ...binding.props, exitable: true, onExit: () => handleNativeBack(true) },
+		};
+	if (tab.format === "notes" && nativeMobileLayout)
+		return {
+			...binding,
+			props: {
+				...binding.props,
+				compact: true,
+				hostReadingMenu: true,
+				nativeColorPicker: isIosHost(),
+			},
 		};
 	if (!mobileLayout.value) return binding;
 	if (tab.format === "xlsx")
@@ -1611,6 +1613,22 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 		tab.previewStale = false;
 		void prepareDocumentPreview(tab);
 	}
+}
+
+async function toggleNotesPages(): Promise<void> {
+	const tab = activeTab.value;
+	if (!tab || tab.format !== "notes") return;
+	await nextTick();
+	const ui = surfaceInstances.get(tab.id) as { togglePages?: () => void } | undefined;
+	ui?.togglePages?.();
+}
+
+async function showNotesViewOptions(): Promise<void> {
+	const tab = activeTab.value;
+	if (!tab || tab.format !== "notes") return;
+	await nextTick();
+	const ui = surfaceInstances.get(tab.id) as { showViewOptions?: () => void } | undefined;
+	ui?.showViewOptions?.();
 }
 
 function setTabSurface(tab: HarmonyDocumentTab, instance: unknown): void {
@@ -3086,6 +3104,21 @@ function handleNativeBack(leaveReader = false): boolean {
 	return false;
 }
 
+/** A desktop-window close waits for the same local drafts that iPad uses. */
+async function prepareNativeWorkspaceClose(): Promise<boolean> {
+	await flushAutosaves();
+	const unsaved = tabs.value.find(
+		(tab) => optionFor(tab.format).editable && tab.editor && !autosaveIsCurrent(tab),
+	);
+	if (unsaved) {
+		selectTab(unsaved.id);
+		error.value = "草稿尚未保存，请稍后重试或另存为文件。";
+		return false;
+	}
+	if (error.value === "草稿尚未保存，请稍后重试或另存为文件。") error.value = "";
+	return true;
+}
+
 function syncMobileLayout(event?: MediaQueryListEvent): void {
 	mobileLayout.value =
 		!nativeTabSession &&
@@ -3213,6 +3246,7 @@ onMounted(() => {
 	window.addEventListener("resize", syncMobileImeInset);
 	window.addEventListener("resize", syncMobileOrientation);
 	window.auroraHandleBack = handleNativeBack;
+	window.auroraPrepareForClose = prepareNativeWorkspaceClose;
 	setUiEditorFileSink(async ({ blob, fileName: outputName, intent }) => {
 		saving.value = true;
 		error.value = "";
@@ -3233,6 +3267,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+	delete window.auroraPrepareForClose;
 	clearInterval(nativeTabTimer);
 	nativeTabUnsubscribe?.();
 	document.removeEventListener("keydown", handleAndroidEscape);
@@ -3310,6 +3345,8 @@ onBeforeUnmount(() => {
 			@restore="restoreAndroidDocument"
 			@create="createDocument"
 			@back="handleNativeBack"
+			@note-pages="toggleNotesPages"
+			@note-view="showNotesViewOptions"
 			@edit="activeTab && enterMobileEditing(activeTab)"
 			@finish="finishMobileEditing"
 			@save="saveActive"

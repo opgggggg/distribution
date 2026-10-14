@@ -1,4 +1,6 @@
 import { common } from '@kit.AbilityKit';
+import { window } from '@kit.ArkUI';
+import deviceInfo from '@ohos.deviceInfo';
 import { emitter } from '@kit.BasicServicesKit';
 import { webview } from '@kit.ArkWeb';
 import { HarmonyWeb, HarmonyWebParams } from './HarmonyWeb';
@@ -11,6 +13,7 @@ import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
 struct Index {
   @State private webReady: boolean = false;
   private backPending: boolean = false;
+  private closeOperation?: Promise<boolean>;
   @StorageLink('harmonyIntent') private harmonyIntent: string = '';
   private controller: webview.WebviewController = new webview.WebviewController();
   private clientServices: HarmonyClientServices = new HarmonyClientServices();
@@ -44,6 +47,11 @@ struct Index {
   aboutToAppear(): void {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.bridge.initialize(context);
+    if (deviceInfo.deviceType === '2in1') {
+      window.getLastWindow(context).then((appWindow: window.Window) => {
+        appWindow.on('windowWillClose', async () => !(await this.prepareWindowClose()));
+      }).catch((cause: Error) => console.warn(`Could not bind local draft close guard: ${cause.message}`));
+    }
     try {
       this.clientServices.initialize(context);
     } catch (_) {
@@ -75,6 +83,32 @@ struct Index {
         this.moveToBackground();
       });
     return true;
+  }
+
+  private prepareWindowClose(): Promise<boolean> {
+    if (this.closeOperation) return this.closeOperation;
+    this.closeOperation = this.flushWindowDrafts().finally(() => { this.closeOperation = undefined; });
+    return this.closeOperation;
+  }
+
+  private async flushWindowDrafts(): Promise<boolean> {
+    if (!this.webReady) return true;
+    try {
+      await this.controller.runJavaScript(
+        "window.__cubeCloseReady=null;Promise.resolve(window.auroraPrepareForClose?.()??false).then(v=>window.__cubeCloseReady=v).catch(()=>window.__cubeCloseReady=false);0"
+      );
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const result = await this.controller.runJavaScript(
+          "window.__cubeCloseReady===true?1:window.__cubeCloseReady===false?0:-1"
+        );
+        if (result === '1') return true;
+        if (result === '0') return false;
+        await new Promise<void>((resolve) => setTimeout(resolve, 100));
+      }
+    } catch (cause) {
+      console.warn(`Local drafts could not be checked before closing: ${String(cause)}`);
+    }
+    return false;
   }
 
   private moveToBackground(): void {

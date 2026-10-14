@@ -199,7 +199,11 @@ test("ink transactions share untouched pages while retaining independent undo sn
 	assert.equal(book.pages[0].layers[0].elements.length, 2);
 	history.undo();
 	assert.equal(history.document.pages[0].layers[0].elements.length, 2);
-	assert.equal(history.isDirty(), false);
+	assert.equal(
+		history.isDirty(),
+		true,
+		"the new redo state still needs saving even at the original canvas",
+	);
 	history.redo();
 	assert.equal(history.document.pages[0].layers[0].elements.length, 3);
 });
@@ -246,21 +250,26 @@ test("pen styles retain native identity, pressure response and Xournal segment w
 		inkWidth({ ...brush, penStyle: undefined }, brush.points[0]),
 		brush.width * (0.3 + 1.4 * brush.points[0].pressure),
 	);
-	const xopp = readNotebook(new Uint8Array(await writeXopp(book).arrayBuffer()));
-	native.pages[0].layers[0].elements.forEach((ink, i) =>
-		ink.points
-			.slice(1)
-			.forEach((p, j) =>
-				assert.ok(
-					Math.abs(
-						inkWidth(
-							xopp.pages[0].layers[0].elements[i],
-							xopp.pages[0].layers[0].elements[i].points[j + 1],
-						) - inkWidth(ink, p),
-					) < 0.001,
+	assert.throws(() => writeXopp(book), /cannot preserve this brush plugin/);
+	const basic = structuredClone(book);
+	basic.pages[0].layers[0].elements.pop();
+	const xopp = readNotebook(new Uint8Array(await writeXopp(basic).arrayBuffer()));
+	native.pages[0].layers[0].elements
+		.slice(0, 2)
+		.forEach((ink, i) =>
+			ink.points
+				.slice(1)
+				.forEach((p, j) =>
+					assert.ok(
+						Math.abs(
+							inkWidth(
+								xopp.pages[0].layers[0].elements[i],
+								xopp.pages[0].layers[0].elements[i].points[j + 1],
+							) - inkWidth(ink, p),
+						) < 0.001,
+					),
 				),
-			),
-	);
+		);
 	assert.throws(
 		() =>
 			validateNotebook({

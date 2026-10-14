@@ -1,3 +1,4 @@
+import { getBrushPlugin, validateBrushSettings } from "./brushes.js";
 /** Coordinates and widths use physical points (1/72 inch), independent of zoom. */
 export interface InkPoint {
 	x: number;
@@ -5,7 +6,7 @@ export interface InkPoint {
 	pressure: number;
 	width?: number;
 }
-export type PenStyle = "ballpoint" | "fountain" | "brush";
+export type PenStyle = string;
 export type AnchorSide = "top" | "right" | "bottom" | "left";
 export interface InkAnchor {
 	elementId: string;
@@ -19,6 +20,15 @@ export interface NoteScene {
 	width: number;
 	height: number;
 }
+export interface MaskingTape {
+	id: string;
+	/** Center, length, width and rotation, in page coordinates. */
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	angle: number;
+}
 export interface InkStroke {
 	id: string;
 	kind: "stroke";
@@ -28,6 +38,13 @@ export interface InkStroke {
 	opacity: number;
 	pressure: boolean;
 	penStyle?: PenStyle;
+	/** Rendering revision: absent means the original brush appearance. */
+	brushVersion?: number;
+	/** Independent pigment identity survives copying and changing element IDs. */
+	brushSeed?: number;
+	brushSettings?: Record<string, number>;
+	/** Tape footprints captured when painting; removing tape preserves the white space. */
+	cutouts?: { x: number; y: number }[][];
 	shape?: "line" | "rectangle" | "ellipse";
 	connector?: { from: InkAnchor; to: InkAnchor };
 	points: InkPoint[];
@@ -51,6 +68,8 @@ export interface InkLayer {
 	elements: InkElement[];
 }
 export interface NotePage {
+	/** Infinite board; false retains a bounded paper page. */
+	infinite?: boolean;
 	id: string;
 	width: number;
 	height: number;
@@ -58,6 +77,7 @@ export interface NotePage {
 	color: string;
 	bookmarked: boolean;
 	scenes?: NoteScene[];
+	tapes?: MaskingTape[];
 	layers: InkLayer[];
 }
 export interface Notebook {
@@ -82,6 +102,7 @@ export function createPage(
 ): NotePage {
 	return {
 		id: uid(),
+		infinite: false,
 		width,
 		height,
 		paper,
@@ -90,22 +111,21 @@ export function createPage(
 		layers: [{ id: uid(), name: "Ink", visible: true, elements: [] }],
 	};
 }
-export function createNotebook(title = "Untitled notebook"): Notebook {
-	return { format: "cubeoffice-notebook", version: 1, title, pages: [createPage()] };
+export function createNotebook(title = "Untitled notebook", infinite = false): Notebook {
+	const page = createPage();
+	page.infinite = infinite;
+	return { format: "cubeoffice-notebook", version: 1, title, pages: [page] };
 }
 export function pageElements(page: NotePage): InkElement[] {
 	return page.layers.filter((layer) => layer.visible).flatMap((layer) => layer.elements);
 }
 export function inkWidth(stroke: InkStroke, point: InkPoint): number {
 	if (point.width !== undefined) return point.width;
-	if (!stroke.pressure || stroke.penStyle === "ballpoint") return stroke.width;
-	const p = point.pressure;
-	const factor =
-		stroke.penStyle === "fountain"
-			? 0.6 + 0.8 * p
-			: stroke.penStyle === "brush"
-				? 0.15 + 1.7 * p
-				: 0.3 + 1.4 * p;
+	const plugin = stroke.penStyle ? getBrushPlugin(stroke.penStyle) : undefined;
+	if (!stroke.pressure || plugin?.supportsPressure === false) return stroke.width;
+	const factor = plugin ? plugin.pressureFactor(point.pressure) : 0.3 + 1.4 * point.pressure;
+	if (!Number.isFinite(factor) || factor <= 0 || factor > 2)
+		throw new Error("Invalid brush pressure response.");
 	return stroke.width * factor;
 }
 export function validateNotebook(value: unknown): Notebook {
@@ -137,6 +157,7 @@ export function validateNotebook(value: unknown): Notebook {
 	for (const page of book.pages) {
 		if (
 			!page ||
+			(page.infinite !== undefined && typeof page.infinite !== "boolean") ||
 			!finite(page.width, 72, 5000) ||
 			!finite(page.height, 72, 5000) ||
 			!["plain", "ruled", "grid", "dotted"].includes(page.paper) ||
@@ -147,7 +168,25 @@ export function validateNotebook(value: unknown): Notebook {
 			page.layers.length > 100
 		)
 			fail();
+		const infinite = page.infinite !== false,
+			low = infinite ? -1_000_000_000 : 0,
+			high = infinite ? 1_000_000_000 : page.width;
 		id(page.id);
+		if (page.tapes !== undefined) {
+			if (!Array.isArray(page.tapes) || page.tapes.length > 24) fail();
+			for (const tape of page.tapes) {
+				if (
+					!tape ||
+					!finite(tape.x, low, high) ||
+					!finite(tape.y, low, infinite ? high : page.height) ||
+					!finite(tape.width, 4, 5000) ||
+					!finite(tape.height, 4, 5000) ||
+					!finite(tape.angle, -180, 180)
+				)
+					fail();
+				id(tape.id);
+			}
+		}
 		if (page.scenes !== undefined) {
 			if (!Array.isArray(page.scenes) || page.scenes.length > 200) fail();
 			for (const scene of page.scenes) {
@@ -156,12 +195,12 @@ export function validateNotebook(value: unknown): Notebook {
 					typeof scene.name !== "string" ||
 					!scene.name.trim() ||
 					scene.name.length > 256 ||
-					!finite(scene.x, 0, page.width) ||
-					!finite(scene.y, 0, page.height) ||
-					!finite(scene.width, 1, page.width) ||
-					!finite(scene.height, 1, page.height) ||
-					scene.x + scene.width > page.width + 0.001 ||
-					scene.y + scene.height > page.height + 0.001
+					!finite(scene.x, low, high) ||
+					!finite(scene.y, low, infinite ? high : page.height) ||
+					!finite(scene.width, 1, high) ||
+					!finite(scene.height, 1, infinite ? high : page.height) ||
+					(!infinite && scene.x + scene.width > page.width + 0.001) ||
+					(!infinite && scene.y + scene.height > page.height + 0.001)
 				)
 					fail();
 				id(scene.id);
@@ -187,13 +226,38 @@ export function validateNotebook(value: unknown): Notebook {
 				id(element.id);
 				if (element.kind === "stroke") {
 					if (
+						typeof element.penStyle === "string" &&
+						element.penStyle.length <= 128 &&
+						!getBrushPlugin(element.penStyle)
+					)
+						throw new Error(
+							`Invalid or unsupported CubeOffice notebook: missing brush plugin ${element.penStyle}.`,
+						);
+					if (
 						!["pen", "highlighter"].includes(element.tool) ||
 						!finite(element.width, 0.01, 100) ||
 						!finite(element.opacity, 0, 1) ||
 						typeof element.pressure !== "boolean" ||
 						(element.penStyle !== undefined &&
 							(element.tool !== "pen" ||
-								!["ballpoint", "fountain", "brush"].includes(element.penStyle))) ||
+								typeof element.penStyle !== "string" ||
+								element.penStyle.length > 128 ||
+								!getBrushPlugin(element.penStyle))) ||
+						(element.brushSettings !== undefined &&
+							(!element.penStyle ||
+								!validateBrushSettings(element.penStyle, element.brushSettings))) ||
+						(element.brushVersion !== undefined &&
+							(!element.penStyle ||
+								!Number.isInteger(element.brushVersion) ||
+								!finite(
+									element.brushVersion,
+									1,
+									getBrushPlugin(element.penStyle)?.version ?? 1,
+								))) ||
+						(element.brushSeed !== undefined &&
+							(!element.penStyle ||
+								!Number.isInteger(element.brushSeed) ||
+								!finite(element.brushSeed, 0, 0xffffffff))) ||
 						!Array.isArray(element.points) ||
 						!element.points.length
 					)
@@ -228,21 +292,44 @@ export function validateNotebook(value: unknown): Notebook {
 						if (element.connector.from.elementId === element.connector.to.elementId)
 							fail();
 					}
+					if (element.cutouts !== undefined) {
+						if (!Array.isArray(element.cutouts) || element.cutouts.length > 24) fail();
+						for (const polygon of element.cutouts)
+							if (
+								!Array.isArray(polygon) ||
+								polygon.length !== 4 ||
+								polygon.some(
+									(p) =>
+										!p ||
+										!finite(
+											p.x,
+											infinite ? low : -10000,
+											infinite ? high : 10000,
+										) ||
+										!finite(
+											p.y,
+											infinite ? low : -10000,
+											infinite ? high : 10000,
+										),
+								)
+							)
+								fail();
+					}
 					points += element.points.length;
 					if (points > LIMITS.points) fail();
 					for (const p of element.points)
 						if (
 							!p ||
-							!finite(p.x, -10000, 10000) ||
-							!finite(p.y, -10000, 10000) ||
+							!finite(p.x, infinite ? low : -10000, infinite ? high : 10000) ||
+							!finite(p.y, infinite ? low : -10000, infinite ? high : 10000) ||
 							!finite(p.pressure, 0, 1) ||
 							(p.width !== undefined && !finite(p.width, 0.01, 200))
 						)
 							fail();
 				} else if (element.kind === "text") {
 					if (
-						!finite(element.x, -10000, 10000) ||
-						!finite(element.y, -10000, 10000) ||
+						!finite(element.x, infinite ? low : -10000, infinite ? high : 10000) ||
+						!finite(element.y, infinite ? low : -10000, infinite ? high : 10000) ||
 						!finite(element.size, 1, 200) ||
 						typeof element.text !== "string" ||
 						element.text.length > 100000 ||

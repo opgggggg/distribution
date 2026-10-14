@@ -122,9 +122,8 @@ export class HarmonyDocumentBridge {
     }
   }
 
-  // 2in1 上 EntryAbility 隐藏了原生标题栏，但系统仍然把最小化/最大化/关闭三个
-  // 按钮画在窗口右上角，自绘标题栏必须给它们让出右侧的位置。平板和手机没有这
-  // 三个按钮，让位只会在标题栏右边留下一块空白。
+  // Only 2in1 has OS window controls. The shared tablet shell leaves them to
+  // the system decoration; legacy desktop Web chrome still uses this hint.
   hasWindowControls(): boolean {
     return deviceInfo.deviceType === '2in1';
   }

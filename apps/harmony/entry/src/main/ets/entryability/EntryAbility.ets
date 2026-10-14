@@ -4,7 +4,6 @@ import { window } from '@kit.ArkUI';
 import { emitter } from '@kit.BasicServicesKit';
 import { fileIo } from '@kit.CoreFileKit';
 import deviceInfo from '@ohos.deviceInfo';
-import { nativeTabs } from '../tabs/NativeTabs';
 
 interface PendingOpenDocument {
   type: string;
@@ -46,18 +45,9 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    // A phone/tablet keeps the single-WebView workspace. Native live tabs are
-    // enabled only on the PC form factor with independent application windows.
-    let nativeWorkspace = false;
-    if (deviceInfo.deviceType === '2in1') {
-      try {
-        nativeTabs.initialize(windowStage, this.context);
-        nativeWorkspace = true;
-      } catch (cause) {
-        console.warn(`Native tabs unavailable; using single-window tabs: ${String(cause)}`);
-      }
-    }
-    windowStage.loadContent(nativeWorkspace ? 'pages/NativeWorkspace' : 'pages/Index', (error) => {
+    // The entire Harmony app shares the iPad workspace, also on tablets/2in1.
+    // The OS owns the desktop window controls; there is no extra app tab strip.
+    windowStage.loadContent('pages/Index', (error) => {
       if (error.code) {
         console.error(`Could not load the main page: ${error.message}`);
         return;
@@ -66,10 +56,10 @@ export default class EntryAbility extends UIAbility {
       if (deviceInfo.deviceType === '2in1') {
         try {
           const mainWindow = windowStage.getMainWindowSync();
-          mainWindow.setWindowDecorVisible(false);
+          mainWindow.setWindowDecorVisible(true);
           mainWindow.setWindowDecorHeight(38);
         } catch (cause) {
-          console.warn(`Could not enable the immersive window title bar: ${String(cause)}`);
+          console.warn(`Could not show the system window title bar: ${String(cause)}`);
         }
       }
     });

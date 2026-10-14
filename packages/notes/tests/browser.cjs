@@ -175,7 +175,7 @@ const output = path.resolve(__dirname, "../../../.cache/notes-qa");
 		assert.ok((await p.locator(".cube-notes__stage").boundingBox()).width >= 360);
 		assert.equal(
 			await p
-				.locator(".cube-notes__toolbar")
+				.locator(".cube-notes__tool-tray")
 				.evaluate((el) => el.scrollWidth <= el.clientWidth),
 			true,
 		);
@@ -185,8 +185,9 @@ const output = path.resolve(__dirname, "../../../.cache/notes-qa");
 		await p.setViewportSize({ width: 900, height: 800 });
 		await p.waitForFunction(
 			() =>
+				document.querySelector(".cube-notes__toolbar") &&
 				getComputedStyle(document.querySelector(".cube-notes__toolbar")).flexDirection ===
-				"column",
+					"column",
 		);
 		assert.equal(
 			await p

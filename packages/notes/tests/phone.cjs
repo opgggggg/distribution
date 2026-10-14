@@ -20,7 +20,7 @@ const base = process.env.NOTES_MOBILE_URL || "http://127.0.0.1:5179/?platform=an
 		const surface = await p.locator(".cube-notes__viewport").boundingBox();
 		assert.ok(surface.height > 800, "the canvas fills the mobile workspace");
 		const dock = await p.locator(".cube-notes__dock").boundingBox();
-		assert.ok(dock.y > 750 && dock.height <= 60, "tools float in one row at the bottom");
+		assert.ok(dock.y >= 680 && dock.height <= 145, "pen tools float above the bottom edge");
 		assert.equal(await p.locator(".cube-notes__properties").count(), 0);
 		await p.screenshot({ path: ".cache/notes-qa/freeform-mobile-empty.png" });
 		const input = await p.context().newCDPSession(p);
@@ -143,7 +143,9 @@ const base = process.env.NOTES_MOBILE_URL || "http://127.0.0.1:5179/?platform=an
 		assert.ok(
 			Math.abs(
 				book.pages[0].layers[0].elements.find((e) => e.shape).points[0].x -
-					(45 * book.pages[0].width) / paper.width,
+					(book.pages[0].infinite !== false
+						? 45
+						: (45 * book.pages[0].width) / paper.width),
 			) < 0.1,
 			"tapping a shape with snapping enabled must not move it",
 		);
@@ -159,8 +161,38 @@ const base = process.env.NOTES_MOBILE_URL || "http://127.0.0.1:5179/?platform=an
 		);
 		assert.ok(edge.points[1].y > edge.points[0].y, "connected endpoint follows resized shape");
 		assert.equal(book.pages[0].scenes[0].name, "手机流程");
+		// Export through the same host delivery flow as native mobile save dialogs.
+		for (const [label, extension] of [
+			["PNG 图片（当前页）", "png"],
+			["全部页面图片（ZIP）", "zip"],
+			["PDF 文档", "pdf"],
+		]) {
+			await p.getByRole("button", { name: "视图选项", exact: true }).tap();
+			await p.getByRole("button", { name: "导出", exact: true }).tap();
+			const exported = p.waitForEvent("download");
+			await p
+				.getByRole("button", { name: new RegExp(label.replace(/[()（）]/g, "\\$&")) })
+				.tap();
+			const file = await exported;
+			assert.ok(file.suggestedFilename().endsWith(`.${extension}`));
+			const data = await fs.readFile(await file.path());
+			if (extension === "png") assert.equal(data.subarray(1, 4).toString(), "PNG");
+			if (extension === "zip")
+				assert.deepEqual(Object.keys(require("fflate").unzipSync(data)), ["page-001.png"]);
+			if (extension === "pdf")
+				assert.equal((await require("pdf-lib").PDFDocument.load(data)).getPageCount(), 1);
+		}
+		const preserved = p.waitForEvent("download");
+		await p
+			.locator(".cube-notes__header")
+			.getByRole("button", { name: "保存", exact: true })
+			.tap();
+		assert.deepEqual(
+			readNotebook(new Uint8Array(await fs.readFile(await (await preserved).path()))),
+			book,
+		);
 		await p.getByRole("button", { name: "视图选项", exact: true }).tap();
-		await p.getByRole("button", { name: "适合宽度", exact: true }).tap();
+		await p.getByRole("button", { name: /^(适合宽度|查看全部)$/ }).tap();
 		await p.screenshot({ path: ".cache/notes-qa/phone-touch-host.png" });
 		await p.locator('[data-tool="pen"]').tap();
 		await p.locator('[data-tool="pen"]').tap();
@@ -180,7 +212,11 @@ const base = process.env.NOTES_MOBILE_URL || "http://127.0.0.1:5179/?platform=an
 				),
 		);
 		const landscapeDock = await p.locator(".cube-notes__dock").boundingBox();
-		assert.ok(landscapeDock.y > 280 && landscapeDock.y + landscapeDock.height <= 390);
+		assert.ok(
+			landscapeDock.y >= 250 &&
+				landscapeDock.height <= 125 &&
+				landscapeDock.y + landscapeDock.height <= 390,
+		);
 		assert.equal(await p.locator(".cube-notes__footer").count(), 0);
 		await p.screenshot({ path: ".cache/notes-qa/phone-touch-landscape.png" });
 		assert.deepEqual(errors, []);

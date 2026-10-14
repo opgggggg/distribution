@@ -13,6 +13,7 @@ const paths: Record<string, string> = {
 	search: "M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
 	folder: "M3 7V5h6l2 2h10v13H3V7Z",
 	plus: "M12 5v14M5 12h14",
+	pages: "M3 4h7v16H3V4Zm11 0h7v16h-7V4Z",
 	file: "M14 3H5v18h14V8l-5-5Zm0 0v5h5M8 12h8M8 16h6",
 	recent: "M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2",
 	settings: "M4 7h16M4 17h16M8 4v6M16 14v6",

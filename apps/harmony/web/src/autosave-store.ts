@@ -19,7 +19,13 @@ export async function updateHarmonyPreview(id: string, preview: string): Promise
 	const store = transaction.objectStore(AUTOSAVE_STORE);
 	const request = store.get(id);
 	request.onsuccess = () => {
-		if (request.result) store.put({ ...request.result, preview });
+		try {
+			if (request.result) store.put({ ...request.result, preview });
+		} catch {
+			// Synchronous quota/clone failures must reject the transaction, rather
+			// than escape from the asynchronous request handler.
+			transaction.abort();
+		}
 	};
 	await transactionComplete(transaction);
 }

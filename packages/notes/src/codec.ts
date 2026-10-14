@@ -1,3 +1,6 @@
+import { isInfinitePage, pageContentBounds } from "./board.js";
+import { translate } from "./geometry.js";
+import { getBrushPlugin } from "./brushes.js";
 import { DOMParser } from "@xmldom/xmldom";
 import { Gunzip, gzipSync, strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import {
@@ -12,42 +15,73 @@ import {
 	type PaperStyle,
 } from "./model.js";
 import { NOTES_MIME_TYPE } from "./formats.js";
+import { encodeHistory, decodeHistory } from "./history-codec.js";
+import { HISTORY_LIMITS, type NoteHistoryState } from "./history.js";
 
-export function writeNotebook(book: Notebook): Blob {
+export function writeNotebook(book: Notebook, history?: NoteHistoryState): Blob {
 	validateNotebook(book);
 	const content = strToU8(JSON.stringify(book));
 	if (content.length > LIMITS.bytes) throw new Error("Notebook exceeds the 64 MB editing limit.");
+	const state = history ? encodeHistory(book, history, LIMITS.bytes - content.length) : undefined;
 	const bytes = zipSync({
 		mimetype: [strToU8(NOTES_MIME_TYPE), { level: 0 }],
 		"notebook.json": content,
+		...(state ? { "history.json": state } : {}),
 	});
 	return new Blob([bytes as BlobPart], { type: NOTES_MIME_TYPE });
 }
 export function readNotebook(bytes: Uint8Array, fileName = "Notebook"): Notebook {
+	return readNotebookState(bytes, fileName).document;
+}
+export function readNotebookState(
+	bytes: Uint8Array,
+	fileName = "Notebook",
+): { document: Notebook; history?: NoteHistoryState } {
 	if (bytes.length > LIMITS.bytes) throw new Error("Notebook exceeds the 64 MB editing limit.");
 	if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
-		let entries = 0;
+		let entries = 0,
+			expanded = 0;
 		const files = unzipSync(bytes, {
 			filter: (entry) => {
 				if (++entries > 20 || entry.originalSize > LIMITS.bytes)
 					throw new Error("Invalid or oversized notebook archive.");
-				return ["mimetype", "notebook.json", "content.xml"].includes(entry.name);
+				if (
+					!["mimetype", "notebook.json", "content.xml", "history.json"].includes(
+						entry.name,
+					)
+				)
+					return false;
+				if (entry.name !== "mimetype") expanded += entry.originalSize;
+				if (
+					expanded > LIMITS.bytes ||
+					(entry.name === "history.json" && entry.originalSize > HISTORY_LIMITS.bytes)
+				)
+					throw new Error("Invalid or oversized notebook archive.");
+				return true;
 			},
 		});
 		if (
 			files["content.xml"] &&
 			(!files.mimetype || strFromU8(files.mimetype) !== NOTES_MIME_TYPE)
 		)
-			return readXopp(files["content.xml"], fileName.replace(/\.(xopp|xoj)$/i, ""));
+			return {
+				document: readXopp(files["content.xml"], fileName.replace(/\.(xopp|xoj)$/i, "")),
+			};
 		if (
 			!files.mimetype ||
 			strFromU8(files.mimetype) !== NOTES_MIME_TYPE ||
 			!files["notebook.json"]
 		)
 			throw new Error("This is not a CubeOffice notebook archive.");
-		return validateNotebook(JSON.parse(strFromU8(files["notebook.json"])));
+		const document = validateNotebook(JSON.parse(strFromU8(files["notebook.json"])));
+		return {
+			document,
+			...(files["history.json"]
+				? { history: decodeHistory(files["history.json"], document) }
+				: {}),
+		};
 	}
-	return readXopp(bytes, fileName.replace(/\.(xopp|xoj)$/i, ""));
+	return { document: readXopp(bytes, fileName.replace(/\.(xopp|xoj)$/i, "")) };
 }
 function inflate(bytes: Uint8Array): Uint8Array {
 	if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) return bytes;
@@ -241,6 +275,45 @@ export const escapeXml = (text: string) =>
 const decimal = (value: number) => Number(value.toFixed(4)).toString();
 export function writeXopp(book: Notebook): Blob {
 	validateNotebook(book);
+	book = structuredClone(book);
+	for (const page of book.pages)
+		if (isInfinitePage(page)) {
+			const b = pageContentBounds(page);
+			if (b.width > 5000 || b.height > 5000)
+				throw new Error(
+					"This board is too large for Xournal paper. Export PNG or PDF, or save .cubenote.",
+				);
+			page.width = b.width;
+			page.height = b.height;
+			page.infinite = false;
+			for (const layer of page.layers)
+				for (const e of layer.elements) translate(e, -b.x, -b.y);
+		}
+	if (
+		book.pages.some(
+			(p) =>
+				p.tapes?.length ||
+				p.layers.some((l) =>
+					l.elements.some((e) => e.kind === "stroke" && e.cutouts?.length),
+				),
+		)
+	)
+		throw new Error(
+			"Xournal cannot preserve masking tape. Save as .cubenote, PNG or PDF to retain its appearance.",
+		);
+	if (
+		book.pages.some((p) =>
+			p.layers.some((l) =>
+				l.elements.some(
+					(e) =>
+						e.kind === "stroke" && !!e.penStyle && !getBrushPlugin(e.penStyle)?.xournal,
+				),
+			),
+		)
+	)
+		throw new Error(
+			"Xournal cannot preserve this brush plugin. Save as .cubenote, PNG or PDF to retain its appearance.",
+		);
 	if (
 		book.pages.some(
 			(p) =>

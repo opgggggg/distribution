@@ -23,6 +23,23 @@ for (const file of ["AppScope/app.json5", "build-profile.json5"]) {
 	const target = path.join(output, file);
 	writeFileSync(target, readFileSync(target, "utf8").replaceAll("com.cubexp.office", bundle));
 }
+const abilityPath = path.join(output, "entry/src/main/ets/entryability/EntryAbility.ets");
+writeFileSync(
+	abilityPath,
+	readFileSync(abilityPath, "utf8")
+		.replace(
+			"import { HarmonyClientServices }",
+			"import { nativeTabs } from '../tabs/NativeTabs';\nimport { HarmonyClientServices }",
+		)
+		.replace(
+			"windowStage.loadContent('pages/Index'",
+			"nativeTabs.initialize(windowStage,this.context);\n    windowStage.loadContent('pages/NativeWorkspace'",
+		)
+		.replace(
+			"mainWindow.setWindowDecorVisible(true)",
+			"mainWindow.setWindowDecorVisible(false)",
+		),
+);
 const webDir = path.join(output, "entry/src/main/resources/rawfile/web");
 mkdirSync(webDir, { recursive: true });
 if (!realEditors)

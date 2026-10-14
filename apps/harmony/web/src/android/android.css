@@ -1,5 +1,6 @@
 /* Android shell: 48dp touch targets, one document at a time, explicit editing. */
 .android-app {
+	touch-action: pan-x pan-y;
 	--android-primary: #205c4e;
 	--android-on-primary: #fff;
 	--android-primary-container: #d4eee3;
@@ -307,6 +308,14 @@
 	position: absolute;
 	inset: 0;
 	border-radius: 8px;
+}
+.android-file-preview[data-format="notes"] {
+	padding: 0;
+	overflow: hidden;
+}
+.android-file-preview[data-format="notes"] img {
+	object-fit: cover;
+	object-position: center top;
 }
 .android-file-copy .android-file-format {
 	display: table;
@@ -1172,6 +1181,9 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 	background: var(--android-card);
 	box-shadow: 0 2px 16px #24324d0d;
 }
+.is-notes-document .android-notes-pages {
+	margin-right: auto;
+}
 .is-notes-document .android-document-title {
 	pointer-events: auto;
 	padding: 0 8px;
@@ -1193,4 +1205,21 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 }
 .is-notes-document .android-topbar > .android-icon-button:last-child svg {
 	transform: rotate(90deg);
+}
+
+/* App controls do not expose text selection; document content and text fields retain it. */
+.android-topbar,
+.android-editor-tools,
+.android-sheet,
+.android-library button {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+.android-sheet input,
+.android-sheet textarea,
+.android-library input {
+	-webkit-user-select: text;
+	user-select: text;
+	-webkit-touch-callout: default;
 }

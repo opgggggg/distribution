@@ -18,6 +18,10 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./brushes": {
+			"types": "./dist/brushes.d.ts",
+			"import": "./dist/brushes.js"
+		},
 		"./formats": {
 			"types": "./dist/formats.d.ts",
 			"import": "./dist/formats.js"

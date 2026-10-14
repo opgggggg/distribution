@@ -17,6 +17,8 @@ const OfficeNotesEditor = defineComponent({
 		fileName: { type: String, default: "Notebook.cubenote" },
 		readonly: Boolean,
 		compact: Boolean,
+		hostReadingMenu: Boolean,
+		nativeColorPicker: Boolean,
 	},
 	emits: ["loaded", "error"],
 	setup(props, { attrs, emit, expose }) {
@@ -38,6 +40,8 @@ const OfficeNotesEditor = defineComponent({
 			setDocumentName: (value) => currentEditor().setDocumentName(value),
 			undo: () => currentEditor().undo(),
 			redo: () => currentEditor().redo(),
+			togglePages: () => currentEditor().togglePages(),
+			showViewOptions: () => currentEditor().showViewOptions(),
 			subscribe(listener) {
 				let unsubscribe = () => {};
 				const unwatch = watch(
@@ -90,6 +94,8 @@ const OfficeNotesEditor = defineComponent({
 				fileName: props.fileName,
 				readonly: props.readonly,
 				compact: props.compact,
+				hostReadingMenu: props.hostReadingMenu,
+				nativeColorPicker: props.nativeColorPicker,
 				locale: i18n.value.locale,
 				onLoaded: () => emit("loaded"),
 				onError: (error: unknown) => emit("error", error),

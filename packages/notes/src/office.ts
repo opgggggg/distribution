@@ -3,9 +3,9 @@ import {
 	type ArtifactPlugin,
 	type ArtifactSession,
 } from "@yaochn/als-office-editor-core";
-import { readNotebook, writeNotebook, writeXopp } from "./codec.js";
+import { readNotebookState, writeNotebook, writeXopp } from "./codec.js";
 import { NOTES_FORMAT_MANIFEST, nativeNotesFormat } from "./formats.js";
-import { NoteHistory } from "./history.js";
+import { NoteHistory, type NoteHistoryState } from "./history.js";
 import { clone, createNotebook, type Notebook } from "./model.js";
 
 export interface NotesArtifactSession extends ArtifactSession {
@@ -15,9 +15,10 @@ export interface NotesArtifactSession extends ArtifactSession {
 function session(
 	book: Notebook,
 	input: { fileName?: string; artifactId?: string; access?: string },
+	state?: NoteHistoryState,
 ): NotesArtifactSession {
 	const readonly = input.access === "read",
-		history = new NoteHistory(book, readonly);
+		history = new NoteHistory(book, readonly, state);
 	let closed = false;
 	const ensureOpen = () => {
 		if (closed) throw new Error("The notebook session is closed.");
@@ -57,7 +58,8 @@ function session(
 			ensureOpen();
 			request?.signal?.throwIfAborted();
 			const format = request?.format ?? nativeNotesFormat(input.fileName);
-			if (["notes", "cubenote"].includes(format)) return writeNotebook(history.document);
+			if (["notes", "cubenote"].includes(format))
+				return writeNotebook(history.document, history.capture());
 			if (["xopp", "xoj"].includes(format)) return writeXopp(history.document);
 			throw new Error(`Notebook export to ${format} requires a graphical surface.`);
 		},
@@ -71,15 +73,15 @@ export const NOTES_ARTIFACT_PLUGIN: ArtifactPlugin = {
 	manifest: NOTES_FORMAT_MANIFEST,
 	async create(input, context) {
 		context?.signal?.throwIfAborted();
-		return session(createNotebook(input.fileName?.replace(/\.cubenote$/i, "")), input);
+		return session(createNotebook(input.fileName?.replace(/\.cubenote$/i, ""), true), input);
 	},
 	async open(input, context) {
 		context?.signal?.throwIfAborted();
-		const book =
+		const restored =
 			input.source === undefined
-				? createNotebook()
-				: readNotebook(await artifactSourceToUint8Array(input.source), input.fileName);
+				? { document: createNotebook(undefined, true) }
+				: readNotebookState(await artifactSourceToUint8Array(input.source), input.fileName);
 		context?.signal?.throwIfAborted();
-		return session(book, input);
+		return session(restored.document, input, restored.history);
 	},
 };

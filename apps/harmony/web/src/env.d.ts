@@ -32,4 +32,5 @@ interface AuroraHarmonyHost {
 interface Window {
 	auroraHarmonyHost?: AuroraHarmonyHost;
 	auroraHandleBack?: () => boolean;
+	auroraPrepareForClose?: () => Promise<boolean>;
 }
