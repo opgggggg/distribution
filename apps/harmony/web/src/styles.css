@@ -1746,13 +1746,35 @@ html[data-reduce-motion="true"] *::after {
 	.als-ofs-docx-word-page {
 	width: 100% !important;
 	min-width: 0;
-	min-height: 100%;
+	min-height: 0;
+}
+.harmony-app.is-mobile-layout.has-document
+	.harmony-documents__surface[data-format="docx"]
+	.als-ofs-docx-word-canvas[data-view="web"]
+	.als-ofs-docx-word-canvas__document {
+	/* Percentage heights stop resolving inside the auto-height viewport.
+	   Grow the editable document instead, while letting long content scroll. */
+	flex: 1 0 auto;
+}
+.harmony-app.is-mobile-layout.has-document
+	.harmony-documents__surface[data-format="docx"]
+	.als-ofs-docx-word-canvas[data-view="web"]
+	.als-ofs-docx-word-page {
+	display: flex;
+	flex-direction: column;
+}
+.harmony-app.is-mobile-layout.has-document
+	.harmony-documents__surface[data-format="docx"]
+	.als-ofs-docx-word-canvas[data-view="web"]
+	.als-ofs-docx-word-page:last-child {
+	flex-grow: 1;
 }
 .harmony-app.is-mobile-layout.has-document
 	.harmony-documents__surface[data-format="docx"]
 	.als-ofs-docx-word-canvas[data-view="web"]
 	.als-ofs-docx-word-page__content {
-	min-height: 100%;
+	flex: 1 0 auto;
+	min-height: 0;
 	/* Keep the compact mobile gutters without discarding the live header and
 		   footer measurements published by WordCanvas. A fixed vertical shorthand
 		   lets the editable body slide underneath the absolutely positioned bands. */
