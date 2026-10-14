@@ -1,14 +1,4 @@
 /* Android tools share one quiet surface, with space instead of nested borders. */
-.android-app {
-	--android-primary: #117a45;
-	--android-primary-container: #e6f3eb;
-	--android-surface: #f6f7f8;
-	--android-container: #f1f3f4;
-	--android-card: #fff;
-	--android-text: #202624;
-	--android-secondary: #68716d;
-	--android-outline: #e9edeb;
-}
 .android-sheet header,
 .android-ribbon-header,
 .harmony-app.android-app .harmony-mobile-insert-sheet > header {
@@ -224,18 +214,6 @@
 	border: 0;
 	background: var(--android-container);
 	padding: 12px;
-}
-@media (prefers-color-scheme: dark) {
-	.android-app {
-		--android-primary: #72d69e;
-		--android-primary-container: #233d2e;
-		--android-surface: #171b19;
-		--android-container: #29312d;
-		--android-card: #202622;
-		--android-text: #edf2ef;
-		--android-secondary: #a8b6ad;
-		--android-outline: #37423b;
-	}
 }
 @media (max-height: 480px) {
 	.harmony-app.android-app.is-mobile-layout {

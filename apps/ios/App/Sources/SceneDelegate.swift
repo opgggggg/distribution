@@ -14,6 +14,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
+        workspace?.flushDraftsForBackground()
         activityTimer?.invalidate()
         activityTimer = nil
     }

@@ -1,3 +1,9 @@
+import {
+	deliverFile,
+	FileDeliveryCancelled,
+	setFileSource,
+	type FileSource,
+} from "./file-delivery";
 const SAVE_CHUNK_BYTES = 192 * 1024;
 const OPEN_CHUNK_BYTES = 192 * 1024;
 const BINARY_STRING_CHUNK = 0x8000;
@@ -8,6 +14,7 @@ interface NativeOpenDocumentDescriptor {
 	fileName: string;
 	mimeType: string;
 	size: number;
+	source?: FileSource;
 }
 
 export interface NativeAssistantCommandDescriptor {
@@ -201,6 +208,7 @@ export async function readNativeOpenDocument(pendingIntent: string): Promise<Fil
 					? candidate.mimeType
 					: "application/octet-stream",
 			size: Math.max(0, candidate.size),
+			source: candidate.source,
 		};
 	} catch {
 		return null;
@@ -221,9 +229,11 @@ export async function readNativeOpenDocument(pendingIntent: string): Promise<Fil
 			if (!encoded) throw new Error("系统传入的文档读取不完整。");
 			chunks.push(base64ToBytes(encoded));
 		}
-		return new File(chunks, descriptor.fileName, {
+		const file = new File(chunks, descriptor.fileName, {
 			type: descriptor.mimeType || "application/octet-stream",
 		});
+		setFileSource(file, descriptor.source);
+		return file;
 	} finally {
 		host.finishOpenDocument(descriptor.id);
 	}
@@ -262,27 +272,8 @@ export async function setMobilePresentationLandscape(enabled: boolean): Promise<
 }
 
 export async function saveBlobWithHost(blob: Blob, fileName: string): Promise<void> {
-	const host = window.auroraHarmonyHost;
-	if (!host) {
-		downloadBlob(blob, fileName);
-		return;
-	}
-
-	const sessionId = host.beginSave(fileName);
-	try {
-		for (let offset = 0; offset < blob.size; offset += SAVE_CHUNK_BYTES) {
-			const bytes = new Uint8Array(
-				await blob.slice(offset, offset + SAVE_CHUNK_BYTES).arrayBuffer(),
-			);
-			if (!host.appendSaveChunk(sessionId, bytesToBase64(bytes))) {
-				throw new Error("The native app rejected a document save chunk.");
-			}
-		}
-		await host.finishSave(sessionId);
-	} catch (cause) {
-		host.abortSave(sessionId);
-		throw cause;
-	}
+	const result = await deliverFile(blob, fileName);
+	if (result.status === "cancelled") throw new FileDeliveryCancelled();
 }
 
 /**

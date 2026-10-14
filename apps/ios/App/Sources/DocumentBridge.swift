@@ -39,7 +39,14 @@ final class DocumentBridge: NSObject {
 		let fileURL: URL
 		let fileName: String
 		let mimeType: String
+        let source: [String: Any]?
 	}
+
+	private lazy var fileOperations = FileOperations { [weak self] id, result in
+        self?.evaluate("window.__auroraIosHost.settleFileResult(\(Self.jsString(id)), \(Self.jsString(result)))")
+    }
+
+    func reference(at url: URL) -> [String: Any]? { fileOperations.reference(at: url) }
 
 	private var saveSessions: [String: SaveSession] = [:]
 	private var exportsInFlight: [URL] = []
@@ -52,9 +59,9 @@ final class DocumentBridge: NSObject {
 	/// Takes ownership of a document the system handed the app. `fileURL` must already be
 	/// a private copy: the security-scoped original is not readable once the opening
 	/// scene callback returns.
-	func enqueueDocument(at fileURL: URL, fileName: String, mimeType: String) {
+	func enqueueDocument(at fileURL: URL, fileName: String, mimeType: String, source: [String: Any]? = nil) {
 		queuedDocuments.append(
-			QueuedDocument(fileURL: fileURL, fileName: fileName, mimeType: mimeType))
+			QueuedDocument(fileURL: fileURL, fileName: fileName, mimeType: mimeType, source: source))
 		flushQueuedWork()
 	}
 
@@ -109,7 +116,7 @@ final class DocumentBridge: NSObject {
 		guard offset < data.count else {
 			try? FileManager.default.removeItem(at: document.fileURL)
 			evaluate(
-				"window.__auroraIosHost.commitStagedDocument(\(Self.jsString(id)), \(Self.jsString(document.fileName)), \(Self.jsString(document.mimeType)))"
+				"window.__auroraIosHost.commitStagedDocument(\(Self.jsString(id)), \(Self.jsString(document.fileName)), \(Self.jsString(document.mimeType)), \(Self.jsonValue(document.source)))"
 			)
 			completion()
 			return
@@ -131,6 +138,9 @@ final class DocumentBridge: NSObject {
 			webReady = true
 			onReady?()
 			flushQueuedWork()
+
+		case "openDocumentPicker":
+            onDocumentPickerRequested?()
 
 		case "setPresentationLandscape":
 			onPresentationLandscape?(body["enabled"] as? Bool ?? false)
@@ -158,9 +168,24 @@ final class DocumentBridge: NSObject {
 				session.failed = true
 			}
 
-		case "finishSave":
+		case "finishSave", "finishFileOperation":
 			guard let sessionId = body["sessionId"] as? String else { return }
-			finishSave(sessionId: sessionId)
+			finishSave(sessionId: sessionId, intent: body["intent"] as? String ?? "export", source: body["source"] as? String)
+
+        case "finishShareFiles":
+            guard let ids = body["ids"] as? [String], let first = ids.first, ids.count <= 50 else { return }
+            var items: [(String, URL)] = []
+            var failed = false
+            for id in ids {
+                guard let session = saveSessions.removeValue(forKey: id) else { failed = true; continue }
+                try? session.handle.close()
+                if session.failed { failed = true }
+                items.append((session.fileName, session.fileURL))
+            }
+            if failed {
+                for item in items { try? FileManager.default.removeItem(at: item.1) }
+                settleSave(first, ok: false, message: "分享文件传输失败。")
+            } else { fileOperations.shareMany(id: first, items: items, presenter: presenter) }
 
 		case "abortSave":
 			guard let sessionId = body["sessionId"] as? String else { return }
@@ -186,7 +211,7 @@ final class DocumentBridge: NSObject {
 			id: sessionId, fileName: safeName, fileURL: fileURL, handle: handle)
 	}
 
-	private func finishSave(sessionId: String) {
+	private func finishSave(sessionId: String, intent: String, source: String?) {
 		guard let session = saveSessions.removeValue(forKey: sessionId) else {
 			settleSave(sessionId, ok: false, message: "未知的保存会话。")
 			return
@@ -198,33 +223,10 @@ final class DocumentBridge: NSObject {
 			return
 		}
 
-		// The export destination is named in the picker, which the Web shell does not
-		// wait for — the Android host settles at the same point, when the picker opens.
-		let destination = FileManager.default.temporaryDirectory
-			.appendingPathComponent(UUID().uuidString, isDirectory: true)
-			.appendingPathComponent(session.fileName)
-		do {
-			try FileManager.default.createDirectory(
-				at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-			try FileManager.default.moveItem(at: session.fileURL, to: destination)
-		} catch {
-			discard(session)
-			settleSave(sessionId, ok: false, message: "文档保存失败")
-			return
-		}
-
-		guard let presenter else {
-			try? FileManager.default.removeItem(at: destination.deletingLastPathComponent())
-			settleSave(sessionId, ok: false, message: "没有可用的保存位置选择器")
-			return
-		}
-		exportsInFlight.append(destination)
-		let picker = UIDocumentPickerViewController(forExporting: [destination], asCopy: true)
-		picker.delegate = self
-		picker.modalPresentationStyle = .formSheet
-		presenter.present(picker, animated: true)
-		settleSave(sessionId, ok: true, message: nil)
-	}
+        let reference = source.flatMap { $0.data(using: .utf8) }.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any]
+        fileOperations.finish(id: sessionId, name: session.fileName, temporary: session.fileURL,
+                              intent: intent, source: reference, presenter: presenter)
+    }
 
 	private func settleSave(_ sessionId: String, ok: Bool, message: String?) {
 		evaluate(
@@ -264,6 +266,12 @@ final class DocumentBridge: NSObject {
 
 	/// Renders a Swift string as a JavaScript string literal. `ClientServices` builds its
 	/// own `evaluateJavaScript` calls with it too.
+	static func jsonValue(_ value: [String: Any]?) -> String {
+        guard let value, let data = try? JSONSerialization.data(withJSONObject: value),
+              let json = String(data: data, encoding: .utf8) else { return "null" }
+        return json
+    }
+
 	static func jsString(_ value: String) -> String {
 		guard let data = try? JSONSerialization.data(withJSONObject: [value]),
 			let json = String(data: data, encoding: .utf8), json.count >= 2

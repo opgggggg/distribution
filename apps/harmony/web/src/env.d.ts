@@ -11,6 +11,14 @@ interface AuroraHarmonyHost {
 	beginSave(fileName: string): string;
 	appendSaveChunk(sessionId: string, base64: string): boolean;
 	finishSave(sessionId: string): Promise<string>;
+	finishFileOperation?(
+		sessionId: string,
+		intent: string,
+		source: string,
+	): string | Promise<string>;
+	finishShareFiles?(sessionIds: string): string | Promise<string>;
+	takeFileResult?(sessionId: string): string;
+	openDocumentPicker?(): boolean | Promise<boolean>;
 	abortSave(sessionId: string): boolean;
 	consumePendingIntent(): string;
 	readOpenDocumentChunk?(id: string, offset: number, length: number): string;
@@ -32,5 +40,6 @@ interface AuroraHarmonyHost {
 interface Window {
 	auroraHarmonyHost?: AuroraHarmonyHost;
 	auroraHandleBack?: () => boolean;
+	auroraFlushDrafts?: () => Promise<void>;
 	auroraPrepareForClose?: () => Promise<boolean>;
 }

@@ -96,9 +96,9 @@ const cubeOfficeProfile = {
 	logoAsset: "https://cubexp.com/assets/cubeoffice-mark.svg",
 	appTitle: "CubeOffice",
 	aboutTitle: "CubeOffice",
-	shortDescription: "Open, edit, and read Office documents with AI",
+	shortDescription: "View and edit everyday files",
 	description:
-		"A cross-platform document workspace for opening, editing, and reading Office files with your preferred AI app working alongside you.",
+		"A cross-platform file workspace for viewing and editing documents, images, text, ebooks, and notes, with optional AI assistance on desktop.",
 	welcomePanelModule: fromHere("./CubeOfficeWelcomePanel.vue"),
 	settingsCopy: {
 		en: {
@@ -212,7 +212,7 @@ const cubeOfficeProfile = {
 					rank: "Alternate",
 				},
 			],
-			shortDescription: "Open, edit, and read Office documents with AI",
+			shortDescription: "View and edit everyday files",
 			externalBin: [
 				"binaries/cubeoffice",
 				"binaries/cubeoffice-ofd-service",

@@ -133,6 +133,13 @@ final class WorkspaceViewController: UIViewController {
 		splash = nil
 	}
 
+    func flushDraftsForBackground() {
+        var task = UIBackgroundTaskIdentifier.invalid
+        let finish = { if task != .invalid { UIApplication.shared.endBackgroundTask(task); task = .invalid } }
+        task = UIApplication.shared.beginBackgroundTask(withName: "Save document drafts", expirationHandler: finish)
+        webView.callAsyncJavaScript("return await window.auroraFlushDrafts?.();", arguments: [:], in: nil, in: .page) { _ in finish() }
+    }
+
 	static var appDisplayName: String {
 		(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
 			?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String)
@@ -159,7 +166,7 @@ final class WorkspaceViewController: UIViewController {
 			return
 		}
 		bridge.enqueueDocument(
-			at: copy, fileName: url.lastPathComponent, mimeType: Self.mimeType(for: url))
+			at: copy, fileName: url.lastPathComponent, mimeType: Self.mimeType(for: url), source: bridge.reference(at: url))
 	}
 
 	func handle(_ url: URL) {
@@ -180,7 +187,7 @@ final class WorkspaceViewController: UIViewController {
 
 	func presentDocumentPicker() {
 		let picker = UIDocumentPickerViewController(
-			forOpeningContentTypes: DocumentTypes.openable, asCopy: true)
+			forOpeningContentTypes: DocumentTypes.openable, asCopy: false)
 		picker.allowsMultipleSelection = true
 		picker.delegate = self
 		picker.modalPresentationStyle = .formSheet

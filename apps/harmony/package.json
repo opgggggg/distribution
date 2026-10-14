@@ -13,8 +13,8 @@
 		"build:web:ios": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode ios"
 	},
 	"dependencies": {
-		"@cubexp/notes": "*",
 		"@cubexp/epub": "*",
+		"@cubexp/notes": "*",
 		"@cubexp/ofd": "*",
 		"@cubexp/text": "*",
 		"@yaochn/als-office-docx": "*",
@@ -25,6 +25,7 @@
 		"@yaochn/als-office-pptx": "*",
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
+		"pdf-lib": "^1.17.1",
 		"utif": "^3.1.0",
 		"vue": "3.5.43"
 	},

@@ -60,6 +60,10 @@ struct Index {
     emitter.on('aurora-native-document', this.documentEventCallback);
   }
 
+  onPageHide(): void {
+    if (this.webReady) this.controller.runJavaScript('window.auroraFlushDrafts?.();0').catch(() => {});
+  }
+
   aboutToDisappear(): void {
     emitter.off('aurora-native-document', this.documentEventCallback);
   }

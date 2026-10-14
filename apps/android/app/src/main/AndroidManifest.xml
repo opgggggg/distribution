@@ -16,6 +16,7 @@
 		android:roundIcon="@mipmap/ic_launcher"
 		android:supportsRtl="true"
 		android:theme="@style/Theme.AuroraPrimeOffice">
+		<provider android:name=".SharedFileProvider" android:authorities="${applicationId}.shared" android:exported="false" android:grantUriPermissions="true" />
 		<activity
 			android:name=".MainActivity"
 			android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"

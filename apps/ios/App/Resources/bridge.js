@@ -115,6 +115,7 @@
 					fileName: pending.fileName,
 					mimeType: pending.mimeType,
 					size: pending.bytes.length,
+					source: pending.source,
 				});
 			}
 			return assistantCommands.length === 0 ? "" : assistantCommands.shift();
@@ -145,6 +146,37 @@
 
 		appendSaveChunk: function (sessionId, base64) {
 			return post("appendSaveChunk", { sessionId: sessionId, chunk: base64 });
+		},
+
+		openDocumentPicker: function () {
+			return post("openDocumentPicker");
+		},
+
+		finishShareFiles: function (encodedIds) {
+			var ids = JSON.parse(encodedIds);
+			return new Promise(function (resolve, reject) {
+				saveSettlers[ids[0]] = { resolve: resolve, reject: reject };
+				if (!post("finishShareFiles", { ids: ids })) {
+					delete saveSettlers[ids[0]];
+					reject(new Error("分享请求失败。"));
+				}
+			});
+		},
+
+		finishFileOperation: function (sessionId, intent, source) {
+			return new Promise(function (resolve, reject) {
+				saveSettlers[sessionId] = { resolve: resolve, reject: reject };
+				if (
+					!post("finishFileOperation", {
+						sessionId: sessionId,
+						intent: intent,
+						source: source,
+					})
+				) {
+					delete saveSettlers[sessionId];
+					reject(new Error("原生容器没有响应文件请求。"));
+				}
+			});
 		},
 
 		finishSave: function (sessionId) {
@@ -289,11 +321,12 @@
 			return false;
 		},
 
-		commitStagedDocument: function (id, fileName, mimeType) {
+		commitStagedDocument: function (id, fileName, mimeType, source) {
 			for (var index = 0; index < openDocuments.length; index += 1) {
 				var staged = openDocuments[index];
 				if (staged.id !== id) continue;
 				staged.fileName = fileName;
+				staged.source = source;
 				staged.mimeType = mimeType || "application/octet-stream";
 				window.dispatchEvent(new Event("aurora-native-document"));
 				return true;
@@ -324,6 +357,13 @@
 			delete serviceOperations[id];
 			serviceResults[id] = json;
 			return true;
+		},
+
+		settleFileResult: function (id, result) {
+			var settler = saveSettlers[id];
+			if (!settler) return;
+			delete saveSettlers[id];
+			settler.resolve(result);
 		},
 
 		settleSave: function (sessionId, ok, message) {

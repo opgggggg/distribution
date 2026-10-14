@@ -28,6 +28,7 @@ export function HarmonyWeb(params: HarmonyWebParams) {
         .domStorageAccess(true)
         .fileAccess(true)
         .onControllerAttached(() => {
+          params.bridge.setDocumentNotifier(() => { params.controller.runJavaScript("window.dispatchEvent(new Event('aurora-native-document'))").catch(() => {}); });
           params.controller.registerJavaScriptProxy(params.services, 'cubeofficeServices',
             ['getInfo', 'setAutomatic', 'copyClientId', 'request', 'takeResult']);
         })
@@ -88,7 +89,7 @@ export function HarmonyWeb(params: HarmonyWebParams) {
             'appendSaveChunk',
             'abortSave'
           ],
-          asyncMethodList: ['finishSave', 'openNativeTab', 'finishImageDecode'],
+          asyncMethodList: ['finishSave', 'finishFileOperation', 'finishShareFiles', 'openDocumentPicker', 'openNativeTab', 'finishImageDecode'],
           controller: params.controller
         })
         .onShowFileSelector((event) => {

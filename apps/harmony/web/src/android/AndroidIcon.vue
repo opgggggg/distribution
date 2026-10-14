@@ -1,6 +1,9 @@
 <script setup lang="ts">
 defineProps<{ name: string }>();
 const paths: Record<string, string> = {
+	share: "M12 16V3m-5 5 5-5 5 5M5 12v9h14v-9",
+	star: "m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z",
+	print: "M6 8V3h12v5M6 17H3V9h18v8h-3M6 14h12v7H6v-7Z",
 	"align-left": "M4 5h16M4 10h10M4 15h16M4 20h10",
 	"align-center": "M4 5h16M7 10h10M4 15h16M7 20h10",
 	"align-right": "M4 5h16M10 10h10M4 15h16M10 20h10",

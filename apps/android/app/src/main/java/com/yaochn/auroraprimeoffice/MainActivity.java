@@ -72,6 +72,8 @@ public final class MainActivity extends Activity {
   private final Runnable startupSplashTimeout = this::hideStartupSplash;
   private CubeOfficeServices cubeOfficeServices;
   private ValueCallback<Uri[]> pendingFileSelection;
+  private boolean workspaceFileSelection;
+  private FileOperations fileOperations;
   private AuroraDocumentBridge documentBridge;
   private boolean backDispatchPending;
   private boolean presentationImmersive;
@@ -97,6 +99,7 @@ public final class MainActivity extends Activity {
 
   @Override
   protected void onPause() {
+    if (webView != null) webView.evaluateJavascript("window.auroraFlushDrafts?.()", null);
     activityHandler.removeCallbacks(activityTick);
     super.onPause();
   }
@@ -352,6 +355,7 @@ public final class MainActivity extends Activity {
       // A full or unavailable private store must not prevent local document editing.
       cubeOfficeServices = null;
     }
+    fileOperations = new FileOperations(this);
     view.setWebViewClient(new LocalContentWebViewClient());
     view.setWebChromeClient(new OfficeWebChromeClient());
   }
@@ -375,10 +379,21 @@ public final class MainActivity extends Activity {
           selectedUris.add(data.getData());
         }
       }
+      if (workspaceFileSelection) {
+        workspaceFileSelection = false;
+        callback.onReceiveValue(null);
+        if (resultCode == RESULT_OK && data != null && documentBridge.receivePickerResult(data))
+          notifyWebOfPendingIntent();
+        return;
+      }
       for (Uri uri : selectedUris) {
         try {
           getContentResolver()
-              .takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+              .takePersistableUriPermission(
+                  uri,
+                  data.getFlags()
+                      & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                          | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
         } catch (SecurityException ignored) {
           // Some document providers grant access only for the current activity.
         }
@@ -388,7 +403,7 @@ public final class MainActivity extends Activity {
     }
     if (requestCode == REQUEST_SAVE_DOCUMENT) {
       Uri destination = resultCode == RESULT_OK && data != null ? data.getData() : null;
-      documentBridge.completeSave(destination);
+      fileOperations.completeExport(destination, data == null ? 0 : data.getFlags());
       return;
     }
     if (requestCode == REQUEST_ASSISTANT_OPEN_DOCUMENT) {
@@ -406,6 +421,7 @@ public final class MainActivity extends Activity {
             .putExtra(Intent.EXTRA_MIME_TYPES, OpenFormats.MIME_TYPES)
             .addFlags(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
     try {
       startActivityForResult(intent, REQUEST_ASSISTANT_OPEN_DOCUMENT);
@@ -454,12 +470,14 @@ public final class MainActivity extends Activity {
       if (pendingFileSelection != null) pendingFileSelection.onReceiveValue(null);
       pendingFileSelection = callback;
       String[] acceptedMimeTypes = acceptedMimeTypes(params);
+      workspaceFileSelection = acceptedMimeTypes.length > 10;
       Intent intent =
           new Intent(Intent.ACTION_OPEN_DOCUMENT)
               .addCategory(Intent.CATEGORY_OPENABLE)
               .setType(acceptedMimeTypes.length == 1 ? acceptedMimeTypes[0] : "*/*")
               .addFlags(
                   Intent.FLAG_GRANT_READ_URI_PERMISSION
+                      | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                       | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
       if (acceptedMimeTypes.length > 1) {
         intent.putExtra(Intent.EXTRA_MIME_TYPES, acceptedMimeTypes);
@@ -607,6 +625,7 @@ public final class MainActivity extends Activity {
           descriptor.put("fileName", pending.fileName);
           descriptor.put("mimeType", pending.mimeType);
           descriptor.put("size", pending.temporaryFile.length());
+          descriptor.put("source", pending.source);
           return descriptor.toString();
         } catch (JSONException cause) {
           pendingOpenDocumentAdvertised = false;
@@ -746,11 +765,53 @@ public final class MainActivity extends Activity {
 
     @JavascriptInterface
     public synchronized String finishSave(String sessionId) {
+      return finishFileOperation(sessionId, "export", "null");
+    }
+
+    @JavascriptInterface
+    public synchronized String finishFileOperation(String sessionId, String intent, String source) {
       SaveSession session = sessions.remove(sessionId);
-      if (session == null) throw new IllegalArgumentException("Unknown Android save session.");
+      if (session == null) throw new IllegalArgumentException("Unknown save session.");
       closeQuietly(session.output);
-      runOnUiThread(() -> launchSavePicker(session));
+      fileOperations.finish(session.id, session.fileName, session.temporaryFile, intent, source);
       return sessionId;
+    }
+
+    @JavascriptInterface
+    public synchronized String finishShareFiles(String encodedIds) {
+      java.util.List<File> files = new ArrayList<>();
+      java.util.List<String> names = new ArrayList<>();
+      String first = "";
+      try {
+        org.json.JSONArray ids = new org.json.JSONArray(encodedIds);
+        if (ids.length() == 0 || ids.length() > 50)
+          throw new IllegalArgumentException("请选择 1–50 个文件。");
+        for (int i = 0; i < ids.length(); i++) {
+          String id = ids.getString(i);
+          if (i == 0) first = id;
+          SaveSession session = sessions.remove(id);
+          if (session == null) throw new IllegalArgumentException("文件传输不完整。");
+          closeQuietly(session.output);
+          files.add(session.temporaryFile);
+          names.add(session.fileName);
+        }
+        fileOperations.shareMany(first, files, names);
+        return first;
+      } catch (Exception cause) {
+        for (File file : files) file.delete();
+        throw new IllegalStateException(cause);
+      }
+    }
+
+    @JavascriptInterface
+    public String takeFileResult(String id) {
+      return fileOperations.take(id);
+    }
+
+    @JavascriptInterface
+    public boolean openDocumentPicker() {
+      runOnUiThread(() -> launchAssistantDocumentPicker());
+      return true;
     }
 
     @JavascriptInterface
@@ -762,46 +823,8 @@ public final class MainActivity extends Activity {
       return true;
     }
 
-    private synchronized void launchSavePicker(SaveSession session) {
-      if (pendingSave != null) {
-        deleteQuietly(pendingSave.temporaryFile);
-      }
-      pendingSave = session;
-      Intent intent =
-          new Intent(Intent.ACTION_CREATE_DOCUMENT)
-              .addCategory(Intent.CATEGORY_OPENABLE)
-              .setType(OpenFormats.mimeTypeFor(session.fileName))
-              .putExtra(Intent.EXTRA_TITLE, session.fileName)
-              .addFlags(
-                  Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-      try {
-        startActivityForResult(intent, REQUEST_SAVE_DOCUMENT);
-      } catch (ActivityNotFoundException cause) {
-        completeSave(null);
-        Toast.makeText(MainActivity.this, "设备没有可用的保存位置选择器", Toast.LENGTH_LONG).show();
-      }
-    }
-
-    private synchronized void completeSave(Uri destination) {
-      SaveSession session = pendingSave;
-      pendingSave = null;
-      if (session == null) return;
-      if (destination == null) {
-        deleteQuietly(session.temporaryFile);
-        return;
-      }
-      try (OutputStream output = getContentResolver().openOutputStream(destination, "wt")) {
-        if (output == null) throw new IOException("The selected destination cannot be written.");
-        java.nio.file.Files.copy(session.temporaryFile.toPath(), output);
-        Toast.makeText(MainActivity.this, R.string.save_complete, Toast.LENGTH_SHORT).show();
-      } catch (IOException cause) {
-        Toast.makeText(MainActivity.this, R.string.save_failed, Toast.LENGTH_LONG).show();
-      } finally {
-        deleteQuietly(session.temporaryFile);
-      }
-    }
-
     private synchronized void dispose() {
+      if (fileOperations != null) fileOperations.dispose();
       for (SaveSession session : sessions.values()) {
         closeQuietly(session.output);
         deleteQuietly(session.temporaryFile);
@@ -842,7 +865,11 @@ public final class MainActivity extends Activity {
       for (Uri uri : pickerResultUris(result)) {
         try {
           getContentResolver()
-              .takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+              .takePersistableUriPermission(
+                  uri,
+                  result.getFlags()
+                      & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                          | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
         } catch (SecurityException ignored) {
           // Some document providers grant access only for the current activity.
         }
@@ -873,9 +900,10 @@ public final class MainActivity extends Activity {
                 id,
                 safeFileName(fileName),
                 mimeType == null ? "application/octet-stream" : mimeType,
-                temporaryFile));
+                temporaryFile,
+                fileOperations.source(uri, safeFileName(fileName), temporaryFile)));
         return true;
-      } catch (IOException | SecurityException cause) {
+      } catch (Exception cause) {
         deleteQuietly(temporaryFile);
         Toast.makeText(MainActivity.this, "无法读取这个文档", Toast.LENGTH_LONG).show();
         return false;
@@ -1012,7 +1040,11 @@ public final class MainActivity extends Activity {
     final String mimeType;
     final File temporaryFile;
 
-    PendingOpenDocument(String id, String fileName, String mimeType, File temporaryFile) {
+    final JSONObject source;
+
+    PendingOpenDocument(
+        String id, String fileName, String mimeType, File temporaryFile, JSONObject source) {
+      this.source = source;
       this.id = id;
       this.fileName = fileName;
       this.mimeType = mimeType;

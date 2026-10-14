@@ -28,6 +28,15 @@ import {
 	type UiArtifactSurfaceInput,
 } from "@yaochn/als-office-editor-ui/vue";
 
+import {
+	deliverFile,
+	deliverFiles,
+	getFileSource,
+	FileDeliveryCancelled,
+	type FileSource,
+} from "./file-delivery";
+import "./mobile/tools.css";
+import { DraftWriteQueue } from "./draft-write-queue";
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
 import DocumentTopbar from "./DocumentTopbar.vue";
 import {
@@ -87,7 +96,6 @@ import {
 	nativeHostPlatform,
 	parseNativeAssistantCommand,
 	readNativeOpenDocument,
-	saveBlobWithHost,
 	setMobilePresentationLandscape,
 	startHarmonyWindowMove,
 	toggleHarmonyWindowMaximize,
@@ -96,6 +104,8 @@ import {
 import {
 	listHarmonyAutosaves,
 	writeHarmonyAutosave,
+	deleteHarmonyAutosave,
+	patchHarmonyAutosave,
 	type HarmonyAutosaveRecord,
 } from "./autosave-store";
 
@@ -151,6 +161,16 @@ interface HarmonyDocumentTab {
 	mobileMode: "reading" | "editing";
 	mobilePptxView?: "all" | "single";
 	mobileAutofocusPending: boolean;
+	sourceRef?: FileSource;
+	originalBlob?: Blob;
+	originalName?: string;
+	favorite?: boolean;
+	isDraft?: boolean;
+	exportedAt?: number;
+	deliveryStatus?: string;
+	deliveryRevision?: string;
+	sizeBytes?: number;
+	sourceSavedRevision?: string;
 }
 
 interface MobileDocxPosition {
@@ -309,12 +329,12 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 	{
 		format: "pdf",
 		label: "PDF",
-		documentLabel: "PDF 文档（只读）",
+		documentLabel: "PDF 文档",
 		shortLabel: "PDF",
 		icon: "PDF",
 		extension: "pdf",
 		baseName: "Document",
-		editable: false,
+		editable: nativeMobileLayout,
 	},
 	{
 		format: "jmp",
@@ -367,7 +387,7 @@ const FORMAT_OPTIONS: readonly HarmonyFormatOption[] = [
 		icon: "IMG",
 		extension: "png",
 		baseName: "Image",
-		editable: false,
+		editable: true,
 	},
 ];
 const formats = new UiArtifactFormatRegistry();
@@ -406,9 +426,13 @@ const FORMAT_ENGINE_MODULES: Readonly<
 	},
 	vsdx: async () => [(await import("@yaochn/als-office-vsdx/vue")).VSDX_VUE_FORMAT_CONTRIBUTION],
 	markdown: async () => [
-		(await import("@yaochn/als-office-markdown/vue")).MARKDOWN_VUE_FORMAT_CONTRIBUTION,
+		nativeMobileLayout
+			? (await import("./mobile/markdown-contribution")).MOBILE_MARKDOWN_CONTRIBUTION
+			: (await import("@yaochn/als-office-markdown/vue")).MARKDOWN_VUE_FORMAT_CONTRIBUTION,
 	],
 	image: async () => {
+		if (nativeMobileLayout)
+			return [(await import("./mobile/image-contribution")).MOBILE_IMAGE_CONTRIBUTION];
 		const [module, { IMAGE_IMPORT_CONVERTERS }] = await Promise.all([
 			import("@yaochn/als-office-image/vue"),
 			import("./image-import"),
@@ -418,7 +442,10 @@ const FORMAT_ENGINE_MODULES: Readonly<
 			{ ...image, converters: [...(image.converters ?? []), ...IMAGE_IMPORT_CONVERTERS] },
 		];
 	},
-	pdf: async () => [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
+	pdf: async () =>
+		nativeMobileLayout
+			? [(await import("./mobile/pdf-contribution")).MOBILE_PDF_CONTRIBUTION]
+			: [(await import("@yaochn/als-office-pdf/vue")).PDF_VUE_FORMAT_CONTRIBUTION],
 	ofd: async () => [(await import("@cubexp/ofd/office-vue")).OFD_VUE_FORMAT_CONTRIBUTION],
 	epub: async () => {
 		await import("@cubexp/epub/style.css");
@@ -615,6 +642,14 @@ const homeActive = computed(() => activeId.value === HOME_TAB_ID);
 const activeEditable = computed(() =>
 	activeTab.value ? optionFor(activeTab.value.format).editable : false,
 );
+const mobileDocumentReady = computed(() => {
+	const tab = activeTab.value;
+	return Boolean(
+		tab?.editor &&
+			tab.loaded &&
+			!(tab.editor.exposed as { isBusy?: () => boolean })?.isBusy?.(),
+	);
+});
 const activeMobileEditing = computed(
 	() =>
 		Boolean(activeTab.value && optionFor(activeTab.value.format).editable) &&
@@ -641,13 +676,18 @@ const mobileFormatLabel = computed(() => {
 	}
 });
 const mobileDocumentStatus = computed(() => {
-	if (saving.value) return "正在另存到文件…";
+	if (saving.value) return "正在处理文件…";
 	if (!activeTab.value?.editor || !activeTab.value.loaded) return "正在解析和渲染文档…";
 	if (!activeEditable.value) return "只读 · " + activeTab.value.format.toUpperCase();
 	const status = activeTab.value.autosaveStatus;
 	if (status === "saving" || status === "pending") return "正在保存本地草稿…";
 	if (status === "error") return "草稿保存失败，请另存到文件";
-	if (status === "saved") return "草稿已保存在本机";
+	if (status === "saved")
+		return activeTab.value.deliveryStatus &&
+			activeTab.value.deliveryRevision ===
+				revisionToken(activeTab.value.editor.getState().revision)
+			? activeTab.value.deliveryStatus
+			: "草稿已保存在本机";
 	return activeMobileEditing.value ? "编辑中 · 自动保存草稿" : "阅读模式";
 });
 
@@ -672,6 +712,10 @@ async function closeAndroidDocument(): Promise<void> {
 }
 
 function openAndroidFormat(): void {
+	if (activeTab.value && ["pdf", "image"].includes(activeTab.value.format)) {
+		(surfaceInstances.get(activeTab.value.id) as { openTools?: () => void })?.openTools?.();
+		return;
+	}
 	if (activeTab.value?.format !== "docx") {
 		void openMobileRibbonTab("home");
 		return;
@@ -711,9 +755,10 @@ function androidTextCommand(command: string): void {
 	}
 }
 
-const AUTOSAVE_DELAY_MS = 5_000;
+const AUTOSAVE_DELAY_MS = 1_500;
 const AUTOSAVE_RETRY_MS = 15_000;
 const autosaveTimers = new Map<string, number>();
+const draftWrites = new DraftWriteQueue();
 const autosaveOperations = new Map<string, Promise<void>>();
 const autosaveUnsubscribers = new Map<string, () => void>();
 const autosaveQueued = new Set<string>();
@@ -753,6 +798,7 @@ function optionFor(format: EditorArtifactFormat): HarmonyFormatOption {
 }
 
 function reportError(cause: unknown): void {
+	if ((cause as Error)?.name === "AbortError") return;
 	error.value = cause instanceof Error ? cause.message : String(cause);
 }
 
@@ -856,6 +902,15 @@ async function addDocument(
 		autosavedAt?: number;
 		activate?: boolean;
 		mobileMode?: "reading" | "editing";
+		sourceRef?: FileSource;
+		originalBlob?: Blob;
+		originalName?: string;
+		favorite?: boolean;
+		isDraft?: boolean;
+		sourceSavedRevision?: string;
+		deliveryStatus?: string;
+		deliveryRevision?: string;
+		exportedAt?: number;
 	} = {},
 ): Promise<void> {
 	if (nativeTabSession && !options.nativeLocal) {
@@ -866,6 +921,11 @@ async function addDocument(
 			autosaveId: options.autosaveId,
 			autosavedAt: options.autosavedAt,
 			mobileMode: options.mobileMode,
+			sourceRef: options.sourceRef ?? getFileSource(source),
+			originalBlob: options.originalBlob ?? source,
+			originalName: options.originalName ?? fileName,
+			favorite: options.favorite,
+			isDraft: options.isDraft,
 		});
 		return;
 	}
@@ -882,9 +942,11 @@ async function addDocument(
 	// empty second read. Materialize it once so editing, autosave and Save As all
 	// share a stable in-memory Blob.
 	const stableSource = source
-		? new Blob([await source.arrayBuffer()], {
-				type: source.type || "application/octet-stream",
-			})
+		? !isHarmonyHost()
+			? source
+			: new Blob([await source.arrayBuffer()], {
+					type: source.type || "application/octet-stream",
+				})
 		: undefined;
 	openingLabel.value = "正在准备文档内容…";
 	await nextTick();
@@ -896,6 +958,16 @@ async function addDocument(
 		format,
 		extension: option.extension,
 		source: stableSource,
+		sourceRef: options.sourceRef ?? getFileSource(source),
+		originalBlob: options.originalBlob ?? stableSource,
+		originalName: options.originalName ?? fileName,
+		favorite: options.favorite ?? false,
+		isDraft: options.isDraft ?? !stableSource,
+		sourceSavedRevision: options.isDraft ? undefined : options.sourceSavedRevision,
+		deliveryStatus: options.deliveryStatus,
+		deliveryRevision: options.deliveryRevision,
+		sizeBytes: stableSource?.size,
+		exportedAt: options.exportedAt,
 		modelValue,
 		preview: autosaveHistory.value.find((record) => record.id === options.autosaveId)?.preview,
 		editor: null,
@@ -956,25 +1028,48 @@ async function persistAutosave(
 	tab: HarmonyDocumentTab,
 	blob: Blob,
 	revision: string,
+	sequence: number,
 ): Promise<void> {
-	const savedAt = Date.now();
-	const record: HarmonyAutosaveRecord = {
-		id: tab.autosaveId,
-		fileName: tab.fileName,
-		format: tab.format,
-		blob,
-		savedAt,
-		preview: tab.preview,
-	};
-	await writeHarmonyAutosave(record);
-	const historyIndex = autosaveHistory.value.findIndex((item) => item.id === record.id);
-	if (historyIndex < 0) autosaveHistory.value.push(record);
-	else autosaveHistory.value.splice(historyIndex, 1, record);
-	tab.autosaveRevision = revision;
-	tab.autosavedAt = savedAt;
-	tab.autosaveStatus = "saved";
-	// Preview capture is best effort and must never delay committing document bytes.
-	void prepareDocumentPreview(tab);
+	await draftWrites.write(tab.id, sequence, async () => {
+		if (!tabs.value.includes(tab)) return false;
+		const savedAt = Date.now();
+		const record: HarmonyAutosaveRecord = {
+			id: tab.autosaveId,
+			fileName: tab.fileName,
+			format: tab.format,
+			blob,
+			savedAt,
+			preview: tab.preview,
+			sourceRef: tab.sourceRef ? { ...toRaw(tab.sourceRef) } : undefined,
+			originalBlob: tab.originalBlob,
+			originalName: tab.originalName,
+			favorite: tab.favorite,
+			isDraft: tab.sourceSavedRevision !== revision,
+			sourceSavedRevision: tab.sourceSavedRevision,
+			deliveryStatus: tab.deliveryStatus,
+			deliveryRevision: tab.deliveryRevision,
+			exportedAt: tab.exportedAt,
+		};
+		await writeHarmonyAutosave(record);
+		const historyIndex = autosaveHistory.value.findIndex((item) => item.id === record.id);
+		if (historyIndex < 0) autosaveHistory.value.push(record);
+		else autosaveHistory.value.splice(historyIndex, 1, record);
+		tab.autosaveRevision = revision;
+		tab.autosavedAt = savedAt;
+		tab.sizeBytes = blob.size;
+		tab.isDraft = record.isDraft;
+		tab.autosaveStatus = "saved";
+		// Preview capture is best effort and must never delay committing document bytes.
+		void prepareDocumentPreview(tab);
+	});
+}
+
+async function persistCurrentDraft(tab: HarmonyDocumentTab): Promise<void> {
+	if (!tab.editor) return;
+	const revision = revisionToken(tab.editor.getState().revision),
+		sequence = draftWrites.capture();
+	const blob = await tab.editor.export();
+	await persistAutosave(tab, blob, revision, sequence);
 }
 
 function runAutosave(tab: HarmonyDocumentTab): Promise<void> {
@@ -987,7 +1082,8 @@ function runAutosave(tab: HarmonyDocumentTab): Promise<void> {
 		const editor = tab.editor;
 		if (!mobileLayout.value || !editor || !optionFor(tab.format).editable) return;
 		const startingState = editor.getState();
-		const startingRevision = revisionToken(startingState.revision);
+		const startingRevision = revisionToken(startingState.revision),
+			sequence = draftWrites.capture();
 		if (!startingState.dirty && tab.autosaveRevision === startingRevision) {
 			tab.autosaveStatus = "saved";
 			return;
@@ -997,13 +1093,14 @@ function runAutosave(tab: HarmonyDocumentTab): Promise<void> {
 			// Export does not clear the editor's dirty state before IndexedDB commits.
 			// The Host treats a matching persisted revision as safe when closing.
 			const blob = await editor.export();
-			await persistAutosave(tab, blob, startingRevision);
+			await persistAutosave(tab, blob, startingRevision, sequence);
 		} catch (cause) {
 			tab.autosaveStatus = "error";
 			console.error("HarmonyOS automatic save failed", cause);
 		}
 	})().finally(() => {
 		autosaveOperations.delete(tab.id);
+		if (!tabs.value.includes(tab)) return;
 		const editor = tab.editor;
 		const queued = autosaveQueued.delete(tab.id);
 		const revisionChanged =
@@ -1029,13 +1126,13 @@ function bindAutosave(tab: HarmonyDocumentTab): void {
 	}
 	const unsubscribe = tab.editor.subscribe((state) => {
 		const revision = revisionToken(state.revision);
-		if (state.dirty && revision !== tab.autosaveRevision) scheduleAutosave(tab);
+		if (revision !== tab.autosaveRevision) scheduleAutosave(tab);
 	});
 	autosaveUnsubscribers.set(tab.id, unsubscribe);
 	const state = tab.editor.getState();
 	if (
 		tab.autosaveRevision === undefined ||
-		(state.dirty && revisionToken(state.revision) !== tab.autosaveRevision)
+		revisionToken(state.revision) !== tab.autosaveRevision
 	) {
 		scheduleAutosave(tab);
 	}
@@ -1050,7 +1147,7 @@ async function flushAutosaves(): Promise<void> {
 		const state = tab.editor.getState();
 		if (
 			tab.autosaveRevision === undefined ||
-			(state.dirty && revisionToken(state.revision) !== tab.autosaveRevision)
+			revisionToken(state.revision) !== tab.autosaveRevision
 		) {
 			pending.push(runAutosave(tab));
 		}
@@ -1089,6 +1186,15 @@ async function restoreHistoricalDocument(record: HarmonyAutosaveRecord): Promise
 			autosaveId: record.id,
 			autosavedAt: record.savedAt,
 			mobileMode: "reading",
+			sourceRef: record.sourceRef,
+			originalBlob: record.originalBlob,
+			originalName: record.originalName,
+			favorite: record.favorite,
+			isDraft: record.isDraft,
+			sourceSavedRevision: record.sourceSavedRevision,
+			deliveryStatus: record.deliveryStatus,
+			deliveryRevision: record.deliveryRevision,
+			exportedAt: record.exportedAt,
 		});
 	} catch (cause) {
 		reportError(cause);
@@ -1322,7 +1428,12 @@ async function addFile(file: File): Promise<void> {
 		},
 		targetFormat,
 	);
-	await addDocument(targetFormat, replaceFileExtension(file.name, targetExtension), converted);
+	await addDocument(targetFormat, replaceFileExtension(file.name, targetExtension), converted, {
+		originalBlob: file,
+		originalName: file.name,
+		isDraft: true,
+		sourceRef: getFileSource(file) ? { ...getFileSource(file)!, writable: false } : undefined,
+	});
 }
 
 async function open(event: Event): Promise<void> {
@@ -1477,11 +1588,12 @@ async function startNativeTabSession(): Promise<void> {
 
 const dialogs = useUiDialogs(() => ({ locale: "zh-CN" }));
 
-async function closeTab(id: string): Promise<void> {
+async function closeTab(id: string, discard = false): Promise<void> {
 	let index = tabs.value.findIndex((tab) => tab.id === id);
 	if (index < 0) return;
 	const tab = tabs.value[index];
 	if (
+		!discard &&
 		tab?.editor?.getState().dirty &&
 		!autosaveIsCurrent(tab) &&
 		!(await dialogs.confirm(`关闭“${tab.fileName}”并放弃未保存的更改？`, { destructive: true }))
@@ -1514,7 +1626,10 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 	tab.previewPending = true;
 	try {
 		await tab.editor?.ready();
+		if (!tabs.value.includes(tab)) return;
 		tab.loaded = true;
+		if (tab.originalBlob && !tab.isDraft)
+			tab.sourceSavedRevision = revisionToken(tab.editor.getState().revision);
 		if (tab.source) {
 			const recent = await ensureHarmonyRecent({
 				id: tab.autosaveId,
@@ -1523,8 +1638,16 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 				blob: tab.source,
 				savedAt: Date.now(),
 				preview: tab.preview,
+				sourceRef: tab.sourceRef ? { ...toRaw(tab.sourceRef) } : undefined,
+				originalBlob: tab.originalBlob,
+				originalName: tab.originalName,
+				favorite: tab.favorite,
+				isDraft: false,
 			});
-			if (!autosaveHistory.value.some((item) => item.id === recent.id))
+			if (
+				tabs.value.includes(tab) &&
+				!autosaveHistory.value.some((item) => item.id === recent.id)
+			)
 				autosaveHistory.value.push(recent);
 		}
 		await nextTick();
@@ -1741,13 +1864,11 @@ async function renameAndroidDocument(id: string): Promise<void> {
 			tab.fileName = fileName;
 			try {
 				if (tab.editor && optionFor(tab.format).editable) {
-					const revision = revisionToken(tab.editor.getState().revision);
-					const blob = await tab.editor.export();
-					await persistAutosave(tab, blob, revision);
+					await persistCurrentDraft(tab);
 				} else {
 					const recent = autosaveHistory.value.find((item) => item.id === tab.autosaveId);
 					if (recent) {
-						await writeHarmonyAutosave({ ...recent, fileName });
+						await patchHarmonyAutosave(recent.id, { fileName });
 						recent.fileName = fileName;
 					}
 				}
@@ -1756,7 +1877,7 @@ async function renameAndroidDocument(id: string): Promise<void> {
 				throw cause;
 			}
 		} else if (record) {
-			await writeHarmonyAutosave({ ...record, fileName });
+			await patchHarmonyAutosave(record.id, { fileName });
 			record.fileName = fileName;
 		}
 	} catch (cause) {
@@ -1768,9 +1889,10 @@ async function renameAndroidDocument(id: string): Promise<void> {
 
 async function saveActive(): Promise<void> {
 	const tab = activeTab.value;
-	if (!tab?.editor?.save || saving.value) return;
+	if (!tab?.editor || saving.value) return;
 	saving.value = true;
 	error.value = "";
+	tab.deliveryStatus = undefined;
 	try {
 		const fileName = nativeMobileLayout
 			? await promptDocumentName(tab.fileName, "保存文件")
@@ -1778,18 +1900,190 @@ async function saveActive(): Promise<void> {
 		if (fileName === null) return;
 		clearAutosaveTimer(tab.id);
 		await autosaveOperations.get(tab.id);
-		const revision = revisionToken(tab.editor.getState().revision);
+		const revision = revisionToken(tab.editor.getState().revision),
+			sequence = draftWrites.capture();
 		const blob = await tab.editor.export();
-		const previousName = tab.fileName;
-		tab.fileName = fileName;
-		try {
-			await persistAutosave(tab, blob, revision);
-		} catch (cause) {
-			tab.fileName = previousName;
-			throw cause;
+		await persistAutosave(tab, blob, revision, sequence);
+		const receipt = await deliverFile(blob, fileName);
+		if (receipt.status === "cancelled") {
+			tab.deliveryRevision = revision;
+			tab.deliveryStatus = "另存已取消 · 草稿仍在本机";
+			return;
 		}
-		await saveBlobWithHost(blob, fileName);
+		tab.fileName = fileName;
+		tab.exportedAt = Date.now();
+		tab.deliveryRevision = revision;
+		tab.deliveryStatus = "副本已导出";
+		// Exporting a copy does not silently change which original a Save targets.
+		if (!tab.sourceRef && receipt.source) {
+			tab.sourceRef = receipt.source;
+			tab.sourceSavedRevision = revision;
+			tab.originalBlob = blob;
+			tab.originalName = fileName;
+		}
+		await persistCurrentDraft(tab);
 		mobileMoreOpen.value = false;
+	} catch (cause) {
+		tab.deliveryRevision = revisionToken(tab.editor.getState().revision);
+		tab.deliveryStatus = "另存失败 · 草稿在本机";
+		reportError(cause);
+	} finally {
+		saving.value = false;
+	}
+}
+
+interface MobileDeliveryRequest {
+	intent: "save" | "export" | "share" | "print";
+	format?: string;
+	original?: boolean;
+}
+const fileExportOptions = computed(() => {
+	const tab = activeTab.value;
+	if (!tab) return [];
+	const options = new Map<string, string>([
+		[tab.format === "markdown" ? "md" : tab.format, "当前格式"],
+	]);
+	for (const item of formats.engine.conversions.listTargets(tab.format, { environment: "dom" })) {
+		options.set(item.target.format, item.target.format.toUpperCase());
+	}
+	if (["docx", "pptx", "markdown", "notes", "pdf", "image"].includes(tab.format))
+		options.set("pdf", "PDF");
+	if (tab.format === "docx") {
+		options.set("text", "纯文本 TXT");
+		options.set("html", "HTML");
+	}
+	if (tab.format === "image") {
+		options.set("png", "PNG");
+		options.set("jpeg", "JPEG（可压缩）");
+		options.set("webp", "WebP");
+	}
+	return [...options].map(([format, label]) => ({ format, label }));
+});
+async function exportMobileContent(tab: HarmonyDocumentTab, format?: string): Promise<Blob> {
+	if (!tab.editor) throw new Error("文档尚未加载。");
+	if (format === "pdf" && tab.format === "image") {
+		const blob = await tab.editor.export({ format: "png" });
+		return (await import("./mobile/pdf-operations")).imageToPdf(blob, blob.type);
+	}
+	return tab.editor.export(format ? { format } : {});
+}
+async function deliverActive(request: MobileDeliveryRequest): Promise<void> {
+	const tab = activeTab.value;
+	if (!tab || saving.value) return;
+	saving.value = true;
+	error.value = "";
+	tab.deliveryStatus = undefined;
+	try {
+		if (request.intent === "save" && !tab.sourceRef?.writable)
+			throw new Error("原文件不可写，请另存副本。");
+		const revision = revisionToken(tab.editor?.getState().revision ?? 0);
+		const blob = request.original
+			? tab.originalBlob
+			: await exportMobileContent(tab, request.format);
+		if (!blob) throw new Error("没有可分享的原文件，请先保存文件。");
+		const extension =
+			request.format === "text" ? "txt" : request.format === "jpeg" ? "jpg" : request.format;
+		const name = request.original
+			? (tab.originalName ?? tab.fileName)
+			: request.intent === "save"
+				? tab.sourceRef!.name
+				: extension && extension !== tab.format && extension !== "image"
+					? replaceFileExtension(tab.fileName, extension)
+					: tab.fileName;
+		if (!request.original && optionFor(tab.format).editable) await persistCurrentDraft(tab);
+		const receipt = await deliverFile(blob, name, request.intent, tab.sourceRef);
+		if (receipt.status === "cancelled") {
+			tab.deliveryRevision = revision;
+			tab.deliveryStatus = "操作已取消 · 草稿仍在本机";
+			return;
+		}
+		tab.deliveryRevision = revision;
+		if (request.intent === "save") {
+			tab.sourceRef = receipt.source ?? tab.sourceRef;
+			tab.sourceSavedRevision = revision;
+			tab.originalBlob = blob;
+			tab.originalName = name;
+			tab.deliveryStatus = "原文件已更新";
+		} else if (request.intent === "export") {
+			tab.deliveryRevision = revision;
+			tab.deliveryStatus = "副本已导出";
+			tab.exportedAt = Date.now();
+		} else
+			tab.deliveryStatus =
+				receipt.status === "share-opened"
+					? "已打开系统分享"
+					: receipt.status === "print-opened"
+						? "已打开打印面板"
+						: request.intent === "share"
+							? "分享已完成"
+							: "打印已完成";
+		if (optionFor(tab.format).editable) await persistCurrentDraft(tab);
+	} catch (cause) {
+		tab.deliveryRevision = revisionToken(tab.editor?.getState().revision ?? 0);
+		tab.deliveryStatus = "操作失败 · 草稿在本机";
+		reportError(cause);
+	} finally {
+		saving.value = false;
+	}
+}
+async function favoriteAndroidDocument(id: string): Promise<void> {
+	if (saving.value) return;
+	const tab = tabs.value.find((item) => item.id === id),
+		record = autosaveHistory.value.find((item) => item.id === (tab?.autosaveId ?? id));
+	const previous = tab?.favorite ?? record?.favorite,
+		favorite = !previous;
+	if (tab) tab.favorite = favorite;
+	try {
+		await patchHarmonyAutosave(tab?.autosaveId ?? id, { favorite });
+		if (record) record.favorite = favorite;
+	} catch (cause) {
+		if (tab) tab.favorite = previous;
+		reportError(cause);
+	}
+}
+async function batchAndroidDocuments(
+	ids: string[],
+	action: "share" | "export" | "remove",
+): Promise<void> {
+	if (saving.value || opening.value) return;
+	if (
+		action === "remove" &&
+		!(await dialogs.confirm(`移除这 ${ids.length} 个本机记录和草稿？原文件不会被删除。`, {
+			destructive: true,
+		}))
+	)
+		return;
+	saving.value = true;
+	error.value = "";
+	try {
+		const files: { blob: Blob; fileName: string }[] = [];
+		for (const id of ids) {
+			const tab = tabs.value.find((item) => item.id === id),
+				recordId = tab?.autosaveId ?? id;
+			const record = autosaveHistory.value.find((item) => item.id === recordId);
+			if (action === "remove") {
+				if (tab) {
+					await autosaveOperations.get(tab.id);
+					clearAutosaveTimer(tab.id);
+					await closeTab(tab.id, true);
+				}
+				if (tabs.value.some((item) => item.id === id))
+					throw new Error("文档仍有未保存修改，移除已取消。");
+				await deleteHarmonyAutosave(recordId);
+				autosaveHistory.value = autosaveHistory.value.filter(
+					(item) => item.id !== recordId,
+				);
+				continue;
+			}
+			const blob = tab?.editor ? await tab.editor.export() : record?.blob;
+			if (!blob) throw new Error("文件记录无法读取，请重新打开。");
+			files.push({ blob, fileName: tab?.fileName ?? record!.fileName });
+		}
+		if (action === "share") await deliverFiles(files);
+		if (action === "export")
+			for (const file of files) {
+				if ((await deliverFile(file.blob, file.fileName)).status === "cancelled") break;
+			}
 	} catch (cause) {
 		reportError(cause);
 	} finally {
@@ -1840,7 +2134,9 @@ async function openActiveSearch(): Promise<void> {
 	reportError("当前文档格式暂不提供页面内查找。");
 }
 
-async function openMobileRibbonTab(tabId?: "home" | "insert"): Promise<void> {
+async function openMobileRibbonTab(
+	tabId?: "home" | "insert" | "data" | "view" | "layout" | "review",
+): Promise<void> {
 	if (!activeTab.value || !activeMobileEditing.value) return;
 	const activeElement = document.activeElement;
 	if (activeElement instanceof HTMLElement && activeDocumentSurface()?.contains(activeElement)) {
@@ -2722,6 +3018,22 @@ async function enterMobileEditing(
 ): Promise<void> {
 	if (!mobileLayout.value || !tab || tab.id !== activeId.value || !optionFor(tab.format).editable)
 		return;
+	const exposed = surfaceInstances.get(tab.id) as
+		| { getEditWarning?: () => string; prepareEditing?: () => Promise<string | undefined> }
+		| undefined;
+	const warning = exposed?.getEditWarning?.();
+	if (warning && !(await dialogs.confirm(warning))) return;
+	try {
+		const name = await exposed?.prepareEditing?.();
+		if (name) {
+			tab.fileName = name;
+			tab.sourceRef = tab.sourceRef ? { ...tab.sourceRef, writable: false } : undefined;
+			tab.isDraft = true;
+		}
+	} catch (cause) {
+		reportError(cause);
+		return;
+	}
 	setMobileDocumentMode(tab, "editing");
 	closeMobileRibbon();
 	mobileSearchOpen.value = false;
@@ -2790,8 +3102,17 @@ async function enterMobileEditing(
 	});
 }
 
-function finishMobileEditing(): void {
+async function finishMobileEditing(): Promise<void> {
 	const tab = activeTab.value;
+	try {
+		if (tab)
+			await (
+				surfaceInstances.get(tab.id) as { finishEditing?: () => Promise<void> } | undefined
+			)?.finishEditing?.();
+	} catch (cause) {
+		reportError(cause);
+		return;
+	}
 	dismissMobileKeyboard();
 	closeMobileRibbon();
 	mobileSearchOpen.value = false;
@@ -2987,6 +3308,11 @@ function showMobileHome(): void {
  * of first closing the reader's open layers, as the system gesture does.
  */
 function handleNativeBack(leaveReader = false): boolean {
+	const custom = activeTab.value
+		? (surfaceInstances.get(activeTab.value.id) as { handleBack?: () => boolean } | undefined)
+		: undefined;
+	if (custom?.handleBack?.()) return true;
+
 	if (
 		!leaveReader &&
 		activeTab.value?.format === "epub" &&
@@ -3213,15 +3539,52 @@ onMounted(() => {
 	window.addEventListener("resize", syncMobileOrientation);
 	window.auroraHandleBack = handleNativeBack;
 	window.auroraPrepareForClose = prepareNativeWorkspaceClose;
+	window.auroraFlushDrafts = flushAutosaves;
 	setUiEditorFileSink(async ({ blob, fileName: outputName, intent }) => {
+		if (intent === "open") {
+			await addFile(new File([blob], outputName, { type: blob.type }));
+			return;
+		}
+		if (saving.value) throw new Error("请等待当前文件操作完成。");
 		saving.value = true;
 		error.value = "";
 		try {
 			const tab = activeTab.value;
-			if (mobileLayout.value && tab?.editor && intent !== "export") {
-				await persistAutosave(tab, blob, revisionToken(tab.editor.getState().revision));
+			const writeOriginal = intent === "save" && tab?.sourceRef?.writable;
+			let savedRevision: string | undefined;
+			if (writeOriginal && tab?.editor) {
+				const revision = revisionToken(tab.editor.getState().revision);
+				const current = await tab.editor.export();
+				let equal = current.size === blob.size;
+				for (let offset = 0; equal && offset < blob.size; offset += 192 * 1024) {
+					const [left, right] = await Promise.all([
+						current.slice(offset, offset + 192 * 1024).arrayBuffer(),
+						blob.slice(offset, offset + 192 * 1024).arrayBuffer(),
+					]);
+					const bytes = new Uint8Array(right);
+					equal = new Uint8Array(left).every((byte, index) => byte === bytes[index]);
+				}
+				if (!equal) throw new Error("文档在导出时发生变化，请重新保存。");
+				savedRevision = revision;
 			}
-			await saveBlobWithHost(blob, outputName);
+			if (mobileLayout.value && tab?.editor && intent !== "export") {
+				await persistCurrentDraft(tab);
+			}
+			const receipt = await deliverFile(
+				blob,
+				writeOriginal ? tab!.sourceRef!.name : outputName,
+				writeOriginal ? "save" : "export",
+				tab?.sourceRef,
+			);
+			if (receipt.status === "cancelled") throw new FileDeliveryCancelled();
+			if (tab && writeOriginal) {
+				tab.sourceRef = receipt.source ?? tab.sourceRef;
+				tab.sourceSavedRevision = savedRevision;
+				tab.originalBlob = blob;
+				tab.originalName = tab.sourceRef!.name;
+			}
+			if (mobileLayout.value && tab?.editor && intent !== "export")
+				await persistCurrentDraft(tab);
 		} catch (cause) {
 			reportError(cause);
 			throw cause;
@@ -3234,6 +3597,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	delete window.auroraPrepareForClose;
+	delete window.auroraFlushDrafts;
 	clearInterval(nativeTabTimer);
 	nativeTabUnsubscribe?.();
 	document.removeEventListener("keydown", handleAndroidEscape);
@@ -3300,11 +3664,12 @@ onBeforeUnmount(() => {
 			:opening="opening"
 			:opening-label="openingLabel"
 			:saving="saving"
-			:ready="Boolean(activeTab?.editor && activeTab.loaded)"
+			:ready="mobileDocumentReady"
 			:status="mobileDocumentStatus"
 			:editable="activeEditable"
 			:reduce-motion="preferences.reduceMotion"
 			:immersive="mobilePptxViewing"
+			:export-options="fileExportOptions"
 			@open="open"
 			@select="selectTab"
 			@restore="restoreAndroidDocument"
@@ -3315,12 +3680,17 @@ onBeforeUnmount(() => {
 			@edit="activeTab && enterMobileEditing(activeTab)"
 			@finish="finishMobileEditing"
 			@save="saveActive"
+			@deliver="deliverActive"
+			@favorite="favoriteAndroidDocument"
+			@batch="batchAndroidDocuments"
 			@rename="renameAndroidDocument"
 			@close="closeAndroidDocument"
 			@undo="undoActive"
 			@redo="redoActive"
 			@search="openActiveSearch"
-			@format="openAndroidFormat"
+			@format="activeTab?.format === 'text' ? openActiveSearch() : openAndroidFormat()"
+			@ribbon="openMobileRibbonTab"
+			@error="reportError"
 			@insert="
 				activeTab?.format === 'docx'
 					? openMobileInsertMenu()

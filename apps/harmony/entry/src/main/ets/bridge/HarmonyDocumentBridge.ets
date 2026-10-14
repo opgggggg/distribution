@@ -1,11 +1,14 @@
 import { common } from '@kit.AbilityKit';
 import { connection } from '@kit.NetworkKit';
 import { window } from '@kit.ArkUI';
-import { fileIo, picker } from '@kit.CoreFileKit';
+import { fileIo, picker, fileUri } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
+import { systemShare } from '@kit.ShareKit';
+import { cryptoFramework } from '@kit.CryptoArchitectureKit';
+import print from '@ohos.print';
 import { image } from '@kit.ImageKit';
 import deviceInfo from '@ohos.deviceInfo';
-import { saveSuffixChoice } from '../common/OpenFormats';
+import { OPEN_FILE_SUFFIX_FILTERS, saveSuffixChoice } from '../common/OpenFormats';
 
 interface SaveSession {
   id: string;
@@ -14,6 +17,9 @@ interface SaveSession {
   file: fileIo.File;
 }
 
+interface FileSource { id: string; name: string; writable: boolean; version: string; }
+interface SourceReference { id: string; uri: string; }
+
 interface PendingOpenDocument {
   type: string;
   id: string;
@@ -21,6 +27,7 @@ interface PendingOpenDocument {
   mimeType: string;
   size: number;
   path: string;
+  originalUri?: string;
 }
 
 interface ImageDecodeSession {
@@ -46,9 +53,14 @@ export class HarmonyDocumentBridge {
   private nativeTabs?: NativeTabsHost;
   private context?: common.UIAbilityContext;
   private appWindow?: window.Window;
+  private documentNotifier?: () => void;
+  setDocumentNotifier(notify: () => void): void { this.documentNotifier = notify; }
   private onReady?: () => void;
   private pendingIntent?: () => string;
   private sequence: number = 0;
+  private sources: Array<SourceReference> = [];
+  private selectedDocuments: Array<PendingOpenDocument> = [];
+  private sourcesLoaded: boolean = false;
   private sessions: Map<string, SaveSession> = new Map();
   private pendingOpenDocuments: Map<string, PendingOpenDocument> = new Map();
   private imageDecodes: Map<string, ImageDecodeSession> = new Map();
@@ -139,7 +151,8 @@ export class HarmonyDocumentBridge {
   }
 
   consumePendingIntent(): string {
-    const pending = this.pendingIntent ? this.pendingIntent() : '';
+    const selected = this.selectedDocuments.shift();
+    const pending = selected ? JSON.stringify(selected) : this.pendingIntent ? this.pendingIntent() : '';
     if (!pending) return '';
     try {
       const descriptor = JSON.parse(pending) as PendingOpenDocument;
@@ -158,11 +171,64 @@ export class HarmonyDocumentBridge {
         id: descriptor.id,
         fileName: descriptor.fileName,
         mimeType: descriptor.mimeType,
-        size: descriptor.size
+        size: descriptor.size,
+        source: descriptor.originalUri ? this.registerSource(descriptor.originalUri, descriptor.fileName, descriptor.path) : undefined
       });
     } catch (_) {
       return pending;
     }
+  }
+
+  private digest(path: string): string {
+    const hash = cryptoFramework.createMd('SHA256');
+    const file = fileIo.openSync(path, fileIo.OpenMode.READ_ONLY);
+    try {
+      const buffer = new ArrayBuffer(65536);
+      let count = fileIo.readSync(file.fd, buffer);
+      while (count > 0) {
+        hash.updateSync({ data: new Uint8Array(buffer.slice(0, count)) });
+        count = fileIo.readSync(file.fd, buffer);
+      }
+      return this.base64.encodeToStringSync(hash.digestSync().data);
+    } finally { fileIo.closeSync(file); }
+  }
+
+  private loadSources(): void {
+    if (this.sourcesLoaded) return;
+    this.sourcesLoaded = true;
+    try { this.sources = JSON.parse(fileIo.readTextSync(`${this.requireContext().filesDir}/document-sources.json`)) as Array<SourceReference>; }
+    catch (_) { this.sources = []; }
+  }
+
+  private registerSource(uri: string, name: string, stagedPath: string): FileSource {
+    this.loadSources();
+    let reference = this.sources.find((item: SourceReference) => item.uri === uri);
+    if (!reference) {
+      reference = { id: `source-${Date.now()}-${this.sequence++}`, uri };
+      this.sources.push(reference);
+      const file = fileIo.openSync(`${this.requireContext().filesDir}/document-sources.json`, fileIo.OpenMode.CREATE | fileIo.OpenMode.WRITE_ONLY | fileIo.OpenMode.TRUNC);
+      try { fileIo.writeSync(file.fd, JSON.stringify(this.sources)); } finally { fileIo.closeSync(file); }
+    }
+    let writable = false;
+    try { const file = fileIo.openSync(uri, fileIo.OpenMode.READ_WRITE); fileIo.closeSync(file); writable = true; } catch (_) {}
+    return { id: reference.id, name, writable, version: this.digest(stagedPath) };
+  }
+
+  async openDocumentPicker(): Promise<boolean> {
+    const options = new picker.DocumentSelectOptions();
+    options.maxSelectNumber = 20;
+    options.fileSuffixFilters = OPEN_FILE_SUFFIX_FILTERS;
+    const uris = await new picker.DocumentViewPicker(this.requireContext()).select(options);
+    for (const uri of uris) {
+      const fileName = decodeURIComponent(uri.split('/').pop()?.split('?')[0] || 'Document');
+      const id = `open-${Date.now()}-${this.sequence++}`;
+      const path = `${this.requireContext().cacheDir}/${id}`;
+      const file = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+      try { fileIo.copyFileSync(file.fd, path); } finally { fileIo.closeSync(file); }
+      this.selectedDocuments.push({ type: 'open-document', id, fileName, mimeType: 'application/octet-stream', size: fileIo.statSync(path).size, path, originalUri: uri });
+    }
+    this.documentNotifier?.();
+    return true;
   }
 
   readOpenDocumentChunk(id: string, offset: number, length: number): string {
@@ -351,7 +417,7 @@ export class HarmonyDocumentBridge {
     const session = this.sessions.get(sessionId);
     if (!session) return false;
     const bytes = this.base64.decodeSync(encodedChunk);
-    fileIo.writeSync(session.file.fd, bytes.buffer);
+    fileIo.writeSync(session.file.fd, bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     return true;
   }
 
@@ -366,7 +432,7 @@ export class HarmonyDocumentBridge {
       options.fileSuffixChoices = [saveSuffixChoice(session.fileName)];
       const documentPicker = new picker.DocumentViewPicker(this.requireContext());
       const destinations = await documentPicker.save(options);
-      if (destinations.length === 0) throw new Error('No save destination was selected.');
+      if (destinations.length === 0) return '';
       const destination = fileIo.openSync(
         destinations[0],
         fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC
@@ -381,6 +447,62 @@ export class HarmonyDocumentBridge {
       this.sessions.delete(sessionId);
       this.removeTemporaryFile(session.path);
     }
+  }
+
+  async finishFileOperation(sessionId: string, intent: string, encodedSource: string): Promise<string> {
+    if (intent === 'export') {
+      const destination = await this.finishSave(sessionId);
+      return JSON.stringify({ status: destination ? 'saved' : 'cancelled', destination });
+    }
+    if (intent === 'share') return this.finishShareFiles(JSON.stringify([sessionId]));
+    const session = this.sessions.get(sessionId);
+    if (!session) throw new Error('未知文件操作。');
+    fileIo.closeSync(session.file);
+    try {
+      if (intent === 'print') {
+        await print.print([session.path], this.requireContext());
+        return JSON.stringify({ status: 'printed' });
+      }
+      const source = JSON.parse(encodedSource) as FileSource;
+      this.loadSources();
+      const reference = this.sources.find((item: SourceReference) => item.id === source.id);
+      if (!reference || !source.writable) throw new Error('原文件不可写，请另存副本。');
+      const backup = `${session.path}.backup`;
+      const original = fileIo.openSync(reference.uri, fileIo.OpenMode.READ_ONLY);
+      try { fileIo.copyFileSync(original.fd, backup); } finally { fileIo.closeSync(original); }
+      try {
+        if (this.digest(backup) !== source.version) throw new Error('原文件已被其他应用修改，请重新打开或另存副本。');
+        const destination = fileIo.openSync(reference.uri, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.TRUNC);
+        try {
+          try { await fileIo.copyFile(session.path, destination.fd); }
+          catch (cause) { await fileIo.copyFile(backup, destination.fd); throw new Error(String(cause)); }
+        } finally { fileIo.closeSync(destination); }
+      } finally { this.removeTemporaryFile(backup); }
+      return JSON.stringify({ status: 'saved', destination: source.name, source: this.registerSource(reference.uri, source.name, session.path) });
+    } finally {
+      this.sessions.delete(sessionId); this.removeTemporaryFile(session.path);
+    }
+  }
+
+  async finishShareFiles(encodedIds: string): Promise<string> {
+    const ids = JSON.parse(encodedIds) as Array<string>;
+    if (ids.length === 0 || ids.length > 50) throw new Error('请选择 1–50 个文件。');
+    let data: systemShare.SharedData | undefined;
+    for (const id of ids) {
+      const session = this.sessions.get(id);
+      if (!session) throw new Error('分享文件传输不完整。');
+      fileIo.closeSync(session.file);
+      const directory = `${this.requireContext().cacheDir}/share-${id}`;
+      fileIo.mkdirSync(directory);
+      const path = `${directory}/${session.fileName}`;
+      try { await fileIo.copyFile(session.path, path); }
+      finally { this.sessions.delete(id); this.removeTemporaryFile(session.path); }
+      const record: systemShare.SharedRecord = { utd: 'general.file', uri: fileUri.getUriFromPath(path), title: session.fileName };
+      if (data) data.addRecord(record); else data = new systemShare.SharedData(record);
+    }
+    if (!data) throw new Error('未选择文件。');
+    await new systemShare.ShareController(data).show(this.requireContext(), { previewMode: systemShare.SharePreviewMode.DETAIL });
+    return JSON.stringify({ status: 'shared' });
   }
 
   abortSave(sessionId: string): boolean {

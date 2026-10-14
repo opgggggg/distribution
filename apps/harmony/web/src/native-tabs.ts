@@ -1,3 +1,4 @@
+import type { FileSource } from "./file-delivery";
 import type { EditorArtifactFormat } from "@yaochn/als-office-editor-ui/vue";
 
 export interface NativeDocumentRequest {
@@ -8,6 +9,11 @@ export interface NativeDocumentRequest {
 	autosaveId?: string;
 	autosavedAt?: number;
 	mobileMode?: "reading" | "editing";
+	sourceRef?: FileSource;
+	originalBlob?: Blob;
+	originalName?: string;
+	favorite?: boolean;
+	isDraft?: boolean;
 }
 
 export interface NativeTabCommand {

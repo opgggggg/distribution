@@ -12,6 +12,7 @@ interface PendingOpenDocument {
   mimeType: string;
   size: number;
   path: string;
+  originalUri: string;
 }
 
 export default class EntryAbility extends UIAbility {
@@ -113,7 +114,7 @@ export default class EntryAbility extends UIAbility {
       fileName,
       mimeType: mimeType || 'application/octet-stream',
       size: fileIo.statSync(path).size,
-      path
+      path, originalUri: uri
     };
   }
 

@@ -1,3 +1,4 @@
+import type { FileSource } from "./file-delivery";
 import type { EditorArtifactFormat } from "@yaochn/als-office-editor-ui/vue";
 
 const DATABASE_NAME = "auroraprime-office-mobile";
@@ -11,6 +12,15 @@ export interface HarmonyAutosaveRecord {
 	blob: Blob;
 	savedAt: number;
 	preview?: string;
+	sourceRef?: FileSource;
+	originalBlob?: Blob;
+	originalName?: string;
+	isDraft?: boolean;
+	favorite?: boolean;
+	exportedAt?: number;
+	deliveryStatus?: string;
+	deliveryRevision?: string;
+	sourceSavedRevision?: string;
 }
 
 export async function updateHarmonyPreview(id: string, preview: string): Promise<void> {
@@ -111,6 +121,25 @@ export async function ensureHarmonyRecent(
 	};
 	await transactionComplete(transaction);
 	return result;
+}
+
+/** Patch metadata against the latest stored bytes, never a stale UI copy of a draft. */
+export async function patchHarmonyAutosave(
+	id: string,
+	patch: Pick<Partial<HarmonyAutosaveRecord>, "fileName" | "favorite">,
+): Promise<void> {
+	const database = await openDatabase(),
+		transaction = database.transaction(AUTOSAVE_STORE, "readwrite");
+	const store = transaction.objectStore(AUTOSAVE_STORE),
+		request = store.get(id);
+	request.onsuccess = () => {
+		try {
+			if (request.result) store.put({ ...request.result, ...patch });
+		} catch {
+			transaction.abort();
+		}
+	};
+	await transactionComplete(transaction);
 }
 
 export async function deleteHarmonyAutosave(id: string): Promise<void> {

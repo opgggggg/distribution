@@ -2,6 +2,8 @@ declare module "utif" {
 	interface IFD {
 		width: number;
 		height: number;
+		t256?: number[];
+		t257?: number[];
 		t274?: number[];
 		[name: string]: unknown;
 	}

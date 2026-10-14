@@ -10,11 +10,20 @@ const sharedText = {
 
 const pageCopy = {
 	home: {
-		title: "CubeOffice | Cross-platform document workspace",
+		title: "CubeOffice | File viewer and editor",
 		description:
-			"CubeOffice is a cross-platform AI document app for macOS, Windows, Linux, and Android, built to work with the AI assistant you already use.",
+			"CubeOffice is a cross-platform file viewer and editor for Office documents, PDFs, images, text, ebooks, and notes.",
 		text: {
 			...sharedText,
+			文件查看与轻量编辑: "File viewing and light editing",
+			"常见文件，": "Everyday files, ",
+			随手打开: "ready to open",
+			"在手机和电脑上，查看、修改、保存与分享。":
+				"View, edit, save, and share on your phone and computer.",
+			"Word、Excel、PowerPoint、PDF、图片、Markdown、文本和电子书，都能在同一个工作区打开。 手机上阅读文件、修改内容、填写和批注文档，处理完再保存或分享。 桌面版还可连接你熟悉的 AI 应用，协助处理文档。":
+				"Open Word, Excel, PowerPoint, PDF, images, Markdown, text, and ebooks in one workspace. Read, make changes, fill out forms, and annotate on your phone, then save or share. Desktop apps also connect to your preferred AI assistant.",
+			"桌面 AI 协作": "Desktop AI collaboration",
+			查看支持格式: "See supported formats",
 			"CubeOffice 下载": "Download CubeOffice",
 			"连接你已在用的 AI 应用": "Connects the AI app you already use",
 			"AI 的": "Your AI's ",
