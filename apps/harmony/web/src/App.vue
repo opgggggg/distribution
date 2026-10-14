@@ -29,6 +29,7 @@ import {
 } from "@yaochn/als-office-editor-ui/vue";
 
 import AndroidWorkspace from "./android/AndroidWorkspace.vue";
+import DocumentTopbar from "./DocumentTopbar.vue";
 import {
 	openNativeDocument,
 	readNativeDocumentRequest,
@@ -611,10 +612,6 @@ const harmonyControlStatus: CliControlStatus = {
 
 const activeTab = computed(() => tabs.value.find((tab) => tab.id === activeId.value) ?? null);
 const homeActive = computed(() => activeId.value === HOME_TAB_ID);
-// EPUB is always immersive on phones: the reader draws its own bars over the page.
-const mobileEpubReading = computed(
-	() => nativeMobileLayout && activeTab.value?.format === "epub" && !homeActive.value,
-);
 const activeEditable = computed(() =>
 	activeTab.value ? optionFor(activeTab.value.format).editable : false,
 );
@@ -643,46 +640,7 @@ const mobileFormatLabel = computed(() => {
 			return "格式";
 	}
 });
-const activeAutosaveLabel = computed(() => {
-	const tab = activeTab.value;
-	if (!mobileLayout.value || !tab || !optionFor(tab.format).editable) return "";
-	switch (tab.autosaveStatus) {
-		case "pending":
-			return "等待自动保存…";
-		case "saving":
-			return "正在自动保存…";
-		case "saved":
-			return "已自动保存";
-		case "error":
-			return "自动保存失败 · 将重试";
-		default:
-			return optionFor(tab.format).documentLabel;
-	}
-});
-const mobileEditingStatusLabel = computed(() => {
-	if (saving.value || activeTab.value?.autosaveStatus === "saving") return "保存中…";
-	switch (activeTab.value?.autosaveStatus) {
-		case "pending":
-			return "等待保存…";
-		case "saved":
-			return "已保存";
-		case "error":
-			return "保存失败";
-		default:
-			return "编辑中";
-	}
-});
-const mobileReadingStatusLabel = computed(() => {
-	const tab = activeTab.value;
-	if (!tab) return "";
-	if (!optionFor(tab.format).editable) return "只读";
-	if (tab.autosaveStatus === "saving") return "查看模式 · 保存中…";
-	if (tab.autosaveStatus === "saved") return "查看模式 · 已保存";
-	if (tab.autosaveStatus === "error") return "查看模式 · 保存失败";
-	return "查看模式";
-});
-
-const androidDocumentStatus = computed(() => {
+const mobileDocumentStatus = computed(() => {
 	if (saving.value) return "正在另存到文件…";
 	if (!activeTab.value?.editor || !activeTab.value.loaded) return "正在解析和渲染文档…";
 	if (!activeEditable.value) return "只读 · " + activeTab.value.format.toUpperCase();
@@ -824,14 +782,13 @@ function surfaceInput(tab: HarmonyDocumentTab): UiArtifactSurfaceInput {
 
 function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 	const binding = formats.require(tab.format).createBinding(surfaceInput(tab));
-	// The reader takes the whole screen on phones and brings its own top bar,
-	// whose back button returns to the library like the workspace one.
+	// The workspace owns document navigation, including read-only books.
 	if (tab.format === "epub" && nativeMobileLayout)
 		return {
 			...binding,
-			props: { ...binding.props, exitable: true, onExit: () => handleNativeBack(true) },
+			props: { ...binding.props, form: "touch", hostNavigation: true },
 		};
-	if (tab.format === "notes" && nativeMobileLayout)
+	if (tab.format === "notes" && mobileLayout.value)
 		return {
 			...binding,
 			props: {
@@ -1615,12 +1572,14 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 	}
 }
 
-async function toggleNotesPages(): Promise<void> {
+async function toggleNotesPages(anchor?: HTMLElement): Promise<void> {
 	const tab = activeTab.value;
 	if (!tab || tab.format !== "notes") return;
 	await nextTick();
-	const ui = surfaceInstances.get(tab.id) as { togglePages?: () => void } | undefined;
-	ui?.togglePages?.();
+	const ui = surfaceInstances.get(tab.id) as
+		| { togglePages?: (anchor?: HTMLElement) => void }
+		| undefined;
+	ui?.togglePages?.(anchor);
 }
 
 async function showNotesViewOptions(): Promise<void> {
@@ -1840,6 +1799,13 @@ async function saveActive(): Promise<void> {
 
 async function openActiveSearch(): Promise<void> {
 	error.value = "";
+	if (activeTab.value?.format === "epub") {
+		const reader = surfaceInstances.get(activeTab.value.id) as
+			| { openSearch?: () => void }
+			| undefined;
+		reader?.openSearch?.();
+		return;
+	}
 	if (mobileSearchOpen.value) {
 		mobileSearchOpen.value = false;
 		return;
@@ -3017,7 +2983,7 @@ function showMobileHome(): void {
 
 /**
  * Android delegates the system Back action here before it closes the Activity.
- * `leaveReader` is the EPUB reader's own back button: it leaves the book instead
+ * `leaveReader` is the explicit document back button: it leaves the book instead
  * of first closing the reader's open layers, as the system gesture does.
  */
 function handleNativeBack(leaveReader = false): boolean {
@@ -3320,8 +3286,7 @@ onBeforeUnmount(() => {
 			'is-mobile-more-open': mobileMoreOpen,
 			'is-mobile-insert-open': mobileInsertMenuOpen,
 			'is-pptx-viewing': mobilePptxViewing,
-			'is-epub-reading': mobileEpubReading,
-			'is-notes-document': nativeMobileLayout && activeTab?.format === 'notes',
+			'is-notes-document': mobileLayout && activeTab?.format === 'notes',
 		}"
 	>
 		<input v-if="nativeTabSession" type="file" :accept="OPEN_ACCEPT" hidden @change="open" />
@@ -3336,15 +3301,15 @@ onBeforeUnmount(() => {
 			:opening-label="openingLabel"
 			:saving="saving"
 			:ready="Boolean(activeTab?.editor && activeTab.loaded)"
-			:status="androidDocumentStatus"
+			:status="mobileDocumentStatus"
 			:editable="activeEditable"
 			:reduce-motion="preferences.reduceMotion"
-			:immersive="mobilePptxViewing || mobileEpubReading"
+			:immersive="mobilePptxViewing"
 			@open="open"
 			@select="selectTab"
 			@restore="restoreAndroidDocument"
 			@create="createDocument"
-			@back="handleNativeBack"
+			@back="handleNativeBack(true)"
 			@note-pages="toggleNotesPages"
 			@note-view="showNotesViewOptions"
 			@edit="activeTab && enterMobileEditing(activeTab)"
@@ -3543,158 +3508,41 @@ onBeforeUnmount(() => {
 					{{ nativeHostLabel() }}
 				</span>
 			</div>
-			<div
-				v-if="activeTab"
-				class="harmony-mobile-document-header"
-				:class="{
-					'is-editing': activeMobileEditing,
-					'is-reading': !activeMobileEditing,
-				}"
-				data-no-drag
-			>
-				<button type="button" aria-label="返回首页" @click="showMobileHome">
-					<svg viewBox="0 0 24 24" aria-hidden="true">
-						<path d="m14.5 5-7 7 7 7" />
-					</svg>
-				</button>
-				<template v-if="activeMobileEditing">
-					<div
-						class="harmony-mobile-edit-header__status"
-						:data-autosave-state="activeTab.autosaveStatus"
-						aria-live="polite"
-					>
-						<template v-if="mobileTextEditing">{{ mobileEditingStatusLabel }}</template>
-						<template v-else>
-							<strong>{{ activeTab.fileName }}</strong>
-							<small>{{ activeAutosaveLabel }}</small>
-						</template>
-					</div>
-					<div class="harmony-mobile-edit-header__actions">
-						<button
-							type="button"
-							aria-label="撤销"
-							@pointerdown.prevent
-							@click="undoActive"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<path d="M9 7 4 12l5 5M5 12h8a6 6 0 0 1 6 6" />
-							</svg>
-						</button>
-						<button
-							type="button"
-							aria-label="重做"
-							@pointerdown.prevent
-							@click="redoActive"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<path d="m15 7 5 5-5 5m4-5h-8a6 6 0 0 0-6 6" />
-							</svg>
-						</button>
-						<button
-							v-if="mobileTextEditing"
-							type="button"
-							aria-label="更多文档选项"
-							:aria-expanded="mobileMoreOpen"
-							@pointerdown.prevent
-							@click="openMobileDocumentOptions"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<circle cx="5" cy="12" r="1.4" />
-								<circle cx="12" cy="12" r="1.4" />
-								<circle cx="19" cy="12" r="1.4" />
-							</svg>
-						</button>
-						<button
-							type="button"
-							class="is-done"
-							aria-label="完成编辑"
-							@pointerdown.prevent
-							@click="finishMobileEditing"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<path d="m5 12.5 4.2 4.2L19 7" />
-							</svg>
-						</button>
-					</div>
-				</template>
-				<template v-else>
+			<div v-if="activeTab" class="harmony-mobile-document-header" data-no-drag>
+				<DocumentTopbar
+					:file-name="activeTab.fileName"
+					:status="mobileDocumentStatus"
+					:status-state="activeTab.autosaveStatus"
+					:editing="activeMobileEditing"
+					:editable="activeEditable"
+					:ready="Boolean(activeTab.editor && activeTab.loaded)"
+					:saving="saving"
+					:menu-open="mobileMoreOpen"
+					@back="showMobileHome"
+					@documents="openMobileDocumentOptions"
+					@edit="enterMobileEditing(activeTab)"
+					@finish="finishMobileEditing"
+					@more="openMobileDocumentOptions"
+				>
 					<button
+						v-if="activeTab.format === 'notes'"
 						type="button"
-						class="harmony-mobile-document-header__title"
-						aria-label="切换文档"
-						:aria-expanded="mobileMoreOpen"
-						@click="mobileMoreOpen = !mobileMoreOpen"
+						aria-label="页面"
+						:disabled="!activeTab.editor || !activeTab.loaded"
+						@click="toggleNotesPages($event.currentTarget as HTMLElement)"
 					>
-						<span
-							class="harmony-mobile-document-header__format"
-							:data-format="activeTab.format"
-						>
-							{{ optionFor(activeTab.format).shortLabel }}
-						</span>
-						<span>
-							<strong>{{ activeTab.fileName }}</strong>
-							<small
-								:data-autosave-state="activeTab.autosaveStatus"
-								aria-live="polite"
-								>{{ saving ? "正在保存到文件…" : mobileReadingStatusLabel }}</small
-							>
-						</span>
-						<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg>
+						<AndroidIcon name="pages" />
 					</button>
-					<div class="harmony-mobile-document-header__actions">
-						<button
-							v-if="activeTab.format !== 'pptx'"
-							type="button"
-							aria-label="查找文档内容"
-							:aria-pressed="mobileSearchOpen"
-							@click="openActiveSearch"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<circle cx="11" cy="11" r="6" />
-								<path d="m16 16 4 4" />
-							</svg>
-						</button>
-						<button
-							v-if="activeTab.format !== 'pptx'"
-							type="button"
-							:aria-label="activityOpen ? '关闭 AI 活动' : '打开 AI 活动'"
-							:aria-pressed="activityOpen"
-							@click="activityOpen = !activityOpen"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<path
-									d="M12 3c.7 3.7 2.6 5.6 6.3 6.3-3.7.7-5.6 2.6-6.3 6.3-.7-3.7-2.6-5.6-6.3-6.3C9.4 8.6 11.3 6.7 12 3Zm6 13c.3 1.5 1 2.2 2.5 2.5-1.5.3-2.2 1-2.5 2.5-.3-1.5-1-2.2-2.5-2.5 1.5-.3 2.2-1 2.5-2.5Z"
-								/>
-							</svg>
-						</button>
-						<button
-							v-if="activeTab.format === 'pptx' && mobilePortrait"
-							type="button"
-							class="is-view-action"
-							aria-label="横屏观看"
-							@click="startMobilePptxViewing"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<rect x="3" y="6" width="18" height="12" rx="2" />
-								<path d="m8 3-2 2 2 2M16 21l2-2-2-2" />
-							</svg>
-							<span>横屏</span>
-						</button>
-						<button
-							v-if="activeEditable"
-							type="button"
-							class="is-edit-action"
-							aria-label="编辑文档"
-							@click="enterMobileEditing(activeTab)"
-						>
-							<svg viewBox="0 0 24 24" aria-hidden="true">
-								<path d="m5 19 3.7-.8L19 7.9 16.1 5 5.8 15.3 5 19Z" />
-								<path d="m14.7 6.4 2.9 2.9" />
-							</svg>
-							<span>编辑</span>
-						</button>
-					</div>
-				</template>
+					<button
+						v-if="activeTab.format === 'pptx' && !activeMobileEditing"
+						type="button"
+						aria-label="播放"
+						:disabled="!activeTab.editor || !activeTab.loaded"
+						@click="startMobilePptxViewing"
+					>
+						<AndroidIcon name="play" />
+					</button>
+				</DocumentTopbar>
 			</div>
 		</header>
 
@@ -4487,6 +4335,22 @@ onBeforeUnmount(() => {
 					</button>
 				</header>
 				<div class="harmony-mobile-sheet__actions">
+					<button v-if="activeMobileEditing" type="button" @click="undoActive">
+						<AndroidIcon name="undo" /><span>撤销</span>
+					</button>
+					<button v-if="activeMobileEditing" type="button" @click="redoActive">
+						<AndroidIcon name="redo" /><span>重做</span>
+					</button>
+					<button
+						v-if="activeTab.format === 'notes'"
+						type="button"
+						@click="
+							mobileMoreOpen = false;
+							showNotesViewOptions();
+						"
+					>
+						<AndroidIcon name="pages" /><span>页面与缩放</span>
+					</button>
 					<button type="button" @click="openActiveSearch">
 						<svg viewBox="0 0 24 24" aria-hidden="true">
 							<circle cx="11" cy="11" r="6" />

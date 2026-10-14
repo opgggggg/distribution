@@ -51,6 +51,8 @@ export const EpubReader = defineComponent({
 		locale: { type: String, default: undefined },
 		/** Shows a back button in the touch top bar; the host handles `exit`. */
 		exitable: { type: Boolean, default: false },
+		/** Hosts share document navigation; reader actions stay in the bottom controls. */
+		hostNavigation: { type: Boolean, default: false },
 		/** "auto" picks the touch layout for coarse pointers and narrow hosts. */
 		form: { type: String as PropType<"auto" | "touch" | "desktop">, default: "auto" },
 	},
@@ -520,6 +522,7 @@ export const EpubReader = defineComponent({
 				return new Blob([bytes as BlobPart], { type: EPUB_MIME_TYPE });
 			},
 			handleBack,
+			openSearch: () => openPanel("search", undefined, true),
 			focus: () => view?.focus(),
 		});
 
@@ -876,19 +879,23 @@ export const EpubReader = defineComponent({
 		function renderTouchChrome(): VNodeChild[] {
 			const m = t.value, loc = location.value;
 			return [
-				h("header", { class: "cubexp-epub-bar is-top", "aria-hidden": String(!chrome.value), inert: !chrome.value || undefined }, [
+				!props.hostNavigation ? h("header", { class: "cubexp-epub-bar is-top", "aria-hidden": String(!chrome.value), inert: !chrome.value || undefined }, [
 					props.exitable ? button({ icon: "back", label: m.back, onClick: () => emit("exit") }) : null,
 					h("div", { class: "cubexp-epub-bar__title" }, [h("strong", book.value?.metadata.title ?? props.fileName), h("small", currentChapter.value)]),
 					button({ icon: "search", label: m.search, onClick: () => openPanel("search") }),
 					button({ icon: "bookmark", label: currentBookmark.value ? m.removeBookmark : m.addBookmark, filled: Boolean(currentBookmark.value), active: Boolean(currentBookmark.value), onClick: toggleBookmark }),
-				]),
+				]) : null,
 				h("footer", { class: "cubexp-epub-bar is-bottom", "aria-hidden": String(!chrome.value), inert: !chrome.value || undefined }, [
 					h("div", { class: "cubexp-epub-bar__progress" }, [
 						button({ icon: "chevron-left", label: m.previousChapter, onClick: () => void view?.prevChapter(), disabled: !loc || loc.atStart }),
 						renderSlider(),
 						button({ icon: "chevron-right", label: m.nextChapter, onClick: () => void view?.nextChapter(), disabled: !loc || loc.atEnd }),
 					]),
-					h("nav", { class: "cubexp-epub-bar__tabs" }, [
+					h("nav", { class: ["cubexp-epub-bar__tabs", props.hostNavigation && "has-host-navigation"] }, [
+						...(props.hostNavigation ? [
+							button({ icon: "search", label: m.search, text: m.search, onClick: () => openPanel("search") }),
+							button({ icon: "bookmark", label: currentBookmark.value ? m.removeBookmark : m.addBookmark, text: m.bookmarks, filled: Boolean(currentBookmark.value), active: Boolean(currentBookmark.value), onClick: toggleBookmark }),
+						] : []),
 						button({ icon: "contents", label: m.contents, text: m.contents, onClick: () => openPanel("navigator", "contents") }),
 						button({ icon: "notes", label: m.notes, text: m.notes, onClick: () => openPanel("navigator", "notes") }),
 						button({ icon: "type", label: m.appearance, text: m.appearance, onClick: () => openPanel("appearance") }),

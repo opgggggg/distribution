@@ -59,7 +59,7 @@ const assert = require("node:assert/strict"),
 				]);
 				const view = await p.locator(".cube-notes__viewport").boundingBox(),
 					tray = await p.locator(".cube-notes__tool-tray").boundingBox();
-				assert.ok(view.height >= height - 1);
+				assert.ok(view.height >= height - writing[".android-topbar"][3] - 1);
 				assert.ok(
 					tray.y > height / 2 && tray.y + tray.height <= height,
 					"iPad pen panel floats above the bottom",
@@ -111,10 +111,9 @@ const assert = require("node:assert/strict"),
 				await p.locator(".android-topbar .android-notes-pages").click();
 				await p.locator(".cube-notes__sidebar").waitFor();
 				await p.locator(".android-topbar .android-notes-pages").click();
-				await p.getByRole("button", { name: "完成书写", exact: true }).click();
 				await p
 					.locator(".android-topbar")
-					.getByRole("button", { name: "返回", exact: true })
+					.getByRole("button", { name: "完成编辑", exact: true })
 					.click();
 				await p.locator(".cube-notes[data-readonly=true]").waitFor();
 				assert.equal(await p.locator(".cube-notes__tool-tray").count(), 0);

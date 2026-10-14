@@ -15,6 +15,7 @@ import { UiCheckbox } from "@yaochn/als-office-editor-ui/vue";
 import { OPEN_ACCEPT } from "../open-formats";
 import { unframeNotesPreview } from "@cubexp/notes/thumbnail";
 import Icon from "./AndroidIcon.vue";
+import DocumentTopbar from "../DocumentTopbar.vue";
 const AndroidServices = defineAsyncComponent(() => import("./AndroidServices.vue"));
 interface DocumentItem {
 	preview?: string;
@@ -53,7 +54,7 @@ const emit = defineEmits<{
 	close: [];
 	undo: [];
 	redo: [];
-	notePages: [];
+	notePages: [anchor: HTMLElement];
 	noteView: [];
 	search: [];
 	format: [];
@@ -216,61 +217,48 @@ function previewLoaded(event: Event, item: DocumentItem) {
 </script>
 
 <template>
-	<header v-show="!immersive" class="android-topbar" :class="{ 'android-topbar-home': !active }">
-		<template v-if="active">
-			<button class="android-icon-button" aria-label="返回" @click="emit('back')">
-				<Icon name="back" />
-			</button>
-			<button
-				v-if="active.format === 'notes'"
-				class="android-icon-button android-notes-pages"
-				aria-label="页面"
-				:disabled="!ready"
-				@click="emit('notePages')"
-			>
-				<Icon name="pages" />
-			</button>
-			<button
-				v-if="active.format !== 'notes' || !editing"
-				class="android-document-title"
-				aria-label="切换文档"
-				@click="sheet = 'documents'"
-			>
-				<strong>{{ active.fileName }}</strong
-				><small role="status">{{ status }}</small>
-			</button>
-			<button
-				v-if="editing && active.format !== 'notes'"
-				class="android-icon-button"
-				aria-label="完成编辑"
-				:disabled="saving"
-				@click="emit('finish')"
-			>
-				<Icon name="check" />
-			</button>
-			<button
-				v-if="!editing && editable && active.format === 'notes'"
-				class="android-icon-button"
-				aria-label="编辑文档"
-				:disabled="!ready"
-				@click="emit('edit')"
-			>
-				<Icon name="edit" />
-			</button>
-			<button
-				class="android-icon-button"
-				aria-label="更多文档操作"
-				aria-haspopup="dialog"
-				@click="sheet = 'more'"
-			>
-				<Icon name="more" />
-			</button>
-		</template>
-		<template v-else>
-			<img :src="appMark" alt="" width="36" height="36" />
-			<strong class="android-brand">{{ APP_PROFILE.name }}</strong>
-			<span class="android-local-badge">本地工作区</span>
-		</template>
+	<DocumentTopbar
+		v-if="active"
+		v-show="!immersive"
+		class="android-topbar"
+		:file-name="active.fileName"
+		:status="status"
+		:status-state="active.autosaveStatus"
+		:editing="editing"
+		:editable="editable"
+		:ready="ready"
+		:saving="saving"
+		:menu-open="sheet === 'more'"
+		@back="emit('back')"
+		@documents="sheet = 'documents'"
+		@edit="emit('edit')"
+		@finish="emit('finish')"
+		@more="sheet = 'more'"
+	>
+		<button
+			v-if="active.format === 'notes'"
+			type="button"
+			class="android-notes-pages"
+			aria-label="页面"
+			:disabled="!ready"
+			@click="emit('notePages', $event.currentTarget as HTMLElement)"
+		>
+			<Icon name="pages" />
+		</button>
+		<button
+			v-if="active.format === 'pptx' && !editing"
+			type="button"
+			aria-label="播放"
+			:disabled="!ready"
+			@click="emit('present')"
+		>
+			<Icon name="play" />
+		</button>
+	</DocumentTopbar>
+	<header v-else v-show="!immersive" class="android-topbar android-topbar-home">
+		<img :src="appMark" alt="" width="36" height="36" />
+		<strong class="android-brand">{{ APP_PROFILE.name }}</strong>
+		<span class="android-local-badge">本地工作区</span>
 	</header>
 	<section v-show="!active" class="android-library" aria-label="文档工作区">
 		<div ref="libraryScroll" class="android-library-scroll">
@@ -440,7 +428,7 @@ function previewLoaded(event: Event, item: DocumentItem) {
 		</nav>
 	</section>
 	<nav
-		v-if="active && !immersive && active.format !== 'notes'"
+		v-if="active && !immersive && active.format !== 'notes' && editing"
 		class="android-editor-tools"
 		:aria-label="editing ? '编辑工具' : '阅读工具'"
 	>
@@ -484,35 +472,6 @@ function previewLoaded(event: Event, item: DocumentItem) {
 			<button v-else aria-label="收起键盘" @pointerdown.prevent @click="emit('keyboard')">
 				<Icon name="keyboard" /><span>收起键盘</span>
 			</button>
-		</template>
-		<template v-else>
-			<button
-				v-if="active.format !== 'notes'"
-				aria-label="查找"
-				:disabled="!ready"
-				@click="emit('search')"
-			>
-				<Icon name="search" /><span>查找</span>
-			</button>
-			<button
-				v-if="active.format === 'pptx'"
-				aria-label="播放"
-				:disabled="!ready"
-				@click="emit('present')"
-			>
-				<Icon name="play" /><span>播放</span>
-			</button>
-			<span class="android-tool-spacer" />
-			<button
-				v-if="editable"
-				class="android-edit-cta"
-				aria-label="编辑文档"
-				:disabled="!ready"
-				@click="emit('edit')"
-			>
-				<Icon name="edit" /><span>编辑文档</span>
-			</button>
-			<span v-else class="android-readonly">只读文档</span>
 		</template>
 	</nav>
 	<input
@@ -595,6 +554,16 @@ function previewLoaded(event: Event, item: DocumentItem) {
 					></button
 				><button class="android-sheet-row" :disabled="!ready" @click="action('search')">
 					<Icon name="search" /><span>查找文档内容</span></button
+				><button
+					v-if="editing"
+					class="android-sheet-row"
+					:disabled="!ready"
+					@click="
+						sheet = '';
+						emit('undo');
+					"
+				>
+					<Icon name="undo" /><span>撤销</span></button
 				><button
 					class="android-sheet-row"
 					:disabled="!ready || !editing"

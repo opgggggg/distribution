@@ -286,6 +286,18 @@ export const NoteCanvas = defineComponent({
 			});
 		}
 		const pointers = new Map<number, Point & { type: string; target: EventTarget | null }>();
+		// Touch.identifier is opaque and may be negative on WebKit. Keep synthetic
+		// contacts separate from native PointerEvent IDs without arithmetic on it.
+		const touchIds = new Map<number, number>();
+		let nextTouchId = -1;
+		function touchId(touch: Touch) {
+			let id = touchIds.get(touch.identifier);
+			if (id === undefined) {
+				id = nextTouchId--;
+				touchIds.set(touch.identifier, id);
+			}
+			return id;
+		}
 		const touchContacts = () =>
 			[...pointers.entries()].filter(([, point]) => point.type === "touch");
 		let gesture: Gesture | undefined,
@@ -1093,6 +1105,8 @@ export const NoteCanvas = defineComponent({
 			event.preventDefault();
 			if (gesture?.pointerType === "pen") return;
 			if (phase === "cancel") {
+				touchIds.clear();
+				nextTouchId = -1;
 				if ([...pointers.keys()].some((id) => id < 0)) resetInput();
 				return;
 			}
@@ -1100,10 +1114,14 @@ export const NoteCanvas = defineComponent({
 				(touch as Touch & { touchType?: string }).touchType !== "stylus";
 			const active = Array.from(event.targetTouches).filter(finger),
 				global = Array.from(event.touches).filter(finger),
-				ids = new Set(active.map((t) => -1 - t.identifier));
+				ids = new Set(active.map(touchId));
+			const present = new Set(
+				[...global, ...Array.from(event.changedTouches)].map((t) => t.identifier),
+			);
+			for (const id of touchIds.keys()) if (!present.has(id)) touchIds.delete(id);
 			const sample = (touch: Touch) =>
 				({
-					pointerId: -1 - touch.identifier,
+					pointerId: touchId(touch),
 					pointerType: "touch",
 					currentTarget: overlay.value,
 					clientX: touch.clientX,
@@ -1134,7 +1152,7 @@ export const NoteCanvas = defineComponent({
 			}
 			if ((phase === "down" || phase === "move") && active.length >= 2) {
 				for (const t of active)
-					pointers.set(-1 - t.identifier, {
+					pointers.set(touchId(t), {
 						x: t.clientX,
 						y: t.clientY,
 						type: "touch",
@@ -1166,6 +1184,11 @@ export const NoteCanvas = defineComponent({
 				for (const id of [...pointers.keys()])
 					if (id < 0 && !ids.has(id)) pointers.delete(id);
 			reconcilePinchEnd();
+			if (phase === "up") {
+				const remaining = new Set(global.map((t) => t.identifier));
+				for (const id of touchIds.keys()) if (!remaining.has(id)) touchIds.delete(id);
+				if (!touchIds.size) nextTouchId = -1;
+			}
 		}
 		watch(
 			() => props.page.id,

@@ -57,6 +57,7 @@ import {
 	selectionBounds,
 } from "../manipulation.js";
 import { useSidebarResize } from "./sidebar-resize.js";
+import { usePagePicker } from "./page-picker.js";
 
 const english: Record<string, string> = {
 	区域: "Scenes",
@@ -271,7 +272,7 @@ export interface NotesEditorApi {
 	setDocumentName(value: string): void;
 	undo(): void;
 	redo(): void;
-	togglePages(): void;
+	togglePages(anchor?: HTMLElement): void;
 	showViewOptions(): void;
 }
 export const NotesEditor = defineComponent({
@@ -346,6 +347,12 @@ export const NotesEditor = defineComponent({
 
 		const mobile = ref(
 			props.compact || (typeof window !== "undefined" && window.innerWidth < 760),
+		);
+		const pagePicker = usePagePicker(
+			root,
+			mobile,
+			sidebar,
+			() => book.value?.pages.length ?? 1,
 		);
 		const paletteOpen = ref(true),
 			rootWidth = ref(typeof window !== "undefined" ? window.innerWidth : 390),
@@ -1203,21 +1210,21 @@ export const NotesEditor = defineComponent({
 			});
 			activeTape.value = page.value?.tapes?.[0]?.id ?? "";
 		}
-		function togglePages() {
+		function togglePages(anchor?: HTMLElement) {
 			if (!ready.value) return;
 			finishText();
 			canvas.value?.cancel();
 			modal.value = "";
 			tapeEditing.value = false;
 			railTab.value = "pages";
-			sidebar.value = !sidebar.value;
-			if (fitMode.value) nextTick(() => fit());
+			pagePicker.toggle(anchor);
+			if (fitMode.value && !mobile.value) nextTick(() => fit());
 		}
 		function navigate(index: number) {
 			finishText();
 			canvas.value?.cancel();
 			active.value = index;
-			if (window.innerWidth < 760) sidebar.value = false;
+			if (mobile.value) pagePicker.close(true);
 		}
 		function fit(fullPage = fitPage.value, cover = fitCover.value) {
 			if (page.value && isInfinitePage(page.value)) {
@@ -2740,7 +2747,17 @@ export const NotesEditor = defineComponent({
 						sidebar.value && book.value
 							? h(
 									"aside",
-									{ class: "cube-notes__sidebar", "aria-label": t("页面") },
+									{
+										class: [
+											"cube-notes__sidebar",
+											mobile.value && "cube-notes__page-picker",
+										],
+										ref: pagePicker.panel,
+										id: pagePicker.id,
+										role: mobile.value ? "dialog" : undefined,
+										style: pagePicker.style.value,
+										"aria-label": t("页面"),
+									},
 									[
 										h("div", { class: "cube-notes__sidebar-header" }, [
 											h("strong", `${t("页面")} · ${count}`),
@@ -2751,9 +2768,9 @@ export const NotesEditor = defineComponent({
 												!writable || count >= LIMITS.pages,
 											),
 											button("关闭", "close", () => {
-												sidebar.value = false;
+												pagePicker.close(true);
 												nextTick(() => {
-													if (fitMode.value) fit();
+													if (fitMode.value && !mobile.value) fit();
 												});
 											}),
 										]),
@@ -2857,7 +2874,7 @@ export const NotesEditor = defineComponent({
 										!book.value.pages.some((p) => p.bookmarked)
 											? h("p", { class: "cube-notes__hint" }, t("没有书签页"))
 											: null,
-										rail.renderHandle(),
+										!mobile.value ? rail.renderHandle() : null,
 									],
 								)
 							: null,

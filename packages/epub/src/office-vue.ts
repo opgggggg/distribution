@@ -14,7 +14,11 @@ const OfficeEpubReader = defineComponent({
 	setup(props, { attrs, expose }) {
 		const i18n = useUiEditorI18n();
 		let reader: Record<string, unknown> | null = null;
-		expose(new Proxy({}, { get: (_, key) => reader?.[key as string] }));
+		expose(new Proxy({}, {
+			get: (_, key) => reader?.[key as string],
+			// Vue checks property membership before reading an exposed method.
+			has: (_, key) => Boolean(reader && key in reader),
+		}));
 		return () => h(EpubReader, {
 			...attrs, source: props.source, fileName: props.fileName, locale: i18n.value.locale,
 			ref: (value: unknown) => { reader = value as Record<string, unknown> | null; },

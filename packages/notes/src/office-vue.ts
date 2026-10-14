@@ -40,7 +40,7 @@ const OfficeNotesEditor = defineComponent({
 			setDocumentName: (value) => currentEditor().setDocumentName(value),
 			undo: () => currentEditor().undo(),
 			redo: () => currentEditor().redo(),
-			togglePages: () => currentEditor().togglePages(),
+			togglePages: (anchor?: HTMLElement) => currentEditor().togglePages(anchor),
 			showViewOptions: () => currentEditor().showViewOptions(),
 			subscribe(listener) {
 				let unsubscribe = () => {};

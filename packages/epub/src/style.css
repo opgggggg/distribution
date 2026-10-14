@@ -609,6 +609,9 @@
 	gap: 4px;
 	padding-top: 2px;
 }
+.cubexp-epub-bar__tabs.has-host-navigation {
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+}
 .cubexp-epub-bar__tabs .cubexp-epub-button {
 	flex-direction: column;
 	gap: 3px;

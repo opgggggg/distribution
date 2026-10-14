@@ -30,7 +30,10 @@ const fs = require("node:fs");
 				await page.locator(".android-sheet button").filter({ hasText: "手写笔记" }).click();
 				await page.locator(".cube-notes__tool-tray").waitFor();
 				const initialTray = await page.locator(".cube-notes__tool-tray").boundingBox();
-				assert.ok(Math.abs(initialTray.x + initialTray.width / 2 - width / 2) < 1, "the drawing tray starts centered, including landscape");
+				assert.ok(
+					Math.abs(initialTray.x + initialTray.width / 2 - width / 2) < 1,
+					"the drawing tray starts centered, including landscape",
+				);
 				const strip = page.locator(".cube-notes__pen-strip");
 				assert.equal(await strip.locator("[data-pen-style]").count(), 10);
 				for (const style of ["oil", "spray", "brush", "fountain"]) {
@@ -108,10 +111,9 @@ const fs = require("node:fs");
 				await page.screenshot({
 					path: `.cache/notes-qa/ipad-audit-${width}-${height}-${colorScheme}.png`,
 				});
-				await page.getByRole("button", { name: "完成书写", exact: true }).tap();
 				await page
 					.locator(".android-topbar")
-					.getByRole("button", { name: "返回", exact: true })
+					.getByRole("button", { name: "完成编辑", exact: true })
 					.tap();
 				await page.locator('.cube-notes[data-readonly="true"]').waitFor();
 				assert.equal(await page.locator(".cube-notes__tool-tray").count(), 0);

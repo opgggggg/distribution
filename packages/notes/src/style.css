@@ -1586,6 +1586,28 @@
 	height: calc(100% - 140px);
 	border-radius: 0 20px 20px 0;
 }
+.cube-notes--mobile .cube-notes__sidebar.cube-notes__page-picker {
+	position: fixed;
+	z-index: 20;
+	padding: 12px;
+	border: 1px solid var(--notes-border);
+	border-radius: 20px;
+	background: var(--notes-panel);
+	box-shadow: 0 12px 40px #24324d24;
+}
+.cube-notes__page-picker .cube-notes__page-list {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-content: start;
+	gap: 8px;
+}
+.cube-notes__page-picker .cube-notes__thumbnail {
+	min-width: 0;
+	padding: 8px;
+}
+.cube-notes__page-picker .cube-notes__thumbnail img {
+	height: 134px;
+}
 @media (prefers-color-scheme: dark) {
 	.cube-notes--mobile .cube-notes__stage {
 		background: var(--notes-stage);
