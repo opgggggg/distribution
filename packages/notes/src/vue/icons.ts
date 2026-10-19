@@ -1,5 +1,9 @@
 import { h } from "vue";
 const paths: Record<string, string[]> = {
+	erasePath: ["M3 18h5m8 0h5", "M11 3l7 5-5 8-7-5z"],
+	eraseStroke: ["M3 18h18M6 15l12 6", "M11 3l7 5-5 8-7-5z"],
+	rotate: ["M20 8V3h-5M20 3l-4 4a8 8 0 1 0 3 8", "M8 9h5v7H8z"],
+	image: ["M3 4h18v16H3z", "M3 17l6-6 4 4 3-3 5 5M8 8h.01"],
 	eyedropper: ["M16 3l5 5-3 3-2-2-9 9H4v-3l9-9-2-2 3-3 2 2z", "M4 18l-1 3 3-1M12 5l7 7"],
 	tape: ["M5 9h14v7H5z", "M5 9l-2 2 2 2-2 3M19 9l2 2-2 2 2 3"],
 	scene: ["M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4", "M8 8h8v8H8z"],
@@ -28,6 +32,7 @@ const paths: Record<string, string[]> = {
 	undo: ["M3 10h12a6 6 0 010 12", "M7 6l-4 4 4 4"],
 	redo: ["M21 10H9a6 6 0 000 12", "M17 6l4 4-4 4"],
 	pages: ["M3 3h6v18H3z", "M13 3h8v18h-8z"],
+	minus: ["M5 12h14"],
 	plus: ["M12 5v14M5 12h14"],
 	more: ["M4 12h1M11 12h1M18 12h1"],
 	close: ["M6 6l12 12M18 6L6 18"],

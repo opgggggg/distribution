@@ -1,7 +1,8 @@
 import { pageContentBounds } from "./board.js";
 import { zip } from "fflate";
 import { LIMITS, type Notebook, type NotePage } from "./model.js";
-import { paintPage } from "./render.js";
+import { loadPagePhotos } from "./photo.js";
+import { createPagePainter } from "./render.js";
 
 /** Render the complete page, independently of the editor's zoom, scroll or selection. */
 export async function exportNotesPagePng(page: NotePage, signal?: AbortSignal): Promise<Blob> {
@@ -18,7 +19,10 @@ export async function exportNotesPagePng(page: NotePage, signal?: AbortSignal): 
 		if (!ctx) throw new Error("Canvas rendering is unavailable.");
 		ctx.scale(scale, scale);
 		ctx.translate(-area.x, -area.y);
-		paintPage(ctx, page, new Set(), area, scale);
+		const photos = await loadPagePhotos(page);
+		signal?.throwIfAborted();
+		createPagePainter(undefined, photos)(ctx, page, new Set(), area, scale);
+		photos.clear();
 		const blob = await new Promise<Blob>((resolve, reject) =>
 			canvas.toBlob(
 				(value) =>

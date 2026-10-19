@@ -5,9 +5,26 @@ export interface NoteHistoryState {
 	readonly past: readonly Notebook[];
 	readonly future: readonly Notebook[];
 }
+function snapshotWeight(value: unknown) {
+	return (
+		JSON.stringify(value, (key, value) =>
+			key === "src" && typeof value === "string" ? "embedded-photo" : value,
+		).length * 3
+	);
+}
+function photoMemory(books: Notebook[]) {
+	const sources = new Set<string>();
+	for (const book of books)
+		for (const p of book.pages) {
+			if (p.background) sources.add(p.background.src);
+			for (const l of p.layers)
+				for (const e of l.elements) if (e.kind === "image") sources.add(e.src);
+		}
+	return [...sources].reduce((total, src) => total + src.length * 2, 0);
+}
 function restoredWeight(before: Notebook, after: Notebook): number {
 	const changed = before.pages.filter((page, i) => page !== after.pages[i]);
-	return JSON.stringify({ ...before, pages: changed }).length * 3;
+	return snapshotWeight({ ...before, pages: changed });
 }
 
 /** One transaction per gesture; cancelling never commits incomplete ink. */
@@ -91,7 +108,7 @@ export class NoteHistory {
 		validateNotebook(next);
 		const before = JSON.stringify(this.document);
 		if (JSON.stringify(next) === before) return false;
-		return this.install(next, before.length * 3);
+		return this.install(next, snapshotWeight(this.document));
 	}
 	/** Ink changes clone their page only; other pages share immutable snapshots. */
 	commitPage(pageId: string, change: (draft: NotePage) => void): boolean {
@@ -100,6 +117,15 @@ export class NoteHistory {
 		if (index < 0) throw new Error("Notebook page was removed.");
 		const page = clone(this.document.pages[index]);
 		change(page);
+		const originalBackground = this.document.pages[index].background;
+		if (
+			page.background &&
+			originalBackground &&
+			["id", "src", "x", "y", "width", "height", "opacity", "angle"].every(
+				(key) => (page.background as any)[key] === (originalBackground as any)[key],
+			)
+		)
+			page.background = originalBackground;
 		const before = JSON.stringify(this.document.pages[index]);
 		if (JSON.stringify(page) === before) return false;
 		// Preserve immutable ink references across page transactions. Adding one pen
@@ -120,7 +146,7 @@ export class NoteHistory {
 		pages[index] = page;
 		const next: Notebook = { ...this.document, pages };
 		validateNotebook(next);
-		return this.install(next, before.length * 3);
+		return this.install(next, snapshotWeight(this.document.pages[index]));
 	}
 	private install(next: Notebook, weight: number): boolean {
 		this.past.push(this.document);
@@ -130,7 +156,8 @@ export class NoteHistory {
 		while (
 			this.past.length > 1 &&
 			(this.past.length > HISTORY_LIMITS.steps ||
-				this.pastWeights.reduce((a, b) => a + b, 0) > HISTORY_LIMITS.bytes)
+				this.pastWeights.reduce((a, b) => a + b, 0) + photoMemory([...this.past, next]) >
+					HISTORY_LIMITS.bytes)
 		) {
 			this.past.shift();
 			this.pastWeights.shift();

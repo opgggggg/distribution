@@ -87,6 +87,7 @@ import {
 } from "../../../../als-office/apps/desktop/src/preferences";
 import {
 	consumeHarmonyIntent,
+	decodeImageWithHost,
 	harmonyHasWindowControls,
 	isAndroidHost,
 	isIosHost,
@@ -103,8 +104,8 @@ import {
 } from "./harmony-host";
 import {
 	listHarmonyAutosaves,
-	writeHarmonyAutosave,
 	deleteHarmonyAutosave,
+	writeHarmonyAutosave,
 	patchHarmonyAutosave,
 	type HarmonyAutosaveRecord,
 } from "./autosave-store";
@@ -759,6 +760,7 @@ const AUTOSAVE_DELAY_MS = 1_500;
 const AUTOSAVE_RETRY_MS = 15_000;
 const autosaveTimers = new Map<string, number>();
 const draftWrites = new DraftWriteQueue();
+const deletingDocuments = new Set<string>();
 const autosaveOperations = new Map<string, Promise<void>>();
 const autosaveUnsubscribers = new Map<string, () => void>();
 const autosaveQueued = new Set<string>();
@@ -842,6 +844,7 @@ function surfaceBinding(tab: HarmonyDocumentTab): UiArtifactSurfaceBinding {
 				compact: true,
 				hostReadingMenu: true,
 				nativeColorPicker: isIosHost(),
+				decodeImage: decodeImageWithHost,
 			},
 		};
 	if (!mobileLayout.value) return binding;
@@ -1008,7 +1011,13 @@ function autosaveIsCurrent(tab: HarmonyDocumentTab): boolean {
 }
 
 function scheduleAutosave(tab: HarmonyDocumentTab, delay = AUTOSAVE_DELAY_MS): void {
-	if (!mobileLayout.value || !optionFor(tab.format).editable || !tab.editor) return;
+	if (
+		deletingDocuments.has(tab.autosaveId) ||
+		!mobileLayout.value ||
+		!optionFor(tab.format).editable ||
+		!tab.editor
+	)
+		return;
 	clearAutosaveTimer(tab.id);
 	if (autosaveOperations.has(tab.id)) {
 		autosaveQueued.add(tab.id);
@@ -1031,7 +1040,7 @@ async function persistAutosave(
 	sequence: number,
 ): Promise<void> {
 	await draftWrites.write(tab.id, sequence, async () => {
-		if (!tabs.value.includes(tab)) return false;
+		if (!tabs.value.includes(tab) || deletingDocuments.has(tab.autosaveId)) return false;
 		const savedAt = Date.now();
 		const record: HarmonyAutosaveRecord = {
 			id: tab.autosaveId,
@@ -1051,6 +1060,7 @@ async function persistAutosave(
 			exportedAt: tab.exportedAt,
 		};
 		await writeHarmonyAutosave(record);
+		if (deletingDocuments.has(tab.autosaveId)) return false;
 		const historyIndex = autosaveHistory.value.findIndex((item) => item.id === record.id);
 		if (historyIndex < 0) autosaveHistory.value.push(record);
 		else autosaveHistory.value.splice(historyIndex, 1, record);
@@ -1165,14 +1175,17 @@ async function restoreAutosaves(): Promise<void> {
 		// Opening history can overlap a new save; never replace a newer in-memory record.
 		for (const record of records) {
 			const current = autosaveHistory.value.find((item) => item.id === record.id);
-			if (!current) autosaveHistory.value.push(record);
+			if (!current && !deletingDocuments.has(record.id)) autosaveHistory.value.push(record);
 		}
 	} catch (cause) {
 		console.error("Could not load HarmonyOS automatic save history", cause);
 	}
 }
 
-async function restoreHistoricalDocument(record: HarmonyAutosaveRecord): Promise<void> {
+async function restoreHistoricalDocument(
+	record: HarmonyAutosaveRecord,
+	mobileMode: "reading" | "editing" = "reading",
+): Promise<void> {
 	const openTab = tabs.value.find((tab) => tab.autosaveId === record.id);
 	if (openTab) {
 		selectTab(openTab.id);
@@ -1185,7 +1198,7 @@ async function restoreHistoricalDocument(record: HarmonyAutosaveRecord): Promise
 		await addDocument(record.format, record.fileName, record.blob, {
 			autosaveId: record.id,
 			autosavedAt: record.savedAt,
-			mobileMode: "reading",
+			mobileMode,
 			sourceRef: record.sourceRef,
 			originalBlob: record.originalBlob,
 			originalName: record.originalName,
@@ -1615,7 +1628,7 @@ async function closeTab(id: string, discard = false): Promise<void> {
 }
 
 async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
-	if (!nativeMobileLayout || !tab.editor) return;
+	if (deletingDocuments.has(tab.autosaveId) || !nativeMobileLayout || !tab.editor) return;
 	if (tab.previewPending) {
 		// A capture is already running against an older revision. Refresh once more
 		// when it finishes rather than dropping this request.
@@ -1626,7 +1639,7 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 	tab.previewPending = true;
 	try {
 		await tab.editor?.ready();
-		if (!tabs.value.includes(tab)) return;
+		if (!tabs.value.includes(tab) || deletingDocuments.has(tab.autosaveId)) return;
 		tab.loaded = true;
 		if (tab.originalBlob && !tab.isDraft)
 			tab.sourceSavedRevision = revisionToken(tab.editor.getState().revision);
@@ -1646,6 +1659,7 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 			});
 			if (
 				tabs.value.includes(tab) &&
+				!deletingDocuments.has(recent.id) &&
 				!autosaveHistory.value.some((item) => item.id === recent.id)
 			)
 				autosaveHistory.value.push(recent);
@@ -1845,6 +1859,53 @@ async function promptDocumentName(fileName: string, title: string): Promise<stri
 	return suffix && !trimmed.toLocaleLowerCase().endsWith(suffix)
 		? `${trimmed}${suffix}`
 		: trimmed;
+}
+
+async function editAndroidLibraryDocument(id: string): Promise<void> {
+	const tab = tabs.value.find((item) => item.id === id);
+	if (tab) {
+		selectTab(id);
+		await enterMobileEditing(tab);
+	} else {
+		const record = autosaveHistory.value.find((item) => item.id === id);
+		if (record) await restoreHistoricalDocument(record, "editing");
+	}
+}
+
+async function deleteAndroidDocument(id: string): Promise<void> {
+	if (opening.value || saving.value) return;
+	const tab = tabs.value.find((item) => item.id === id);
+	const record = autosaveHistory.value.find((item) => item.id === id);
+	if (!tab && !record) return;
+	const autosaveId = tab?.autosaveId ?? record!.id;
+	saving.value = true;
+	try {
+		if (
+			!(await dialogs.confirm(
+				`删除“${(tab ?? record)!.fileName}”的本地记录？此操作无法撤销，设备中的原文件不受影响。`,
+				{ title: "删除文档", destructive: true, confirmLabel: "删除" },
+			))
+		)
+			return;
+		deletingDocuments.add(autosaveId);
+		if (tab) {
+			clearAutosaveTimer(tab.id);
+			autosaveUnsubscribers.get(tab.id)?.();
+			autosaveUnsubscribers.delete(tab.id);
+			autosaveQueued.delete(tab.id);
+			await autosaveOperations.get(tab.id);
+			clearAutosaveTimer(tab.id);
+		}
+		await deleteHarmonyAutosave(autosaveId);
+		autosaveHistory.value = autosaveHistory.value.filter((item) => item.id !== autosaveId);
+		if (tab) await closeTab(tab.id, true);
+	} catch (cause) {
+		deletingDocuments.delete(autosaveId);
+		if (tab) bindAutosave(tab);
+		reportError(cause);
+	} finally {
+		saving.value = false;
+	}
 }
 
 async function renameAndroidDocument(id: string): Promise<void> {
@@ -3684,6 +3745,8 @@ onBeforeUnmount(() => {
 			@favorite="favoriteAndroidDocument"
 			@batch="batchAndroidDocuments"
 			@rename="renameAndroidDocument"
+			@delete="deleteAndroidDocument"
+			@edit-document="editAndroidLibraryDocument"
 			@close="closeAndroidDocument"
 			@undo="undoActive"
 			@redo="redoActive"

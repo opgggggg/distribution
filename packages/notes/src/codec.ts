@@ -303,6 +303,14 @@ export function writeXopp(book: Notebook): Blob {
 		);
 	if (
 		book.pages.some((p) =>
+			p.layers.some((l) => l.elements.some((e) => e.kind === "stroke" && e.erasures?.length)),
+		)
+	)
+		throw new Error(
+			"Xournal cannot preserve path erasing. Save as .cubenote, PNG or PDF to retain its appearance.",
+		);
+	if (
+		book.pages.some((p) =>
 			p.layers.some((l) =>
 				l.elements.some(
 					(e) =>
@@ -317,6 +325,8 @@ export function writeXopp(book: Notebook): Blob {
 	if (
 		book.pages.some(
 			(p) =>
+				Boolean(p.background) ||
+				p.layers.some((l) => l.elements.some((e) => e.kind === "image")) ||
 				p.paper === "dotted" ||
 				p.bookmarked ||
 				Boolean(p.scenes?.length) ||
@@ -324,7 +334,7 @@ export function writeXopp(book: Notebook): Blob {
 		)
 	)
 		throw new Error(
-			"Xournal export cannot preserve dotted paper, bookmarks, scenes or hidden layers. Save as .cubenote to retain these settings.",
+			"Xournal export cannot preserve embedded photos, image backgrounds, dotted paper, bookmarks, scenes or hidden layers. Save as .cubenote to retain these settings.",
 		);
 	const pages = book.pages
 		.map((page) => {
@@ -336,6 +346,8 @@ export function writeXopp(book: Notebook): Blob {
 					(layer) =>
 						`<layer name="${escapeXml(layer.name)}">${layer.elements
 							.map((element) => {
+								if (element.kind === "image")
+									throw new Error("Save photos as .cubenote or export PDF/PNG.");
 								if (element.kind === "text")
 									return `<text font="${escapeXml(element.font ?? "sans-serif")}" size="${decimal(element.size)}" x="${decimal(element.x)}" y="${decimal(element.y)}" color="${element.color}ff">${escapeXml(element.text)}</text>`;
 								const points =

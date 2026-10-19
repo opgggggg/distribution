@@ -1,12 +1,15 @@
 import { pageContentBounds, intersects } from "./board.js";
 import { bounds, type Bounds } from "./geometry.js";
 import { polygonPath } from "./masking.js";
+import { erasureCapsule, erasureSegments } from "./erasure-geometry.js";
 import { getStroke } from "perfect-freehand";
 import { getBrushPlugin } from "./brushes.js";
 import type { BrushPass } from "./brushes.js";
 export type { BrushPass } from "./brushes.js";
 import { escapeXml } from "./codec.js";
 import { inkWidth, pageElements, type InkStroke, type NotePage } from "./model.js";
+import { loadPhoto, paintPhoto, photoSvg, samplePhotoColor } from "./photo.js";
+import type { InkImage } from "./model.js";
 import { grainPattern, grainSvg } from "./texture.js";
 
 type CanvasPass = BrushPass & { drawPath: Path2D; clipPath?: Path2D };
@@ -16,12 +19,75 @@ type CanvasStrokeCache = {
 		{ plugin: ReturnType<typeof getBrushPlugin>; passes: CanvasPass[]; weight: number }
 	>;
 	weight: number;
+	photos?: Map<string, HTMLImageElement>;
+	loading?: Set<string>;
+	onPhotoReady?: () => void;
 };
 
 /** Cache immutable ink vectors across page snapshots, with a bounded estimate of their size. */
-export function createPagePainter(): typeof paintPage {
-	const cache: CanvasStrokeCache = { strokes: new Map(), weight: 0 };
-	return (ctx, page, omit, region, zoom) => paintPage(ctx, page, omit, region, zoom, cache);
+function paintCachedPhoto(
+	ctx: CanvasRenderingContext2D,
+	photo: InkImage,
+	cache?: CanvasStrokeCache,
+) {
+	const image = cache?.photos?.get(photo.src);
+	if (image) paintPhoto(ctx, photo, image);
+	else if (cache?.onPhotoReady && !cache.loading?.has(photo.src)) {
+		cache.loading?.add(photo.src);
+		void loadPhoto(photo.src)
+			.then((image) => {
+				cache.photos?.set(photo.src, image);
+				cache.onPhotoReady?.();
+			})
+			.catch(() => {
+				/* A corrupt raster must not block editing other content. */
+			});
+	}
+}
+export function createPagePainter(
+	onPhotoReady?: () => void,
+	photos = new Map<string, HTMLImageElement>(),
+) {
+	let sampleCanvas: HTMLCanvasElement | undefined;
+	const cache: CanvasStrokeCache = {
+		strokes: new Map(),
+		weight: 0,
+		photos,
+		loading: new Set(),
+		onPhotoReady,
+	};
+	return Object.assign(
+		(
+			ctx: CanvasRenderingContext2D,
+			page: NotePage,
+			omit?: Set<string>,
+			region?: Bounds,
+			zoom?: number,
+		) => {
+			const used = new Set([
+				...(page.background ? [page.background.src] : []),
+				...pageElements(page)
+					.filter((e): e is InkImage => e.kind === "image")
+					.map((e) => e.src),
+			]);
+			for (const src of photos.keys()) if (!used.has(src)) photos.delete(src);
+			for (const src of cache.loading!) if (!used.has(src)) cache.loading!.delete(src);
+			paintPage(ctx, page, omit, region, zoom, cache);
+		},
+		{
+			samplePhoto: (photo: InkImage, point: import("./geometry.js").Point) => {
+				const image = photos.get(photo.src);
+				if (!image) return;
+				sampleCanvas ??= Object.assign(document.createElement("canvas"), {
+					width: 1,
+					height: 1,
+				});
+				return samplePhotoColor(photo, image, point, sampleCanvas);
+			},
+			photo: (ctx: CanvasRenderingContext2D, photo: InkImage) =>
+				paintCachedPhoto(ctx, photo, cache),
+		},
+	);
 }
 
 export function strokeOutline(stroke: InkStroke, scale = 1): number[][] {
@@ -88,11 +154,20 @@ export function brushPasses(stroke: InkStroke): BrushPass[] {
 		: [{ path: geometry.path(), opacity: stroke.opacity }];
 }
 export function clipStrokeSvg(stroke: InkStroke, content: string): string {
-	if (!stroke.cutouts?.length) return content;
+	if (!stroke.cutouts?.length && !stroke.erasures?.length) return content;
 	const id = escapeXml(`tape-${stroke.id}`),
 		b = bounds(stroke),
 		margin = stroke.width * 3;
-	return `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="${b.x - margin}" y="${b.y - margin}" width="${b.width + margin * 2}" height="${b.height + margin * 2}" style="mask-type:luminance"><rect x="${b.x - margin}" y="${b.y - margin}" width="${b.width + margin * 2}" height="${b.height + margin * 2}" fill="white"/>${stroke.cutouts.map((p) => `<path d="${polygonPath(p)}" fill="black"/>`).join("")}</mask></defs><g mask="url(#${id})">${content}</g>`;
+	const erased = (stroke.erasures ?? [])
+		.map((e) => {
+			const rx = e.width / 2,
+				ry = (e.height ?? e.width) / 2;
+			if (e.points.length === 1)
+				return `<ellipse cx="${e.points[0].x}" cy="${e.points[0].y}" rx="${rx}" ry="${ry}" fill="black"/>`;
+			return `<path d="M${e.points.map((p) => `${p.x / rx},${p.y / ry}`).join("L")}" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="scale(${rx} ${ry})"/>`;
+		})
+		.join("");
+	return `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="${b.x - margin}" y="${b.y - margin}" width="${b.width + margin * 2}" height="${b.height + margin * 2}" style="mask-type:luminance"><rect x="${b.x - margin}" y="${b.y - margin}" width="${b.width + margin * 2}" height="${b.height + margin * 2}" fill="white"/>${(stroke.cutouts ?? []).map((p) => `<path d="${polygonPath(p)}" fill="black"/>`).join("")}${erased}</mask></defs><g mask="url(#${id})">${content}</g>`;
 }
 export function strokeSvg(
 	stroke: InkStroke,
@@ -137,6 +212,14 @@ export function paintStroke(
 			),
 			"evenodd",
 		);
+	for (const erasure of stroke.erasures ?? [])
+		for (const [a, end] of erasureSegments(erasure))
+			ctx.clip(
+				new Path2D(
+					`M${b.x - m},${b.y - m}h${b.width + m * 2}v${b.height + m * 2}h${-b.width - m * 2}Z${erasureCapsule(a, end, erasure.width, erasure.height)}`,
+				),
+				"evenodd",
+			);
 	ctx.globalAlpha = stroke.opacity;
 	ctx.fillStyle = ctx.strokeStyle = stroke.color;
 	if (stroke.tool === "highlighter") {
@@ -218,6 +301,7 @@ export function paintPage(
 	const area = region ?? { x: 0, y: 0, width: page.width, height: page.height };
 	ctx.fillStyle = page.color;
 	ctx.fillRect(area.x, area.y, area.width, area.height);
+	if (page.background) paintCachedPhoto(ctx, page.background, cache);
 	ctx.strokeStyle = "#cdd4df";
 	ctx.fillStyle = "#c1c9d7";
 	ctx.lineWidth = 0.5 / Math.min(1, zoom);
@@ -260,6 +344,7 @@ export function paintPage(
 		)
 			continue;
 		if (element.kind === "stroke") paintStroke(ctx, element, cache);
+		else if (element.kind === "image") paintCachedPhoto(ctx, element, cache);
 		else {
 			ctx.fillStyle = element.color;
 			ctx.font = `${element.size}px ${JSON.stringify(element.font ?? "sans-serif")}, sans-serif`;
@@ -304,6 +389,7 @@ export function pageSvg(page: NotePage): string {
 		paper = `<pattern id="paper" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M0 20H20${page.paper === "grid" ? "M20 0V20" : ""}" fill="none" stroke="#cdd4df" stroke-width="0.5"/></pattern>`;
 	const content = elements
 		.map((e) => {
+			if (e.kind === "image") return photoSvg(e);
 			if (e.kind === "text")
 				return `<text x="${e.x}" y="${e.y + e.size}" fill="${e.color}" font-size="${e.size}" font-family="${escapeXml(e.font ?? "sans-serif")}">${e.text
 					.split("\n")
@@ -327,7 +413,7 @@ export function pageSvg(page: NotePage): string {
 				: strokeSvg(e, `ink-${e.color.slice(1)}`, false, rendered.get(e.id));
 		})
 		.join("");
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${area.x} ${area.y} ${area.width} ${area.height}" width="${area.width}" height="${area.height}"><defs>${paper}${textures}</defs><rect x="${area.x}" y="${area.y}" width="${area.width}" height="${area.height}" fill="${page.color}"/>${paper ? `<rect x="${area.x}" y="${area.y}" width="${area.width}" height="${area.height}" fill="url(#paper)"/>` : ""}${content}</svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${area.x} ${area.y} ${area.width} ${area.height}" width="${area.width}" height="${area.height}"><defs>${paper}${textures}</defs><rect x="${area.x}" y="${area.y}" width="${area.width}" height="${area.height}" fill="${page.color}"/>${page.background ? photoSvg(page.background) : ""}${paper ? `<rect x="${area.x}" y="${area.y}" width="${area.width}" height="${area.height}" fill="url(#paper)"/>` : ""}${content}</svg>`;
 }
 export function pageSvgUrl(page: NotePage): string {
 	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(pageSvg(page))}`;

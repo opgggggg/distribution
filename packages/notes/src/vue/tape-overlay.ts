@@ -1,3 +1,4 @@
+import { unrotateLocal, rotateVector } from "../view-rotation.js";
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from "vue";
 import { icon } from "./icons.js";
 import type { MaskingTape } from "../model.js";
@@ -12,6 +13,7 @@ export const TapeOverlay = defineComponent({
 	props: {
 		tapes: { type: Array as PropType<MaskingTape[]>, required: true },
 		zoom: { type: Number, required: true },
+		rotation: { type: Number, default: 0 },
 		editable: Boolean,
 		infinite: Boolean,
 		origin: { type: Object as PropType<Point>, default: () => ({ x: 0, y: 0 }) },
@@ -42,7 +44,7 @@ export const TapeOverlay = defineComponent({
 			gesture = undefined;
 			preview.value = undefined;
 		}
-		watch(() => [props.editable, props.zoom, props.tapes], reset);
+		watch(() => [props.editable, props.zoom, props.tapes, props.rotation], reset);
 		const visibility = () => {
 			if (document.hidden) reset();
 		};
@@ -56,13 +58,17 @@ export const TapeOverlay = defineComponent({
 			reset();
 		});
 		function point(e: PointerEvent) {
-			const paper = (e.currentTarget as HTMLElement)
-				.closest(".cube-notes__paper")!
-				.getBoundingClientRect();
-			return {
-				x: props.origin.x + (e.clientX - paper.left) / props.zoom,
-				y: props.origin.y + (e.clientY - paper.top) / props.zoom,
-			};
+			const element = (e.currentTarget as HTMLElement).closest<HTMLElement>(
+				".cube-notes__paper",
+			)!;
+			const box = element.getBoundingClientRect();
+			const p = unrotateLocal(
+				{ x: e.clientX - box.left, y: e.clientY - box.top },
+				element.clientWidth,
+				element.clientHeight,
+				props.rotation,
+			);
+			return { x: props.origin.x + p.x / props.zoom, y: props.origin.y + p.y / props.zoom };
 		}
 		function down(
 			e: PointerEvent,
@@ -134,11 +140,13 @@ export const TapeOverlay = defineComponent({
 				next.x = gesture.fixed!.x + (sign * c * length) / 2;
 				next.y = gesture.fixed!.y + (sign * s * length) / 2;
 			}
-			const paper = (e.currentTarget as HTMLElement)
-				.closest(".cube-notes__paper")!
-				.getBoundingClientRect();
-			if (!props.infinite) next.x = Math.max(0, Math.min(paper.width / props.zoom, next.x));
-			if (!props.infinite) next.y = Math.max(0, Math.min(paper.height / props.zoom, next.y));
+			const paper = (e.currentTarget as HTMLElement).closest<HTMLElement>(
+				".cube-notes__paper",
+			)!;
+			if (!props.infinite)
+				next.x = Math.max(0, Math.min(paper.clientWidth / props.zoom, next.x));
+			if (!props.infinite)
+				next.y = Math.max(0, Math.min(paper.clientHeight / props.zoom, next.y));
 			preview.value = next;
 		}
 		function finish(e: PointerEvent, commit: boolean) {
@@ -226,6 +234,10 @@ export const TapeOverlay = defineComponent({
 											e.preventDefault();
 											e.stopPropagation();
 											emit("select", tape.id);
+											const movement = rotateVector(
+												{ x: delta[e.key][0], y: delta[e.key][1] },
+												-props.rotation,
+											);
 											if (e.altKey)
 												emit("update", tape.id, {
 													angle: angle(
@@ -236,12 +248,8 @@ export const TapeOverlay = defineComponent({
 												});
 											else
 												emit("update", tape.id, {
-													x:
-														tape.x +
-														delta[e.key][0] * (e.shiftKey ? 20 : 2),
-													y:
-														tape.y +
-														delta[e.key][1] * (e.shiftKey ? 20 : 2),
+													x: tape.x + movement.x * (e.shiftKey ? 20 : 2),
+													y: tape.y + movement.y * (e.shiftKey ? 20 : 2),
 												});
 										},
 									})
@@ -290,7 +298,7 @@ export const TapeOverlay = defineComponent({
 												class: "cube-notes__tape-angle",
 												"aria-label": t("旋转角度", "Rotation"),
 												style: {
-													transform: `translate(-50%,-50%) rotate(${-shown.angle}deg)`,
+													transform: `translate(-50%,-50%) rotate(${-shown.angle - props.rotation * 90}deg)`,
 												},
 											},
 											`${Math.round(shown.angle)}°`,

@@ -1,8 +1,9 @@
 import { pageContentBounds } from "./board.js";
-import { paintPage } from "./render.js";
+import { loadPagePhotos } from "./photo.js";
+import { createPagePainter } from "./render.js";
 import type { NotePage } from "./model.js";
 
-export function captureNotesBoardPreview(page: NotePage): string | undefined {
+export async function captureNotesBoardPreview(page: NotePage): Promise<string | undefined> {
 	const area = pageContentBounds(page),
 		scale = Math.min(1, 480 / Math.max(area.width, area.height));
 	const canvas = document.createElement("canvas");
@@ -12,16 +13,20 @@ export function captureNotesBoardPreview(page: NotePage): string | undefined {
 	if (!ctx) return;
 	ctx.scale(scale, scale);
 	ctx.translate(-area.x, -area.y);
-	paintPage(ctx, page, new Set(), area, scale);
+	const photos = await loadPagePhotos(page);
+	createPagePainter(undefined, photos)(ctx, page, new Set(), area, scale);
+	photos.clear();
 	return canvas.toDataURL("image/png");
 }
 /** Existing host recent-files pipeline captures the notebook's active paper canvas. */
-export function captureNotesPreview(surface: Element): string | undefined {
+export async function captureNotesPreview(surface: Element): Promise<string | undefined> {
 	const paper = surface.querySelector<
-		HTMLCanvasElement & { boardPreview?: () => string | undefined }
+		HTMLCanvasElement & {
+			boardPreview?: () => Promise<string | undefined> | string | undefined;
+		}
 	>(".cube-notes__paper-canvas");
 	if (paper?.boardPreview) {
-		const preview = paper.boardPreview();
+		const preview = await paper.boardPreview();
 		if (preview) return preview;
 	}
 	if (!paper?.width || !paper.height) return undefined;

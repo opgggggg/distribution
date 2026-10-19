@@ -70,14 +70,28 @@ export function resizeElements(elements: InkElement[], from: Bounds, to: Bounds)
 	for (const e of elements) {
 		if (e.kind === "stroke") {
 			if (e.connector) continue;
-			[...e.points, ...(e.cutouts ?? []).flat()].forEach((p) => {
+			[
+				...e.points,
+				...(e.cutouts ?? []).flat(),
+				...(e.erasures ?? []).flatMap((v) => v.points),
+			].forEach((p) => {
 				p.x = to.x + (p.x - from.x) * sx;
 				p.y = to.y + (p.y - from.y) * sy;
 			});
+			for (const erasure of e.erasures ?? []) {
+				erasure.height = Math.max(
+					0.01,
+					Math.min(1_000_000, (erasure.height ?? erasure.width) * sy),
+				);
+				erasure.width = Math.max(0.01, Math.min(1_000_000, erasure.width * sx));
+			}
 		} else {
 			e.x = to.x + (e.x - from.x) * sx;
 			e.y = to.y + (e.y - from.y) * sy;
-			e.size = Math.max(1, Math.min(200, e.size * Math.min(sx, sy)));
+			if (e.kind === "image") {
+				e.width = Math.max(0.01, Math.min(1_000_000, e.width * sx));
+				e.height = Math.max(0.01, Math.min(1_000_000, e.height * sy));
+			} else e.size = Math.max(1, Math.min(200, e.size * Math.min(sx, sy)));
 		}
 	}
 }

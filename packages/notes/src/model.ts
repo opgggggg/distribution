@@ -1,3 +1,4 @@
+import { validPhotoSource } from "./photo.js";
 import { getBrushPlugin, validateBrushSettings } from "./brushes.js";
 /** Coordinates and widths use physical points (1/72 inch), independent of zoom. */
 export interface InkPoint {
@@ -29,6 +30,12 @@ export interface MaskingTape {
 	height: number;
 	angle: number;
 }
+export interface InkErasure {
+	/** Swept round eraser, in page coordinates. Height preserves nonuniform resizing. */
+	width: number;
+	height?: number;
+	points: { x: number; y: number }[];
+}
 export interface InkStroke {
 	id: string;
 	kind: "stroke";
@@ -45,6 +52,8 @@ export interface InkStroke {
 	brushSettings?: Record<string, number>;
 	/** Tape footprints captured when painting; removing tape preserves the white space. */
 	cutouts?: { x: number; y: number }[][];
+	/** Local removal of existing pigment; future strokes remain unaffected. */
+	erasures?: InkErasure[];
 	shape?: "line" | "rectangle" | "ellipse";
 	connector?: { from: InkAnchor; to: InkAnchor };
 	points: InkPoint[];
@@ -59,7 +68,19 @@ export interface InkText {
 	size: number;
 	font?: string;
 }
-export type InkElement = InkStroke | InkText;
+export interface InkImage {
+	/** Degrees clockwise around the image center; omitted in older notebooks. */
+	angle?: number;
+	id: string;
+	kind: "image";
+	src: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	opacity: number;
+}
+export type InkElement = InkStroke | InkText | InkImage;
 export type PaperStyle = "plain" | "ruled" | "grid" | "dotted";
 export interface InkLayer {
 	id: string;
@@ -78,6 +99,8 @@ export interface NotePage {
 	bookmarked: boolean;
 	scenes?: NoteScene[];
 	tapes?: MaskingTape[];
+	/** Fixed reference beneath the grid and ink; never part of lasso/eraser content. */
+	background?: InkImage;
 	layers: InkLayer[];
 }
 export interface Notebook {
@@ -153,6 +176,20 @@ export function validateNotebook(value: unknown): Notebook {
 	};
 	const finite = (v: unknown, min: number, max: number) =>
 		typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+	const photo = (image: InkImage) => {
+		if (
+			!image ||
+			image.kind !== "image" ||
+			!validPhotoSource(image.src) ||
+			!finite(image.x, -1_000_000_000, 1_000_000_000) ||
+			!finite(image.y, -1_000_000_000, 1_000_000_000) ||
+			!finite(image.width, 0.01, 1_000_000) ||
+			!finite(image.height, 0.01, 1_000_000) ||
+			!finite(image.opacity, 0, 1) ||
+			(image.angle !== undefined && !finite(image.angle, -360, 360))
+		)
+			fail();
+	};
 	const color = (v: unknown) => typeof v === "string" && /^#[\da-f]{6}$/i.test(v);
 	for (const page of book.pages) {
 		if (
@@ -172,6 +209,10 @@ export function validateNotebook(value: unknown): Notebook {
 			low = infinite ? -1_000_000_000 : 0,
 			high = infinite ? 1_000_000_000 : page.width;
 		id(page.id);
+		if (page.background !== undefined) {
+			photo(page.background);
+			id(page.background.id);
+		}
 		if (page.tapes !== undefined) {
 			if (!Array.isArray(page.tapes) || page.tapes.length > 24) fail();
 			for (const tape of page.tapes) {
@@ -222,7 +263,12 @@ export function validateNotebook(value: unknown): Notebook {
 				fail();
 			id(layer.id);
 			for (const element of layer.elements) {
-				if (!element || ++elements > LIMITS.elements || !color(element.color)) fail();
+				if (
+					!element ||
+					++elements > LIMITS.elements ||
+					(element.kind !== "image" && !color(element.color))
+				)
+					fail();
 				id(element.id);
 				if (element.kind === "stroke") {
 					if (
@@ -315,6 +361,33 @@ export function validateNotebook(value: unknown): Notebook {
 							)
 								fail();
 					}
+					if (element.erasures !== undefined) {
+						if (!Array.isArray(element.erasures) || element.erasures.length > 10000)
+							fail();
+						for (const erasure of element.erasures) {
+							if (
+								!erasure ||
+								!finite(erasure.width, 0.01, 1_000_000) ||
+								(erasure.height !== undefined &&
+									!finite(erasure.height, 0.01, 1_000_000)) ||
+								!Array.isArray(erasure.points) ||
+								!erasure.points.length
+							)
+								fail();
+							points += erasure.points.length;
+							for (const p of erasure.points)
+								if (
+									!p ||
+									!finite(
+										p.x,
+										infinite ? low : -10000,
+										infinite ? high : 10000,
+									) ||
+									!finite(p.y, infinite ? low : -10000, infinite ? high : 10000)
+								)
+									fail();
+						}
+					}
 					points += element.points.length;
 					if (points > LIMITS.points) fail();
 					for (const p of element.points)
@@ -337,7 +410,8 @@ export function validateNotebook(value: unknown): Notebook {
 							(typeof element.font !== "string" || element.font.length > 256))
 					)
 						fail();
-				} else fail();
+				} else if (element.kind === "image") photo(element);
+				else fail();
 			}
 		}
 	}

@@ -1,6 +1,9 @@
+import { photoCenter, photoBounds, transformPhoto } from "../photo-geometry.js";
+import { quarterTurn, rotatedSize, rotateVector } from "../view-rotation.js";
 import { isInfinitePage, pageContentBounds } from "../board.js";
 import { preservePigmentIdentity } from "../brushes/pigment.js";
 import { NoteColorPicker } from "./color-picker.js";
+import { canvasColors } from "./color-picker-model.js";
 import {
 	listBrushPlugins,
 	getBrushPlugin,
@@ -17,6 +20,7 @@ import {
 	ref,
 	shallowRef,
 	watch,
+	type PropType,
 } from "vue";
 import { readNotebookState, writeNotebook, writeXopp } from "../codec.js";
 import { nativeNotesFormat } from "../formats.js";
@@ -41,6 +45,7 @@ import {
 	type PenStyle,
 } from "../model.js";
 import { exportNotesPdf } from "../pdf.js";
+import { preparePhoto, type PreparedPhoto } from "../photo.js";
 import { exportNotesImages, exportNotesPagePng } from "../image.js";
 import { pageSvgUrl, strokeSvg } from "../render.js";
 import { NoteCanvas, type NoteTool } from "./canvas.js";
@@ -58,8 +63,54 @@ import {
 } from "../manipulation.js";
 import { useSidebarResize } from "./sidebar-resize.js";
 import { usePagePicker } from "./page-picker.js";
+import { PencilMenu } from "./pencil-menu.js";
+import type { EraserMode } from "../eraser.js";
 
 const english: Record<string, string> = {
+	画布颜色: "Canvas colors",
+	画布尚无用色: "No colors on this page yet",
+	快捷工具: "Quick tools",
+	轨迹擦除: "Pixel eraser",
+	整笔擦除: "Object eraser",
+	擦除方式: "Eraser mode",
+	轨迹橡皮擦: "Pixel eraser",
+	橡皮大小: "Eraser size",
+	橡皮设置: "Eraser settings",
+	只擦掉经过的部分: "Erase only the area you touch",
+	碰到笔迹就整笔删除: "Remove the entire stroke you touch",
+	"仅擦除笔迹，不影响图片和背景。": "Erases ink only; images and backgrounds stay in place.",
+	"正在处理图片…": "Processing image…",
+	插入图片: "Insert image",
+	拍照: "Take photo",
+	选择图片: "Choose image",
+	普通图片: "Content image",
+	背景图片: "Background image",
+	背景透明度: "Background opacity",
+	当前页面背景: "Page background",
+	调整背景: "Adjust background",
+	从背景取色: "Pick from background",
+	背景图: "Background image",
+	"拖动 · 双指缩放旋转": "Drag · Pinch and rotate",
+	缩小背景图: "Shrink background",
+	放大背景图: "Enlarge background",
+	"背景图旋转 90°": "Rotate background 90°",
+	背景图设置: "Background settings",
+	背景旋转角度: "Background angle",
+	复位背景: "Reset background",
+	显示完整背景: "Show entire background",
+	"点选或拖动，读取照片原色": "Tap or drag to pick the original photo color",
+	请选择颜色: "Select a color",
+	使用此颜色: "Use color",
+	取色: "Pick color",
+	画面颜色: "Canvas color",
+	背景原色: "Background original",
+	"点选或拖动，抬笔使用颜色": "Tap or drag; lift to use the color",
+	移除背景图片: "Remove background image",
+	插入方式: "Insert as",
+	待插入图片预览: "Image preview",
+	"使用套索移动、缩放或删除图片。": "Use the lasso to move, resize or delete the image.",
+	"固定在笔迹下方，可调整透明度，适合学习和描边。":
+		"Fixed beneath ink, with adjustable opacity for studying and tracing.",
 	区域: "Scenes",
 	保存区域: "Save scene",
 	区域名称: "Scene name",
@@ -102,6 +153,11 @@ const english: Record<string, string> = {
 	柔边叠色: "Soft color washes",
 	浓度: "Color strength",
 	更多工具: "More tools",
+	"旋转画布 90°": "Rotate canvas 90°",
+	"向左旋转 90°": "Rotate left 90°",
+	"向右旋转 90°": "Rotate right 90°",
+	重置方向: "Reset orientation",
+	画布方向: "Canvas orientation",
 	摆放美纹纸: "Place masking tape",
 	"单指移动 · 双指旋转 · 拖端点调整":
 		"Drag to move · Two fingers to rotate · Drag ends to resize",
@@ -132,7 +188,7 @@ const english: Record<string, string> = {
 	视图选项: "View options",
 	完成书写: "Done drawing",
 	更多颜色: "More colors",
-	常用颜色: "Favorite colors",
+	常用颜色: "Common colors",
 	常用粗细: "Favorite widths",
 	点击已选工具调整设置: "Tap the active tool to adjust settings",
 	未修改: "Unmodified",
@@ -284,6 +340,7 @@ export const NotesEditor = defineComponent({
 		compact: Boolean,
 		hostReadingMenu: Boolean,
 		nativeColorPicker: Boolean,
+		decodeImage: Function as PropType<(source: Blob) => Promise<Blob | null>>,
 		locale: { type: String, default: "zh-CN" },
 	},
 	emits: ["loaded", "error", "save", "export"],
@@ -293,9 +350,13 @@ export const NotesEditor = defineComponent({
 		const root = ref<HTMLElement>(),
 			canvas = ref<{
 				cancel(): void;
+				previewBackground(photo?: import("../model.js").InkImage): void;
 				viewBounds(): Bounds;
-				focusView(b: Bounds): void;
-				sampleColor(x: number, y: number): string | undefined;
+				focusView(
+					b: Bounds,
+					inset?: number | { bottom?: number; right?: number; top?: number },
+				): void;
+				sampleColor(x: number, y: number, backgroundOnly?: boolean): string | undefined;
 			}>();
 		const history = shallowRef<NoteHistory>(),
 			book = shallowRef<Notebook>(),
@@ -304,10 +365,35 @@ export const NotesEditor = defineComponent({
 		const ready = ref(false),
 			error = ref(""),
 			busy = ref(false),
+			photoLoading = ref(false),
 			drawing = ref(false),
 			active = ref(0),
 			tool = ref<NoteTool>("pen"),
 			selected = ref<string[]>([]);
+		const pencilMenu = ref<Point>();
+		let previousInkTool: "pen" | "highlighter" = "pen";
+		const eraserMode = ref<EraserMode>(
+			(() => {
+				try {
+					return localStorage.getItem("cubeoffice.notes.eraser-mode") === "path"
+						? "path"
+						: "stroke";
+				} catch {
+					return "stroke";
+				}
+			})(),
+		);
+		const eraserLabel = computed(() =>
+			eraserMode.value === "path" ? "轨迹橡皮擦" : "整笔橡皮擦",
+		);
+		watch(eraserMode, (value) => {
+			canvas.value?.cancel();
+			try {
+				localStorage.setItem("cubeoffice.notes.eraser-mode", value);
+			} catch {
+				/* Optional UI preference. */
+			}
+		});
 		const sidebar = ref(
 				!props.compact && typeof window !== "undefined" && window.innerWidth >= 760,
 			),
@@ -364,8 +450,14 @@ export const NotesEditor = defineComponent({
 			trayPopover = ref<Record<string, string>>();
 		const highlighterOpacity = ref(0.5),
 			colorSampling = ref(false),
+			sampleBackground = ref(false),
 			sampledColor = ref(""),
 			samplePoint = ref({ x: 0, y: 0 });
+		const tipSampling = ref(false);
+		const tipSampleBar = ref<HTMLElement>();
+		let lastSampleClient: Point | undefined,
+			sampleGeneration = 0;
+		let sampleSourceReady = Promise.resolve();
 		const inkOpacity = ref(1),
 			pressure = ref(true),
 			fingerDraw = ref(mobile.value),
@@ -376,16 +468,23 @@ export const NotesEditor = defineComponent({
 		let penColor = palette[0],
 			highlighterColor = highlighterPalette[0];
 		const zoom = ref(1),
+			viewRotation = ref(0),
 			fitMode = ref(true),
 			fitPage = ref(false),
 			fitCover = ref(mobile.value),
 			draft = ref<TextDraft>(),
 			textInput = ref<HTMLTextAreaElement>();
+		const photoInput = ref<HTMLInputElement>(),
+			cameraInput = ref<HTMLInputElement>();
+		const pendingPhoto = ref<PreparedPhoto>(),
+			photoMode = ref<"content" | "background">("content");
+		let photoPageId = "";
 		const name = ref(props.fileName),
 			savedOnce = ref(false);
 		const draftVersion = ref(0);
 		const modal = ref<
 				| ""
+				| "photo"
 				| "paper"
 				| "export"
 				| "pages"
@@ -409,10 +508,18 @@ export const NotesEditor = defineComponent({
 			),
 		);
 		const activeTape = ref(""),
-			tapeEditing = ref(false);
+			tapeEditing = ref(false),
+			backgroundEditing = ref(false),
+			backgroundDetails = ref(false);
+		const backgroundControlPreview = shallowRef<import("../model.js").InkImage>();
 		const page = computed(
 			() => book.value?.pages[Math.min(active.value, (book.value?.pages.length ?? 1) - 1)],
 		);
+		const usedColors = computed(() => {
+			if (modal.value !== "colors") return [];
+			revision.value;
+			return canvasColors(page.value);
+		});
 		const width = computed(() =>
 			tool.value === "highlighter"
 				? highlighterWidth.value
@@ -574,6 +681,11 @@ export const NotesEditor = defineComponent({
 			() => props.readonly,
 			(readonly, previous) => {
 				if (readonly && !previous) {
+					backgroundEditing.value = false;
+					if (colorSampling.value) {
+						colorSampling.value = false;
+						sampleBackground.value = false;
+					}
 					tapeEditing.value = false;
 					modal.value = "";
 					finishText(true);
@@ -583,6 +695,9 @@ export const NotesEditor = defineComponent({
 			},
 		);
 		watch(active, () => {
+			backgroundEditing.value = false;
+			colorSampling.value = false;
+			sampleBackground.value = false;
 			tapeEditing.value = false;
 			activeTape.value = "";
 			selected.value = [];
@@ -633,6 +748,95 @@ export const NotesEditor = defineComponent({
 				if (!layer) throw new Error(t("没有可见图层，请先显示一个图层。"));
 				layer.elements.push(element);
 			});
+		}
+		function choosePhoto(camera = false) {
+			if (props.readonly || busy.value) return;
+			finishText();
+			canvas.value?.cancel();
+			pendingPhoto.value = undefined;
+			photoPageId = page.value?.id ?? "";
+			modal.value = "";
+			dialog.value?.close();
+			(camera ? cameraInput.value : photoInput.value)?.click();
+		}
+		async function photoChosen(event: Event) {
+			const input = event.target as HTMLInputElement,
+				file = input.files?.[0];
+			if (!file || props.readonly) {
+				input.value = "";
+				return;
+			}
+			busy.value = true;
+			photoLoading.value = true;
+			try {
+				if (file.size > 32 * 1024 * 1024)
+					throw new Error(t("图片超过 32 MB，请选择较小的图片。"));
+				const source = new Blob([await file.arrayBuffer()], { type: file.type });
+				input.value = "";
+				const photo = await preparePhoto(source, props.decodeImage);
+				if (props.readonly || page.value?.id !== photoPageId) return;
+				pendingPhoto.value = photo;
+				photoMode.value = "content";
+				modal.value = "photo";
+			} catch (reason) {
+				report(reason);
+			} finally {
+				input.value = "";
+				photoLoading.value = false;
+				busy.value = false;
+			}
+		}
+		function insertPhoto() {
+			const photo = pendingPhoto.value,
+				p = page.value;
+			if (!photo || !p || props.readonly || p.id !== photoPageId) return;
+			if (photoMode.value === "content" && !p.layers.some((layer) => layer.visible)) {
+				report(new Error(t("没有可见图层，请先显示一个图层。")));
+				return;
+			}
+			const existingBytes = new TextEncoder().encode(JSON.stringify(book.value)).length;
+			const replacedBytes =
+				photoMode.value === "background" ? (p.background?.src.length ?? 0) : 0;
+			if (existingBytes - replacedBytes + photo.src.length + 512 > LIMITS.bytes) {
+				report(new Error(t("笔记已达到 64 MB 容量限制，请删除部分内容后再插入图片。")));
+				return;
+			}
+			const view = canvas.value?.viewBounds() ?? {
+				x: 0,
+				y: 0,
+				width: p.width,
+				height: p.height,
+			};
+			const area = isInfinitePage(p)
+				? view
+				: { x: 0, y: 0, width: p.width, height: p.height };
+			const factor = Math.min(
+				(area.width * 0.8) / photo.width,
+				(area.height * 0.8) / photo.height,
+			);
+			const width = photo.width * factor,
+				height = photo.height * factor;
+			const image = {
+				id: uid(),
+				kind: "image" as const,
+				src: photo.src,
+				x: area.x + (area.width - width) / 2,
+				y: area.y + (area.height - height) / 2,
+				width,
+				height,
+				opacity: photoMode.value === "background" ? 0.35 : 1,
+			};
+			if (photoMode.value === "background") {
+				changePage((p) => (p.background = image));
+				selectTool("pen");
+			} else {
+				add(image);
+				selectTool("lasso");
+				selected.value = [image.id];
+			}
+			pendingPhoto.value = undefined;
+			modal.value = "";
+			if (photoMode.value === "background") nextTick(openBackground);
 		}
 		function resizeSelection(to: Bounds) {
 			if (!page.value) return;
@@ -893,6 +1097,18 @@ export const NotesEditor = defineComponent({
 				}),
 			);
 		}
+		function erasePath(strokes: InkStroke[], removed: string[]) {
+			if (!strokes.length && !removed.length) return;
+			const updates = new Map(strokes.map((stroke) => [stroke.id, stroke]));
+			const deleted = new Set(removed);
+			changePage((p) =>
+				p.layers.forEach((layer) => {
+					layer.elements = layer.elements
+						.filter((e) => !deleted.has(e.id))
+						.map((e) => (updates.has(e.id) ? clone(updates.get(e.id)!) : e));
+				}),
+			);
+		}
 		function moveSelection(dx: number, dy: number) {
 			if (!dx && !dy) return;
 			changePage((p) =>
@@ -950,7 +1166,7 @@ export const NotesEditor = defineComponent({
 						l.elements
 							.filter((e) => selected.value.includes(e.id))
 							.forEach((e) => {
-								e.color = value;
+								if (e.kind !== "image") e.color = value;
 								if (e.kind === "stroke" && typeof opacity === "number")
 									e.opacity = opacity;
 							}),
@@ -974,6 +1190,26 @@ export const NotesEditor = defineComponent({
 				);
 		}
 		function stopColorSample() {
+			sampleGeneration++;
+			lastSampleClient = undefined;
+			if (tipSampling.value) {
+				const restoreFocus = tipSampleBar.value?.contains(document.activeElement);
+				canvas.value?.cancel();
+				tipSampling.value = colorSampling.value = sampleBackground.value = false;
+				modal.value = "";
+				if (restoreFocus && document.hasFocus() && !props.readonly)
+					root.value
+						?.querySelector<HTMLElement>(".cube-notes__viewport")
+						?.focus({ preventScroll: true });
+				return;
+			}
+			if (sampleBackground.value) {
+				canvas.value?.cancel();
+				colorSampling.value = false;
+				sampleBackground.value = false;
+				modal.value = "";
+				return;
+			}
 			if (!colorSampling.value) return;
 			canvas.value?.cancel();
 			colorSampling.value = false;
@@ -996,19 +1232,163 @@ export const NotesEditor = defineComponent({
 				return;
 			}
 			modal.value = "";
+			sampleBackground.value = false;
 			sampledColor.value = "";
 			colorSampling.value = true;
 		}
 		function moveColorSample(e: PointerEvent) {
 			e.preventDefault();
 			e.stopPropagation();
-			const value = canvas.value?.sampleColor(e.clientX, e.clientY);
-			if (value) sampledColor.value = value;
+			updateColorSample({ x: e.clientX, y: e.clientY });
+		}
+		function updateColorSample(point: Point) {
+			lastSampleClient = point;
+			sampledColor.value =
+				canvas.value?.sampleColor(point.x, point.y, sampleBackground.value) ?? "";
 			const box = root.value!.getBoundingClientRect();
 			samplePoint.value = {
-				x: Math.max(12, Math.min(box.width - 56, e.clientX - box.left)),
-				y: Math.max(12, e.clientY - box.top - 64),
+				x: Math.max(12, Math.min(box.width - 92, point.x - box.left)),
+				y: Math.max(12, Math.min(box.height - 68, point.y - box.top - 64)),
 			};
+		}
+		function startTipColorSample(anchor: Point) {
+			if (props.readonly || !ready.value || busy.value) return;
+			sampleGeneration++;
+			canvas.value?.cancel();
+			selected.value = [];
+			pencilMenu.value = undefined;
+			modal.value = "";
+			tipSampling.value = colorSampling.value = true;
+			sampleSourceReady = Promise.resolve();
+			sampleBackground.value = false;
+			updateColorSample(anchor);
+			void nextTick(() => {
+				if (tipSampling.value) tipSampleBar.value?.focus({ preventScroll: true });
+			});
+		}
+		function changeTipSampleSource(background: boolean) {
+			if (!tipSampling.value || (background && !page.value?.background)) return;
+			const token = ++sampleGeneration;
+			sampleBackground.value = background;
+			sampledColor.value = "";
+			// Returning from source-photo preview must wait for the composite repaint.
+			sampleSourceReady = (async () => {
+				await nextTick();
+				await new Promise(requestAnimationFrame);
+				if (token === sampleGeneration && tipSampling.value && lastSampleClient)
+					updateColorSample(lastSampleClient);
+			})();
+		}
+		async function acceptTipColor() {
+			const token = sampleGeneration;
+			await sampleSourceReady;
+			if (token !== sampleGeneration || !tipSampling.value) return;
+			const value = sampledColor.value;
+			if (!value || props.readonly) return;
+			stopColorSample();
+			if (tool.value === "eraser") selectTool(previousInkTool);
+			setColor(value);
+		}
+		watch(
+			() => [props.source, props.readonly, page.value?.id],
+			() => {
+				if (tipSampling.value) stopColorSample();
+			},
+		);
+		watch(
+			() => page.value?.background,
+			(photo) => {
+				backgroundControlPreview.value = undefined;
+				canvas.value?.previewBackground(undefined);
+				if (!photo) {
+					if (backgroundEditing.value) selectTool("pen");
+					if (colorSampling.value && sampleBackground.value) stopColorSample();
+				}
+			},
+		);
+		function previewBackgroundControl(patch: Partial<import("../model.js").InkImage>) {
+			const photo = page.value?.background;
+			if (!photo || props.readonly) return;
+			backgroundControlPreview.value = { ...photo, ...patch };
+			canvas.value?.previewBackground(backgroundControlPreview.value);
+		}
+		function commitBackgroundControl() {
+			const photo = backgroundControlPreview.value;
+			backgroundControlPreview.value = undefined;
+			if (photo) updateBackground(photo);
+			canvas.value?.previewBackground(undefined);
+		}
+		watch(
+			() => [backgroundEditing.value, page.value?.id, props.readonly],
+			() => {
+				backgroundControlPreview.value = undefined;
+				canvas.value?.previewBackground(undefined);
+			},
+		);
+		function updateBackground(photo: import("../model.js").InkImage) {
+			if (props.readonly || photo.id !== page.value?.background?.id) return;
+			changePage((p) => {
+				p.background = { ...photo };
+			});
+		}
+		function backgroundInset(expanded = false) {
+			const box = root.value?.getBoundingClientRect();
+			return box && box.width > box.height && box.height < 600
+				? { right: 324, top: 64 }
+				: expanded
+					? 320
+					: 240;
+		}
+		function openBackground() {
+			if (props.readonly || !page.value?.background) return;
+			finishText();
+			canvas.value?.cancel();
+			selected.value = [];
+			tapeEditing.value = false;
+			modal.value = "";
+			backgroundDetails.value = false;
+			backgroundEditing.value = true;
+			nextTick(() => {
+				if (page.value?.background)
+					canvas.value?.focusView(photoBounds(page.value.background), backgroundInset());
+			});
+		}
+		function changeBackground(scale = 1, angle = 0) {
+			const photo = page.value?.background;
+			if (photo) updateBackground(transformPhoto(photo, photoCenter(photo), scale, angle));
+		}
+		function resetBackground() {
+			const photo = page.value?.background,
+				view = canvas.value?.viewBounds();
+			if (!photo || !view) return;
+			const factor = Math.min(
+				(view.width * 0.7) / photo.width,
+				(view.height * 0.65) / photo.height,
+			);
+			updateBackground({
+				...photo,
+				width: photo.width * factor,
+				height: photo.height * factor,
+				x: view.x + (view.width - photo.width * factor) / 2,
+				y: view.y + (view.height - photo.height * factor) / 2,
+				angle: 0,
+			});
+		}
+		function startBackgroundSample() {
+			if (!page.value?.background || props.readonly) return;
+			canvas.value?.cancel();
+			selected.value = [];
+			modal.value = "";
+			sampleBackground.value = true;
+			sampledColor.value = "";
+			colorSampling.value = true;
+		}
+		function acceptBackgroundColor() {
+			const value = sampledColor.value;
+			if (!value) return;
+			stopColorSample();
+			selectTool("pen");
+			setColor(value);
 		}
 		function selectPenStyle(value: PenStyle) {
 			penPresets[penStyle.value] = {
@@ -1027,6 +1407,9 @@ export const NotesEditor = defineComponent({
 			inkSettings.value = { ...preset.settings };
 		}
 		function selectTool(value: NoteTool) {
+			pencilMenu.value = undefined;
+			if (value === "pen" || value === "highlighter") previousInkTool = value;
+			backgroundEditing.value = false;
 			tapeEditing.value = false;
 			finishText();
 			tool.value = value;
@@ -1036,6 +1419,41 @@ export const NotesEditor = defineComponent({
 			color.value = value === "highlighter" ? highlighterColor : penColor;
 			selected.value = [];
 		}
+		function pencilDoubleTap(event: Event) {
+			if (
+				props.readonly ||
+				!ready.value ||
+				busy.value ||
+				document.hidden ||
+				!root.value?.getClientRects().length ||
+				colorSampling.value ||
+				(modal.value && !popover.value) ||
+				draft.value
+			)
+				return;
+			event.stopImmediatePropagation();
+			canvas.value?.cancel();
+			modal.value = "";
+			selectTool(tool.value === "eraser" ? previousInkTool : "eraser");
+		}
+		watch(
+			() => [
+				props.source,
+				props.readonly,
+				active.value,
+				zoom.value,
+				viewRotation.value,
+				modal.value,
+				backgroundEditing.value,
+				tapeEditing.value,
+				colorSampling.value,
+				busy.value,
+				ready.value,
+			],
+			() => {
+				pencilMenu.value = undefined;
+			},
+		);
 		function setWidth(value: number) {
 			if (tool.value === "highlighter") highlighterWidth.value = value;
 			else if (tool.value === "eraser") eraserWidth.value = value;
@@ -1078,6 +1496,7 @@ export const NotesEditor = defineComponent({
 			const remap = new Map<string, string>();
 			copy.scenes?.forEach((s) => (s.id = uid()));
 			copy.tapes?.forEach((tape) => (tape.id = uid()));
+			if (copy.background) copy.background.id = uid();
 			copy.layers.forEach((l) => {
 				l.id = uid();
 				l.elements.forEach((e) => {
@@ -1113,6 +1532,7 @@ export const NotesEditor = defineComponent({
 			active.value = target;
 		}
 		function openTape() {
+			backgroundEditing.value = false;
 			finishText();
 			canvas.value?.cancel();
 			selected.value = [];
@@ -1226,6 +1646,13 @@ export const NotesEditor = defineComponent({
 			active.value = index;
 			if (mobile.value) pagePicker.close(true);
 		}
+		function rotateCanvas(turns = 1) {
+			finishText();
+			canvas.value?.cancel();
+			fitMode.value = false;
+			viewRotation.value = quarterTurn(viewRotation.value + turns);
+			modal.value = "";
+		}
 		function fit(fullPage = fitPage.value, cover = fitCover.value) {
 			if (page.value && isInfinitePage(page.value)) {
 				fitMode.value = false;
@@ -1239,19 +1666,20 @@ export const NotesEditor = defineComponent({
 				fitMode.value = true;
 				fitPage.value = fullPage;
 				fitCover.value = cover;
+				const size = rotatedSize(page.value.width, page.value.height, viewRotation.value);
 				zoom.value = Math.max(
 					0.25,
 					Math.min(
 						4,
 						mobile.value && cover && !fullPage
 							? Math.max(
-									stage.clientWidth / page.value.width,
-									stage.clientHeight / page.value.height,
+									stage.clientWidth / size.width,
+									stage.clientHeight / size.height,
 								)
-							: (stage.clientWidth - (mobile.value ? 0 : 48)) / page.value.width,
+							: (stage.clientWidth - (mobile.value ? 0 : 48)) / size.width,
 						fullPage
 							? (stage.clientHeight - (window.innerWidth < 760 ? 44 : 64)) /
-									page.value.height
+									size.height
 							: 4,
 					),
 				);
@@ -1436,16 +1864,31 @@ export const NotesEditor = defineComponent({
 				erase(selected.value);
 				selected.value = [];
 			} else if (event.key === "Escape") {
+				backgroundEditing.value = false;
 				draft.value = undefined;
 				selected.value = [];
 				canvas.value?.cancel();
 			} else if (!modifier && event.key.startsWith("Arrow") && selected.value.length) {
 				event.preventDefault();
 				const amount = event.shiftKey ? 10 : 1;
-				moveSelection(
-					event.key === "ArrowLeft" ? -amount : event.key === "ArrowRight" ? amount : 0,
-					event.key === "ArrowUp" ? -amount : event.key === "ArrowDown" ? amount : 0,
+				const delta = rotateVector(
+					{
+						x:
+							event.key === "ArrowLeft"
+								? -amount
+								: event.key === "ArrowRight"
+									? amount
+									: 0,
+						y:
+							event.key === "ArrowUp"
+								? -amount
+								: event.key === "ArrowDown"
+									? amount
+									: 0,
+					},
+					-viewRotation.value,
 				);
+				moveSelection(delta.x, delta.y);
 			} else if (!modifier) {
 				const match = tools.find((t) => t.key.toLowerCase() === event.key.toLowerCase());
 				if (match) {
@@ -1455,6 +1898,7 @@ export const NotesEditor = defineComponent({
 			}
 		}
 		onMounted(() => {
+			window.addEventListener("cubeoffice:pencil-double-tap", pencilDoubleTap);
 			window.addEventListener("blur", stopColorSample);
 			observer = new ResizeObserver(() => {
 				rootWidth.value = root.value?.clientWidth ?? window.innerWidth;
@@ -1467,6 +1911,10 @@ export const NotesEditor = defineComponent({
 			if (root.value) observer.observe(root.value);
 		});
 		onBeforeUnmount(() => {
+			sampleGeneration++;
+			tipSampling.value = false;
+			lastSampleClient = undefined;
+			window.removeEventListener("cubeoffice:pencil-double-tap", pencilDoubleTap);
 			generation++;
 			window.removeEventListener("blur", stopColorSample);
 			observer?.disconnect();
@@ -1509,52 +1957,73 @@ export const NotesEditor = defineComponent({
 				},
 				t(label),
 			);
-		function colorControls(all = false) {
+		function colorControls(all = false, canvas = false) {
 			const colors = tool.value === "highlighter" ? highlighterPalette : palette;
 			const favorites = colors.slice(0, 3);
 			if (!all && !favorites.includes(color.value)) favorites[2] = color.value;
+			const label = t(canvas ? "画布颜色" : all ? "常用颜色" : "笔迹颜色");
 			return h(
 				"div",
-				{ class: "cube-notes__swatches", role: "group", "aria-label": t("笔迹颜色") },
-				(all ? colors : favorites).map((c) =>
-					h(
-						"button",
-						{
-							type: "button",
-							class: ["cube-notes__swatch", color.value === c && "is-active"],
-							style: { "--ink-color": c },
-							title: c,
-							"aria-label": `${t("笔迹颜色")} ${c}`,
-							"aria-pressed": color.value === c,
-							disabled: !ready.value || props.readonly || busy.value,
-							onClick: () => setColor(c),
-						},
-						[
+				{
+					class: ["cube-notes__swatches", all && "cube-notes__palette-row"],
+					role: "group",
+					"aria-label": label,
+				},
+				canvas && !usedColors.value.length
+					? [h("span", { class: "cube-notes__palette-empty" }, t("画布尚无用色"))]
+					: (canvas ? usedColors.value : all ? colors : favorites).map((c) =>
 							h(
-								"span",
-								{ class: "cube-notes__color-dot" },
-								color.value === c ? [icon("check")] : [],
+								"button",
+								{
+									type: "button",
+									class: ["cube-notes__swatch", color.value === c && "is-active"],
+									style: { "--ink-color": c },
+									title: c,
+									"aria-label": `${label} ${c}`,
+									"aria-pressed": color.value === c,
+									disabled: !ready.value || props.readonly || busy.value,
+									onClick: () => setColor(c),
+								},
+								[
+									h(
+										"span",
+										{ class: "cube-notes__color-dot" },
+										color.value === c ? [icon("check")] : [],
+									),
+								],
 							),
-						],
-					),
-				),
+						),
 			);
 		}
+		function quickColorRows() {
+			return h("div", { class: "cube-notes__quick-colors" }, [
+				colorControls(true),
+				h(
+					"span",
+					{ class: "cube-notes__palette-label", "aria-hidden": "true" },
+					t("画布颜色"),
+				),
+				colorControls(true, true),
+			]);
+		}
 		function widthControl() {
+			const label = t(tool.value === "eraser" ? "橡皮大小" : "笔迹粗细");
 			return h("label", { class: "cube-notes__width" }, [
-				h("span", t("笔迹粗细")),
+				h("span", label),
 				h("input", {
 					type: "range",
 					min: 0.5,
 					max:
 						tool.value === "pen"
 							? activeBrush.value.maxWidth
-							: tool.value === "highlighter" || tool.value === "eraser"
-								? 30
-								: 10,
+							: tool.value === "eraser"
+								? 100
+								: tool.value === "highlighter"
+									? 30
+									: 10,
 					step: 0.5,
 					value: width.value,
-					"aria-label": t("笔迹粗细"),
+					"aria-label": label,
 					onInput: (e: Event) => setWidth(Number((e.target as HTMLInputElement).value)),
 				}),
 				h("output", `${width.value.toFixed(1)} pt`),
@@ -1591,6 +2060,144 @@ export const NotesEditor = defineComponent({
 			});
 		}
 		function modalContents() {
+			if (modal.value === "ink" && tool.value === "eraser")
+				return [
+					h(
+						"div",
+						{
+							class: "cube-notes__eraser-modes",
+							role: "group",
+							"aria-label": t("擦除方式"),
+						},
+						(
+							[
+								["path", "轨迹擦除", "只擦掉经过的部分", "erasePath"],
+								["stroke", "整笔擦除", "碰到笔迹就整笔删除", "eraseStroke"],
+							] as const
+						).map(([mode, label, hint, glyph]) =>
+							h(
+								"button",
+								{
+									type: "button",
+									"aria-label": t(label),
+									"aria-pressed": eraserMode.value === mode,
+									class: [
+										"cube-notes__eraser-mode",
+										eraserMode.value === mode && "is-active",
+									],
+									onClick: () => {
+										eraserMode.value = mode;
+									},
+								},
+								[icon(glyph), h("strong", t(label)), h("small", t(hint))],
+							),
+						),
+					),
+					widthControl(),
+					h(
+						"div",
+						{ class: "cube-notes__eraser-sizes" },
+						quickWidths.value.map((value) =>
+							choice(
+								`${value} pt`,
+								() => setWidth(value),
+								value === eraserWidth.value,
+							),
+						),
+					),
+					h("p", { class: "cube-notes__hint" }, t("仅擦除笔迹，不影响图片和背景。")),
+				];
+			if (modal.value === "photo")
+				return [
+					h("div", { class: "cube-notes__photo-sources" }, [
+						choice("拍照", () => choosePhoto(true)),
+						choice("选择图片", () => choosePhoto()),
+					]),
+					pendingPhoto.value
+						? h("div", { class: "cube-notes__photo-insert" }, [
+								h("img", { src: pendingPhoto.value.src, alt: t("待插入图片预览") }),
+								h(
+									"div",
+									{
+										role: "group",
+										"aria-label": t("插入方式"),
+										class: "cube-notes__photo-modes",
+									},
+									[
+										choice(
+											"普通图片",
+											() => (photoMode.value = "content"),
+											photoMode.value === "content",
+										),
+										choice(
+											"背景图片",
+											() => (photoMode.value = "background"),
+											photoMode.value === "background",
+										),
+									],
+								),
+								h(
+									"p",
+									{ class: "cube-notes__hint" },
+									t(
+										photoMode.value === "background"
+											? "固定在笔迹下方，可调整透明度，适合学习和描边。"
+											: "使用套索移动、缩放或删除图片。",
+									),
+								),
+								h("div", { class: "cube-notes__row" }, [
+									choice("取消", () => {
+										pendingPhoto.value = undefined;
+										modal.value = "";
+									}),
+									h(
+										"button",
+										{
+											type: "button",
+											class: "cube-notes__choice cube-notes__photo-confirm",
+											onClick: insertPhoto,
+										},
+										t("插入图片"),
+									),
+								]),
+							])
+						: null,
+					page.value?.background
+						? h("section", { class: "cube-notes__photo-background" }, [
+								h("strong", t("当前页面背景")),
+								h("div", { class: "cube-notes__row" }, [
+									choice("调整背景", openBackground),
+									choice("从背景取色", startBackgroundSample),
+								]),
+								h("label", [
+									t("背景透明度"),
+									h("input", {
+										type: "range",
+										min: 0,
+										max: 100,
+										value: Math.round(page.value.background.opacity * 100),
+										"aria-label": t("背景透明度"),
+										onChange: (event: Event) =>
+											changePage((p) => {
+												if (p.background)
+													p.background.opacity =
+														Number(
+															(event.target as HTMLInputElement)
+																.value,
+														) / 100;
+											}),
+									}),
+									h(
+										"span",
+										`${Math.round(page.value.background.opacity * 100)}%`,
+									),
+								]),
+								choice("移除背景图片", () =>
+									changePage((p) => delete p.background),
+								),
+							])
+						: null,
+				];
 			if (modal.value === "tape") {
 				const tape = page.value?.tapes?.find((item) => item.id === activeTape.value);
 				return tape
@@ -1631,6 +2238,17 @@ export const NotesEditor = defineComponent({
 			if (modal.value === "palette")
 				return [
 					h("div", { class: "cube-notes__view-actions" }, [
+						choice("插入图片", () => {
+							pendingPhoto.value = undefined;
+							modal.value = "photo";
+						}),
+						...(page.value?.background
+							? [
+									choice("调整背景", openBackground),
+									choice("从背景取色", startBackgroundSample),
+								]
+							: []),
+						choice("旋转画布 90°", () => rotateCanvas()),
 						choice("文字", () => {
 							selectTool("text");
 							modal.value = "";
@@ -1664,22 +2282,26 @@ export const NotesEditor = defineComponent({
 				];
 			if (modal.value === "colors")
 				return [
-					...(!props.nativeColorPicker ? [] : [colorControls(true)]),
+					...(!props.nativeColorPicker ? [] : [quickColorRows()]),
 					!props.nativeColorPicker
-						? h(NoteColorPicker, {
-								value: color.value,
-								titleId: "cube-notes-dialog-title",
-								locale: props.locale,
-								opacity:
-									tool.value === "highlighter"
-										? highlighterOpacity.value
-										: inkOpacity.value,
-								onOpacity: setOpacity,
-								onClose: () => (modal.value = ""),
-								onSample: startColorSample,
-								onChange: setColor,
-								onLayout: () => void nextTick(placeTrayPopover),
-							})
+						? h(
+								NoteColorPicker,
+								{
+									value: color.value,
+									titleId: "cube-notes-dialog-title",
+									locale: props.locale,
+									opacity:
+										tool.value === "highlighter"
+											? highlighterOpacity.value
+											: inkOpacity.value,
+									onOpacity: setOpacity,
+									onClose: () => (modal.value = ""),
+									onSample: startColorSample,
+									onChange: setColor,
+									onLayout: () => void nextTick(placeTrayPopover),
+								},
+								{ quickColors: quickColorRows },
+							)
 						: h("label", { class: "cube-notes__custom-color" }, [
 								h("span", t("自定义颜色")),
 								h("input", {
@@ -1699,6 +2321,23 @@ export const NotesEditor = defineComponent({
 				];
 			if (modal.value === "view")
 				return [
+					h("div", { class: "cube-notes__rotation-controls" }, [
+						h(
+							"output",
+							{ "aria-label": t("画布方向") },
+							`${t("画布方向")} · ${viewRotation.value * 90}°`,
+						),
+						h("div", { class: "cube-notes__row" }, [
+							choice("向左旋转 90°", () => rotateCanvas(-1)),
+							choice("向右旋转 90°", () => rotateCanvas()),
+							choice(
+								"重置方向",
+								() => rotateCanvas(-viewRotation.value),
+								false,
+								viewRotation.value === 0,
+							),
+						]),
+					]),
 					h("div", { class: "cube-notes__view-actions" }, [
 						choice("页面", togglePages),
 						choice(
@@ -2271,6 +2910,24 @@ export const NotesEditor = defineComponent({
 				width: style.id === penStyle.value ? penWidth.value : penPresets[style.id].width,
 			}));
 		});
+		const quickWidths = computed(() =>
+			tool.value === "highlighter"
+				? [8, 14, 22]
+				: tool.value === "eraser"
+					? eraserMode.value === "path"
+						? [8, 20, 40]
+						: [5, 10, 20]
+					: tool.value === "pen"
+						? (activeBrush.value.quickWidths ?? [
+								activeBrush.value.defaults.width / 2,
+								activeBrush.value.defaults.width,
+								Math.min(
+									activeBrush.value.maxWidth,
+									activeBrush.value.defaults.width * 2,
+								),
+							])
+						: [1, 2, 4],
+		);
 		return () => {
 			const p = page.value,
 				count = book.value?.pages.length ?? 0;
@@ -2284,44 +2941,93 @@ export const NotesEditor = defineComponent({
 						: props.source
 							? t("未修改")
 							: t("新笔记 · 尚未保存到文件");
-			const dock = !props.readonly
-				? mobile.value
-					? paletteOpen.value
-						? h(ToolTray, {
-								ref: tray,
-								locale: props.locale,
-								wide: rootWidth.value >= 680,
-								pens: trayPens.value,
-								tool: tool.value,
-								penStyle: penStyle.value,
-								color: color.value,
-								highlighterColor,
-								highlighterWidth: highlighterWidth.value,
-								eraserWidth: eraserWidth.value,
-								disabled: !writable,
-								canUndo: history.value?.canUndo(),
-								canRedo: history.value?.canRedo(),
-								onPen: (style: PenStyle) => {
-									selectPenStyle(style);
-									selectTool("pen");
-								},
-								onTool: (value: NoteTool) => selectTool(value),
-								onSettings: () => {
-									modal.value = "ink";
-								},
-								onUndo: undo,
-								onRedo: redo,
-								onColor: setColor,
-								onColors: () => {
-									modal.value = "colors";
-								},
-								onMore: () => {
-									modal.value = "palette";
-								},
-								onMove: () => {
-									modal.value = "";
-								},
-							})
+			const dock =
+				!props.readonly &&
+				!backgroundEditing.value &&
+				!(colorSampling.value && sampleBackground.value && !tipSampling.value)
+					? mobile.value
+						? paletteOpen.value
+							? h(ToolTray, {
+									ref: tray,
+									locale: props.locale,
+									wide: rootWidth.value >= 680,
+									pens: trayPens.value,
+									tool: tool.value,
+									penStyle: penStyle.value,
+									color: color.value,
+									highlighterColor,
+									highlighterWidth: highlighterWidth.value,
+									eraserWidth: eraserWidth.value,
+									eraserMode: eraserMode.value,
+									disabled: !writable,
+									canUndo: history.value?.canUndo(),
+									canRedo: history.value?.canRedo(),
+									onPen: (style: PenStyle) => {
+										selectPenStyle(style);
+										selectTool("pen");
+									},
+									onTool: (value: NoteTool) => selectTool(value),
+									onSettings: () => {
+										modal.value = "ink";
+									},
+									onUndo: undo,
+									onRedo: redo,
+									onColor: setColor,
+									onColors: () => {
+										modal.value = "colors";
+									},
+									onMore: () => {
+										modal.value = "palette";
+									},
+									onMove: () => {
+										modal.value = "";
+									},
+								})
+							: h("div", { class: "cube-notes__dock" }, [
+									h(
+										"div",
+										{
+											class: "cube-notes__toolbar",
+											role: "toolbar",
+											"aria-label": t("笔迹与文字"),
+										},
+										[
+											h("div", { class: "cube-notes__tools" }, [
+												button(
+													"画笔",
+													"pen",
+													() => selectTool("pen"),
+													!writable,
+													false,
+													{ "data-tool": "pen", "aria-pressed": false },
+												),
+												button(
+													"文字",
+													"text",
+													() => selectTool("text"),
+													!writable,
+													tool.value === "text",
+													{
+														"data-tool": "text",
+														"aria-pressed": tool.value === "text",
+													},
+												),
+												button(
+													"形状",
+													"shapes",
+													() => {
+														modal.value =
+															modal.value === "tools" ? "" : "tools";
+													},
+													!writable,
+													["line", "rectangle", "ellipse"].includes(
+														tool.value,
+													),
+												),
+											]),
+										],
+									),
+								])
 						: h("div", { class: "cube-notes__dock" }, [
 								h(
 									"div",
@@ -2332,28 +3038,60 @@ export const NotesEditor = defineComponent({
 									},
 									[
 										h("div", { class: "cube-notes__tools" }, [
-											button(
-												"画笔",
-												"pen",
-												() => selectTool("pen"),
-												!writable,
-												false,
-												{ "data-tool": "pen", "aria-pressed": false },
-											),
-											button(
-												"文字",
-												"text",
-												() => selectTool("text"),
-												!writable,
-												tool.value === "text",
-												{
-													"data-tool": "text",
-													"aria-pressed": tool.value === "text",
-												},
-											),
+											...tools
+												.filter(
+													(item) =>
+														!["line", "rectangle", "ellipse"].includes(
+															item.id,
+														),
+												)
+												.map((item) =>
+													button(
+														item.id === "eraser"
+															? eraserLabel.value
+															: item.label,
+														item.id,
+														() => {
+															if (
+																tool.value === item.id &&
+																[
+																	"pen",
+																	"highlighter",
+																	"eraser",
+																].includes(item.id)
+															)
+																modal.value =
+																	modal.value === "ink"
+																		? ""
+																		: "ink";
+															else selectTool(item.id);
+														},
+														!writable,
+														tool.value === item.id,
+														{
+															title: `${t(item.id === "eraser" ? eraserLabel.value : item.label)} (${item.key})`,
+															"aria-pressed": tool.value === item.id,
+															"data-tool": item.id,
+															"data-pen-label":
+																item.id === "pen"
+																	? t(
+																			penStyles.value.find(
+																				(style) =>
+																					style.id ===
+																					penStyle.value,
+																			)!.label,
+																		)
+																	: undefined,
+														},
+													),
+												),
 											button(
 												"形状",
-												"shapes",
+												["line", "rectangle", "ellipse"].includes(
+													tool.value,
+												)
+													? tool.value
+													: "shapes",
 												() => {
 													modal.value =
 														modal.value === "tools" ? "" : "tools";
@@ -2364,194 +3102,113 @@ export const NotesEditor = defineComponent({
 												),
 											),
 										]),
+										h(
+											"div",
+											{
+												class: "cube-notes__properties",
+												role: "group",
+												"aria-label": t("工具设置"),
+											},
+											["hand", "lasso"].includes(tool.value)
+												? [
+														h(
+															"span",
+															{ class: "cube-notes__tool-hint" },
+															t(
+																tool.value === "lasso"
+																	? "单击或圈选内容"
+																	: "仅触控笔书写，手指移动页面",
+															),
+														),
+														tool.value === "lasso"
+															? colorControls()
+															: null,
+													]
+												: [
+														tool.value !== "eraser"
+															? colorControls()
+															: h(
+																	"span",
+																	{
+																		class: "cube-notes__tool-hint",
+																	},
+																	t("擦除整条笔迹"),
+																),
+														tool.value !== "eraser"
+															? button(
+																	"更多颜色",
+																	"palette",
+																	() => {
+																		modal.value =
+																			modal.value === "ink"
+																				? ""
+																				: "ink";
+																	},
+																	!writable,
+																)
+															: null,
+														h(
+															"div",
+															{
+																class: "cube-notes__widths",
+																role: "group",
+																"aria-label": t("常用粗细"),
+															},
+															quickWidths.value.map((value, index) =>
+																h(
+																	"button",
+																	{
+																		type: "button",
+																		class: [
+																			"cube-notes__width-preset",
+																			value === width.value &&
+																				"is-active",
+																		],
+																		"aria-label": `${t("笔迹粗细")} ${value} pt`,
+																		"aria-pressed":
+																			value === width.value,
+																		disabled: !writable,
+																		onClick: () =>
+																			setWidth(value),
+																	},
+																	[
+																		h("span", {
+																			class: "cube-notes__width-dot",
+																			"aria-hidden": "true",
+																			style: {
+																				width: `${[4, 8, 14][index]}px`,
+																				height: `${[4, 8, 14][index]}px`,
+																			},
+																		}),
+																		h(
+																			"small",
+																			{
+																				"aria-hidden":
+																					"true",
+																			},
+																			`${value}pt`,
+																		),
+																	],
+																),
+															),
+														),
+														button(
+															"画笔设置",
+															"settings",
+															() => {
+																modal.value =
+																	modal.value === "ink"
+																		? ""
+																		: "ink";
+															},
+															!writable,
+														),
+													],
+										),
 									],
 								),
 							])
-					: h("div", { class: "cube-notes__dock" }, [
-							h(
-								"div",
-								{
-									class: "cube-notes__toolbar",
-									role: "toolbar",
-									"aria-label": t("笔迹与文字"),
-								},
-								[
-									h("div", { class: "cube-notes__tools" }, [
-										...tools
-											.filter(
-												(item) =>
-													!["line", "rectangle", "ellipse"].includes(
-														item.id,
-													),
-											)
-											.map((item) =>
-												button(
-													item.label,
-													item.id,
-													() => {
-														if (
-															tool.value === item.id &&
-															[
-																"pen",
-																"highlighter",
-																"eraser",
-															].includes(item.id)
-														)
-															modal.value =
-																modal.value === "ink" ? "" : "ink";
-														else selectTool(item.id);
-													},
-													!writable,
-													tool.value === item.id,
-													{
-														title: `${t(item.label)} (${item.key})`,
-														"aria-pressed": tool.value === item.id,
-														"data-tool": item.id,
-														"data-pen-label":
-															item.id === "pen"
-																? t(
-																		penStyles.value.find(
-																			(style) =>
-																				style.id ===
-																				penStyle.value,
-																		)!.label,
-																	)
-																: undefined,
-													},
-												),
-											),
-										button(
-											"形状",
-											["line", "rectangle", "ellipse"].includes(tool.value)
-												? tool.value
-												: "shapes",
-											() => {
-												modal.value =
-													modal.value === "tools" ? "" : "tools";
-											},
-											!writable,
-											["line", "rectangle", "ellipse"].includes(tool.value),
-										),
-									]),
-									h(
-										"div",
-										{
-											class: "cube-notes__properties",
-											role: "group",
-											"aria-label": t("工具设置"),
-										},
-										["hand", "lasso"].includes(tool.value)
-											? [
-													h(
-														"span",
-														{ class: "cube-notes__tool-hint" },
-														t(
-															tool.value === "lasso"
-																? "单击或圈选内容"
-																: "仅触控笔书写，手指移动页面",
-														),
-													),
-													tool.value === "lasso" ? colorControls() : null,
-												]
-											: [
-													tool.value !== "eraser"
-														? colorControls()
-														: h(
-																"span",
-																{
-																	class: "cube-notes__tool-hint",
-																},
-																t("擦除整条笔迹"),
-															),
-													tool.value !== "eraser"
-														? button(
-																"更多颜色",
-																"palette",
-																() => {
-																	modal.value =
-																		modal.value === "ink"
-																			? ""
-																			: "ink";
-																},
-																!writable,
-															)
-														: null,
-													h(
-														"div",
-														{
-															class: "cube-notes__widths",
-															role: "group",
-															"aria-label": t("常用粗细"),
-														},
-														(tool.value === "highlighter"
-															? [8, 14, 22]
-															: tool.value === "eraser"
-																? [5, 10, 20]
-																: tool.value === "pen"
-																	? (activeBrush.value
-																			.quickWidths ?? [
-																			activeBrush.value
-																				.defaults.width / 2,
-																			activeBrush.value
-																				.defaults.width,
-																			Math.min(
-																				activeBrush.value
-																					.maxWidth,
-																				activeBrush.value
-																					.defaults
-																					.width * 2,
-																			),
-																		])
-																	: [1, 2, 4]
-														).map((value, index) =>
-															h(
-																"button",
-																{
-																	type: "button",
-																	class: [
-																		"cube-notes__width-preset",
-																		value === width.value &&
-																			"is-active",
-																	],
-																	"aria-label": `${t("笔迹粗细")} ${value} pt`,
-																	"aria-pressed":
-																		value === width.value,
-																	disabled: !writable,
-																	onClick: () => setWidth(value),
-																},
-																[
-																	h("span", {
-																		class: "cube-notes__width-dot",
-																		"aria-hidden": "true",
-																		style: {
-																			width: `${[4, 8, 14][index]}px`,
-																			height: `${[4, 8, 14][index]}px`,
-																		},
-																	}),
-																	h(
-																		"small",
-																		{ "aria-hidden": "true" },
-																		`${value}pt`,
-																	),
-																],
-															),
-														),
-													),
-													button(
-														"画笔设置",
-														"settings",
-														() => {
-															modal.value =
-																modal.value === "ink" ? "" : "ink";
-														},
-														!writable,
-													),
-												],
-									),
-								],
-							),
-						])
-				: null;
+					: null;
 
 			return h(
 				"section",
@@ -2563,6 +3220,7 @@ export const NotesEditor = defineComponent({
 						mobile.value && "cube-notes--mobile",
 						mobile.value && !props.readonly && paletteOpen.value && "is-writing",
 						mobile.value && !props.readonly && paletteOpen.value && "has-pen-tray",
+						tipSampling.value && "is-color-sampling",
 						rail.resizing.value && "is-resizing-sidebar",
 					],
 					style: { "--notes-sidebar-width": `${rail.width.value}px` },
@@ -2582,6 +3240,176 @@ export const NotesEditor = defineComponent({
 					},
 				},
 				[
+					pencilMenu.value && writable && root.value
+						? h(PencilMenu, {
+								anchor: pencilMenu.value,
+								boundary: root.value,
+								tool: tool.value,
+								eraserMode: eraserMode.value,
+								color: color.value,
+								width: width.value,
+								widths: quickWidths.value,
+								colors: (tool.value === "highlighter"
+									? highlighterPalette
+									: palette
+								).slice(0, 5),
+								canUndo: Boolean(history.value?.canUndo()),
+								canRedo: Boolean(history.value?.canRedo()),
+								translate: t,
+								onClose: () => {
+									pencilMenu.value = undefined;
+								},
+								onTool: (value: NoteTool) => {
+									if (value === "eraser" && tool.value === "eraser")
+										modal.value = "ink";
+									else selectTool(value === "pen" ? previousInkTool : value);
+								},
+								onColor: (value: string) => {
+									if (tool.value === "eraser") selectTool(previousInkTool);
+									setColor(value);
+								},
+								onWidth: setWidth,
+								onPalette: () => {
+									if (tool.value === "eraser") selectTool(previousInkTool);
+									modal.value = "colors";
+								},
+								onSample: startTipColorSample,
+								onUndo: undo,
+								onRedo: redo,
+							})
+						: null,
+					backgroundEditing.value &&
+					p?.background &&
+					!props.readonly &&
+					!colorSampling.value
+						? h(
+								"nav",
+								{
+									class: "cube-notes__background-controls",
+									"aria-label": t("调整背景"),
+								},
+								[
+									h("div", { class: "cube-notes__background-header" }, [
+										h("img", { src: p.background.src, alt: "" }),
+										h("div", [
+											h("strong", t("背景图")),
+											h("small", t("拖动 · 双指缩放旋转")),
+										]),
+										button("撤销", "undo", undo, !history.value?.canUndo()),
+										button("重做", "redo", redo, !history.value?.canRedo()),
+										h(
+											"button",
+											{
+												type: "button",
+												class: "cube-notes__background-done",
+												onClick: () => selectTool("pen"),
+											},
+											[icon("check"), t("完成")],
+										),
+									]),
+									h("label", { class: "cube-notes__background-opacity" }, [
+										h("span", t("背景透明度")),
+										h("input", {
+											type: "range",
+											min: 0,
+											max: 100,
+											value: Math.round(
+												(backgroundControlPreview.value ?? p.background)
+													.opacity * 100,
+											),
+											"aria-label": t("背景透明度"),
+											onInput: (e: Event) =>
+												previewBackgroundControl({
+													opacity:
+														Number(
+															(e.target as HTMLInputElement).value,
+														) / 100,
+												}),
+											onChange: commitBackgroundControl,
+										}),
+										h(
+											"output",
+											`${Math.round((backgroundControlPreview.value ?? p.background).opacity * 100)}%`,
+										),
+									]),
+									h("div", { class: "cube-notes__background-actions" }, [
+										button("缩小背景图", "minus", () =>
+											changeBackground(1 / 1.15),
+										),
+										button("放大背景图", "plus", () => changeBackground(1.15)),
+										button("背景图旋转 90°", "rotate", () =>
+											changeBackground(1, 90),
+										),
+										h(
+											"button",
+											{
+												type: "button",
+												class: "cube-notes__background-pick",
+												onClick: startBackgroundSample,
+											},
+											[icon("eyedropper"), t("取色")],
+										),
+										button(
+											"背景图设置",
+											"settings",
+											() =>
+												(backgroundDetails.value =
+													!backgroundDetails.value),
+											false,
+											backgroundDetails.value,
+											{ "aria-expanded": backgroundDetails.value },
+										),
+									]),
+									backgroundDetails.value
+										? h("div", { class: "cube-notes__background-details" }, [
+												h("label", [
+													t("旋转角度"),
+													h("input", {
+														type: "range",
+														min: -180,
+														max: 180,
+														step: 1,
+														value:
+															(
+																backgroundControlPreview.value ??
+																p.background
+															).angle ?? 0,
+														"aria-label": t("背景旋转角度"),
+														onInput: (e: Event) =>
+															previewBackgroundControl({
+																angle: Number(
+																	(e.target as HTMLInputElement)
+																		.value,
+																),
+															}),
+														onChange: commitBackgroundControl,
+													}),
+													h(
+														"output",
+														`${Math.round((backgroundControlPreview.value ?? p.background).angle ?? 0)}°`,
+													),
+												]),
+												h("div", { class: "cube-notes__row" }, [
+													choice("复位背景", resetBackground),
+													choice("显示完整背景", () => {
+														if (p.background)
+															canvas.value?.focusView(
+																photoBounds(p.background),
+																backgroundInset(
+																	backgroundDetails.value,
+																),
+															);
+													}),
+													choice("移除背景图片", () => {
+														changePage((p) => delete p.background);
+														selectTool("pen");
+													}),
+												]),
+											])
+										: null,
+								],
+							)
+						: null,
 					tapeEditing.value && !props.readonly
 						? h(
 								"nav",
@@ -2646,6 +3474,30 @@ export const NotesEditor = defineComponent({
 								"aria-expanded": sidebar.value,
 							})
 						: null,
+					photoLoading.value
+						? h(
+								"p",
+								{ role: "status", class: "cube-notes__photo-loading" },
+								t("正在处理图片…"),
+							)
+						: null,
+					h("input", {
+						ref: photoInput,
+						type: "file",
+						accept: "image/*",
+						hidden: true,
+						"data-note-photo": "library",
+						onChange: photoChosen,
+					}),
+					h("input", {
+						ref: cameraInput,
+						type: "file",
+						accept: "image/*",
+						capture: "environment",
+						hidden: true,
+						"data-note-photo": "camera",
+						onChange: photoChosen,
+					}),
 					h("header", { class: "cube-notes__header" }, [
 						button("页面", "pages", togglePages, !ready.value, sidebar.value, {
 							"aria-expanded": sidebar.value,
@@ -2670,6 +3522,15 @@ export const NotesEditor = defineComponent({
 									),
 								])
 							: null,
+						button(
+							"插入图片",
+							"image",
+							() => {
+								pendingPhoto.value = undefined;
+								modal.value = "photo";
+							},
+							!writable,
+						),
 						button("美纹纸", "tape", openTape, !writable),
 						button(
 							"纸张",
@@ -2888,9 +3749,13 @@ export const NotesEditor = defineComponent({
 											h(NoteCanvas, {
 												ref: canvas,
 												page: p,
-												tool: tapeEditing.value ? "hand" : tool.value,
+												tool:
+													tapeEditing.value || backgroundEditing.value
+														? "hand"
+														: tool.value,
 												color: color.value,
 												width: width.value,
+												eraserMode: eraserMode.value,
 												inkOpacity: inkOpacity.value,
 												highlighterOpacity: highlighterOpacity.value,
 												pressure: pressure.value,
@@ -2898,7 +3763,23 @@ export const NotesEditor = defineComponent({
 												brushSettings: inkSettings.value,
 												fingerDraw: fingerDraw.value,
 												readonly: props.readonly,
+												pencilMenuEnabled:
+													writable &&
+													!modal.value &&
+													!colorSampling.value,
+												onPencilMenu: (point: Point) => {
+													if (
+														writable &&
+														!modal.value &&
+														!colorSampling.value
+													)
+														pencilMenu.value = point;
+												},
 												editTapes: tapeEditing.value,
+												editBackground: backgroundEditing.value,
+												backgroundSampling:
+													colorSampling.value && sampleBackground.value,
+												onBackgroundUpdate: updateBackground,
 												activeTape: activeTape.value,
 												onTapeUpdate: (
 													id: string,
@@ -2907,6 +3788,7 @@ export const NotesEditor = defineComponent({
 												onTapeSelect: (id: string) =>
 													(activeTape.value = id),
 												zoom: zoom.value,
+												rotation: viewRotation.value,
 												selected: selected.value,
 												snapGrid: snapGrid.value,
 												alignGuides: alignGuides.value,
@@ -2923,6 +3805,7 @@ export const NotesEditor = defineComponent({
 													}
 												},
 												onErase: erase,
+												onErasePath: erasePath,
 												onMove: moveSelection,
 												onSelect: (ids: string[]) => {
 													// Clone connections in the same transaction rather than adding another undo step.
@@ -3126,7 +4009,7 @@ export const NotesEditor = defineComponent({
 						]),
 					]),
 					mobile.value
-						? props.readonly
+						? props.readonly || backgroundEditing.value
 							? null
 							: h(
 									"nav",
@@ -3238,6 +4121,12 @@ export const NotesEditor = defineComponent({
 											),
 									),
 									button(
+										"旋转画布 90°",
+										"rotate",
+										() => rotateCanvas(),
+										!ready.value,
+									),
+									button(
 										p && isInfinitePage(p) ? "查看全部" : "适合宽度",
 										"fit",
 										() => fit(false, false),
@@ -3254,12 +4143,112 @@ export const NotesEditor = defineComponent({
 									onPointermove: moveColorSample,
 									onPointerup: (e: PointerEvent) => {
 										moveColorSample(e);
-										if (sampledColor.value) setColor(sampledColor.value);
-										stopColorSample();
+										if (tipSampling.value) acceptTipColor();
+										else if (!sampleBackground.value) {
+											if (sampledColor.value) setColor(sampledColor.value);
+											stopColorSample();
+										}
 									},
 									onPointercancel: stopColorSample,
 								},
 								[
+									sampleBackground.value || tipSampling.value
+										? h(
+												"div",
+												{
+													ref: tipSampleBar,
+													tabindex: tipSampling.value ? -1 : undefined,
+													class: [
+														"cube-notes__background-sample-bar",
+														tipSampling.value &&
+															"cube-notes__tip-sample-bar",
+													],
+													onPointerdown: (e: PointerEvent) =>
+														e.stopPropagation(),
+													onPointermove: (e: PointerEvent) =>
+														e.stopPropagation(),
+													onPointerup: (e: PointerEvent) =>
+														e.stopPropagation(),
+												},
+												[
+													h(
+														"strong",
+														t(
+															tipSampling.value
+																? "取色"
+																: "从背景取色",
+														),
+													),
+													tipSampling.value && p?.background
+														? h(
+																"div",
+																{
+																	class: "cube-notes__sample-sources",
+																	role: "group",
+																	"aria-label": t("取色"),
+																},
+																[
+																	choice(
+																		"画面颜色",
+																		() => {
+																			void changeTipSampleSource(
+																				false,
+																			);
+																		},
+																		!sampleBackground.value,
+																	),
+																	choice(
+																		"背景原色",
+																		() => {
+																			void changeTipSampleSource(
+																				true,
+																			);
+																		},
+																		sampleBackground.value,
+																	),
+																],
+															)
+														: null,
+													h(
+														"small",
+														t(
+															tipSampling.value
+																? "点选或拖动，抬笔使用颜色"
+																: "点选或拖动，读取照片原色",
+														),
+													),
+													h("div", [
+														h("span", {
+															class: "cube-notes__background-sample-swatch",
+															style: {
+																background:
+																	sampledColor.value ||
+																	"transparent",
+															},
+														}),
+														h(
+															"output",
+															sampledColor.value.toUpperCase() ||
+																t("请选择颜色"),
+														),
+														choice("取消", stopColorSample),
+														h(
+															"button",
+															{
+																type: "button",
+																class: "cube-notes__background-done",
+																disabled: !sampledColor.value,
+																onClick: () =>
+																	tipSampling.value
+																		? acceptTipColor()
+																		: acceptBackgroundColor(),
+															},
+															t("使用此颜色"),
+														),
+													]),
+												],
+											)
+										: null,
 									h(
 										"span",
 										{
@@ -3272,17 +4261,21 @@ export const NotesEditor = defineComponent({
 										},
 										sampledColor.value.toUpperCase(),
 									),
-									h(
-										"button",
-										{
-											type: "button",
-											class: "cube-notes__color-sampling-cancel",
-											onPointerdown: (e: PointerEvent) => e.stopPropagation(),
-											onPointerup: (e: PointerEvent) => e.stopPropagation(),
-											onClick: stopColorSample,
-										},
-										t("取消取色"),
-									),
+									!sampleBackground.value && !tipSampling.value
+										? h(
+												"button",
+												{
+													type: "button",
+													class: "cube-notes__color-sampling-cancel",
+													onPointerdown: (e: PointerEvent) =>
+														e.stopPropagation(),
+													onPointerup: (e: PointerEvent) =>
+														e.stopPropagation(),
+													onClick: stopColorSample,
+												},
+												t("取消取色"),
+											)
+										: null,
 								],
 							)
 						: null,
@@ -3327,36 +4320,42 @@ export const NotesEditor = defineComponent({
 											"h2",
 											{ id: "cube-notes-dialog-title" },
 											t(
-												modal.value === "tape"
-													? "美纹纸"
-													: modal.value === "palette"
-														? "更多工具"
-														: modal.value === "colors"
-															? "选择颜色"
-															: modal.value === "view"
-																? "视图选项"
-																: modal.value === "scene"
-																	? "保存区域"
-																	: modal.value === "snap"
-																		? "吸附设置"
-																		: modal.value ===
-																			  "selection"
-																			? "排列选中内容"
-																			: modal.value === "ink"
-																				? "画笔设置"
+												modal.value === "photo"
+													? "插入图片"
+													: modal.value === "tape"
+														? "美纹纸"
+														: modal.value === "palette"
+															? "更多工具"
+															: modal.value === "colors"
+																? "选择颜色"
+																: modal.value === "view"
+																	? "视图选项"
+																	: modal.value === "scene"
+																		? "保存区域"
+																		: modal.value === "snap"
+																			? "吸附设置"
+																			: modal.value ===
+																				  "selection"
+																				? "排列选中内容"
 																				: modal.value ===
-																					  "tools"
-																					? "形状"
+																					  "ink"
+																					? tool.value ===
+																						"eraser"
+																						? "橡皮设置"
+																						: "画笔设置"
 																					: modal.value ===
-																						  "paper"
-																						? "纸张"
+																						  "tools"
+																						? "形状"
 																						: modal.value ===
-																							  "export"
-																							? "导出"
+																							  "paper"
+																							? "纸张"
 																							: modal.value ===
-																								  "layers"
-																								? "图层"
-																								: "页面操作",
+																								  "export"
+																								? "导出"
+																								: modal.value ===
+																									  "layers"
+																									? "图层"
+																									: "页面操作",
 											),
 										),
 										button("关闭", "close", () => {
@@ -3369,7 +4368,9 @@ export const NotesEditor = defineComponent({
 								? h("p", { role: "alert", class: "cube-notes__error" }, error.value)
 								: null,
 							!(modal.value === "colors" && !props.nativeColorPicker) &&
-							!["export", "clear", "delete", "scene", "tape"].includes(modal.value)
+							!["export", "clear", "delete", "scene", "tape", "photo"].includes(
+								modal.value,
+							)
 								? h("footer", [
 										choice("完成", () => {
 											modal.value = "";

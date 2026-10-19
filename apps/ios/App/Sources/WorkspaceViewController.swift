@@ -71,6 +71,9 @@ final class WorkspaceViewController: UIViewController {
 		webView.scrollView.bouncesZoom = false
 		if #available(iOS 14.0, *) { webView.pageZoom = 1 }
 		webView.allowsBackForwardNavigationGestures = false
+		let pencilInteraction = UIPencilInteraction()
+		pencilInteraction.delegate = self
+		webView.addInteraction(pencilInteraction)
 		if #available(iOS 16.4, *) {
 			// Lets Safari's Web Inspector attach to a development build on a connected Mac.
 			webView.isInspectable = true
@@ -232,6 +235,25 @@ final class WorkspaceViewController: UIViewController {
 		controller?.removeScriptMessageHandler(
 			forName: ImageDecoder.messageHandlerName, contentWorld: .page)
 		bridge.dispose()
+	}
+}
+
+extension WorkspaceViewController: UIPencilInteractionDelegate {
+	private func togglePencilEraser() {
+		guard presentedViewController == nil else { return }
+		// Only the visible, editable notebook consumes this event. Native dialogs
+		// and other document editors retain their own interaction behavior.
+		webView.evaluateJavaScript(
+			"window.dispatchEvent(new CustomEvent('cubeoffice:pencil-double-tap'))", completionHandler: nil)
+	}
+
+	func pencilInteractionDidTap(_ interaction: UIPencilInteraction) {
+		togglePencilEraser()
+	}
+
+	@available(iOS 17.5, *)
+	func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+		togglePencilEraser()
 	}
 }
 

@@ -10,6 +10,7 @@
 	--android-text: #1e2232;
 	--android-secondary: #686e81;
 	--android-outline: #e7e9f0;
+	--android-error: #ba1a1a;
 	--harmony-mobile-header-height: 64px;
 	--harmony-mobile-ribbon-height: min(55dvh, 480px);
 	font-family: Roboto, "Noto Sans SC", system-ui, sans-serif;
@@ -735,6 +736,7 @@
 		--android-text: #eff0f7;
 		--android-secondary: #a8aec2;
 		--android-outline: #343847;
+		--android-error: #ffb4ab;
 	}
 	.android-app .android-file-type,
 	.android-app .android-format-mark {
@@ -1313,4 +1315,137 @@ dialog.harmony-mobile-insert-backdrop::backdrop {
 .android-filter-done {
 	width: 100%;
 	margin-top: 24px;
+}
+
+/* Tablet library: previews are the primary navigation targets. */
+@media (min-width: 600px) {
+	.android-file-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+		gap: 28px 24px;
+	}
+	.android-file-entry {
+		position: relative;
+		align-items: stretch;
+		border: 0;
+	}
+	.android-file-entry > .android-file-row {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 12px;
+		padding: 0;
+		border-radius: 12px;
+	}
+	.android-file-row > .android-file-preview {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 1;
+		flex: none;
+		border-radius: 12px;
+		background: var(--android-card);
+		box-shadow: 0 3px 12px rgb(20 50 35 / 7%);
+	}
+	.android-file-preview img {
+		border-radius: 12px;
+	}
+	.android-file-preview > svg {
+		width: 48px;
+		height: 48px;
+	}
+	.android-file-row > .android-file-copy {
+		padding: 0 44px 0 4px;
+	}
+	.android-file-copy strong {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		font-size: 14px;
+		line-height: 1.4;
+	}
+	.android-file-copy .android-file-format,
+	.android-file-row > svg {
+		display: none;
+	}
+	.android-file-entry > .android-icon-button {
+		position: absolute;
+		right: -4px;
+		bottom: 0;
+		min-width: 44px;
+		width: 44px;
+		min-height: 44px;
+		padding: 10px;
+		color: var(--android-secondary);
+	}
+	.android-file-entry:has(.android-file-row[aria-expanded="true"]) .android-file-preview {
+		outline: 2px solid var(--android-primary);
+		outline-offset: 3px;
+	}
+}
+.android-file-row {
+	touch-action: pan-y;
+}
+.android-sheet.android-file-menu {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	max-height: calc(100dvh - 24px);
+	border-radius: 18px;
+	padding: 12px;
+	box-shadow: 0 12px 40px rgb(0 0 0 / 20%);
+}
+.android-file-menu .android-sheet-content {
+	padding: 0;
+}
+.android-file-menu header {
+	display: flex;
+	min-height: 44px;
+	margin: 0 0 8px;
+	padding: 0;
+	border: 0;
+}
+.android-file-menu header h2 {
+	color: var(--android-text);
+	font-size: 15px;
+}
+.android-file-menu header .android-icon-button {
+	margin-left: auto;
+}
+.android-file-menu header .android-icon-button {
+	min-height: 44px;
+	width: 44px;
+	min-width: 44px;
+	padding: 8px;
+}
+.android-file-menu .android-sheet-description {
+	margin: 0 8px 8px;
+	overflow-wrap: anywhere;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.android-file-menu .android-sheet-row {
+	min-height: 48px;
+	padding: 10px 12px;
+	border-radius: 10px;
+}
+.android-file-menu .is-destructive {
+	color: var(--android-error, #ba1a1a);
+}
+.android-file-menu::backdrop {
+	background: rgb(0 0 0 / 12%);
+}
+
+/* Library headings and filenames follow the shell theme, including dark mode. */
+.android-app .android-brand,
+.android-app .android-page-title h1,
+.android-app .android-list-heading h2,
+.android-app .android-file-copy strong,
+.android-app .android-open-card strong {
+	color: var(--android-text);
+}
+.android-app .android-file-entry > .android-icon-button {
+	color: var(--android-secondary);
 }

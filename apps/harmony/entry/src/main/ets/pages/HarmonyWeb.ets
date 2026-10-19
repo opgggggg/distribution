@@ -1,5 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { picker } from '@kit.CoreFileKit';
+import { camera, cameraPicker } from '@kit.CameraKit';
+import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { webview } from '@kit.ArkWeb';
 import { HarmonyDocumentBridge } from '../bridge/HarmonyDocumentBridge';
 import { HarmonyClientServices } from '../bridge/HarmonyClientServices';
@@ -93,6 +95,23 @@ export function HarmonyWeb(params: HarmonyWebParams) {
           controller: params.controller
         })
         .onShowFileSelector((event) => {
+          if (event.fileSelector.getAcceptType().some((type: string) => type.startsWith('image/'))) {
+            if (event.fileSelector.isCapture()) {
+              cameraPicker.pick(params.context, [cameraPicker.PickerMediaType.PHOTO], {
+                cameraPosition: camera.CameraPosition.CAMERA_POSITION_BACK
+              }).then((photo: cameraPicker.PickerResult) => {
+                event.result.handleFileList(photo.resultCode === 0 && photo.resultUri ? [photo.resultUri] : []);
+              }).catch(() => event.result.handleFileList([]));
+            } else {
+              const options = new photoAccessHelper.PhotoSelectOptions();
+              options.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
+              options.maxSelectNumber = 1;
+              new photoAccessHelper.PhotoViewPicker().select(options).then((photos: photoAccessHelper.PhotoSelectResult) => {
+                event.result.handleFileList(photos.photoUris);
+              }).catch(() => event.result.handleFileList([]));
+            }
+            return true;
+          }
           const options = new picker.DocumentSelectOptions();
           options.maxSelectNumber = 1;
           // Generated from scripts/open-formats.mjs, like OPEN_ACCEPT in the web shell.
@@ -102,6 +121,7 @@ export function HarmonyWeb(params: HarmonyWebParams) {
           documentPicker.select(options).then((uris: Array<string>) => {
             event.result.handleFileList(uris);
           }).catch((cause: Error) => {
+            event.result.handleFileList([]);
             console.error(`Document selection failed: ${cause.message}`);
           });
           return true;

@@ -11,6 +11,7 @@ const paths: Record<string, string> = {
 	"list-bullet": "M8 6h12M8 12h12M8 18h12M3 6h.01M3 12h.01M3 18h.01",
 	"list-number": "M9 6h11M9 12h11M9 18h11M3 4h1v5M2 9h4M2 14c0-2 3-2 3 0l-3 5h3",
 	back: "m12 5-7 7 7 7M5 12h15",
+	trash: "M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7",
 	close: "m6 6 12 12M18 6 6 18",
 	more: "M12 5h.01M12 12h.01M12 19h.01",
 	search: "M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",

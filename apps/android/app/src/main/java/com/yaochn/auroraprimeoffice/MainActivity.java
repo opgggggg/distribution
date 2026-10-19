@@ -12,6 +12,7 @@ import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.util.TypedValue;
@@ -38,6 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
+import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,6 +60,7 @@ import org.json.JSONObject;
 
 public final class MainActivity extends Activity {
   private static final int REQUEST_OPEN_DOCUMENT = 4101;
+  private static final int REQUEST_TAKE_PHOTO = 4104;
   private static final int REQUEST_SAVE_DOCUMENT = 4102;
   private static final int REQUEST_ASSISTANT_OPEN_DOCUMENT = 4103;
   private static final String ACTION_ASSISTANT_SUFFIX = ".action.ASSISTANT";
@@ -74,6 +77,7 @@ public final class MainActivity extends Activity {
   private ValueCallback<Uri[]> pendingFileSelection;
   private boolean workspaceFileSelection;
   private FileOperations fileOperations;
+  private Uri pendingPhotoUri;
   private AuroraDocumentBridge documentBridge;
   private boolean backDispatchPending;
   private boolean presentationImmersive;
@@ -363,6 +367,15 @@ public final class MainActivity extends Activity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == REQUEST_TAKE_PHOTO) {
+      ValueCallback<Uri[]> callback = pendingFileSelection;
+      Uri uri = pendingPhotoUri;
+      pendingFileSelection = null;
+      pendingPhotoUri = null;
+      if (callback != null)
+        callback.onReceiveValue(resultCode == RESULT_OK && uri != null ? new Uri[] {uri} : null);
+      return;
+    }
     if (requestCode == REQUEST_OPEN_DOCUMENT) {
       ValueCallback<Uri[]> callback = pendingFileSelection;
       pendingFileSelection = null;
@@ -471,6 +484,35 @@ public final class MainActivity extends Activity {
       pendingFileSelection = callback;
       String[] acceptedMimeTypes = acceptedMimeTypes(params);
       workspaceFileSelection = acceptedMimeTypes.length > 10;
+      if (params != null
+          && params.isCaptureEnabled()
+          && acceptedMimeTypes.length == 1
+          && acceptedMimeTypes[0].startsWith("image/")) {
+        try {
+          File directory = new File(getCacheDir(), "note-camera");
+          if (!directory.isDirectory() && !directory.mkdirs())
+            throw new IOException("Camera cache unavailable");
+          File file = File.createTempFile("photo-", ".jpg", directory);
+          pendingPhotoUri =
+              FileProvider.getUriForFile(
+                  MainActivity.this, getPackageName() + ".note-camera", file);
+          Intent capture =
+              new Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                  .putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri)
+                  .addFlags(
+                      Intent.FLAG_GRANT_READ_URI_PERMISSION
+                          | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+          capture.setClipData(ClipData.newRawUri("Photo", pendingPhotoUri));
+          startActivityForResult(capture, REQUEST_TAKE_PHOTO);
+          return true;
+        } catch (IOException | ActivityNotFoundException | SecurityException cause) {
+          pendingPhotoUri = null;
+          pendingFileSelection = null;
+          callback.onReceiveValue(null);
+          Toast.makeText(MainActivity.this, "无法打开相机，请使用选择图片", Toast.LENGTH_LONG).show();
+          return true;
+        }
+      }
       Intent intent =
           new Intent(Intent.ACTION_OPEN_DOCUMENT)
               .addCategory(Intent.CATEGORY_OPENABLE)

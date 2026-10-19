@@ -71,6 +71,8 @@ const emit = defineEmits<{
 	favorite: [id: string];
 	batch: [ids: string[], action: "share" | "export" | "remove"];
 	rename: [id: string];
+	delete: [id: string];
+	editDocument: [id: string];
 	close: [];
 	undo: [];
 	redo: [];
@@ -246,13 +248,89 @@ const sheetTitle = computed(
 			file: fileMenuItem.value?.fileName ?? "文件操作",
 		})[sheet.value] || "",
 );
+const menuPosition = ref({
+	left: "12px",
+	top: "80px",
+	width: "280px",
+	maxHeight: "calc(100dvh - 24px)",
+});
+let pressTimer: ReturnType<typeof setTimeout> | undefined;
+let pressOrigin: { x: number; y: number } | undefined;
+let suppressClickUntil = 0;
+function cancelPress() {
+	clearTimeout(pressTimer);
+	pressTimer = undefined;
+	pressOrigin = undefined;
+}
+function fileMenu(item: DocumentItem, anchor: HTMLElement) {
+	cancelPress();
+	if (props.opening || props.saving) return;
+	fileMenuId.value = item.id;
+	const bounds = anchor.getBoundingClientRect();
+	const viewport = window.visualViewport;
+	const left = viewport?.offsetLeft ?? 0,
+		top = viewport?.offsetTop ?? 0;
+	const width = viewport?.width ?? window.innerWidth,
+		height = viewport?.height ?? window.innerHeight;
+	const menuWidth = Math.min(280, width - 24);
+	menuPosition.value = {
+		left: `${Math.max(left + 12, Math.min(left + width - menuWidth - 12, bounds.left + bounds.width / 2 - menuWidth / 2))}px`,
+		top: `${Math.max(top + 12, Math.min(top + height - 304, bounds.top + 48))}px`,
+		width: `${menuWidth}px`,
+		maxHeight: `${height - 24}px`,
+	};
+	sheet.value = "file";
+}
+function beginPress(event: PointerEvent, item: DocumentItem) {
+	cancelPress();
+	if (event.button !== 0 || selecting.value || props.opening || props.saving) return;
+	pressOrigin = { x: event.clientX, y: event.clientY };
+	const anchor = event.currentTarget as HTMLElement;
+	pressTimer = setTimeout(() => {
+		suppressClickUntil = Date.now() + 1000;
+		anchor.focus({ preventScroll: true });
+		fileMenu(item, anchor);
+	}, 500);
+}
+function movePress(event: PointerEvent) {
+	if (
+		pressOrigin &&
+		Math.hypot(event.clientX - pressOrigin.x, event.clientY - pressOrigin.y) > 10
+	)
+		cancelPress();
+}
+function tapFile(item: DocumentItem) {
+	if (Date.now() < suppressClickUntil) {
+		suppressClickUntil = 0;
+		return;
+	}
+	if (selecting.value) toggleSelection(item.id);
+	else select(item);
+}
+function menuAction(action: "open" | "edit" | "rename" | "delete") {
+	const item = fileMenuItem.value;
+	sheet.value = "";
+	if (!item) return;
+	if (action === "open") select(item);
+	else if (action === "edit") emit("editDocument", item.id);
+	else if (action === "rename") emit("rename", item.id);
+	else emit("delete", item.id);
+}
 let previousFocus: HTMLElement | null = null;
 watch(sheet, async (value) => {
 	if (value) {
 		previousFocus = document.activeElement as HTMLElement;
 		await nextTick();
 		if (!dialog.value?.open) dialog.value?.showModal();
+		if (value === "file" && dialog.value) {
+			await nextTick();
+			const viewport = window.visualViewport;
+			const top = viewport?.offsetTop ?? 0,
+				height = viewport?.height ?? window.innerHeight;
+			menuPosition.value.top = `${Math.max(top + 12, Math.min(Number.parseFloat(menuPosition.value.top), top + height - dialog.value.getBoundingClientRect().height - 12))}px`;
+		}
 	} else {
+		suppressClickUntil = 0;
 		dialog.value?.close();
 		previousFocus?.focus({ preventScroll: true });
 	}
@@ -270,8 +348,19 @@ watch(
 		}
 	},
 );
-onMounted(() => document.documentElement.classList.add("als-ofs-mobile-ui"));
+function viewportChanged() {
+	cancelPress();
+	if (sheet.value === "file") sheet.value = "";
+}
+onMounted(() => {
+	document.documentElement.classList.add("als-ofs-mobile-ui");
+	window.addEventListener("resize", viewportChanged);
+	window.addEventListener("blur", cancelPress);
+});
 onBeforeUnmount(() => {
+	window.removeEventListener("resize", viewportChanged);
+	window.removeEventListener("blur", cancelPress);
+	cancelPress();
 	dialog.value?.close();
 	document.documentElement.classList.remove("als-ofs-mobile-ui");
 });
@@ -407,7 +496,7 @@ function previewLoaded(event: Event, item: DocumentItem) {
 		<span class="android-local-badge">本机文件</span>
 	</header>
 	<section v-show="!active" class="android-library" aria-label="文档工作区">
-		<div ref="libraryScroll" class="android-library-scroll">
+		<div ref="libraryScroll" class="android-library-scroll" @scroll="cancelPress">
 			<template v-if="destination !== 'settings'">
 				<div class="android-home-heading">
 					<h1>我的文件</h1>
@@ -514,8 +603,23 @@ function previewLoaded(event: Event, item: DocumentItem) {
 						/>
 						<button
 							class="android-file-row"
-							:disabled="opening"
-							@click="selecting ? toggleSelection(item.id) : select(item)"
+							:disabled="opening || saving"
+							aria-haspopup="dialog"
+							:aria-expanded="sheet === 'file' && fileMenuItem?.id === item.id"
+							:aria-label="`打开 ${item.fileName}`"
+							aria-description="轻点打开，长按显示文件操作"
+							@click="tapFile(item)"
+							@pointerdown="beginPress($event, item)"
+							@pointermove="movePress"
+							@pointerup="cancelPress"
+							@pointercancel="cancelPress"
+							@pointerleave="cancelPress"
+							@contextmenu.prevent="
+								fileMenu(item, $event.currentTarget as HTMLElement)
+							"
+							@keydown.shift.f10.prevent="
+								fileMenu(item, $event.currentTarget as HTMLElement)
+							"
 						>
 							<span
 								class="android-file-preview"
@@ -549,11 +653,9 @@ function previewLoaded(event: Event, item: DocumentItem) {
 							v-if="!selecting"
 							class="android-icon-button"
 							:aria-label="`文件操作 ${item.fileName}`"
-							aria-haspopup="dialog"
 							:disabled="opening || saving"
 							@click="
-								fileMenuId = item.id;
-								sheet = 'file';
+								fileMenu(item, ($event.currentTarget as HTMLElement).parentElement!)
 							"
 						>
 							<Icon name="more" />
@@ -720,7 +822,8 @@ function previewLoaded(event: Event, item: DocumentItem) {
 	/>
 	<dialog
 		ref="dialog"
-		class="android-sheet"
+		:class="['android-sheet', sheet === 'file' && 'android-file-menu']"
+		:style="sheet === 'file' ? menuPosition : undefined"
 		aria-labelledby="android-sheet-title"
 		@cancel.prevent="sheet = ''"
 		@click.self="sheet = ''"
@@ -790,6 +893,16 @@ function previewLoaded(event: Event, item: DocumentItem) {
 					"
 				>
 					<Icon name="edit" /><span>修改文件名</span>
+				</button>
+				<button
+					v-if="formats.some((f) => f.id === fileMenuItem?.format)"
+					class="android-sheet-row"
+					@click="menuAction('edit')"
+				>
+					<Icon name="edit" /><span>编辑</span>
+				</button>
+				<button class="android-sheet-row is-destructive" @click="menuAction('delete')">
+					<Icon name="trash" /><span>删除</span>
 				</button>
 			</template>
 			<template v-else-if="sheet === 'new'"

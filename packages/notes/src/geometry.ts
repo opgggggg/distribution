@@ -1,3 +1,5 @@
+import { photoBounds } from "./photo-geometry.js";
+import { erasureCovers } from "./erasure-geometry.js";
 import { inkWidth, type InkElement, type InkPoint, type InkStroke } from "./model.js";
 export interface Point {
 	x: number;
@@ -10,6 +12,7 @@ export interface Bounds {
 	height: number;
 }
 export function bounds(element: InkElement): Bounds {
+	if (element.kind === "image") return photoBounds(element);
 	if (element.kind === "text") {
 		const lines = element.text.split("\n");
 		return {
@@ -48,6 +51,7 @@ export function distanceToSegment(p: Point, a: Point, b: Point): number {
 	return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
 }
 export function hitStroke(stroke: InkStroke, point: Point, radius: number): boolean {
+	if (stroke.erasures?.some((e) => erasureCovers(e, point, point, radius))) return false;
 	if (stroke.points.length === 1)
 		return (
 			Math.hypot(point.x - stroke.points[0].x, point.y - stroke.points[0].y) <=
@@ -100,16 +104,25 @@ export function lassoSelect(elements: InkElement[], polygon: Point[]): string[] 
 									),
 								)),
 					)
-				: inside({ x: e.x, y: e.y + e.size / 2 }, polygon),
+				: inside(
+						e.kind === "image"
+							? { x: e.x + e.width / 2, y: e.y + e.height / 2 }
+							: { x: e.x, y: e.y + e.size / 2 },
+						polygon,
+					),
 		)
 		.map((e) => e.id);
 }
 export function translate(element: InkElement, dx: number, dy: number): void {
-	if (element.kind === "text") {
+	if (element.kind !== "stroke") {
 		element.x += dx;
 		element.y += dy;
 	} else
-		for (const p of [...element.points, ...(element.cutouts ?? []).flat()]) {
+		for (const p of [
+			...element.points,
+			...(element.cutouts ?? []).flat(),
+			...(element.erasures ?? []).flatMap((e) => e.points),
+		]) {
 			p.x += dx;
 			p.y += dy;
 		}

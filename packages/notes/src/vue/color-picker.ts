@@ -23,7 +23,7 @@ export const NoteColorPicker = defineComponent({
 		locale: { type: String, default: "zh-CN" },
 	},
 	emits: ["change", "opacity", "layout", "close", "sample"],
-	setup(props, { emit }) {
+	setup(props, { emit, slots }) {
 		const scope = useId(),
 			color = ref(props.value),
 			alpha = ref(props.opacity),
@@ -265,6 +265,7 @@ export const NoteColorPicker = defineComponent({
 							icon("close"),
 						),
 					]),
+					slots.quickColors?.(),
 					h(
 						"div",
 						{

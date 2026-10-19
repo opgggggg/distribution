@@ -73,3 +73,8 @@ val syncMobileWeb by tasks.registering(Exec::class) {
 tasks.named("preBuild").configure {
 	dependsOn(syncAppProfileResources, syncMobileWeb)
 }
+
+// Private URI hand-off to the system camera; no broad storage/camera access.
+dependencies {
+	implementation("androidx.core:core:1.15.0")
+}

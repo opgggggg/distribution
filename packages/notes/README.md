@@ -10,6 +10,8 @@ CubeOffice's own paginated handwriting editor, using the same Vue surface on des
 - Ballpoint (uniform width), fountain (gentle pressure), Chinese brush (bamboo silhouette, tapered ink and adjustable dry texture), pencil (paper grain), watercolor (soft translucent washes), marker (broad ink), crayon (waxy grain) reed (angled calligraphy), spray (deterministic scattered pigment) and oil paint (pigment ridges and bristle texture), with per-type color/width/pressure settings. Watercolor also remembers color strength (10–100%) and supports widths up to 60 pt. Choose a pen directly in the mobile tray; tap it again for settings. Reed supports a 0–180° nib angle.
 - Pen with real stylus pressure or velocity-based finger pressure (slow writing is thicker, fast writing thinner), highlighter, whole-stroke eraser, lasso selection and dragging. The pressure toggle enables both; ballpoint remains uniform.
 - Stroke colors and thickness, separate pen/highlighter presets, selection recoloring and duplication.
+- Eraser settings offer Object (whole stroke) and Pixel (follow the drag path) modes, with remembered preference, 8/20/40 pt pixel presets and a size cursor. Pixel erasing removes existing ink locally without altering brush geometry, grain or pigment seeds; images and tracing backgrounds stay untouched, and future strokes can cover the erased area. Each gesture is one undo step, retained in native saves, previews and PNG/PDF. Tap the active eraser again to change mode; Pencil double tap retains the selected mode.
+- Hold a stylus tip still for 550 ms to open quick tools beside it: pen/eraser, palette, favorite colors, brush-specific widths, undo/redo and an eyedropper. The eyedropper starts at the held tip location; choose the visible canvas color or the original background raster (ignoring ink, grid and tracing opacity), tap/drag and lift to apply, or cancel to retain the previous tool/color. Accepting a sample while erasing returns to the remembered drawing brush. Sampling preserves the viewport and never writes ink or history. Movement beyond 5 screen pixels cancels recognition; opening discards tentative ink/erasure without creating history. Fingers retain drawing/pan/pinch behavior. On iOS, double-tapping an Apple Pencil barrel toggles the eraser and the last pen/highlighter, preserving its preset. Both actions are disabled in reading mode; the tip menu is also disabled during background/tape manipulation.
 - Straight lines, rectangles, ellipses, editable text boxes, layers and page bookmarks.
 - Blank, ruled, grid and dotted paper; paper colors, A4/A5/Letter and orientation.
 - Undo/redo with a single transaction per stroke, erasing gesture, selection move or page operation. Native saves and local recovery drafts retain both stacks and their cursor, up to 200 steps and a bounded history payload.
@@ -18,6 +20,7 @@ CubeOffice's own paginated handwriting editor, using the same Vue surface on des
 - Editable rectangle/ellipse connections: drag a side arrow to another shape or empty paper; endpoints follow move/resize and deletion is undoable.
 - Named scene bookmarks save a selected region or visible viewport, with jump, rename, ordering and deletion across pages.
 - Floating tool dock on desktop; draggable pen silhouettes on mobile/iPad, undo/redo, a two-row tablet color palette, scrollable tools and contextual width/strength/angle settings. Writing fills the workspace and paper defaults to its available width. Native application chrome stays at a fixed scale while the canvas handles pinch zoom. Toolbar labels are nonselectable; text fields retain selection.
+- Color panels show common colors first, then a horizontally scrollable row of deduplicated colors used by visible strokes and text on the current page. Colors update with edits, undo/redo and page changes; selecting a swatch preserves the current brush opacity.
 - iPad custom colors retain the iOS system picker. HarmonyOS, Android and standalone mobile previews use an in-app replica measured against the native iPadOS palette: the 120-color 12×10 grid, vertical rainbow spectrum, RGB sliders and numeric fields, HEX entry, opacity and persistent color samples. It remembers the active tab. Eyedropper uses the system sampling API where available, with an in-board sampler otherwise; no browser color popup is opened. Interrupted input clears touch contacts before the next stroke. A topbar Pages button opens the page list in both reading and editing modes; zoom and export remain in the host’s More menu.
 - Masking tape under More tools: add a strip or a four-edge frame, drag with one finger, rotate with two fingers or a handle, resize the endpoints, adjust width, paint and peel. Placement uses a compact action bar and visible angle snapping instead of a large settings panel. Captured tape footprints preserve clean white space in native files, undo/redo, previews, PNG and PDF; adjusting or peeling tape never reveals paint underneath. Tape overlays are omitted from exports.
 - Chinese and English labels, keyboard commands, native modal focus behavior, small-screen layouts, dark mode and reduced-motion support.
@@ -31,22 +34,24 @@ CubeOffice's own paginated handwriting editor, using the same Vue surface on des
 
 ## Source navigation
 
-| Module                               | Responsibility                                                                |
-| ------------------------------------ | ----------------------------------------------------------------------------- |
-| `src/model.ts`                       | Versioned document schema, physical coordinates and validation limits         |
-| `src/codec.ts`                       | Native archive and guarded Xournal XML interchange                            |
-| `src/history.ts`                     | Transactions, undo/redo and revision-aware save acknowledgement               |
-| `src/manipulation.ts`                | Selection transforms, alignment/grid/spacing and connected shape anchors      |
-| `src/geometry.ts`                    | Hit testing, lasso selection, movement and shape geometry                     |
-| `src/texture.ts`                     | Deterministic paper grain shared by Canvas and SVG, with bounded tile caching |
-| `src/render.ts`                      | Canvas appearance and safe SVG thumbnails                                     |
-| `src/vue/sidebar-resize.ts`          | Page rail resizing, pointer/keyboard handling and local UI preference         |
-| `src/vue/canvas.ts`                  | Pointer capture, pen/palm handling, gesture cancellation and navigation       |
-| `src/vue/editor.ts`                  | Notebook tools, pages, paper, layers, live text and export UI                 |
-| `src/pdf.ts`                         | Appearance-only PDF export                                                    |
-| `src/image.ts`                       | Full-page PNG rendering shared with PDF, and numbered image ZIP export        |
-| `src/office.ts`, `src/office-vue.ts` | Headless session and graphical host contribution                              |
-| `src/thumbnail.ts`                   | Recent-file preview integration                                               |
+| Module                                     | Responsibility                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------- |
+| `src/model.ts`                             | Versioned document schema, physical coordinates and validation limits         |
+| `src/codec.ts`                             | Native archive and guarded Xournal XML interchange                            |
+| `src/history.ts`                           | Transactions, undo/redo and revision-aware save acknowledgement               |
+| `src/manipulation.ts`                      | Selection transforms, alignment/grid/spacing and connected shape anchors      |
+| `src/geometry.ts`                          | Hit testing, lasso selection, movement and shape geometry                     |
+| `src/texture.ts`                           | Deterministic paper grain shared by Canvas and SVG, with bounded tile caching |
+| `src/render.ts`                            | Canvas appearance and safe SVG thumbnails                                     |
+| `src/vue/sidebar-resize.ts`                | Page rail resizing, pointer/keyboard handling and local UI preference         |
+| `src/vue/canvas.ts`                        | Pointer capture, pen/palm handling, gesture cancellation and navigation       |
+| `src/eraser.ts`, `src/erasure-geometry.ts` | Swept local erasing, overlap-safe mask geometry and hit testing               |
+| `src/vue/pencil-menu.ts`                   | Transient pen-tip tools, viewport bounds and dismissal                        |
+| `src/vue/editor.ts`                        | Notebook tools, pages, paper, layers, live text and export UI                 |
+| `src/pdf.ts`                               | Appearance-only PDF export                                                    |
+| `src/image.ts`                             | Full-page PNG rendering shared with PDF, and numbered image ZIP export        |
+| `src/office.ts`, `src/office-vue.ts`       | Headless session and graphical host contribution                              |
+| `src/thumbnail.ts`                         | Recent-file preview integration                                               |
 
 ## Native file format
 
@@ -99,6 +104,11 @@ npm exec vite -- --host 127.0.0.1 --port 5178
 node packages/notes/tests/browser.cjs
 node packages/notes/tests/export.cjs
 node packages/notes/tests/phone.cjs
+node packages/notes/tests/eraser.cjs
+node packages/notes/tests/pencil-menu.cjs
+node packages/notes/tests/pencil-color-sample.cjs
+node packages/notes/tests/canvas-colors.cjs
+node packages/notes/tests/touch-identifiers.cjs
 ```
 
 The browser suite uses installed Chrome, writes screenshots and exported notebooks/PDFs to `.cache/notes-qa`, and checks mouse/pen writing, palm contacts, erasing, lasso, history, live-text export, failed/stale saves, readonly transitions and responsive layouts. It checks PDF page count as well. Stylus latency, actual palm rejection and native save dialogs still need hardware QA on each supported OS.
@@ -112,3 +122,5 @@ Pencil texture is deterministic and uses pressure for width and overall graphite
 To verify the new brushes with the notes test viewer running on port 5178, run `node packages/notes/tests/art.cjs` from the repository root. It exercises actual pointer input, tone/grain/soft-edge pixels, watercolor layering and strength memory, native/PNG/PDF export, undo and mobile layout. Model and format checks also run with `npm run test:notes`.
 
 History persistence checks: `npm run test:notes` and, with the notes viewer (5178) and mobile host (5179) running, `node packages/notes/tests/history-persistence.cjs`. The browser check reopens partially undone files, preserves redo on blank pages, exports a live text draft, and reloads a real mobile IndexedDB autosave before redoing its strokes.
+
+Local erasure data belongs to each stroke as optional `erasures`: swept paths with a point array and width; optional height retains elliptical footprints after nonuniform resizing. It only removes that stroke’s pigment and follows selection translation/scaling. Xournal export rejects local erasures rather than restoring removed ink; `.cubenote`, PNG and PDF retain the appearance.

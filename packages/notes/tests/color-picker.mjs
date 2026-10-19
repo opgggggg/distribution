@@ -81,3 +81,28 @@ test("picker tab preference persists and rejects unsupported values", () => {
 	assert.equal(loadColorMode(), "grid");
 	delete globalThis.localStorage;
 });
+
+test("canvas palette deduplicates visible paint colors across brush styles and opacity", async () => {
+	const { canvasColors } = await import("../dist/vue/color-picker-model.js");
+	const { createPage } = await import("../dist/model.js");
+	const page = createPage();
+	page.layers[0].elements = [
+		{ kind: "stroke", color: "#FF0011", points: [{}], opacity: 1 },
+		{ kind: "stroke", color: "#ff0011", points: [{}], opacity: 0.2 },
+		{ kind: "text", color: "#123456", text: "Label" },
+		{ kind: "text", color: "#abcdef", text: "  " },
+		{ kind: "stroke", color: "#abcdef", points: [], opacity: 1 },
+		{ kind: "stroke", color: "#abcdef", points: [{}], opacity: 0 },
+		{ kind: "image", src: "data:image/png;base64,..." },
+	];
+	page.layers.push({
+		visible: false,
+		elements: [{ kind: "text", text: "Hidden", color: "#abcdef" }],
+	});
+	assert.deepEqual(canvasColors(page), ["#ff0011", "#123456"]);
+	page.layers[0].elements.shift();
+	assert.deepEqual(canvasColors(page), ["#ff0011", "#123456"]);
+	page.layers[0].elements.shift();
+	assert.deepEqual(canvasColors(page), ["#123456"]);
+	assert.deepEqual(canvasColors(undefined), []);
+});

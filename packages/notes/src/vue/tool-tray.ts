@@ -12,6 +12,7 @@ import { uid, type PenStyle } from "../model.js";
 import { icon } from "./icons.js";
 import { penGlyph } from "./pen-glyph.js";
 import type { NoteTool } from "./canvas.js";
+import type { EraserMode } from "../eraser.js";
 
 interface PenOption {
 	id: PenStyle;
@@ -29,6 +30,7 @@ export const ToolTray = defineComponent({
 		highlighterColor: { type: String, required: true },
 		highlighterWidth: { type: Number, required: true },
 		eraserWidth: { type: Number, required: true },
+		eraserMode: { type: String as PropType<EraserMode>, default: "stroke" },
 		wide: Boolean,
 		disabled: Boolean,
 		canUndo: Boolean,
@@ -259,7 +261,9 @@ export const ToolTray = defineComponent({
 									],
 									[
 										"eraser",
-										t("整笔橡皮擦", "Stroke eraser"),
+										props.eraserMode === "path"
+											? t("轨迹橡皮擦", "Pixel eraser")
+											: t("整笔橡皮擦", "Stroke eraser"),
 										"#ee929b",
 										props.eraserWidth,
 									],

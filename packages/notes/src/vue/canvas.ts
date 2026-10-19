@@ -1,3 +1,12 @@
+import { BackgroundOverlay } from "./background-overlay.js";
+import {
+	rotatedSize,
+	rotateVector,
+	rotateLocal,
+	unrotateLocal,
+	paperRotation,
+	pointBounds,
+} from "../view-rotation.js";
 import { captureNotesBoardPreview } from "../thumbnail.js";
 import { isInfinitePage, worldCoordinate } from "../board.js";
 import { tapePolygon } from "../masking.js";
@@ -49,6 +58,7 @@ import {
 } from "../manipulation.js";
 import { icon } from "./icons.js";
 import { VelocityPressure } from "../pressure.js";
+import { PathEraser, type EraserMode } from "../eraser.js";
 
 export type NoteTool =
 	| "pen"
@@ -74,6 +84,7 @@ interface Gesture {
 	stroke?: InkStroke;
 	simulatedPressure?: VelocityPressure;
 	erased: Set<string>;
+	pathEraser?: PathEraser;
 }
 export const NoteCanvas = defineComponent({
 	name: "CubeNoteCanvas",
@@ -82,6 +93,7 @@ export const NoteCanvas = defineComponent({
 		tool: { type: String as PropType<NoteTool>, default: "pen" },
 		color: { type: String, default: "#222b40" },
 		width: { type: Number, default: 2 },
+		eraserMode: { type: String as PropType<EraserMode>, default: "stroke" },
 		inkOpacity: { type: Number, default: 1 },
 		highlighterOpacity: { type: Number, default: 0.5 },
 		pressure: { type: Boolean, default: true },
@@ -89,9 +101,13 @@ export const NoteCanvas = defineComponent({
 		brushSettings: { type: Object as PropType<Record<string, number>>, default: () => ({}) },
 		fingerDraw: Boolean,
 		editTapes: Boolean,
+		editBackground: Boolean,
+		backgroundSampling: Boolean,
 		activeTape: String,
 		readonly: Boolean,
+		pencilMenuEnabled: { type: Boolean, default: true },
 		zoom: { type: Number, default: 1 },
+		rotation: { type: Number, default: 0 },
 		snapGrid: Boolean,
 		alignGuides: { type: Boolean, default: true },
 		locale: { type: String, default: "zh-CN" },
@@ -99,9 +115,11 @@ export const NoteCanvas = defineComponent({
 	},
 	emits: [
 		"add",
+		"backgroundUpdate",
 		"tapeUpdate",
 		"tapeSelect",
 		"erase",
+		"erasePath",
 		"move",
 		"select",
 		"text",
@@ -110,12 +128,18 @@ export const NoteCanvas = defineComponent({
 		"layout",
 		"resize",
 		"connect",
+		"pencilMenu",
 	],
 	setup(props, { emit, expose }) {
 		const viewport = ref<HTMLElement>(),
 			paperElement = ref<HTMLElement>(),
 			base = ref<HTMLCanvasElement>(),
 			overlay = ref<HTMLCanvasElement>();
+		const backgroundPreview = shallowRef<import("../model.js").InkImage>();
+		const backgroundOverlay = ref<{
+			cancel(): void;
+			showPreview(photo?: import("../model.js").InkImage): void;
+		}>();
 		const infinite = computed(() => isInfinitePage(props.page));
 		const origin = ref({ x: 0, y: 0 }),
 			viewSize = ref({ width: 1, height: 1 });
@@ -123,6 +147,45 @@ export const NoteCanvas = defineComponent({
 		// without repainting the page on every touch sample.
 		let baseMargin = { x: 0, y: 0 };
 		const cameras = new Map<string, Point>();
+		const logicalViewSize = () =>
+			rotatedSize(
+				viewport.value?.clientWidth || 1,
+				viewport.value?.clientHeight || 1,
+				props.rotation,
+			);
+		const paperSize = computed(() =>
+			infinite.value
+				? viewSize.value
+				: { width: props.page.width * props.zoom, height: props.page.height * props.zoom },
+		);
+		const frameSize = computed(() =>
+			rotatedSize(paperSize.value.width, paperSize.value.height, props.rotation),
+		);
+		function localPoint(element: HTMLElement, p: Point): Point {
+			const box = element.getBoundingClientRect();
+			const size = rotatedSize(box.width, box.height, props.rotation);
+			return unrotateLocal(
+				{ x: p.x - box.left, y: p.y - box.top },
+				size.width,
+				size.height,
+				props.rotation,
+			);
+		}
+		function clientPoint(element: HTMLElement, p: Point): Point {
+			const box = element.getBoundingClientRect();
+			const size = rotatedSize(box.width, box.height, props.rotation);
+			const projected = rotateLocal(p, size.width, size.height, props.rotation);
+			return { x: box.left + projected.x, y: box.top + projected.y };
+		}
+		function clientBounds(b: import("../geometry.js").Bounds) {
+			const corners = [
+				{ x: b.x, y: b.y },
+				{ x: b.x + b.width, y: b.y },
+				{ x: b.x, y: b.y + b.height },
+				{ x: b.x + b.width, y: b.y + b.height },
+			].map((p) => clientPoint(paperElement.value!, { x: screenX(p.x), y: screenY(p.y) }));
+			return pointBounds(corners);
+		}
 		const screenX = (x: number) => (x - (infinite.value ? origin.value.x : 0)) * props.zoom;
 		const screenY = (y: number) => (y - (infinite.value ? origin.value.y : 0)) * props.zoom;
 		const region = () => ({
@@ -156,8 +219,8 @@ export const NoteCanvas = defineComponent({
 			viewPreview = {
 				zoom: props.zoom,
 				origin: { ...origin.value },
-				width: viewport.value.clientWidth,
-				height: viewport.value.clientHeight,
+				width: viewSize.value.width,
+				height: viewSize.value.height,
 			};
 			if (frame) {
 				cancelAnimationFrame(frame);
@@ -267,20 +330,21 @@ export const NoteCanvas = defineComponent({
 				?.querySelector<HTMLElement>(".cube-notes__selection-bar");
 			const width = Math.min(view.width - 16, toolbar?.offsetWidth || 440),
 				height = toolbar?.offsetHeight || 54;
-			const above = paper.top - view.top + screenY(b.y) - height - 8;
+			const projected = clientBounds(b);
+			const above = projected.y - view.top - height - 8;
 			emit("layout", {
 				x: Math.max(
 					8,
 					Math.min(
 						view.width - width - 8,
-						paper.left - view.left + screenX(b.x + b.width / 2) - width / 2,
+						projected.x - view.left + projected.width / 2 - width / 2,
 					),
 				),
 				y: Math.max(
 					8,
 					Math.min(
 						view.height - height - 8,
-						above >= 8 ? above : paper.top - view.top + screenY(b.y + b.height) + 8,
+						above >= 8 ? above : projected.y - view.top + projected.height + 8,
 					),
 				),
 			});
@@ -309,23 +373,24 @@ export const NoteCanvas = defineComponent({
 			frame = 0,
 			baseDirty = false,
 			zoomGeneration = 0;
-		let paintBoard = createPagePainter();
+		let mounted = true;
+		const photoReady = () => {
+			if (mounted) {
+				renderBase();
+				renderOverlay();
+			}
+		};
+		let paintBoard = createPagePainter(photoReady);
 		let rasterCamera: { zoom: number; x: number; y: number } | undefined;
 		const point = (event: PointerEvent): InkPoint => {
-			const box = (infinite.value ? viewport.value! : overlay.value!).getBoundingClientRect();
+			const p = localPoint(paperElement.value!, { x: event.clientX, y: event.clientY });
 			return {
 				x: infinite.value
-					? worldCoordinate(origin.value.x + (event.clientX - box.left) / props.zoom)
-					: Math.max(
-							0,
-							Math.min(props.page.width, (event.clientX - box.left) / props.zoom),
-						),
+					? worldCoordinate(origin.value.x + p.x / props.zoom)
+					: Math.max(0, Math.min(props.page.width, p.x / props.zoom)),
 				y: infinite.value
-					? worldCoordinate(origin.value.y + (event.clientY - box.top) / props.zoom)
-					: Math.max(
-							0,
-							Math.min(props.page.height, (event.clientY - box.top) / props.zoom),
-						),
+					? worldCoordinate(origin.value.y + p.y / props.zoom)
+					: Math.max(0, Math.min(props.page.height, p.y / props.zoom)),
 				pressure: event.pointerType === "pen" && event.pressure > 0 ? event.pressure : 0.5,
 			};
 		};
@@ -365,9 +430,39 @@ export const NoteCanvas = defineComponent({
 						omit.add(e.id);
 			}
 			const area = region();
+			let paintedPage =
+				backgroundPreview.value || props.backgroundSampling
+					? {
+							...props.page,
+							background:
+								props.backgroundSampling && props.page.background
+									? { ...props.page.background, opacity: 1 }
+									: (backgroundPreview.value ?? props.page.background),
+							...(props.backgroundSampling
+								? {
+										paper: "plain" as const,
+										tapes: [],
+										layers: props.page.layers.map((l) => ({
+											...l,
+											visible: false,
+										})),
+									}
+								: {}),
+						}
+					: props.page;
+			if (gesture?.pathEraser?.updates.size) {
+				const updates = gesture.pathEraser.updates;
+				paintedPage = {
+					...paintedPage,
+					layers: paintedPage.layers.map((l) => ({
+						...l,
+						elements: l.elements.map((e) => updates.get(e.id) ?? e),
+					})),
+				};
+			}
 			paintBoard(
 				ctx,
-				props.page,
+				paintedPage,
 				omit,
 				infinite.value
 					? {
@@ -395,6 +490,7 @@ export const NoteCanvas = defineComponent({
 				page.paper !== previous.paper ||
 				page.color !== previous.color ||
 				page.infinite !== previous.infinite ||
+				page.background !== previous.background ||
 				JSON.stringify(page.tapes) !== JSON.stringify(previous.tapes)
 			)
 				return false;
@@ -426,6 +522,25 @@ export const NoteCanvas = defineComponent({
 			const ctx = prepare(overlay.value);
 			if (!ctx) return;
 			if (gesture?.stroke) paintStroke(ctx, gesture.stroke);
+			const eraserPoint = gesture?.tool === "eraser" ? gesture.last : eraserHover;
+			if (!props.readonly && props.tool === "eraser" && eraserPoint) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(
+					eraserPoint.x,
+					eraserPoint.y,
+					props.width / (props.eraserMode === "path" ? 2 : 1),
+					0,
+					Math.PI * 2,
+				);
+				ctx.strokeStyle = "#ffffff";
+				ctx.lineWidth = 3 / props.zoom;
+				ctx.stroke();
+				ctx.strokeStyle = "#505767";
+				ctx.lineWidth = 1 / props.zoom;
+				ctx.stroke();
+				ctx.restore();
+			}
 			if (gesture?.tool === "connect" && !guides.length) {
 				const source = pageElements(props.page).find((e) => e.id === gesture!.from?.id);
 				if (source && connectable(source))
@@ -457,6 +572,7 @@ export const NoteCanvas = defineComponent({
 			for (const element of transformed) {
 				if (moving || resizing) {
 					if (element.kind === "stroke") paintStroke(ctx, element);
+					else if (element.kind === "image") paintBoard.photo(ctx, element);
 					else {
 						ctx.fillStyle = element.color;
 						ctx.font = `${element.size}px sans-serif`;
@@ -540,16 +656,10 @@ export const NoteCanvas = defineComponent({
 				applyViewPreview();
 				return;
 			}
-			const width = infinite.value
-				? (viewport.value?.clientWidth || 1) / props.zoom
-				: props.page.width;
-			const height = infinite.value
-				? (viewport.value?.clientHeight || 1) / props.zoom
-				: props.page.height;
-			viewSize.value = {
-				width: viewport.value?.clientWidth || 1,
-				height: viewport.value?.clientHeight || 1,
-			};
+			const size = logicalViewSize();
+			const width = infinite.value ? size.width / props.zoom : props.page.width;
+			const height = infinite.value ? size.height / props.zoom : props.page.height;
+			viewSize.value = size;
 			baseMargin = infinite.value
 				? {
 						x: Math.ceil(viewSize.value.width / 4),
@@ -598,6 +708,7 @@ export const NoteCanvas = defineComponent({
 			layout();
 		}
 		function cancel() {
+			clearPencilHold();
 			const restoreBase = ["eraser", "move", "resize"].includes(gesture?.tool ?? "");
 			gesture = undefined;
 			guides = [];
@@ -606,6 +717,8 @@ export const NoteCanvas = defineComponent({
 			renderOverlay();
 		}
 		function resetInput() {
+			eraserHover = undefined;
+			backgroundOverlay.value?.cancel();
 			const wasPinching = Boolean(pinch),
 				hadPreview = Boolean(viewPreview);
 			previewGeneration++;
@@ -628,15 +741,15 @@ export const NoteCanvas = defineComponent({
 		}
 		function pinchAnchor() {
 			if (!infinite.value) return;
-			const box = viewport.value!.getBoundingClientRect(),
-				contacts = touchContacts()
-					.slice(0, 2)
-					.map(([, p]) => p);
+			const contacts = touchContacts()
+				.slice(0, 2)
+				.map(([, p]) => p);
 			if (contacts.length < 2) return;
-			return {
-				x: origin.value.x + ((contacts[0].x + contacts[1].x) / 2 - box.left) / props.zoom,
-				y: origin.value.y + ((contacts[0].y + contacts[1].y) / 2 - box.top) / props.zoom,
-			};
+			const p = localPoint(paperElement.value!, {
+				x: (contacts[0].x + contacts[1].x) / 2,
+				y: (contacts[0].y + contacts[1].y) / 2,
+			});
+			return { x: origin.value.x + p.x / props.zoom, y: origin.value.y + p.y / props.zoom };
 		}
 		function zoomAround(value: number, center: Point, anchor?: Point) {
 			if (pinch && infinite.value) {
@@ -653,13 +766,13 @@ export const NoteCanvas = defineComponent({
 		function applyZoomAround(value: number, center: Point, anchor?: Point) {
 			if (infinite.value) {
 				value = Math.max(0.000001, Math.min(4, value));
-				const box = viewport.value!.getBoundingClientRect();
+				const p = localPoint(paperElement.value!, center);
 				zoomAnchor = {
 					world: anchor ?? {
-						x: origin.value.x + (center.x - box.left) / props.zoom,
-						y: origin.value.y + (center.y - box.top) / props.zoom,
+						x: origin.value.x + p.x / props.zoom,
+						y: origin.value.y + p.y / props.zoom,
 					},
-					screen: { x: center.x - box.left, y: center.y - box.top },
+					screen: p,
 				};
 				if (Math.abs(value - props.zoom) < 1e-9) {
 					setOrigin(
@@ -672,15 +785,19 @@ export const NoteCanvas = defineComponent({
 			}
 			const before = overlay.value?.getBoundingClientRect();
 			if (!before) return;
-			const x = (center.x - before.left) / props.zoom,
-				y = (center.y - before.top) / props.zoom;
+			const local = localPoint(paperElement.value!, center);
+			const x = local.x / props.zoom,
+				y = local.y / props.zoom;
 			const token = ++zoomGeneration;
 			emit("zoom", value);
 			nextTick(() => {
 				if (token !== zoomGeneration || !viewport.value || !overlay.value) return;
-				const after = overlay.value.getBoundingClientRect();
-				viewport.value.scrollLeft += after.left + x * props.zoom - center.x;
-				viewport.value.scrollTop += after.top + y * props.zoom - center.y;
+				const after = clientPoint(paperElement.value!, {
+					x: x * props.zoom,
+					y: y * props.zoom,
+				});
+				viewport.value.scrollLeft += after.x - center.x;
+				viewport.value.scrollTop += after.y - center.y;
 			});
 		}
 		function eraseAt(p: Point) {
@@ -692,10 +809,43 @@ export const NoteCanvas = defineComponent({
 				)
 					gesture?.erased.add(e.id);
 		}
+		let pencilHold:
+			| { id: number; x: number; y: number; timer: ReturnType<typeof setTimeout> }
+			| undefined;
+		let eraserHover: Point | undefined;
+		function clearPencilHold() {
+			if (pencilHold) clearTimeout(pencilHold.timer);
+			pencilHold = undefined;
+		}
+		function beginPencilHold(event: PointerEvent) {
+			if (
+				!props.pencilMenuEnabled ||
+				event.pointerType !== "pen" ||
+				!["pen", "highlighter", "eraser"].includes(props.tool)
+			)
+				return;
+			const { pointerId: id, clientX: x, clientY: y } = event;
+			pencilHold = {
+				id,
+				x,
+				y,
+				timer: setTimeout(() => {
+					if (!pencilHold || gesture?.id !== id || props.readonly) return;
+					// Discard the live preview, including any tentative erasure. Keep capture
+					// until pen-up so the held tip and palm cannot select a menu item or paint.
+					cancel();
+					emit("pencilMenu", { x, y });
+				}, 550),
+			};
+		}
 		function down(event: PointerEvent) {
 			if (event.pointerType === "mouse" && event.button !== 0) return;
 			// Ignore palm contacts while a pen is writing; they must not cancel ink.
-			if (event.pointerType === "touch" && gesture?.pointerType === "pen") return;
+			if (
+				event.pointerType === "touch" &&
+				[...pointers.values()].some((p) => p.type === "pen")
+			)
+				return;
 			if (event.pointerType === "pen") resetInput();
 			viewport.value?.focus({ preventScroll: true });
 			if (event.pointerId >= 0) overlay.value?.setPointerCapture(event.pointerId);
@@ -763,7 +913,7 @@ export const NoteCanvas = defineComponent({
 					? [...pageElements(props.page)]
 							.reverse()
 							.find((e) =>
-								e.kind === "text" || connectable(e)
+								e.kind !== "stroke" || connectable(e)
 									? contains(p, bounds(e))
 									: hitStroke(e, p, 5 / props.zoom),
 							)
@@ -790,8 +940,13 @@ export const NoteCanvas = defineComponent({
 				points: [p],
 				erased: new Set(),
 			};
-			if (tool === "eraser") eraseAt(p);
-			else if (tool !== "lasso")
+			if (tool === "eraser") {
+				if (props.eraserMode === "path") {
+					gesture.pathEraser = new PathEraser(pageElements(props.page), props.width);
+					gesture.pathEraser.add(p);
+					gesture.erased = gesture.pathEraser.removed;
+				} else eraseAt(p);
+			} else if (tool !== "lasso")
 				gesture.stroke = {
 					id: uid(),
 					kind: "stroke",
@@ -831,10 +986,21 @@ export const NoteCanvas = defineComponent({
 				gesture.simulatedPressure = new VelocityPressure(p, event.timeStamp);
 			if (!moving) emit("select", []);
 			emit("gesture", true);
+			beginPencilHold(event);
 			schedule();
 		}
 		function move(event: PointerEvent) {
-			if (!pointers.has(event.pointerId)) return;
+			if (!pointers.has(event.pointerId)) {
+				if (
+					props.tool === "eraser" &&
+					!props.readonly &&
+					(event.pointerType === "mouse" || event.pointerType === "pen")
+				) {
+					eraserHover = point(event);
+					schedule();
+				}
+				return;
+			}
 			pointers.set(event.pointerId, {
 				x: event.clientX,
 				y: event.clientY,
@@ -871,12 +1037,13 @@ export const NoteCanvas = defineComponent({
 			}
 			if (pan?.id === event.pointerId) {
 				if (infinite.value && !viewPreview) beginViewPreview();
-				if (infinite.value)
-					setOrigin(
-						(pan.left + pan.x - event.clientX) / props.zoom,
-						(pan.top + pan.y - event.clientY) / props.zoom,
+				if (infinite.value) {
+					const delta = rotateVector(
+						{ x: pan.x - event.clientX, y: pan.y - event.clientY },
+						-props.rotation,
 					);
-				else {
+					setOrigin((pan.left + delta.x) / props.zoom, (pan.top + delta.y) / props.zoom);
+				} else {
 					viewport.value!.scrollLeft = pan.left + pan.x - event.clientX;
 					viewport.value!.scrollTop = pan.top + pan.y - event.clientY;
 				}
@@ -886,6 +1053,11 @@ export const NoteCanvas = defineComponent({
 			const events =
 				typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [];
 			for (const sample of events.length ? events : [event]) {
+				if (
+					pencilHold?.id === event.pointerId &&
+					Math.hypot(sample.clientX - pencilHold.x, sample.clientY - pencilHold.y) > 5
+				)
+					clearPencilHold();
 				let p = point(sample);
 				if (gesture.simulatedPressure)
 					p.pressure = gesture.simulatedPressure.sample(p, sample.timeStamp);
@@ -920,7 +1092,11 @@ export const NoteCanvas = defineComponent({
 						};
 					let w = Math.max(12, c.includes("w") ? fixed.x - p.x : p.x - fixed.x),
 						h = Math.max(12, c.includes("n") ? fixed.y - p.y : p.y - fixed.y);
-					if (event.shiftKey) {
+					const imageOnly =
+						props.selected.length === 1 &&
+						pageElements(props.page).find((e) => e.id === props.selected[0])?.kind ===
+							"image";
+					if (event.shiftKey || imageOnly) {
 						const ratio = Math.max(w / b.width, h / b.height);
 						w = b.width * ratio;
 						h = b.height * ratio;
@@ -929,6 +1105,11 @@ export const NoteCanvas = defineComponent({
 						w = Math.min(w, c.includes("w") ? fixed.x : props.page.width - fixed.x);
 					if (!infinite.value)
 						h = Math.min(h, c.includes("n") ? fixed.y : props.page.height - fixed.y);
+					if (imageOnly && !infinite.value) {
+						const ratio = Math.min(w / b.width, h / b.height);
+						w = b.width * ratio;
+						h = b.height * ratio;
+					}
 					gesture.resizeBox = {
 						x: c.includes("w") ? fixed.x - w : fixed.x,
 						y: c.includes("n") ? fixed.y - h : fixed.y,
@@ -974,6 +1155,12 @@ export const NoteCanvas = defineComponent({
 				if (gesture.tool === "eraser") {
 					// Interpolate across sparse events so fast erasing cannot skip a stroke.
 					const previous = gesture.points.at(-1)!;
+					if (gesture.pathEraser) {
+						gesture.pathEraser.add(previous, p);
+						gesture.erased = gesture.pathEraser.removed;
+						gesture.points = [p];
+						continue;
+					}
 					const steps = Math.ceil(
 						Math.hypot(p.x - previous.x, p.y - previous.y) / Math.max(1, props.width),
 					);
@@ -1004,14 +1191,23 @@ export const NoteCanvas = defineComponent({
 			schedule();
 		}
 		function up(event: PointerEvent) {
+			eraserHover = undefined;
+			if (pencilHold?.id === event.pointerId) clearPencilHold();
 			const wasPinching = Boolean(pinch);
 			if (gesture?.id === event.pointerId) {
 				move(event);
 				const done = gesture;
 				const previousPage = props.page;
 				gesture = undefined;
-				if (done.tool === "eraser") emit("erase", Array.from(done.erased));
-				else if (done.tool === "lasso") {
+				if (done.tool === "eraser") {
+					if (done.pathEraser)
+						emit(
+							"erasePath",
+							[...done.pathEraser.updates.values()],
+							[...done.pathEraser.removed],
+						);
+					else emit("erase", Array.from(done.erased));
+				} else if (done.tool === "lasso") {
 					const elements = pageElements(props.page);
 					const ids = lassoSelect(elements, done.points);
 					if (
@@ -1103,7 +1299,7 @@ export const NoteCanvas = defineComponent({
 		}
 		function touchInput(event: TouchEvent, phase: "down" | "move" | "up" | "cancel") {
 			event.preventDefault();
-			if (gesture?.pointerType === "pen") return;
+			if ([...pointers.values()].some((p) => p.type === "pen")) return;
 			if (phase === "cancel") {
 				touchIds.clear();
 				nextTouchId = -1;
@@ -1235,6 +1431,53 @@ export const NoteCanvas = defineComponent({
 			{ flush: "post" },
 		);
 		watch(
+			() => props.rotation,
+			(_, previous) => {
+				const center = infinite.value
+					? {
+							x: origin.value.x + viewSize.value.width / (2 * props.zoom),
+							y: origin.value.y + viewSize.value.height / (2 * props.zoom),
+						}
+					: (() => {
+							const view = viewport.value!.getBoundingClientRect();
+							const box = overlay.value!.getBoundingClientRect();
+							const size = rotatedSize(box.width, box.height, previous);
+							const p = unrotateLocal(
+								{
+									x: view.left + view.width / 2 - box.left,
+									y: view.top + view.height / 2 - box.top,
+								},
+								size.width,
+								size.height,
+								previous,
+							);
+							return { x: p.x / props.zoom, y: p.y / props.zoom };
+						})();
+				resetInput();
+				const size = logicalViewSize();
+				viewSize.value = size;
+				if (infinite.value)
+					setOrigin(
+						center.x - size.width / (2 * props.zoom),
+						center.y - size.height / (2 * props.zoom),
+					);
+				nextTick(() => {
+					resize();
+					if (!infinite.value) {
+						const p = clientPoint(paperElement.value!, {
+							x: center.x * props.zoom,
+							y: center.y * props.zoom,
+						});
+						const view = viewport.value!.getBoundingClientRect();
+						viewport.value!.scrollLeft += p.x - view.left - view.width / 2;
+						viewport.value!.scrollTop += p.y - view.top - view.height / 2;
+					}
+					layout();
+				});
+			},
+			{ flush: "pre" },
+		);
+		watch(
 			() => props.selected,
 			() => {
 				renderOverlay();
@@ -1242,7 +1485,20 @@ export const NoteCanvas = defineComponent({
 			},
 			{ flush: "post" },
 		);
-		watch(() => [props.tool, props.readonly, props.color], resetInput);
+		watch(
+			() => [
+				props.tool,
+				props.readonly,
+				props.color,
+				props.editBackground,
+				props.backgroundSampling,
+				props.eraserMode,
+			],
+			() => {
+				resetInput();
+				schedule(true);
+			},
+		);
 		const visibilityChanged = () => {
 			if (document.hidden) resetInput();
 		};
@@ -1251,14 +1507,13 @@ export const NoteCanvas = defineComponent({
 			resize();
 			if (base.value)
 				Object.assign(base.value, {
-					boardPreview: () =>
-						infinite.value ? captureNotesBoardPreview(props.page) : undefined,
+					boardPreview: () => captureNotesBoardPreview(props.page),
 				});
 			viewportObserver = new ResizeObserver(() => {
 				if (
 					viewPreview &&
-					(viewport.value!.clientWidth !== viewPreview.width ||
-						viewport.value!.clientHeight !== viewPreview.height)
+					(logicalViewSize().width !== viewPreview.width ||
+						logicalViewSize().height !== viewPreview.height)
 				)
 					resetInput();
 				else resize();
@@ -1268,6 +1523,8 @@ export const NoteCanvas = defineComponent({
 			document.addEventListener("visibilitychange", visibilityChanged);
 		});
 		onBeforeUnmount(() => {
+			clearPencilHold();
+			mounted = false;
 			viewportObserver?.disconnect();
 			window.removeEventListener("blur", resetInput);
 			document.removeEventListener("visibilitychange", visibilityChanged);
@@ -1321,30 +1578,54 @@ export const NoteCanvas = defineComponent({
 		}
 		function viewBounds() {
 			if (infinite.value) return region();
-			const paper = overlay.value!.getBoundingClientRect(),
-				view = viewport.value!.getBoundingClientRect();
-			const x = Math.max(0, (view.left - paper.left) / props.zoom),
-				y = Math.max(0, (view.top - paper.top) / props.zoom);
+			const v = viewport.value!.getBoundingClientRect();
+			const points = [
+				{ x: v.left, y: v.top },
+				{ x: v.right, y: v.top },
+				{ x: v.left, y: v.bottom },
+				{ x: v.right, y: v.bottom },
+			].map((p) => localPoint(paperElement.value!, p));
+			const b = pointBounds(points);
+			const x = Math.max(0, b.x / props.zoom),
+				y = Math.max(0, b.y / props.zoom);
 			return {
 				x,
 				y,
-				width: Math.max(1, Math.min(props.page.width - x, view.width / props.zoom)),
-				height: Math.max(1, Math.min(props.page.height - y, view.height / props.zoom)),
+				width: Math.max(
+					1,
+					Math.min(props.page.width - x, (b.x + b.width) / props.zoom - x),
+				),
+				height: Math.max(
+					1,
+					Math.min(props.page.height - y, (b.y + b.height) / props.zoom - y),
+				),
 			};
 		}
-		function focusView(b: import("../geometry.js").Bounds) {
+		function focusView(
+			b: import("../geometry.js").Bounds,
+			inset: number | { bottom?: number; right?: number; top?: number } = 0,
+		) {
+			const viewBox = viewport.value!.getBoundingClientRect();
+			const {
+				bottom = 0,
+				right = 0,
+				top = 0,
+			} = typeof inset === "number" ? { bottom: inset } : inset;
+			const visibleWidth = Math.max(80, viewBox.width - right),
+				visibleHeight = Math.max(80, viewBox.height - bottom - top);
+			const usable = rotatedSize(visibleWidth, visibleHeight, props.rotation);
+			const centerScreen = localPoint(paperElement.value!, {
+				x: viewBox.left + visibleWidth / 2,
+				y: viewBox.top + top + visibleHeight / 2,
+			});
 			if (infinite.value) {
 				const zoom = Math.max(
 					0.000001,
-					Math.min(
-						4,
-						(viewSize.value.width - 48) / b.width,
-						(viewSize.value.height - 48) / b.height,
-					),
+					Math.min(4, (usable.width - 48) / b.width, (usable.height - 48) / b.height),
 				);
 				zoomAnchor = {
 					world: { x: b.x + b.width / 2, y: b.y + b.height / 2 },
-					screen: { x: viewSize.value.width / 2, y: viewSize.value.height / 2 },
+					screen: centerScreen,
 				};
 				emit("zoom", zoom);
 				nextTick(() => {
@@ -1362,18 +1643,31 @@ export const NoteCanvas = defineComponent({
 			if (!view) return;
 			const zoom = Math.max(
 				0.25,
-				Math.min(4, (view.clientWidth - 32) / b.width, (view.clientHeight - 32) / b.height),
+				Math.min(4, (usable.width - 32) / b.width, (usable.height - 32) / b.height),
 			);
 			emit("zoom", zoom);
 			nextTick(() => {
-				const paper = overlay.value!.getBoundingClientRect(),
+				const projected = clientBounds(b),
 					v = view.getBoundingClientRect();
-				view.scrollLeft += paper.left - v.left + b.x * zoom - 16;
-				view.scrollTop += paper.top - v.top + b.y * zoom - 16;
+				view.scrollLeft += projected.x - v.left - 16;
+				view.scrollTop += projected.y - v.top - 16;
 				layout();
 			});
 		}
-		function sampleColor(clientX: number, clientY: number): string | undefined {
+		function sampleColor(
+			clientX: number,
+			clientY: number,
+			backgroundOnly = false,
+		): string | undefined {
+			if (backgroundOnly) {
+				const photo = props.page.background;
+				if (!photo) return;
+				const local = localPoint(paperElement.value!, { x: clientX, y: clientY });
+				return paintBoard.samplePhoto(photo, {
+					x: local.x / props.zoom + (infinite.value ? origin.value.x : 0),
+					y: local.y / props.zoom + (infinite.value ? origin.value.y : 0),
+				});
+			}
 			const element = base.value,
 				context = element?.getContext("2d");
 			if (!element || !context) return;
@@ -1385,8 +1679,16 @@ export const NoteCanvas = defineComponent({
 				clientY >= box.bottom
 			)
 				return;
-			const x = Math.floor(((clientX - box.left) / box.width) * element.width),
-				y = Math.floor(((clientY - box.top) / box.height) * element.height);
+			const p = localPoint(element, { x: clientX, y: clientY }),
+				size = rotatedSize(box.width, box.height, props.rotation);
+			const x = Math.min(
+					element.width - 1,
+					Math.max(0, Math.floor((p.x / size.width) * element.width)),
+				),
+				y = Math.min(
+					element.height - 1,
+					Math.max(0, Math.floor((p.y / size.height) * element.height)),
+				);
 			const pixel = context.getImageData(x, y, 1, 1).data;
 			return (
 				"#" +
@@ -1395,7 +1697,19 @@ export const NoteCanvas = defineComponent({
 					.join("")
 			);
 		}
-		expose({ cancel: resetInput, viewport, canvas: base, viewBounds, focusView, sampleColor });
+		expose({
+			cancel: resetInput,
+			viewport,
+			canvas: base,
+			viewBounds,
+			focusView,
+			sampleColor,
+			previewBackground: (photo: import("../model.js").InkImage | undefined) => {
+				backgroundPreview.value = photo;
+				backgroundOverlay.value?.showPreview(photo);
+				schedule(true);
+			},
+		});
 		return () =>
 			h(
 				"div",
@@ -1413,12 +1727,14 @@ export const NoteCanvas = defineComponent({
 							e.preventDefault();
 							e.stopPropagation();
 							const d = (e.shiftKey ? 240 : 60) / props.zoom;
-							setOrigin(
-								origin.value.x +
-									(e.key === "ArrowRight" ? d : e.key === "ArrowLeft" ? -d : 0),
-								origin.value.y +
-									(e.key === "ArrowDown" ? d : e.key === "ArrowUp" ? -d : 0),
+							const delta = rotateVector(
+								{
+									x: e.key === "ArrowRight" ? d : e.key === "ArrowLeft" ? -d : 0,
+									y: e.key === "ArrowDown" ? d : e.key === "ArrowUp" ? -d : 0,
+								},
+								-props.rotation,
 							);
+							setOrigin(origin.value.x + delta.x, origin.value.y + delta.y);
 						}
 					},
 					tabindex: 0,
@@ -1432,9 +1748,13 @@ export const NoteCanvas = defineComponent({
 							});
 						} else if (infinite.value) {
 							e.preventDefault();
+							const delta = rotateVector(
+								{ x: e.deltaX, y: e.deltaY },
+								-props.rotation,
+							);
 							setOrigin(
-								origin.value.x + e.deltaX / props.zoom,
-								origin.value.y + e.deltaY / props.zoom,
+								origin.value.x + delta.x / props.zoom,
+								origin.value.y + delta.y / props.zoom,
 							);
 						}
 					},
@@ -1445,154 +1765,198 @@ export const NoteCanvas = defineComponent({
 					h(
 						"div",
 						{
-							class: "cube-notes__paper",
-							ref: paperElement,
+							class: "cube-notes__paper-frame",
 							style: {
-								backgroundColor: props.page.color,
-								width: infinite.value
-									? `${viewSize.value.width}px`
-									: `${props.page.width * props.zoom}px`,
-								height: infinite.value
-									? `${viewSize.value.height}px`
-									: `${props.page.height * props.zoom}px`,
+								width: `${frameSize.value.width}px`,
+								height: `${frameSize.value.height}px`,
 							},
 						},
-						[
-							h("canvas", {
-								class: "cube-notes__paper-canvas",
-								ref: base,
-								"aria-hidden": "true",
-							}),
-							h("canvas", {
-								class: "cube-notes__ink-canvas",
-								ref: overlay,
-								"aria-label": "Handwriting canvas",
+						h(
+							"div",
+							{
+								class: "cube-notes__paper",
+								ref: paperElement,
 								style: {
-									cursor:
-										props.readonly || props.tool === "hand"
-											? "grab"
-											: props.tool === "text"
-												? "text"
-												: "crosshair",
+									backgroundColor: props.page.color,
+									transformOrigin: "0 0",
+									transform: paperRotation(
+										paperSize.value.width,
+										paperSize.value.height,
+										props.rotation,
+									),
+									width: infinite.value
+										? `${viewSize.value.width}px`
+										: `${props.page.width * props.zoom}px`,
+									height: infinite.value
+										? `${viewSize.value.height}px`
+										: `${props.page.height * props.zoom}px`,
 								},
-								onPointerdown: (e: PointerEvent) => {
-									if (e.pointerType !== "touch") down(e);
-								},
-								onPointermove: (e: PointerEvent) => {
-									if (e.pointerType !== "touch") move(e);
-								},
-								onPointerup: (e: PointerEvent) => {
-									if (e.pointerType !== "touch") up(e);
-								},
-								onPointercancel: (e: PointerEvent) => {
-									if (e.pointerType !== "touch") pointerCancel(e);
-								},
-								onTouchstart: (e: TouchEvent) => touchInput(e, "down"),
-								onTouchmove: (e: TouchEvent) => touchInput(e, "move"),
-								onTouchend: (e: TouchEvent) => touchInput(e, "up"),
-								onTouchcancel: (e: TouchEvent) => touchInput(e, "cancel"),
-								onLostpointercapture: pointerCancel,
-								onContextmenu: (e: Event) => e.preventDefault(),
-							}),
-							h(TapeOverlay, {
-								tapes: props.page.tapes ?? [],
-								zoom: props.zoom,
-								origin: infinite.value ? origin.value : { x: 0, y: 0 },
-								infinite: infinite.value,
-								editable: props.editTapes && !props.readonly,
-								active: props.activeTape,
-								locale: props.locale,
-								onUpdate: (
-									id: string,
-									patch: Partial<import("../model.js").MaskingTape>,
-								) => emit("tapeUpdate", id, patch),
-								onSelect: (id: string) => emit("tapeSelect", id),
-							}),
-							...(!props.readonly &&
-							props.tool === "lasso" &&
-							selection.value &&
-							pageElements(props.page).some(
-								(e) =>
-									props.selected.includes(e.id) &&
-									!(e.kind === "stroke" && e.connector),
-							)
-								? [
-										...["nw", "ne", "sw", "se"].map((c) =>
-											h(
-												"button",
-												{
-													type: "button",
-													class: "cube-notes__resize-handle",
-													draggable: false,
-													onPointermove: move,
-													onPointerup: up,
-													onPointercancel: pointerCancel,
-													onLostpointercapture: pointerCancel,
-													onDragstart: (e: DragEvent) =>
-														e.preventDefault(),
-													"aria-label": `${props.locale.startsWith("zh") ? "缩放选中内容" : "Resize selection"} ${c}`,
-													"data-resize": c,
-													style: {
-														left: `${screenX(displayedSelection.value!.x + (c.includes("e") ? displayedSelection.value!.width : 0))}px`,
-														top: `${screenY(displayedSelection.value!.y + (c.includes("s") ? displayedSelection.value!.height : 0))}px`,
-														cursor: `${c}-resize`,
-													},
-													onPointerdown: (e: PointerEvent) =>
-														beginHandle(e, "resize", c),
-												},
-												h("span"),
-											),
-										),
-										...(props.selected.length === 1 &&
-										pageElements(props.page).some(
-											(e) => e.id === props.selected[0] && connectable(e),
-										)
-											? (
-													[
-														"top",
-														"right",
-														"bottom",
-														"left",
-													] as AnchorSide[]
-												).map((side) => {
-													const source = displayedElements.value.find(
-															(e) => e.id === props.selected[0],
-														) as InkStroke,
-														point = anchorPoint(source, side);
-													return h(
-														"button",
-														{
-															type: "button",
-															class: `cube-notes__connect-handle side-${side}`,
-															draggable: false,
-															onPointermove: move,
-															onPointerup: up,
-															onPointercancel: pointerCancel,
-															onLostpointercapture: pointerCancel,
-															onDragstart: (e: DragEvent) =>
-																e.preventDefault(),
-															"aria-label": `${props.locale.startsWith("zh") ? "拖出连接线" : "Drag connection"} ${side}`,
-															"data-connect": side,
-															style: {
-																left: `${screenX(point.x)}px`,
-																top: `${screenY(point.y)}px`,
-															},
-															onPointerdown: (e: PointerEvent) =>
-																beginHandle(e, "connect", side),
+							},
+							[
+								h("canvas", {
+									class: "cube-notes__paper-canvas",
+									ref: base,
+									"aria-hidden": "true",
+								}),
+								h("canvas", {
+									class: "cube-notes__ink-canvas",
+									ref: overlay,
+									"aria-label": "Handwriting canvas",
+									style: {
+										cursor:
+											props.readonly || props.tool === "hand"
+												? "grab"
+												: props.tool === "text"
+													? "text"
+													: props.tool === "eraser"
+														? "none"
+														: "crosshair",
+									},
+									onPointerdown: (e: PointerEvent) => {
+										if (e.pointerType !== "touch") down(e);
+									},
+									onPointermove: (e: PointerEvent) => {
+										if (e.pointerType !== "touch") move(e);
+									},
+									onPointerleave: () => {
+										eraserHover = undefined;
+										schedule();
+									},
+									onPointerup: (e: PointerEvent) => {
+										if (e.pointerType !== "touch") up(e);
+									},
+									onPointercancel: (e: PointerEvent) => {
+										if (e.pointerType !== "touch") pointerCancel(e);
+									},
+									onTouchstart: (e: TouchEvent) => touchInput(e, "down"),
+									onTouchmove: (e: TouchEvent) => touchInput(e, "move"),
+									onTouchend: (e: TouchEvent) => touchInput(e, "up"),
+									onTouchcancel: (e: TouchEvent) => touchInput(e, "cancel"),
+									onLostpointercapture: pointerCancel,
+									onContextmenu: (e: Event) => e.preventDefault(),
+								}),
+								props.editBackground &&
+								!props.readonly &&
+								props.page.background &&
+								!props.backgroundSampling
+									? h(BackgroundOverlay, {
+											ref: backgroundOverlay,
+											photo: props.page.background,
+											zoom: props.zoom,
+											origin: infinite.value ? origin.value : { x: 0, y: 0 },
+											rotation: props.rotation,
+											locale: props.locale,
+											onPreview: (
+												photo: import("../model.js").InkImage | undefined,
+											) => {
+												backgroundPreview.value = photo;
+												schedule(true);
+											},
+											onUpdate: (photo: import("../model.js").InkImage) =>
+												emit("backgroundUpdate", photo),
+										})
+									: null,
+								h(TapeOverlay, {
+									tapes: props.page.tapes ?? [],
+									rotation: props.rotation,
+									zoom: props.zoom,
+									origin: infinite.value ? origin.value : { x: 0, y: 0 },
+									infinite: infinite.value,
+									editable: props.editTapes && !props.readonly,
+									active: props.activeTape,
+									locale: props.locale,
+									onUpdate: (
+										id: string,
+										patch: Partial<import("../model.js").MaskingTape>,
+									) => emit("tapeUpdate", id, patch),
+									onSelect: (id: string) => emit("tapeSelect", id),
+								}),
+								...(!props.readonly &&
+								props.tool === "lasso" &&
+								selection.value &&
+								pageElements(props.page).some(
+									(e) =>
+										props.selected.includes(e.id) &&
+										!(e.kind === "stroke" && e.connector),
+								)
+									? [
+											...["nw", "ne", "sw", "se"].map((c) =>
+												h(
+													"button",
+													{
+														type: "button",
+														class: "cube-notes__resize-handle",
+														draggable: false,
+														onPointermove: move,
+														onPointerup: up,
+														onPointercancel: pointerCancel,
+														onLostpointercapture: pointerCancel,
+														onDragstart: (e: DragEvent) =>
+															e.preventDefault(),
+														"aria-label": `${props.locale.startsWith("zh") ? "缩放选中内容" : "Resize selection"} ${c}`,
+														"data-resize": c,
+														style: {
+															left: `${screenX(displayedSelection.value!.x + (c.includes("e") ? displayedSelection.value!.width : 0))}px`,
+															top: `${screenY(displayedSelection.value!.y + (c.includes("s") ? displayedSelection.value!.height : 0))}px`,
+															cursor: `${props.rotation % 2 ? ({ nw: "ne", ne: "nw", sw: "se", se: "sw" } as Record<string, string>)[c] : c}-resize`,
 														},
-														icon(
-															side === "top"
-																? "up"
-																: side === "bottom"
-																	? "down"
-																	: side,
-														),
-													);
-												})
-											: []),
-									]
-								: []),
-						],
+														onPointerdown: (e: PointerEvent) =>
+															beginHandle(e, "resize", c),
+													},
+													h("span"),
+												),
+											),
+											...(props.selected.length === 1 &&
+											pageElements(props.page).some(
+												(e) => e.id === props.selected[0] && connectable(e),
+											)
+												? (
+														[
+															"top",
+															"right",
+															"bottom",
+															"left",
+														] as AnchorSide[]
+													).map((side) => {
+														const source = displayedElements.value.find(
+																(e) => e.id === props.selected[0],
+															) as InkStroke,
+															point = anchorPoint(source, side);
+														return h(
+															"button",
+															{
+																type: "button",
+																class: `cube-notes__connect-handle side-${side}`,
+																draggable: false,
+																onPointermove: move,
+																onPointerup: up,
+																onPointercancel: pointerCancel,
+																onLostpointercapture: pointerCancel,
+																onDragstart: (e: DragEvent) =>
+																	e.preventDefault(),
+																"aria-label": `${props.locale.startsWith("zh") ? "拖出连接线" : "Drag connection"} ${side}`,
+																"data-connect": side,
+																style: {
+																	left: `${screenX(point.x)}px`,
+																	top: `${screenY(point.y)}px`,
+																},
+																onPointerdown: (e: PointerEvent) =>
+																	beginHandle(e, "connect", side),
+															},
+															icon(
+																side === "top"
+																	? "up"
+																	: side === "bottom"
+																		? "down"
+																		: side,
+															),
+														);
+													})
+												: []),
+										]
+									: []),
+							],
+						),
 					),
 				),
 			);

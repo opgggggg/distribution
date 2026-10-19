@@ -14,7 +14,7 @@ export function pageContentBounds(page: NotePage): Bounds {
 		top = Infinity,
 		right = -Infinity,
 		bottom = -Infinity;
-	for (const element of pageElements(page)) {
+	for (const element of [...(page.background ? [page.background] : []), ...pageElements(page)]) {
 		const b = bounds(element),
 			margin = element.kind === "stroke" ? element.width * 2 : 8;
 		left = Math.min(left, b.x - margin);

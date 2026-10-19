@@ -1,3 +1,22 @@
+import type { NotePage } from "../model.js";
+
+/** Reusable paint colors on this page, in first-use order, independent of brush opacity. */
+export function canvasColors(page: NotePage | undefined): string[] {
+	const colors = new Set<string>();
+	for (const layer of page?.layers ?? []) {
+		if (!layer.visible) continue;
+		for (const element of layer.elements) {
+			if (element.kind === "image") continue;
+			if (element.kind === "stroke" && (!element.points.length || element.opacity <= 0))
+				continue;
+			if (element.kind === "text" && !element.text.trim()) continue;
+			const color = normalizeHex(element.color);
+			if (color) colors.add(color);
+		}
+	}
+	return [...colors];
+}
+
 /** sRGB samples from the native iPadOS 26.5 picker; row-major, 12 columns. */
 export const IPAD_GRID_COLORS: readonly string[] = [
 	"#ffffff",

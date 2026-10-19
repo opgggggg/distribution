@@ -273,6 +273,10 @@
 
 	<!-- The shell ships no cryptography of its own; declaring it keeps every build
 	     from asking about export compliance. -->
+	<key>NSCameraUsageDescription</key>
+	<string>拍摄照片并插入笔记，作为图片或描边背景。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>选择照片并插入笔记，作为图片或学习背景。</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

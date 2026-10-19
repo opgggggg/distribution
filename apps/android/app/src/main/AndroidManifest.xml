@@ -7,6 +7,10 @@
 	     navigator.onLine cannot be trusted. Normal permission, no runtime prompt. -->
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+	<queries>
+		<intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>
+	</queries>
+
 	<application
 		android:allowBackup="true"
 		android:enableOnBackInvokedCallback="true"
@@ -17,6 +21,9 @@
 		android:supportsRtl="true"
 		android:theme="@style/Theme.AuroraPrimeOffice">
 		<provider android:name=".SharedFileProvider" android:authorities="${applicationId}.shared" android:exported="false" android:grantUriPermissions="true" />
+		<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.note-camera" android:exported="false" android:grantUriPermissions="true">
+			<meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/note_camera_paths" />
+		</provider>
 		<activity
 			android:name=".MainActivity"
 			android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
