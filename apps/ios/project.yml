@@ -13,10 +13,42 @@ options:
 fileGroups:
     - README.md
 
+schemes:
+    AuroraPrimeOffice:
+        build:
+            targets:
+                AuroraPrimeOffice: all
+    NativeNotesRegression:
+        build:
+            targets:
+                AuroraPrimeOffice: all
+        test:
+            targets:
+                - NativeNotesTests
+
 targets:
+    NativeNotesTests:
+        type: bundle.unit-test
+        platform: iOS
+        sources:
+            - path: tests/NativeNotesTests
+        dependencies:
+            - target: AuroraPrimeOffice
+        settings:
+            base:
+                GENERATE_INFOPLIST_FILE: YES
+                PRODUCT_BUNDLE_IDENTIFIER: com.cubexp.office.native-tests
+                SWIFT_VERSION: "5.0"
+                "ARCHS[sdk=iphonesimulator*]": arm64
+                TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AuroraPrimeOffice.app/AuroraPrimeOffice"
+                BUNDLE_LOADER: "$(TEST_HOST)"
+
     AuroraPrimeOffice:
         type: application
         platform: iOS
+        dependencies:
+            - framework: App/Native/CubeNotes.xcframework
+              embed: false
 
         configFiles:
             Debug: App/Config/Base.xcconfig
@@ -26,6 +58,12 @@ targets:
             - path: App/Sources
             - path: App/Resources/Assets.xcassets
             - path: App/Resources/bridge.js
+              buildPhase: resources
+            - path: App/Resources/NotesFonts
+              type: folder
+              buildPhase: resources
+            - path: App/Resources/NativeLicenses
+              type: folder
               buildPhase: resources
             # A folder reference, so the code-split payload lands in the bundle with its
             # `assets/` subdirectory and hashed chunk names intact — the entry chunk imports
@@ -39,6 +77,9 @@ targets:
             base:
                 SUPPORTS_MACCATALYST: NO
                 SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) CUBE_NATIVE_NOTES"
+                OTHER_LDFLAGS: "$(inherited) -lc++"
+                "ARCHS[sdk=iphonesimulator*]": arm64
 
         preBuildScripts:
             - name: Sync app profile and mobile Web payload

@@ -3,7 +3,11 @@ import { loadPagePhotos } from "./photo.js";
 import { createPagePainter } from "./render.js";
 import type { NotePage } from "./model.js";
 
-export async function captureNotesBoardPreview(page: NotePage): Promise<string | undefined> {
+export async function captureNotesBoardPreview(
+	page: NotePage,
+	canPaint = () => true,
+): Promise<string | undefined> {
+	if (!canPaint()) return;
 	const area = pageContentBounds(page),
 		scale = Math.min(1, 480 / Math.max(area.width, area.height));
 	const canvas = document.createElement("canvas");
@@ -14,6 +18,10 @@ export async function captureNotesBoardPreview(page: NotePage): Promise<string |
 	ctx.scale(scale, scale);
 	ctx.translate(-area.x, -area.y);
 	const photos = await loadPagePhotos(page);
+	if (!canPaint()) {
+		photos.clear();
+		return;
+	}
 	createPagePainter(undefined, photos)(ctx, page, new Set(), area, scale);
 	photos.clear();
 	return canvas.toDataURL("image/png");

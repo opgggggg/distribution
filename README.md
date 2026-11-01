@@ -28,10 +28,18 @@ an unmodified upstream checkout.
 
 ## Checkout
 
+Use Node.js 22.13 or newer, with `pnpm@10.30.3` available through Corepack for
+the upstream build. CubeOffice retains its npm workspace. Prepare the pinned upstream font resources once;
+subsequent builds reuse the verified local cache and stay offline.
+The owned handwriting, EPUB and text kernels build from the root Cargo workspace; install the
+pinned Rust compiler and WASM target before building the application.
+
 ```sh
 git clone --recurse-submodules https://github.com/opgggggg/distribution.git
 cd distribution
 npm ci
+rustup toolchain install 1.88.0 --profile minimal --target wasm32-unknown-unknown
+npm run prepare:assets -w @yaochn/als-office-fonts
 ```
 
 The build preparation step links the pinned upstream checkout to the root npm
@@ -259,3 +267,34 @@ and Node APIs. It is not automatically installed into a distribution app profile
 imports `@cubexp/text/formats` and `@cubexp/text/office-vue`, whose subpath exports resolve
 to `dist/`, so on a fresh clone `build:web`, `build:android`, and `build:ios` all fail
 `vue-tsc` with `TS2307` until those packages have been built once.
+
+## Rust document kernels
+
+The distribution-owned `crates/formats-core` now supplies the text buffer,
+encoding/range decoding, grouped history/selection and save snapshots, plus EPUB
+ZIP/OPF/spine/TOC/font handling and search, and OFD archive/package metadata,
+versions, immutable parts, detached write snapshots, signature structure/reference checking,
+image-OFD/text-DOCX XML/ZIP writers, OFD-to-SVG drawing/font outlines/gradients,
+structural validation, BMP/TIFF codecs, final device stroke widths, and mobile PDF
+page/signature/image conversion commands. `packages/kernels` ships
+its WASM ABI to the existing text/EPUB/OFD hosts. Build with `npm run build:kernels`; native Rust
+consumers use the same library. See [its owner and checks](crates/formats-core/README.md).
+The existing CodeMirror/EPUB views remain; this is not the complete native UI rewrite.
+
+The pinned upstream now supplies shared Rust/WASM document kernels. CubeOffice uses
+one explicit asset map for desktop and all mobile WebView hosts; native payload builds
+verify every kernel against the pinned binary before packaging. Android keeps its
+existing file origin and local drafts, serving only WASM through a local immutable
+asset endpoint. This does not make the document surface native.
+
+See [the format/platform migration matrix and native handwriting track](docs/rust-kernel-migration.md)
+for current boundaries, retained host responsibilities and remaining owned-format work.
+
+Checks: `node scripts/test-rust-kernels.cjs` against the mobile dev server on 5189,
+`node scripts/check-office-kernel-assets.mjs <payload-directory>`, and the normal
+platform payload builds.
+
+The handwriting editor and headless notes session now use the distribution-owned
+[`cubeoffice-notes-core`](crates/notes-core/README.md), compiled natively or to WASM.
+The [full Rust rewrite ledger](docs/rust-rewrite.md) records completed core work and
+the remaining brush, native rendering, UI and other-format migrations.

@@ -52,6 +52,14 @@ const tick = async () => {
 	await nextTick();
 };
 
+async function loaded(mounted) {
+	for (let i = 0; i < 200 && !mounted.viewer.value?.getDocument(); i++) {
+		await new Promise((resolve) => setTimeout(resolve, 5));
+		await tick();
+	}
+	assert.ok(mounted.viewer.value?.getDocument(), "WASM-backed document did not finish loading");
+}
+
 test("theme changes preserve the loaded OFD document and viewer instance", async (t) => {
 	const theme = ref("classic");
 	const mounted = mountViewer(new Blob([ofd()]), {
@@ -61,6 +69,7 @@ test("theme changes preserve the loaded OFD document and viewer instance", async
 	});
 	t.after(() => mounted.app.unmount());
 	await tick();
+	await loaded(mounted);
 	const viewer = mounted.viewer.value;
 	const document = viewer.getDocument();
 	assert.ok(document);
@@ -109,6 +118,7 @@ test("viewer drops stale loads, aborts prior fetches and uses custom export back
 	assert.equal(signal.aborted, true);
 	release();
 	await tick();
+	await loaded(mounted);
 	assert.equal(previewCount, 1);
 	assert.match(mounted.viewer.value.getDocument().text, /new/);
 	assert.doesNotMatch(mounted.viewer.value.getDocument().text, /old/);
@@ -148,6 +158,7 @@ test("Goto remains in the current document when page IDs repeat across bodies", 
 	const mounted = mountViewer(source);
 	t.after(() => mounted.app.unmount());
 	await tick();
+	await loaded(mounted);
 	assert.equal(mounted.viewer.value.getPageCount(), 4);
 	mounted.viewer.value.goToPage(2);
 	await tick();

@@ -36,13 +36,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 		// A cold launch carries its document here rather than through openURLContexts.
 		// The bridge queues it until the Web shell reports ready.
 		for context in connectionOptions.urlContexts {
-			workspace?.handle(context.url)
+      openDocument(context.url)
 		}
 	}
 
 	func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
 		for context in URLContexts {
-			workspace?.handle(context.url)
+      openDocument(context.url)
 		}
 	}
+
+  private func openDocument(_ url: URL) {
+    workspace?.handle(url)
+}
 }

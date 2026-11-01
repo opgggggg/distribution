@@ -91,6 +91,8 @@ import {
 	harmonyHasWindowControls,
 	isAndroidHost,
 	isIosHost,
+	hasNativeNotebooks,
+	editNativeNotebook,
 	isHarmonyHost,
 	isNativeMobileHost,
 	nativeHostLabel,
@@ -764,7 +766,7 @@ const deletingDocuments = new Set<string>();
 const autosaveOperations = new Map<string, Promise<void>>();
 const autosaveUnsubscribers = new Map<string, () => void>();
 const autosaveQueued = new Set<string>();
-let autosavesRestored = false;
+let autosaveRestoration: Promise<void> | undefined;
 
 watch(activeId, () => {
 	androidFormatOpen.value = false;
@@ -916,6 +918,53 @@ async function addDocument(
 		exportedAt?: number;
 	} = {},
 ): Promise<void> {
+	if (format === "notes" && hasNativeNotebooks()) {
+		await restoreAutosaves();
+		const id = options.autosaveId ?? createAutosaveId();
+		const existing = autosaveHistory.value.find((record) => record.id === id);
+		// An IndexedDB/provider Blob can still refer to its original backing file.
+		// Own the bytes before any library write can replace that record/backing file.
+		const initial = source
+			? new Blob([await source.arrayBuffer()], { type: source.type })
+			: await import("@cubexp/notes").then((notes) => notes.writeNotebook(notes.createNotebook(undefined, true)));
+		const originalSource = options.originalBlob ?? source;
+		const originalBlob = originalSource === source ? (source ? initial : undefined)
+			: originalSource ? new Blob([await originalSource.arrayBuffer()], { type: originalSource.type }) : undefined;
+		const record: HarmonyAutosaveRecord = {
+			...existing, id, format, fileName, blob: initial, savedAt: existing?.savedAt ?? Date.now(),
+			sourceRef: options.sourceRef ? { ...toRaw(options.sourceRef) } : getFileSource(source),
+			originalBlob,
+			originalName: options.originalName ?? fileName,
+			favorite: options.favorite ?? existing?.favorite ?? false,
+			isDraft: options.isDraft ?? !source,
+			sourceSavedRevision: options.sourceSavedRevision,
+			deliveryStatus: options.deliveryStatus, deliveryRevision: options.deliveryRevision,
+			exportedAt: options.exportedAt,
+		};
+		// Keep existing records untouched until native opening/saving succeeds.
+		// A new note needs its initial archive persisted before entering native UI.
+		if (!existing) {
+			await writeHarmonyAutosave(record);
+			autosaveHistory.value.push(record);
+		}
+		const result = await editNativeNotebook(initial, fileName, id, (options.mobileMode ?? (source ? "reading" : "editing")) !== "editing");
+		const updated: HarmonyAutosaveRecord = {
+			...record,
+			blob: result.changed ? result.blob : initial,
+			savedAt: result.changed ? Date.now() : record.savedAt,
+			preview: result.preview || record.preview,
+			isDraft: result.changed ? true : record.isDraft,
+			sourceSavedRevision: result.changed ? undefined : record.sourceSavedRevision,
+			deliveryRevision: result.changed ? undefined : record.deliveryRevision,
+		};
+		await writeHarmonyAutosave(updated);
+		const index = autosaveHistory.value.findIndex((item) => item.id === id);
+		if (index < 0) autosaveHistory.value.push(updated);
+		else autosaveHistory.value.splice(index, 1, updated);
+		window.auroraHarmonyHost?.ackNativeNotes?.(id, result.digest);
+		activeId.value = HOME_TAB_ID;
+		return;
+	}
 	if (nativeTabSession && !options.nativeLocal) {
 		await openNativeDocument({
 			format,
@@ -1166,8 +1215,8 @@ async function flushAutosaves(): Promise<void> {
 }
 
 async function restoreAutosaves(): Promise<void> {
-	if (autosavesRestored) return;
-	autosavesRestored = true;
+	if (autosaveRestoration) return autosaveRestoration;
+	autosaveRestoration = (async () => {
 	try {
 		const records = (await listHarmonyAutosaves()).filter((record) =>
 			formatOptions.has(record.format),
@@ -1177,9 +1226,38 @@ async function restoreAutosaves(): Promise<void> {
 			const current = autosaveHistory.value.find((item) => item.id === record.id);
 			if (!current && !deletingDocuments.has(record.id)) autosaveHistory.value.push(record);
 		}
+		const host = window.auroraHarmonyHost;
+		if (hasNativeNotebooks() && host?.listNativeNotes && host.readNativeNotes) {
+			for (const draft of await host.listNativeNotes()) {
+				const result = await host.readNativeNotes(draft.id);
+				const previous = autosaveHistory.value.find((item) => item.id === draft.id);
+				let preview = previous?.preview;
+				try {
+					const { readNotebook } = await import("@cubexp/notes");
+					const { captureNotesBoardPreview } = await import("@cubexp/notes/thumbnail");
+					preview = await captureNotesBoardPreview(readNotebook(new Uint8Array(await result.blob.arrayBuffer())).pages[0]) ?? preview;
+				} catch { /* A preview never prevents recovery of the full archive and history. */ }
+				const recovered: HarmonyAutosaveRecord = {
+					...previous, id: draft.id, format: "notes", fileName: draft.fileName, blob: result.blob,
+					savedAt: draft.savedAt || Date.now(), preview, isDraft: true,
+					sourceRef: previous?.sourceRef ? { ...toRaw(previous.sourceRef) } : undefined,
+					originalBlob: previous?.originalBlob ? new Blob([await previous.originalBlob.arrayBuffer()], { type: previous.originalBlob.type }) : undefined,
+					sourceSavedRevision: undefined, deliveryRevision: undefined,
+				};
+				await writeHarmonyAutosave(recovered);
+				const index = autosaveHistory.value.findIndex((item) => item.id === draft.id);
+				if (index < 0) autosaveHistory.value.push(recovered);
+				else autosaveHistory.value.splice(index, 1, recovered);
+				host.ackNativeNotes?.(draft.id, result.digest);
+			}
+		}
 	} catch (cause) {
 		console.error("Could not load HarmonyOS automatic save history", cause);
+		reportError(cause);
+		autosaveRestoration = undefined;
 	}
+	})();
+	return autosaveRestoration;
 }
 
 async function restoreHistoricalDocument(
@@ -1680,7 +1758,11 @@ async function prepareDocumentPreview(tab: HarmonyDocumentTab): Promise<void> {
 			});
 			// A tab switch or unmount during that wait leaves the existing thumbnail
 			// in place; the record below still needs writing.
-			if (tab.id === activeId.value && surface.isConnected) {
+			if (
+				tab.id === activeId.value &&
+				surface.isConnected &&
+				!surface.querySelector('.cube-notes[data-drawing="true"]')
+			) {
 				const preview = await captureDocumentPreview(surface);
 				if (preview) {
 					tab.preview = preview;

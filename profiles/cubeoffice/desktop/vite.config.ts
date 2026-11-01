@@ -1,3 +1,4 @@
+import { cubeOfficeKernelAssetsPlugin } from "./kernel-assets-plugin.mjs";
 import { cubeOfficeLargeTextPlugin } from "./large-text-plugin.mjs";
 import { cubeOfficeBrandingPlugin } from "./branding-plugin.mjs";
 import { cubeOfficeEditorThemePlugin } from "./editor-theme-plugin.mjs";
@@ -12,6 +13,7 @@ import { cubeOfficeTextContributionPlugin } from "./text-contribution-plugin.mjs
 export default defineConfig(async (environment) =>
 	mergeConfig(await upstreamConfig(environment), {
 		plugins: [
+			cubeOfficeKernelAssetsPlugin(),
 			cubeOfficeBrandingPlugin(),
 			cubeOfficeEditorThemePlugin(),
 			cubeOfficeLargeTextPlugin(),

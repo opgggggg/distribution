@@ -1,0 +1,249 @@
+{
+  "sourceCommit": "43022d3584827e6adb89c18f1d7fa5b50ed17b21",
+  "oracle": "original complete OFD validator including the same Annex-A XSD engine",
+  "cases": [
+    {
+      "name": "original-image-writer",
+      "parts": {
+        "Doc_0/Pages/Page_0/Content.xml": "<ofd:Page xmlns:ofd=\"http://www.ofdspec.org/2016\"><ofd:Area><ofd:PhysicalBox>0 0 26.458333333333332 21.166666666666668</ofd:PhysicalBox></ofd:Area><ofd:Content><ofd:Layer ID=\"100000\"><ofd:ImageObject ID=\"3\" ResourceID=\"1\" Boundary=\"0 0 26.458333333333332 21.166666666666668\" CTM=\"26.458333333333332 0 0 21.166666666666668 0 0\"/></ofd:Layer></ofd:Content></ofd:Page>",
+        "OFD.xml": "<ofd:OFD xmlns:ofd=\"http://www.ofdspec.org/2016\" Version=\"1.0\" DocType=\"OFD\"><ofd:DocBody><ofd:DocInfo><ofd:DocID>00000000000040008000000000000001</ofd:DocID></ofd:DocInfo><ofd:DocRoot>Doc_0/Document.xml</ofd:DocRoot></ofd:DocBody></ofd:OFD>",
+        "Doc_0/Document.xml": "<ofd:Document xmlns:ofd=\"http://www.ofdspec.org/2016\"><ofd:CommonData><ofd:MaxUnitID>100001</ofd:MaxUnitID><ofd:PageArea><ofd:PhysicalBox>0 0 26.458333333333332 21.166666666666668</ofd:PhysicalBox></ofd:PageArea><ofd:DocumentRes>DocumentRes.xml</ofd:DocumentRes></ofd:CommonData><ofd:Pages><ofd:Page ID=\"2\" BaseLoc=\"Pages/Page_0/Content.xml\"/></ofd:Pages></ofd:Document>",
+        "Doc_0/DocumentRes.xml": "<ofd:Res xmlns:ofd=\"http://www.ofdspec.org/2016\" BaseLoc=\"Res\"><ofd:MultiMedias><ofd:MultiMedia ID=\"1\" Type=\"Image\" Format=\"PNG\"><ofd:MediaFile>image_0.png</ofd:MediaFile></ofd:MultiMedia></ofd:MultiMedias></ofd:Res>"
+      },
+      "binaryParts": {
+        "Doc_0/Res/image_0.png": "iVBORw0KGgo="
+      },
+      "expected": {
+        "valid": true,
+        "issues": [],
+        "checkedParts": [
+          "OFD.xml",
+          "Doc_0/Document.xml",
+          "Doc_0/DocumentRes.xml",
+          "Doc_0/Pages/Page_0/Content.xml"
+        ]
+      }
+    },
+    {
+      "name": "missing-image-reference-schema-result",
+      "parts": {
+        "Doc_0/Pages/Page_0/Content.xml": "<ofd:Page xmlns:ofd=\"http://www.ofdspec.org/2016\"><ofd:Area><ofd:PhysicalBox>0 0 26.458333333333332 21.166666666666668</ofd:PhysicalBox></ofd:Area><ofd:Content><ofd:Layer ID=\"100000\"><ofd:ImageObject ID=\"3\" Boundary=\"0 0 26.458333333333332 21.166666666666668\" CTM=\"26.458333333333332 0 0 21.166666666666668 0 0\"/></ofd:Layer></ofd:Content></ofd:Page>",
+        "OFD.xml": "<ofd:OFD xmlns:ofd=\"http://www.ofdspec.org/2016\" Version=\"1.0\" DocType=\"OFD\"><ofd:DocBody><ofd:DocInfo><ofd:DocID>00000000000040008000000000000001</ofd:DocID></ofd:DocInfo><ofd:DocRoot>Doc_0/Document.xml</ofd:DocRoot></ofd:DocBody></ofd:OFD>",
+        "Doc_0/Document.xml": "<ofd:Document xmlns:ofd=\"http://www.ofdspec.org/2016\"><ofd:CommonData><ofd:MaxUnitID>100001</ofd:MaxUnitID><ofd:PageArea><ofd:PhysicalBox>0 0 26.458333333333332 21.166666666666668</ofd:PhysicalBox></ofd:PageArea><ofd:DocumentRes>DocumentRes.xml</ofd:DocumentRes></ofd:CommonData><ofd:Pages><ofd:Page ID=\"2\" BaseLoc=\"Pages/Page_0/Content.xml\"/></ofd:Pages></ofd:Document>",
+        "Doc_0/DocumentRes.xml": "<ofd:Res xmlns:ofd=\"http://www.ofdspec.org/2016\" BaseLoc=\"Res\"><ofd:MultiMedias><ofd:MultiMedia ID=\"1\" Type=\"Image\" Format=\"PNG\"><ofd:MediaFile>image_0.png</ofd:MediaFile></ofd:MultiMedia></ofd:MultiMedias></ofd:Res>"
+      },
+      "binaryParts": {
+        "Doc_0/Res/image_0.png": "iVBORw0KGgo="
+      },
+      "expected": {
+        "valid": false,
+        "issues": [
+          {
+            "path": "Doc_0/Pages/Page_0/Content.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}ImageObject': The attribute 'ResourceID' is required but missing.\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/ofd:Page/ofd:Content/ofd:Layer/ofd:ImageObject"
+          }
+        ],
+        "checkedParts": [
+          "OFD.xml",
+          "Doc_0/Document.xml",
+          "Doc_0/DocumentRes.xml",
+          "Doc_0/Pages/Page_0/Content.xml"
+        ]
+      }
+    },
+    {
+      "name": "scoped-ids-boundary-matrix-and-resource-type",
+      "parts": {
+        "OFD.xml": "<o:OFD xmlns:o=\"http://www.ofdspec.org/2016\" Version=\"1.0\" DocType=\"OFD\"><o:DocBody><o:DocInfo><o:DocID>test</o:DocID></o:DocInfo><o:DocRoot>Doc.xml</o:DocRoot></o:DocBody></o:OFD>",
+        "Doc.xml": "<o:Document xmlns:o=\"http://www.ofdspec.org/2016\"><o:CommonData><o:MaxUnitID>2</o:MaxUnitID><o:PageArea><o:PhysicalBox>0 0 100 100</o:PhysicalBox></o:PageArea><o:DocumentRes>Res.xml</o:DocumentRes></o:CommonData><o:Pages><o:Page ID=\"1\" BaseLoc=\"Page.xml\"/></o:Pages></o:Document>",
+        "Res.xml": "<o:Res xmlns:o=\"http://www.ofdspec.org/2016\"><o:Fonts><o:Font ID=\"3\" FontName=\"Test\"><o:FontFile>missing.ttf</o:FontFile></o:Font></o:Fonts></o:Res>",
+        "Page.xml": "<o:Page xmlns:o=\"http://www.ofdspec.org/2016\"><o:Content><o:Layer ID=\"2\"><o:ImageObject ID=\"2\" ResourceID=\"3\" Boundary=\"0 0 -1 10\" CTM=\"1 0 0\"/><o:TextObject ID=\"4\" Font=\"99\" Size=\"4\" Boundary=\"0 0 10 10\"><o:TextCode X=\"0\" Y=\"4\">Test</o:TextCode></o:TextObject></o:Layer></o:Content></o:Page>"
+      },
+      "expected": {
+        "valid": false,
+        "issues": [
+          {
+            "path": "Res.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}Res': The attribute 'BaseLoc' is required but missing.\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:Res"
+          },
+          {
+            "path": "Res.xml",
+            "code": "missing-part",
+            "message": "Missing referenced part missing.ttf."
+          },
+          {
+            "path": "Page.xml",
+            "code": "duplicate-id",
+            "message": "ID 2 is already declared as Layer."
+          },
+          {
+            "path": "Page.xml",
+            "code": "boundary",
+            "message": "Boundary requires four finite numbers and non-negative dimensions."
+          },
+          {
+            "path": "Page.xml",
+            "code": "matrix",
+            "message": "CTM requires six finite numbers."
+          },
+          {
+            "path": "Page.xml",
+            "code": "reference-type",
+            "message": "ID 3 is Font, expected MultiMedia."
+          },
+          {
+            "path": "Page.xml",
+            "code": "unresolved-id",
+            "message": "Unknown Font ID 99."
+          },
+          {
+            "path": "Doc.xml",
+            "code": "max-unit-id",
+            "message": "MaxUnitID 2 is less than declared ID 4."
+          }
+        ],
+        "checkedParts": [
+          "OFD.xml",
+          "Doc.xml",
+          "Res.xml",
+          "Page.xml"
+        ]
+      }
+    },
+    {
+      "name": "escaping-container-reference",
+      "parts": {
+        "OFD.xml": "<o:OFD xmlns:o=\"http://www.ofdspec.org/2016\"><o:DocBody><o:DocRoot>../../escape.xml</o:DocRoot></o:DocBody></o:OFD>"
+      },
+      "expected": {
+        "valid": false,
+        "issues": [
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}OFD': The attribute 'Version' is required but missing.\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD"
+          },
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}OFD': The attribute 'DocType' is required but missing.\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD"
+          },
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}DocRoot': This element is not expected. Expected is ( {http://www.ofdspec.org/2016}DocInfo ).\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD/o:DocBody/o:DocRoot"
+          },
+          {
+            "path": "OFD.xml",
+            "code": "path",
+            "message": "Error: Archive resource escapes its root."
+          }
+        ],
+        "checkedParts": [
+          "OFD.xml"
+        ]
+      }
+    },
+    {
+      "name": "shared-parts-across-independent-documents",
+      "parts": {
+        "OFD.xml": "<o:OFD xmlns:o=\"http://www.ofdspec.org/2016\"><o:DocBody><o:DocRoot>A.xml</o:DocRoot></o:DocBody><o:DocBody><o:DocRoot>B.xml</o:DocRoot></o:DocBody></o:OFD>",
+        "A.xml": "<o:Document xmlns:o=\"http://www.ofdspec.org/2016\"><o:CommonData><o:MaxUnitID>4</o:MaxUnitID></o:CommonData><o:Pages><o:Page ID=\"1\" BaseLoc=\"Shared.xml\"/></o:Pages></o:Document>",
+        "B.xml": "<o:Document xmlns:o=\"http://www.ofdspec.org/2016\"><o:CommonData><o:MaxUnitID>2</o:MaxUnitID></o:CommonData><o:Pages><o:Page ID=\"1\" BaseLoc=\"Shared.xml\"/></o:Pages></o:Document>",
+        "Shared.xml": "<o:Page xmlns:o=\"http://www.ofdspec.org/2016\"><o:Content><o:Layer ID=\"3\"><o:PathObject ID=\"4\" Boundary=\"0 0 10 10\"><o:AbbreviatedData>M 0 0 L 1 1</o:AbbreviatedData></o:PathObject></o:Layer></o:Content></o:Page>"
+      },
+      "expected": {
+        "valid": false,
+        "issues": [
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}OFD': The attribute 'Version' is required but missing.\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD"
+          },
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}OFD': The attribute 'DocType' is required but missing.\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD"
+          },
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}DocRoot': This element is not expected. Expected is ( {http://www.ofdspec.org/2016}DocInfo ).\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD/o:DocBody[1]/o:DocRoot"
+          },
+          {
+            "path": "OFD.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}DocRoot': This element is not expected. Expected is ( {http://www.ofdspec.org/2016}DocInfo ).\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:OFD/o:DocBody[2]/o:DocRoot"
+          },
+          {
+            "path": "A.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}CommonData': Missing child element(s). Expected is ( {http://www.ofdspec.org/2016}PageArea ).\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:Document/o:CommonData"
+          },
+          {
+            "path": "B.xml",
+            "code": "xsd",
+            "message": "Element '{http://www.ofdspec.org/2016}CommonData': Missing child element(s). Expected is ( {http://www.ofdspec.org/2016}PageArea ).\n",
+            "level": 2,
+            "line": 1,
+            "col": 0,
+            "xpath": "/o:Document/o:CommonData"
+          },
+          {
+            "path": "B.xml",
+            "code": "max-unit-id",
+            "message": "MaxUnitID 2 is less than declared ID 4."
+          }
+        ],
+        "checkedParts": [
+          "OFD.xml",
+          "A.xml",
+          "B.xml",
+          "Shared.xml"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+	"name": "@cubexp/kernels",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./sync": {
+			"types": "./dist/sync.d.ts",
+			"import": "./dist/sync.js"
+		}
+	},
+	"scripts": {
+		"build": "node ../../scripts/build-formats-kernel.mjs && tsc -p tsconfig.json && node -e \"require('node:fs').copyFileSync('src/formats-kernel.wasm','dist/formats-kernel.wasm')\"",
+		"prepack": "npm run build",
+		"test:built": "node --test tests/*.mjs"
+	},
+	"devDependencies": {
+		"typescript": "^5.0.3",
+		"pdf-lib": "^1.17.1",
+		"pdfjs-dist": "^6.2.108",
+		"@napi-rs/canvas": "^1.0.3"
+	},
+	"license": "Apache-2.0",
+	"description": "Portable CubeOffice owned-format Rust WASM kernels and ABI host",
+	"files": [
+		"dist",
+		"README.md",
+		"THIRD_PARTY_LICENSES.txt",
+		"LICENSE"
+	],
+	"types": "./dist/index.d.ts",
+	"publishConfig": {
+		"access": "public"
+	}
+}

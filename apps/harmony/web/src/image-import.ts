@@ -1,6 +1,6 @@
 import type { UiArtifactFormatContribution } from "@yaochn/als-office-editor-ui/vue";
 import { IMAGE_FORMAT_MANIFEST } from "@yaochn/als-office-image";
-import UTIF from "utif";
+import { decodeTiffPage } from "./image-codec";
 
 import { decodeImageWithHost } from "./harmony-host";
 
@@ -12,7 +12,7 @@ type ArtifactConverter = NonNullable<UiArtifactFormatContribution["converters"]>
  * `.png`. Loaded with the image engine chunk, never eagerly.
  *
  * GIF, BMP and SVG decode in every WebView; TIFF has no WebView support outside
- * Safari, so it goes through UTIF; HEIC decodes in WKWebView from iOS 17 and otherwise
+ * Safari, so it goes through the shared Rust decoder; HEIC decodes in WKWebView from iOS 17 and otherwise
  * through the native host's system decoder.
  */
 
@@ -197,56 +197,10 @@ function vectorSize(width: number, height: number, markup: string): [number, num
 	return [width, height];
 }
 
-function decodeTiff(buffer: ArrayBuffer): Promise<Blob> {
-	const pages = UTIF.decode(buffer);
-	// A multi-page TIFF (a fax or a scanned stack) opens at its first page.
-	const page = pages[0];
-	if (!page) throw new Error("TIFF 文件里没有图片。");
-	UTIF.decodeImage(buffer, page);
-	const { width, height } = page;
-	if (!width || !height || width * height > 40_000_000) {
-		throw new RangeError("TIFF 图片尺寸超出可打开的范围。");
-	}
-	const pixels = new Uint8ClampedArray(width * height * 4);
-	pixels.set(UTIF.toRGBA8(page));
-	const raw = createCanvas(width, height);
-	raw.getContext("2d")!.putImageData(new ImageData(pixels, width, height), 0, 0);
-	const orientation = page.t274?.[0] ?? 1;
-	const turned = orientation >= 5 && orientation <= 8;
-	const size = fitOutput(turned ? height : width, turned ? width : height, 0);
-	const canvas = createCanvas(size.width, size.height);
-	const context = canvas.getContext("2d")!;
-	context.scale(size.width / (turned ? height : width), size.height / (turned ? width : height));
-	applyExifOrientation(context, orientation, width, height);
-	context.drawImage(raw, 0, 0);
-	return canvasToPng(canvas);
-}
-
-/** Maps stored pixels onto the displayed frame for EXIF/TIFF orientations 1–8. */
-function applyExifOrientation(
-	context: CanvasRenderingContext2D,
-	orientation: number,
-	width: number,
-	height: number,
-): void {
-	switch (orientation) {
-		case 2:
-			return context.transform(-1, 0, 0, 1, width, 0);
-		case 3:
-			return context.transform(-1, 0, 0, -1, width, height);
-		case 4:
-			return context.transform(1, 0, 0, -1, 0, height);
-		case 5:
-			return context.transform(0, 1, 1, 0, 0, 0);
-		case 6:
-			return context.transform(0, 1, -1, 0, height, 0);
-		case 7:
-			return context.transform(0, -1, -1, 0, height, width);
-		case 8:
-			return context.transform(0, -1, 1, 0, 0, width);
-		default:
-			return;
-	}
+async function decodeTiff(buffer: ArrayBuffer): Promise<Blob> {
+	// A multi-page TIFF opens at its first page; the image editor retains all pages.
+	const decoded = await decodeTiffPage(buffer);
+	return decodeWithWebView(decoded.blob, "image/png");
 }
 
 function fitOutput(width: number, height: number, minSide: number) {

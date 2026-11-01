@@ -1,19 +1,81 @@
 # CubeOffice for iOS / iPadOS
 
-This iOS target reuses the mobile Web editor from `apps/harmony/web` inside a native
-`WKWebView`, the same way the Android target does. The iOS host provides the system
-document picker, chunked Save As, external-link handling, and the startup splash
-without duplicating editor code; local IndexedDB autosave is the Web shell's own.
+This iOS target keeps the existing CubeOffice workspace and document library. Notes
+open in the Rust/UIKit editor directly; other formats continue to use the shared
+mobile editors from `apps/harmony/web` while their native migrations remain open.
+The iOS host supplies document pickers, file delivery, external links and the splash.
 
 `apps/harmony/web/src/android/` is the shared touch workspace, so iPhone and iPad get
 the same UI as Android and HarmonyOS phones. Nothing in those components branches on
 platform.
 
+## Rust native notes in CubeOffice
+
+The `NativeNotesRegression` Xcode scheme runs hosted UIKit/Rust integration tests
+inside this same application (no additional QA app). It covers editing after a
+background flush, color/undo, camera presentation before gesture end, and live ink
+during a complex board's background refinement. It also covers cold native-host
+opening, exact preview-cache reuse, viewport raster reuse, Latin/CJK text, rapid
+commits and 40 Pencil touch sequences across all ten brushes, color changes,
+autosave, unrelated palm cancellation and missing/recycled touch callbacks.
+These are controller/ABI-to-layer tests using touch doubles, not physical
+Pencil-to-photon measurements. Run it with `xcodebuild test` and
+an iOS device/simulator destination. For the optional private-board regression,
+copy an archive to the test app's `Library/Caches/NativeCanvasRegression.cubenote`;
+the test edits a temporary copy and leaves the original library untouched. Without
+that file, only this private regression is explicitly skipped.
+
+The existing CubeOffice application (`com.cubexp.office`) includes native notes. Rust owns
+notes state, brushes, layout, typed input and wgpu/Metal drawing; UIKit supplies controls,
+coalesced touches, the native color picker and file services. It does not create a
+WKWebView for drawing. Opening/new/importing a note from the existing file list
+enters the native editor; its back button saves and returns to that list, including
+the new thumbnail and full archive/history. It does not create a second app or a
+separate user library. Remaining feature/UI parity is tracked in the migration ledger.
+
+Archive decoding occurs once on the file worker and transfers ownership of the
+Rust session to the editor. The production canvas retains committed meshes and
+GPU textures. Camera changes update a uniform and do not queue whole-board CPU
+refinement. Growing ink uses GPU coverage; oil uploads only changed bristle
+sections. Both erasers preserve existing geometry and alter GPU coverage.
+Photo transforms reuse their decoded texture, paper is procedural, and recent
+undo/redo geometry is retained under a bounded cache. Pure ink boards skip font
+initialization; text loads portable fonts on the worker and uses object textures.
+The CJK fallback and SIL OFL license are in `App/Resources/NotesFonts`.
+
+The CPU reference/fallback renderer still has its bounded draft, exact PNG cache,
+progressive raster tiles and geometry caches. It also supplies exports and
+thumbnails. Those raster-specific assertions are intentionally separate from the
+production GPU acceptance tests. Camera movement in the GPU path must present
+new frames before fingers lift, retain the mesh upload count and preserve actual
+GPU pixels through selection, erasure, undo/redo and archive reopening. Renderer
+resources are released on memory warnings; GPU readback is reserved for QA.
+
+From the repository root, after installing Rust 1.88.0:
+
+```sh
+rustup target add --toolchain 1.88.0 aarch64-apple-ios aarch64-apple-ios-sim
+npm run test:notes:native
+APP_PROFILE=cubeoffice npm run build:ios
+```
+
+The script builds a static XCFramework for iOS devices and Apple Silicon simulators,
+then generates and builds the existing `AuroraPrimeOffice.xcodeproj`. The old
+`build:notes:ios-native` command is an alias for the same application. Physical device
+signing uses the existing bundle ID and profile. See
+[the full migration ledger](../../docs/rust-rewrite.md) for acceptance and measured limits.
+
+Native drafts are atomically saved under Application Support. The workspace writes
+a valid initial archive before presenting native UI, and imports unacknowledged
+native drafts into its existing IndexedDB history after a restart. Recovery is
+acknowledged only after that history write succeeds; original file-provider metadata
+is retained. Pointer samples never pass through the JavaScript bridge.
+
 ## Requirements
 
 - macOS with **Xcode 15 or newer** (the Command Line Tools alone are not enough).
 - **XcodeGen**: `brew install xcodegen`.
-- Node 20+, and `npm install` already run at the repository root.
+- Node 22.13+, and `npm install` already run at the repository root.
 - The iOS platform component. Xcode 26 no longer ships it: `xcodebuild -showsdks` lists an
   iOS SDK either way, but `xcrun simctl list runtimes` is empty and every destination is
   ineligible until you run `xcodebuild -downloadPlatform iOS` (or Xcode → Settings →
@@ -288,3 +350,59 @@ Still not verified: opening a document _into_ the app through the picker or a sh
 staging path in `DocumentBridge`), and everything on the device beyond launching — document
 open and save were exercised only in the simulator. Siri and Shortcuts invocation remains
 open, and a device is the only place it can be settled.: record the physical iPad install)
+
+The native notes chrome follows the existing iPad design. Rust supplies the ten pen
+glyphs plus highlighter/eraser/lasso, tray/topbar geometry, page overlay and action
+cards. The UIKit binding supplies OS widgets, direct coalesced input, file services,
+camera/photo library and the native color picker. The existing workspace owns the
+file gallery; notes provide autosave/history, selection/erasing/tape/background tools and worker-rendered PNG/
+raster PDF exports. Full feature and 1:1 UI acceptance remain open in
+`docs/rust-rewrite.md`; integration uses the existing App identity and file list. The user confirmed
+smooth drawing/zoom on iPad mini 6. A subsequent four-stroke, roughly 25-second
+device sample recorded input p95 0.033 ms, live ink raster p95 19.872 ms and no
+display-link interval above 33 ms. This is a limited CPU/UI timing sample, not
+hardware Pencil-to-photon or dense-board acceptance. Local QA timing aggregates
+are available at `Library/Caches/NativeNotesMetrics.json` in the app container.
+Selection color/opacity, pigment-preserving duplication, attached shapes/arrows and
+the original alignment/equal-spacing/grid snapping now have native implementations.
+
+Native notes camera/selection QA (2026-10-23): the mini 6 hosted regression now
+has 19 cases: the latest CPU-path run passed 18 and failed the whole-stroke eraser's
+250 ms publication budget. Selected content restores the original bottom capsule (color, arrangement, saved
+region, duplicate/delete and conditional text/shape actions), and an
+isolated cropped layer follows manipulation before pointer-up; an underlying
+replacement patch removes the original pixels without erasing other objects.
+Camera updates use bounded world-aligned tiles, progressive rows and at most four
+workers sharing immutable compiled paths/fonts/image trees. Local object edits retain
+unaffected tiles; detached atomic tokens interrupt stale camera work between
+objects and brush passes. The dense-board delete regression now measures command
+latency and actual pixel publication instead of allowing a whole-scene redraw.
+Timings are automated UIKit/Rust measurements using touch doubles, not hardware
+Pencil latency. See `docs/rust-rewrite.md` for cache limits, visual
+checks and measurement scope. Hosted tests keep only their process awake; normal
+Release delivery retains the app's idle policy and existing bundle/data identity.
+Live oil retains all 29 pigment passes but updates only new ribbon sections and
+dirty tiles. An 8193-sample mini 6 hosted stroke measured late worker-frame p95
+19.27 ms, max input callback 0.102 ms and max snapshot capture 0.816 ms. The test
+also verifies final commit, undo and resumed drawing. Incremental pixel tests
+cover overlapping paths, pressure, trims and tile seams; interchange geometry
+remains covered by the native/WASM brush fixtures. These timings use generated
+Pencil samples and do not measure hardware-to-display latency.
+The expanded all-tool audit covers 10 pens, highlighter and both eraser modes.
+Direct native paths and retained dirty coverage reduce long brush/watercolor
+updates to 14.5/8.0 ms on mini 6, but whole-stroke erase still publishes after
+363 ms p95 (path erase 181 ms p95, cold max 437 ms). CPU recomposition remains an
+open performance issue; wgpu is the proposed next rendering layer and has not
+been integrated. Full timings, scope and the failing acceptance budget are in
+`docs/rust-rewrite.md`.
+
+The iPad canvas migration adds `NativeGpuCanvas.swift` and the Rust `gpu-renderer`
+feature (wgpu/Metal). Build the xcframework with
+`node scripts/build-notes-native-ios.mjs`, then regenerate the Xcode project.
+The normal CubeOffice app uses the GPU path; there is no separate delivery app
+or file-format migration. Raster exports/thumbnails retain the existing renderer.
+`NativeGpuCanvasTests` verifies the production GPU view; the earlier
+`NativeCanvasTests` uses a Debug-only CPU reference initializer for assertions
+about the old raster layers. The earlier CPU eraser failure remains a historical
+baseline, not an assertion about GPU performance. See `docs/rust-rewrite.md` for
+the implementation scope and final physical-device measurements.

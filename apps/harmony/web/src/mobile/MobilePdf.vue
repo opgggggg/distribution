@@ -147,6 +147,15 @@ async function annotation(type: "Highlight" | "Text" | "FreeText") {
 		error.value = "请输入批注或填写文字。";
 		return;
 	}
+	// Rust commands capture detached values; Vue proxies are not cloneable.
+	const annotation = {
+		operation: "add" as const,
+		pageNumber: at?.pageNumber ?? page.value,
+		type,
+		contents: text.value,
+		color: color.value,
+		rect: { ...(type === "Highlight" ? at!.bbox! : box.value) },
+	};
 	try {
 		await update(
 			async (bytes) =>
@@ -155,16 +164,7 @@ async function annotation(type: "Highlight" | "Text" | "FreeText") {
 						await editPdfDocument(
 							bytes,
 							{
-								annotations: [
-									{
-										operation: "add",
-										pageNumber: at?.pageNumber ?? page.value,
-										type,
-										contents: text.value,
-										color: color.value,
-										rect: type === "Highlight" ? at!.bbox! : box.value,
-									},
-								],
+								annotations: [annotation],
 							},
 							{
 								fontBytes: viewer.value?.getFormFontBytes(),

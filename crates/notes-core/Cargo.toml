@@ -1,0 +1,37 @@
+[package]
+name = "cubeoffice-notes-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+default = []
+gpu-renderer = ["native-renderer", "dep:wgpu", "dep:lyon_tessellation", "dep:bytemuck", "dep:pollster"]
+native-renderer = ["dep:resvg", "dep:base64", "dep:imagesize", "dep:svgtypes"]
+
+[lib]
+crate-type = ["rlib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "cubeoffice-notes"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "=1.0.151", features = ["preserve_order", "float_roundtrip"] }
+zip = { version = "2.4.2", default-features = false, features = ["deflate"] }
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+roxmltree = "0.20"
+office-browser-abi = { path = "../../als-office/crates/office-browser-abi" }
+resvg = { version = "=0.45.1", default-features = false, features = ["text", "raster-images"], optional = true }
+base64 = { version = "=0.22.1", optional = true }
+imagesize = { version = "=0.13.0", optional = true }
+svgtypes = { version = "=0.15.3", optional = true }
+
+
+wgpu = { version = "=26.0.1", default-features = false, features = ["std", "metal", "wgsl"], optional = true }
+lyon_tessellation = { version = "1", optional = true }
+bytemuck = { version = "1", features = ["derive"], optional = true }
+pollster = { version = "0.4", optional = true }

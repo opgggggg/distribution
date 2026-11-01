@@ -3,6 +3,7 @@ import { quarterTurn, rotatedSize, rotateVector } from "../view-rotation.js";
 import { isInfinitePage, pageContentBounds } from "../board.js";
 import { preservePigmentIdentity } from "../brushes/pigment.js";
 import { NoteColorPicker } from "./color-picker.js";
+import { writeNotebookInBackground } from "./notebook-writer.js";
 import { canvasColors } from "./color-picker-model.js";
 import {
 	listBrushPlugins,
@@ -22,10 +23,9 @@ import {
 	watch,
 	type PropType,
 } from "vue";
-import { readNotebookState, writeNotebook, writeXopp } from "../codec.js";
+import { RustNoteHistory } from "../kernel/history.js";
 import { nativeNotesFormat } from "../formats.js";
 import { bounds, translate, type Bounds, type Point } from "../geometry.js";
-import { NoteHistory, type NoteHistoryState } from "../history.js";
 import {
 	clone,
 	createNotebook,
@@ -358,7 +358,7 @@ export const NotesEditor = defineComponent({
 				): void;
 				sampleColor(x: number, y: number, backgroundOnly?: boolean): string | undefined;
 			}>();
-		const history = shallowRef<NoteHistory>(),
+		const history = shallowRef<RustNoteHistory>(),
 			book = shallowRef<Notebook>(),
 			revision = ref(0),
 			dirty = ref(false);
@@ -542,7 +542,7 @@ export const NotesEditor = defineComponent({
 			previousFocus: HTMLElement | null = null;
 		const pageTitle = (index: number) =>
 			props.locale.startsWith("zh") ? `第 ${index + 1} 页` : `Page ${index + 1}`;
-		function current(): NoteHistory {
+		function current(): RustNoteHistory {
 			if (!ready.value || !history.value) throw new Error("Notebook is not loaded.");
 			return history.value;
 		}
@@ -579,10 +579,9 @@ export const NotesEditor = defineComponent({
 				unsubscribe?.();
 				history.value?.close();
 				try {
-					let document: Notebook;
-					let storedHistory: NoteHistoryState | undefined;
+					let loaded: RustNoteHistory;
 					if (source === undefined || source === null)
-						document = createNotebook(name.value.replace(/\.[^.]+$/, ""), true);
+						loaded = await RustNoteHistory.create(createNotebook(name.value.replace(/\.[^.]+$/, ""), true));
 					else {
 						if (source instanceof Blob && source.size > LIMITS.bytes)
 							throw new Error("Notebook exceeds the 64 MB editing limit.");
@@ -595,12 +594,11 @@ export const NotesEditor = defineComponent({
 										? new Uint8Array(source)
 										: undefined;
 						if (!bytes) throw new Error("Unsupported notebook source.");
-						const restored = readNotebookState(bytes, name.value);
-						document = restored.document;
-						storedHistory = restored.history;
+						loaded = await RustNoteHistory.open(bytes, name.value);
 					}
-					if (token !== generation) return;
-					history.value = new NoteHistory(document, false, storedHistory);
+					if (token !== generation) { loaded.close(); return; }
+					loaded.setReadonly(props.readonly);
+					history.value = loaded;
 					unsubscribe = history.value.subscribe(sync);
 					ready.value = true;
 					savedOnce.value = false;
@@ -692,6 +690,7 @@ export const NotesEditor = defineComponent({
 					selected.value = [];
 					canvas.value?.cancel();
 				}
+				history.value?.setReadonly(readonly);
 			},
 		);
 		watch(active, () => {
@@ -1779,13 +1778,16 @@ export const NotesEditor = defineComponent({
 			options: NotesSaveOptions = {},
 		): Promise<Blob> {
 			options.signal?.throwIfAborted();
-			const document = snapshot();
+			// History documents are immutable; postMessage clones their shared graph once.
+			// Deep-cloning here duplicated the current page before every automatic save.
+			const document = draft.value ? snapshot() : current().document;
 			if (["notes", "cubenote"].includes(format))
-				return writeNotebook(
+				return writeNotebookInBackground(
 					document,
 					current().capture(draft.value ? document : undefined),
+					options.signal,
 				);
-			if (["xopp", "xoj"].includes(format)) return writeXopp(document);
+			if (["xopp", "xoj"].includes(format)) return current().exportXopp(document, options.signal);
 			if (format === "pdf") return exportNotesPdf(document, options.signal);
 			if (format === "png")
 				return exportNotesPagePng(document.pages[active.value], options.signal);
@@ -3214,6 +3216,8 @@ export const NotesEditor = defineComponent({
 				"section",
 				{
 					ref: root,
+					"data-drawing": drawing.value ? "true" : undefined,
+					"data-kernel": "rust",
 					class: [
 						"cube-notes",
 						props.compact && "cube-notes--compact",

@@ -1,15 +1,4 @@
-import { XMLSerializer } from "@xmldom/xmldom";
-import {
-	Archive,
-	attr,
-	children,
-	first,
-	descendants,
-	resolvePath,
-	escapeXml as e,
-	zip,
-	parseXml,
-} from "./archive.js";
+import { Archive } from "./archive.js";
 import { abort, blob, type ReadOptions } from "./types.js";
 export interface OfdSignatureContext {
 	id: string;
@@ -61,119 +50,79 @@ const base64 = (data: Uint8Array) => {
 		value += String.fromCharCode(...data.subarray(i, i + 8192));
 	return btoa(value);
 };
-function decode(value: string): Uint8Array {
-	const clean = value.replace(/\s+/g, "");
-	if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(clean))
-		throw new Error("Invalid signature digest encoding.");
-	return Uint8Array.from(atob(clean), (c) => c.charCodeAt(0));
+interface VerifyPlanEntry {
+	id: string;
+	digestMethod: string;
+	references: { path: string; missing: boolean }[];
+	context?: {
+		id: string;
+		method: string;
+		descriptorPath: string;
+		valuePath: string;
+		sealPath?: string;
+		signedAt?: string;
+	} | null;
 }
-function equal(a: Uint8Array, b: Uint8Array): boolean {
-	if (a.length !== b.length) return false;
-	let diff = 0;
-	for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-	return diff === 0;
-}
+/** The provider owns crypto/trust; Rust owns package paths, digest comparison and results. */
 export async function verifyOfdSignatures(
 	source: Blob | Uint8Array | ArrayBuffer,
 	options: VerifySignatureOptions = {},
 ): Promise<OfdSignatureVerification[]> {
 	const archive = await Archive.open(source, options),
-		ofd = archive.xml("OFD.xml"),
-		results: OfdSignatureVerification[] = [];
-	for (const body of children(ofd, "DocBody")) {
-		const reference = children(body, "Signatures")[0]?.textContent?.trim();
-		if (!reference) continue;
-		const indexPath = resolvePath("OFD.xml", reference);
-		for (const entry of children(archive.xml(indexPath), "Signature")) {
-			abort(options.signal);
-			const result: OfdSignatureVerification = {
-				id: attr(entry, "ID"),
-				references: [],
-				integrity: "invalid",
-				cryptographicValidity: "unverified",
-				trust: "unknown",
-			};
-			results.push(result);
-			try {
-				const path = resolvePath(indexPath, attr(entry, "BaseLoc")),
-					root = archive.xml(path),
-					signedInfo = children(root, "SignedInfo")[0];
-				if (!signedInfo) throw new Error("Signature is missing SignedInfo.");
-				const refs = children(signedInfo, "References")[0];
-				if (!refs || !children(refs, "Reference").length)
-					throw new Error("Signature has no protected file references.");
-				const method = attr(refs, "CheckMethod");
-				for (const ref of children(refs, "Reference")) {
-					abort(options.signal);
-					const file = attr(ref, "FileRef");
-					if (!file.startsWith("/"))
-						throw new Error("Signature FileRef must be an absolute package path.");
-					const location = resolvePath("", file),
-						data = archive.files[location];
-					if (!data) {
-						result.references.push({
-							path: location,
-							valid: false,
-							error: "Missing protected file.",
-						});
-						continue;
-					}
-					try {
-						result.references.push({
-							path: location,
-							valid: equal(
-								await (options.digest ?? webDigest)(method, data),
-								decode(first(ref, "CheckValue")?.textContent ?? ""),
-							),
-						});
-					} catch (error) {
-						result.integrity = "unsupported";
-						result.references.push({
-							path: location,
-							valid: false,
-							error: String(error),
-						});
-					}
-				}
-				if (result.integrity !== "unsupported")
-					result.integrity = result.references.every((ref) => ref.valid)
-						? "valid"
-						: "invalid";
-				const valuePath = resolvePath(
-						path,
-						first(root, "SignedValue")?.textContent?.trim() ?? "",
-					),
-					signedValue = archive.files[valuePath];
-				if (!signedValue) throw new Error("Missing SignedValue.");
-				const seal = children(signedInfo, "Seal")[0],
-					sealRef = seal && first(seal, "BaseLoc")?.textContent?.trim();
-				if (options.verifySignedValue) {
-					const verification = await options.verifySignedValue({
-						id: result.id,
-						method: first(signedInfo, "SignatureMethod")?.textContent?.trim() ?? "",
-						descriptor: archive.files[path].slice(),
-						signedValue: signedValue.slice(),
-						...(sealRef
-							? { seal: archive.files[resolvePath(path, sealRef)]?.slice() }
-							: {}),
-						signedAt: first(signedInfo, "SignatureDateTime")?.textContent ?? undefined,
-					});
-					result.cryptographicValidity = verification.valid ? "valid" : "invalid";
-					result.trust =
-						verification.trusted === undefined
-							? "unknown"
-							: verification.trusted
-								? "trusted"
-								: "untrusted";
-				}
-			} catch (error) {
+		core = archive.core();
+	const read = (path: string): Uint8Array => {
+		core.request({ op: "part", path });
+		return core.save();
+	};
+	try {
+		const plan = core.request<VerifyPlanEntry[]>({ op: "verifyPlan" });
+		const digests: Record<string, unknown>[] = [],
+			providers: Record<string, unknown>[] = [];
+		for (const [entry, item] of plan.entries()) {
+			for (const [reference, ref] of item.references.entries()) {
 				abort(options.signal);
-				result.error = error instanceof Error ? error.message : String(error);
+				if (ref.missing) continue;
+				try {
+					const digest = await (options.digest ?? webDigest)(
+						item.digestMethod,
+						read(ref.path),
+					);
+					digests.push({ entry, reference, path: ref.path, digest: base64(digest) });
+				} catch (error) {
+					abort(options.signal);
+					digests.push({ entry, reference, path: ref.path, error: String(error) });
+				}
+			}
+			if (item.context && options.verifySignedValue) {
+				const c = item.context;
+				try {
+					const result = await options.verifySignedValue({
+						id: c.id,
+						method: c.method,
+						descriptor: read(c.descriptorPath),
+						signedValue: read(c.valuePath),
+						...(c.sealPath ? { seal: read(c.sealPath) } : {}),
+						signedAt: c.signedAt,
+					});
+					providers.push({
+						entry,
+						valid: result.valid,
+						...(result.trusted === undefined ? {} : { trusted: result.trusted }),
+					});
+				} catch (error) {
+					abort(options.signal);
+					providers.push({
+						entry,
+						error: error instanceof Error ? error.message : String(error),
+					});
+				}
 			}
 		}
+		abort(options.signal);
+		return core.request({ op: "verifyFinish", digests, providers });
+	} finally {
+		core.close();
 	}
-	abort(options.signal);
-	return results;
 }
 export interface SignOfdOptions extends ReadOptions {
 	documentIndex?: number;
@@ -196,71 +145,42 @@ export async function signOfdDocument(
 	options: SignOfdOptions,
 ): Promise<Blob> {
 	const archive = await Archive.open(source, options),
-		parts = { ...archive.files },
-		ofd = archive.xml("OFD.xml"),
-		body = children(ofd, "DocBody")[options.documentIndex ?? 0];
-	if (!body) throw new RangeError("Document index is outside the OFD package.");
-	const serializer = new XMLSerializer(),
-		encode = (s: string) => new TextEncoder().encode(s);
-	const ns = ofd.namespaceURI || "http://www.ofdspec.org/2016",
-		namespace = `xmlns:ofd="${e(ns)}"`;
-	let reference = children(body, "Signatures")[0];
-	const indexPath = reference
-		? resolvePath("OFD.xml", reference.textContent?.trim() ?? "")
-		: `Signatures-${crypto.randomUUID()}/Signatures.xml`;
-	let index = parts[indexPath]
-		? archive.xml(indexPath)
-		: parseXml(`<ofd:Signatures ${namespace}/>`);
-	// Appending must not invalidate an existing signature that protects the index.
-	for (const ref of children(index, "Signature")) {
-		const sigPath = resolvePath(indexPath, attr(ref, "BaseLoc")),
-			signature = archive.xml(sigPath);
-		if (
-			descendants(signature, "Reference").some(
-				(r) => resolvePath("", attr(r, "FileRef")) === indexPath,
-			)
-		)
-			throw new Error(
-				"The signature index is protected; appending would invalidate an existing signature.",
+		core = archive.core();
+	try {
+		const plan = core.request<{
+			paths: string[];
+			descriptorPath: string;
+			valuePath: string;
+			sealPath?: string | null;
+			digestMethod: string;
+		}>({
+			op: "signBegin",
+			documentIndex: options.documentIndex,
+			digestMethod: options.digestMethod,
+			signatureMethod: options.signatureMethod,
+			provider: options.provider,
+			signedAt: options.signedAt,
+			stamps: options.stamps,
+			hasSeal: !!options.seal,
+			nonce: crypto.randomUUID(),
+			indexNonce: crypto.randomUUID(),
+		});
+		if (plan.sealPath && options.seal) core.setPart(plan.sealPath, options.seal);
+		const hashes: Record<string, string> = Object.create(null);
+		for (const path of plan.paths) {
+			abort(options.signal);
+			core.request({ op: "part", path });
+			hashes[path] = base64(
+				await (options.digest ?? webDigest)(plan.digestMethod, core.save()),
 			);
-	}
-	if (!reference) {
-		reference = ofd.ownerDocument!.createElementNS(ns, "ofd:Signatures");
-		reference.textContent = indexPath;
-		body.appendChild(reference);
-		parts["OFD.xml"] = encode(serializer.serializeToString(ofd.ownerDocument!));
-	}
-	const id = `s${crypto.randomUUID().replace(/-/g, "")}`,
-		directory = resolvePath(indexPath, `${id}/placeholder`).replace(/placeholder$/, ""),
-		descriptorPath = `${directory}Signature.xml`,
-		valuePath = `${directory}SignedValue.dat`;
-	const entry = index.ownerDocument!.createElementNS(ns, "ofd:Signature");
-	entry.setAttribute("ID", id);
-	entry.setAttribute("Type", options.seal ? "Seal" : "Sign");
-	entry.setAttribute("BaseLoc", `/${descriptorPath}`);
-	index.appendChild(entry);
-	index.setAttribute("MaxSignId", id);
-	parts[indexPath] = encode(serializer.serializeToString(index));
-	if (options.seal) parts[`${directory}Seal.esl`] = options.seal.slice();
-	const digestMethod = options.digestMethod ?? "SHA256",
-		refs: string[] = [];
-	for (const path of Object.keys(parts).sort()) {
+		}
+		core.request({ op: "signDescriptor", hashes });
+		const value = await options.sign(core.save());
 		abort(options.signal);
-		if (path === indexPath) continue;
-		refs.push(
-			`<ofd:Reference FileRef="/${e(path)}"><ofd:CheckValue>${base64(await (options.digest ?? webDigest)(digestMethod, parts[path]))}</ofd:CheckValue></ofd:Reference>`,
-		);
+		core.setPart(plan.valuePath, value);
+		core.request({ op: "write", allowInvalidSignatures: true });
+		return blob(core.save(), "application/ofd");
+	} finally {
+		core.close();
 	}
-	const stamps = (options.stamps ?? [])
-		.map(
-			(s, i) =>
-				`<ofd:StampAnnot ID="${e(s.id ?? `${id}-${i}`)}" PageRef="${e(s.pageId)}" Boundary="${s.boundary.join(" ")}"${s.clip ? ` Clip="${s.clip.join(" ")}"` : ""}/>`,
-		)
-		.join("");
-	parts[descriptorPath] = encode(
-		`<?xml version="1.0" encoding="UTF-8"?><ofd:Signature ${namespace}><ofd:SignedInfo><ofd:Provider ProviderName="${e(options.provider.name)}"${options.provider.company ? ` Company="${e(options.provider.company)}"` : ""}${options.provider.version ? ` Version="${e(options.provider.version)}"` : ""}/><ofd:SignatureMethod>${e(options.signatureMethod)}</ofd:SignatureMethod><ofd:SignatureDateTime>${e(options.signedAt)}</ofd:SignatureDateTime><ofd:References CheckMethod="${e(digestMethod)}">${refs.join("")}</ofd:References>${stamps}${options.seal ? "<ofd:Seal><ofd:BaseLoc>Seal.esl</ofd:BaseLoc></ofd:Seal>" : ""}</ofd:SignedInfo><ofd:SignedValue>SignedValue.dat</ofd:SignedValue></ofd:Signature>`,
-	);
-	parts[valuePath] = (await options.sign(parts[descriptorPath].slice())).slice();
-	abort(options.signal);
-	return blob(zip(parts), "application/ofd");
 }

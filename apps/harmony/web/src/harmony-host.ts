@@ -61,6 +61,21 @@ export function isAndroidHost(): boolean {
 export function isIosHost(): boolean {
 	return nativeHostPlatform() === "ios";
 }
+export function hasNativeNotebooks(): boolean {
+    return isIosHost() && window.auroraHarmonyHost?.nativeNotesAvailable?.() === true;
+}
+export async function editNativeNotebook(source: Blob, name: string, id: string, readonly: boolean): Promise<NativeNotebookResult> {
+    const host = window.auroraHarmonyHost;
+    if (!hasNativeNotebooks() || !host?.editNativeNotes) throw new Error("原生笔记不可用。");
+    const session = host.beginSave(name);
+    try {
+        for (let offset = 0; offset < source.size; offset += SAVE_CHUNK_BYTES) {
+            const bytes = new Uint8Array(await source.slice(offset, offset + SAVE_CHUNK_BYTES).arrayBuffer());
+            if (!host.appendSaveChunk(session, bytesToBase64(bytes))) throw new Error("无法传输笔记内容。");
+        }
+        return await host.editNativeNotes(session, id, readonly);
+    } catch (error) { host.abortSave(session); throw error; }
+}
 
 /**
  * Android 和 iOS 的原生宿主检测；HarmonyOS 在 App.vue 同样启用共享触屏工作区，

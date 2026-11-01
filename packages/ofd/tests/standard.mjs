@@ -182,7 +182,7 @@ test("§10 BMP and single-page TIFF decode to actual pixels", async () => {
 		[bmp, decodeBmp, [255, 0, 0, 255]],
 		[tiff, decodeTiff, [0, 255, 0, 255]],
 	]) {
-		const image = await loadImage(Buffer.from(decode(source))),
+		const image = await loadImage(Buffer.from(await decode(source))),
 			canvas = createCanvas(1, 1);
 		canvas.getContext("2d").drawImage(image, 0, 0);
 		assert.deepEqual([...canvas.getContext("2d").getImageData(0, 0, 1, 1).data], expected);

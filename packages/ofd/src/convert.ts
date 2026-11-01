@@ -1,5 +1,5 @@
 import { svgAtDeviceScale } from "./strokes.js";
-import { PDFDocument } from "pdf-lib";
+import { writePdfImages } from "@cubexp/kernels";
 import { readOfdDocument } from "./read.js";
 import {
 	blob,
@@ -120,24 +120,23 @@ export async function exportDocument(
 			);
 		}
 		if (to === "pdf") {
-			const pdf = await PDFDocument.create();
+			const input = [];
 			for (let i = 0; i < pages.length; i++) {
 				abort(options.signal);
-				const image = await pdf.embedPng(await images[i].arrayBuffer());
-				const page = pdf.addPage([pages[i].width * 0.75, pages[i].height * 0.75]);
-				page.drawImage(image, {
-					x: 0,
-					y: 0,
-					width: page.getWidth(),
-					height: page.getHeight(),
+				input.push({
+					bytes: new Uint8Array(await images[i].arrayBuffer()),
+					width: pages[i].width * 0.75,
+					height: pages[i].height * 0.75,
 				});
 			}
+			const pdf = await writePdfImages(input);
+			abort(options.signal);
 			diagnostics.push({
 				code: "raster-pdf",
 				message:
 					"PDF pages are rasterized; use the source document for selectable text and electronic signatures.",
 			});
-			return one(blob(await pdf.save(), "application/pdf"));
+			return one(blob(pdf, "application/pdf"));
 		}
 		return {
 			diagnostics,

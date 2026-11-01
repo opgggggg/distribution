@@ -3,6 +3,11 @@
 独立的 EPUB 阅读包：解析 EPUB 2/3（OPF、nav/NCX 目录、封面、字体混淆），用 CSS 分栏在 iframe 中分页渲染，
 并提供桌面与移动端两套布局的 Vue 阅读器。只读格式，导出即原文件。
 
+ZIP 资源、OPF 元数据、章节顺序、nav/NCX 目录与字体解混淆由共享 Rust 内核提供；
+搜索接收页面净化后的文字，并返回原始 UTF-16 坐标。浏览器保留原有分页、净化、可访问性与界面。
+`openEpub()` 会加载随包提供的 WASM，解析书籍本身无需 DOMParser；章节渲染仍使用 DOM。
+资源按需解压，限制为整包 256 MiB、单资源 64 MiB、文字资源 16 MiB，原文件导出保持字节不变。
+
 ```sh
 npm run build:epub
 npm run test:epub

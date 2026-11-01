@@ -1,4 +1,9 @@
 interface AuroraHarmonyHost {
+    nativeNotesAvailable?(): boolean;
+    editNativeNotes?(sessionId: string, draftId: string, readonly: boolean): Promise<NativeNotebookResult>;
+    listNativeNotes?(): Promise<Array<{id: string; fileName: string; savedAt: number}>>;
+    readNativeNotes?(draftId: string): Promise<NativeNotebookResult>;
+    ackNativeNotes?(draftId: string, digest: string): boolean;
 	getNativeTabSession?(): string;
 	openNativeTab?(request: string): Promise<string>;
 	publishNativeTab?(state: string): boolean;
@@ -35,6 +40,15 @@ interface AuroraHarmonyHost {
 	setPresentationLandscape?(enabled: boolean): boolean;
 	startWindowMove(): boolean;
 	toggleMaximizeWindow(): boolean;
+}
+interface NativeNotebookResult {
+    id: string;
+    fileName: string;
+    blob: Blob;
+    changed?: boolean;
+    preview?: string;
+    digest: string;
+    savedAt?: number;
 }
 
 interface Window {

@@ -1,0 +1,4 @@
+module CubeNotes {
+    header "cubeoffice_notes_native.h"
+    export *
+}

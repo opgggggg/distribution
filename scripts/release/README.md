@@ -63,7 +63,7 @@ AI 根据线上版本和已核实的代码变化确定新版本（用户已指�
 
 ## 构建环境
 
-- 编排主机：Apple Silicon macOS，Bash 3.2+、Node 20+、npm、Python 3.7+、Git、SSH、Docker CLI，以及 macOS 开发工具。使用 Homebrew Rust 时会从本次进程 PATH 中移除 `~/.cargo/bin`，避免旧 rustup 覆盖它；不会修改系统配置。
+- 编排主机：Apple Silicon macOS，Bash 3.2+、Node 22.13+、npm、Python 3.7+、Git、SSH、Docker CLI，以及 macOS 开发工具。使用 Homebrew Rust 时会从本次进程 PATH 中移除 `~/.cargo/bin`，避免旧 rustup 覆盖它；不会修改系统配置。
 - Android：完整 JDK 21+，必须包含 `javac` 和 `jlink`；Android SDK 35、Build Tools 35；现有 APK 签名证书。发布前会下载上一版 APK、核对其 feed 哈希并比较签名证书。
 - Windows：可通过 SSH 访问的现有 UTM 主机，Node、Rust/MSVC x64 工具链、Strawberry Perl（用于 OpenSSL）和 updater 密钥。脚本自动创建构建根目录，通过 vswhere 或已知安装路径定位 MSVC，并检查 Perl。旧构建机没有外网路由，靠宿主机上的 CONNECT 代理（`~/cubexp.com/windows-connect-proxy.py`，监听 `192.168.64.1:8898`）访问 registry；**发布前先把它跑起来**，否则 Windows 预检会以 `ECONNREFUSED` 失败。可直连 npm 的新机器将 `WINDOWS_PROXY=''`，无需代理。脚本在需要时启动配置的 VM，但不自动关机。默认要求至少 4 GB 空间；不足时停止，不删除或压缩其他工作目录。网络代理须提前运行，只为构建进程设置 npm 代理。
 - Linux：现有 `colima-rosetta` 的 `cubeoffice-linux-rosetta` 容器，已安装 Cargo、Linux 依赖、FUSE，以及按[发布技能](../../.agents/skills/cubeoffice-release/references/release-process.md)修正过的 linuxdeploy 工具。容器需配置可读的 `OFFICE_UPDATER_SIGNING_PRIVATE_KEY` 和显式的 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`。脚本使用 `bash -c` 保留 Cargo 路径，以独立目录和受锁保护的缓存构建。脚本会启动已配置的现有容器；配置 `LINUX_COLIMA_PROFILE` 后也会按需启动该既有 Colima profile。不会删除或重建容器。

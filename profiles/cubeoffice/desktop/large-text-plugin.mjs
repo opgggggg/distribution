@@ -21,8 +21,8 @@ export function cubeOfficeLargeTextPlugin() {
 				"\tbytes: Uint8Array;\n\tsource?: Blob;\n\topenedAt: string;",
 			],
 			[
-				"export async function readArtifact(path: string): Promise<DesktopArtifact> {",
-				`export async function readArtifact(path: string): Promise<DesktopArtifact> {\n\tconst ranged = await readLargeTextArtifact(path);\n\tif (ranged) return ranged;`,
+				"export async function readArtifact(\n\tpath: string,\n\tkernel: ConversionKernelOptions = {},\n): Promise<DesktopArtifact> {",
+				`export async function readArtifact(\n\tpath: string,\n\tkernel: ConversionKernelOptions = {},\n): Promise<DesktopArtifact> {\n\tconst ranged = await readLargeTextArtifact(path);\n\tif (ranged) return ranged;`,
 			],
 		],
 		"app/document-opening.ts": [

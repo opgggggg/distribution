@@ -1,5 +1,24 @@
 # @cubexp/ofd
 
+OFD 包读取、版本选择、目录/权限/动作/附件元数据、部件修改和 `OfdPackage.write()`
+现由 `crates/formats-core` 的 Rust 核心提供。现有查看界面保持不变，页面绘制由同一 Rust 核心生成 SVG。
+ZIP 资源按需解压，不会仅为查看元数据就展开附件；小资源缓存最多 16 MiB。
+未修改时导出原始文件字节；修改时保留所有未触碰部件的字节。原本带签名的文件
+继续要求重签或显式 `allowInvalidSignatures`，删除签名索引也不会绕过这项检查。
+
+二进制部件使用随包 WASM 的直接上传接口，不把图片/字体字节转为 JSON 数字数组。
+`openOfdPackage()` 只读取一次输入 Blob。Rust 加载失败会显示错误。
+`createOfdPackage()`、图片转 OFD、文本转 DOCX 的 XML/ZIP 写出，以及签名索引/描述生成、
+引用摘要比对、验证结果聚合也由 Rust 承担。图片/DOCX 写出的公开同步调用约定保持不变；
+小型独立 Rust writer 以内嵌 WASM 首次同步初始化，完整文档内核仍按需异步加载。
+密码运算与证书信任继续通过原有安全服务回调提供，摘要一致不会自动表示签名可信。
+页面 SVG、OpenType 字形轮廓、渐变/纹理、裁剪/模板/注释、BMP/TIFF 解码、
+结构引用校验和最终设备线宽也已迁入 Rust。ICC 通过原来的 QCMS/自定义色彩服务绑定，
+Annex A XSD 通过原来的 libxml2 绑定执行；栅格页面写成 PDF 也由 Rust 一次性完成，
+不再调用 JS PDF 写入器；操作系统像素输出、PDF 输入栅格化和应用原生界面
+仍是后续迁移项。独立的迁移前实现用于元数据、签名、XML 部件及像素对照；生产代码
+不调用该参考实现。
+
 Independent OFD package maintained in `distribution/packages/ofd`, outside the
 `als-office` submodule. It provides package editing, parsing, SVG rendering, a Vue
 viewer, Office adapters, conversions, signature-provider APIs and XSD validation.

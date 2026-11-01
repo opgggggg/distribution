@@ -10,7 +10,10 @@
 		"prebuild:web:android": "npm --prefix ../.. run profile:sync -- --android",
 		"build:web:android": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode android",
 		"prebuild:web:ios": "npm --prefix ../.. run profile:sync -- --ios",
-		"build:web:ios": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode ios"
+		"build:web:ios": "vue-tsc -p tsconfig.json --noEmit && vite build --config vite.config.ts --mode ios",
+		"postbuild:web": "node ../../scripts/check-office-kernel-assets.mjs entry/src/main/resources/rawfile/web",
+		"postbuild:web:ios": "node ../../scripts/check-office-kernel-assets.mjs ../ios/App/Resources/web",
+		"postbuild:web:android": "node ../../scripts/check-office-kernel-assets.mjs ../android/app/src/main/assets/web"
 	},
 	"dependencies": {
 		"@cubexp/epub": "*",
@@ -18,6 +21,7 @@
 		"@cubexp/ofd": "*",
 		"@cubexp/text": "*",
 		"@yaochn/als-office-docx": "*",
+		"@yaochn/als-office-editor-core": "*",
 		"@yaochn/als-office-editor-ui": "*",
 		"@yaochn/als-office-image": "*",
 		"@yaochn/als-office-markdown": "*",
@@ -25,14 +29,14 @@
 		"@yaochn/als-office-pptx": "*",
 		"@yaochn/als-office-vsdx": "*",
 		"@yaochn/als-office-xlsx": "*",
-		"pdf-lib": "^1.17.1",
-		"utif": "^3.1.0",
-		"vue": "3.5.43"
+		"vue": "3.5.43",
+		"@cubexp/kernels": "*"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^5.2.0",
 		"typescript": "^5.0.3",
 		"vite": "^6.4.3",
-		"vue-tsc": "^3.3.8"
+		"vue-tsc": "^3.3.8",
+		"pdf-lib": "^1.17.1"
 	}
 }

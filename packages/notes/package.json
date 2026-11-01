@@ -45,9 +45,9 @@
 		"./style.css": "./dist/style.css"
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/style.css', 'dist/style.css')\"",
+		"build": "node ../../scripts/build-notes-kernel.mjs && tsc -p tsconfig.build.json && node -e \"const fs=require('node:fs');fs.copyFileSync('src/style.css','dist/style.css');fs.copyFileSync('src/kernel/notes-kernel.wasm','dist/kernel/notes-kernel.wasm')\"",
 		"check:types": "tsc -p tsconfig.json",
-		"test": "npm run build && node --test tests/*.mjs",
+		"test": "npm run build && cargo test --locked --manifest-path ../../Cargo.toml -p cubeoffice-notes-core && cargo build --locked --manifest-path ../../Cargo.toml -p cubeoffice-notes-core --bin cubeoffice-notes && node --test tests/*.mjs",
 		"test:browser": "node tests/browser.cjs"
 	},
 	"dependencies": {

@@ -1,0 +1,830 @@
+{
+  "oracle": "original TypeScript describePackage",
+  "sourceCommit": "43022d3584827e6adb89c18f1d7fa5b50ed17b21",
+  "cases": [
+    {
+      "name": "metadata-policy-actions-extensions",
+      "parts": {
+        "OFD.xml": "<o:OFD xmlns:o=\"urn:ofd\"><o:DocBody><o:DocInfo><o:Title>中文 &amp; metadata</o:Title></o:DocInfo><o:DocRoot>Doc/Document.xml</o:DocRoot><o:Signatures>Signatures.xml</o:Signatures></o:DocBody></o:OFD>",
+        "Doc/Document.xml": "<o:Document xmlns:o=\"urn:ofd\" xmlns:x=\"urn:extension\"><o:Pages><o:Page ID=\"1\" BaseLoc=\"Pages/a.xml\"/></o:Pages><o:Outlines><o:OutlineElem Title=\"目录\" Expanded=\"0\"><o:Actions><o:Action Event=\"CLICK\"><o:Goto><o:Dest PageID=\"1\"/></o:Goto></o:Action></o:Actions><o:OutlineElem Title=\"Nested\"/></o:OutlineElem></o:Outlines><o:Bookmarks><o:Bookmark Name=\"Start\"/></o:Bookmarks><o:Permissions><o:Edit>0</o:Edit><o:Annot>1</o:Annot><o:Export>false</o:Export><o:Print Printable=\"true\" Copies=\"0\"/><o:ValidPeriod StartDate=\"2026-01-01\" EndDate=\"2026-12-31\"/></o:Permissions><o:VPreferences><o:PageLayout>TwoPage</o:PageLayout><o:Zoom>1.5</o:Zoom><o:HideToolbar>1</o:HideToolbar></o:VPreferences><o:Actions><o:Action Event=\"DO\"><o:URI URI=\"https://example.invalid/a?a=1&amp;b=2\"/><o:Region><o:Area Start=\"0 0\"><o:QuadraticBezier Point1=\"6 2\" Point2=\"5 5\"/><o:Close/></o:Area></o:Region></o:Action></o:Actions><o:Attachments>Attachments.xml</o:Attachments><o:CustomTags>Custom.xml</o:CustomTags><o:Extensions>Extensions.xml</o:Extensions><o:Annotations>Annotations.xml</o:Annotations><x:Opaque x:flag=\"a&#10;b\">one&amp;two<![CDATA[<raw>]]>after<!--keep-->tail</x:Opaque></o:Document>",
+        "Doc/Attachments.xml": "<o:Attachments xmlns:o=\"urn:ofd\"><o:Attachment ID=\"a\" Name=\"附件.txt\" Format=\"txt\"><o:FileLoc>files/a.txt</o:FileLoc></o:Attachment></o:Attachments>",
+        "Doc/Custom.xml": "<x:Custom xmlns:x=\"urn:custom\">keep</x:Custom>",
+        "Doc/Extensions.xml": "<o:Extensions xmlns:o=\"urn:ofd\"><o:Extension/></o:Extensions>",
+        "Doc/Annotations.xml": "<o:Annotations xmlns:o=\"urn:ofd\"/>",
+        "Signatures.xml": "<o:Signatures xmlns:o=\"urn:ofd\"/>",
+        "Doc/files/a.txt": "attachment"
+      },
+      "expected": [
+        {
+          "path": "Doc/Document.xml",
+          "outlineItems": [
+            {
+              "title": "目录",
+              "expanded": false,
+              "actions": [
+                {
+                  "event": "CLICK",
+                  "type": "Goto",
+                  "parameters": {
+                    "name": "o:Goto",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      {
+                        "name": "o:Dest",
+                        "namespace": "urn:ofd",
+                        "attributes": {
+                          "PageID": "1"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                }
+              ],
+              "children": [
+                {
+                  "title": "Nested",
+                  "expanded": true,
+                  "actions": [],
+                  "children": []
+                }
+              ]
+            }
+          ],
+          "root": {
+            "name": "o:Document",
+            "namespace": "urn:ofd",
+            "attributes": {
+              "xmlns:o": "urn:ofd",
+              "xmlns:x": "urn:extension"
+            },
+            "children": [
+              {
+                "name": "o:Pages",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:Page",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "ID": "1",
+                      "BaseLoc": "Pages/a.xml"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "o:Outlines",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:OutlineElem",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "Title": "目录",
+                      "Expanded": "0"
+                    },
+                    "children": [
+                      {
+                        "name": "o:Actions",
+                        "namespace": "urn:ofd",
+                        "attributes": {},
+                        "children": [
+                          {
+                            "name": "o:Action",
+                            "namespace": "urn:ofd",
+                            "attributes": {
+                              "Event": "CLICK"
+                            },
+                            "children": [
+                              {
+                                "name": "o:Goto",
+                                "namespace": "urn:ofd",
+                                "attributes": {},
+                                "children": [
+                                  {
+                                    "name": "o:Dest",
+                                    "namespace": "urn:ofd",
+                                    "attributes": {
+                                      "PageID": "1"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "o:OutlineElem",
+                        "namespace": "urn:ofd",
+                        "attributes": {
+                          "Title": "Nested"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "o:Bookmarks",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:Bookmark",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "Name": "Start"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "o:Permissions",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:Edit",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "0"
+                    ]
+                  },
+                  {
+                    "name": "o:Annot",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "name": "o:Export",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "false"
+                    ]
+                  },
+                  {
+                    "name": "o:Print",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "Printable": "true",
+                      "Copies": "0"
+                    },
+                    "children": []
+                  },
+                  {
+                    "name": "o:ValidPeriod",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "StartDate": "2026-01-01",
+                      "EndDate": "2026-12-31"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "o:VPreferences",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:PageLayout",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "TwoPage"
+                    ]
+                  },
+                  {
+                    "name": "o:Zoom",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "1.5"
+                    ]
+                  },
+                  {
+                    "name": "o:HideToolbar",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "o:Actions",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:Action",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "Event": "DO"
+                    },
+                    "children": [
+                      {
+                        "name": "o:URI",
+                        "namespace": "urn:ofd",
+                        "attributes": {
+                          "URI": "https://example.invalid/a?a=1&b=2"
+                        },
+                        "children": []
+                      },
+                      {
+                        "name": "o:Region",
+                        "namespace": "urn:ofd",
+                        "attributes": {},
+                        "children": [
+                          {
+                            "name": "o:Area",
+                            "namespace": "urn:ofd",
+                            "attributes": {
+                              "Start": "0 0"
+                            },
+                            "children": [
+                              {
+                                "name": "o:QuadraticBezier",
+                                "namespace": "urn:ofd",
+                                "attributes": {
+                                  "Point1": "6 2",
+                                  "Point2": "5 5"
+                                },
+                                "children": []
+                              },
+                              {
+                                "name": "o:Close",
+                                "namespace": "urn:ofd",
+                                "attributes": {},
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "o:Attachments",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "Attachments.xml"
+                ]
+              },
+              {
+                "name": "o:CustomTags",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "Custom.xml"
+                ]
+              },
+              {
+                "name": "o:Extensions",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "Extensions.xml"
+                ]
+              },
+              {
+                "name": "o:Annotations",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "Annotations.xml"
+                ]
+              },
+              {
+                "name": "x:Opaque",
+                "namespace": "urn:extension",
+                "attributes": {
+                  "x:flag": "a\nb"
+                },
+                "children": [
+                  "one&two",
+                  "<raw>",
+                  "after",
+                  "tail"
+                ]
+              }
+            ]
+          },
+          "info": {
+            "name": "o:DocInfo",
+            "namespace": "urn:ofd",
+            "attributes": {},
+            "children": [
+              {
+                "name": "o:Title",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "中文 & metadata"
+                ]
+              }
+            ]
+          },
+          "pages": [
+            {
+              "id": "1",
+              "path": "Doc/Pages/a.xml"
+            }
+          ],
+          "outlines": [
+            {
+              "name": "o:OutlineElem",
+              "namespace": "urn:ofd",
+              "attributes": {
+                "Title": "目录",
+                "Expanded": "0"
+              },
+              "children": [
+                {
+                  "name": "o:Actions",
+                  "namespace": "urn:ofd",
+                  "attributes": {},
+                  "children": [
+                    {
+                      "name": "o:Action",
+                      "namespace": "urn:ofd",
+                      "attributes": {
+                        "Event": "CLICK"
+                      },
+                      "children": [
+                        {
+                          "name": "o:Goto",
+                          "namespace": "urn:ofd",
+                          "attributes": {},
+                          "children": [
+                            {
+                              "name": "o:Dest",
+                              "namespace": "urn:ofd",
+                              "attributes": {
+                                "PageID": "1"
+                              },
+                              "children": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "o:OutlineElem",
+                  "namespace": "urn:ofd",
+                  "attributes": {
+                    "Title": "Nested"
+                  },
+                  "children": []
+                }
+              ]
+            }
+          ],
+          "bookmarks": [
+            {
+              "name": "o:Bookmark",
+              "namespace": "urn:ofd",
+              "attributes": {
+                "Name": "Start"
+              },
+              "children": []
+            }
+          ],
+          "permissions": {
+            "name": "o:Permissions",
+            "namespace": "urn:ofd",
+            "attributes": {},
+            "children": [
+              {
+                "name": "o:Edit",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "0"
+                ]
+              },
+              {
+                "name": "o:Annot",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "1"
+                ]
+              },
+              {
+                "name": "o:Export",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  "false"
+                ]
+              },
+              {
+                "name": "o:Print",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "Printable": "true",
+                  "Copies": "0"
+                },
+                "children": []
+              },
+              {
+                "name": "o:ValidPeriod",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "StartDate": "2026-01-01",
+                  "EndDate": "2026-12-31"
+                },
+                "children": []
+              }
+            ]
+          },
+          "policy": {
+            "edit": false,
+            "annotate": true,
+            "export": false,
+            "sign": true,
+            "watermark": true,
+            "printScreen": true,
+            "print": {
+              "allowed": false,
+              "copies": 0
+            },
+            "validPeriod": {
+              "start": "2026-01-01",
+              "end": "2026-12-31"
+            }
+          },
+          "view": {
+            "pageMode": "None",
+            "pageLayout": "TwoPage",
+            "tabDisplay": "FileName",
+            "hideToolbar": true,
+            "hideMenubar": false,
+            "hideWindowUI": false,
+            "zoomMode": "Default",
+            "zoom": 1.5
+          },
+          "actions": [
+            {
+              "event": "DO",
+              "type": "URI",
+              "parameters": {
+                "name": "o:URI",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "URI": "https://example.invalid/a?a=1&b=2"
+                },
+                "children": []
+              },
+              "region": "M 0 0 Q 6 2 5 5 Z Z"
+            }
+          ],
+          "attachments": [
+            {
+              "id": "a",
+              "name": "附件.txt",
+              "path": "Doc/files/a.txt",
+              "mediaType": "txt",
+              "metadata": {
+                "name": "o:Attachment",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "ID": "a",
+                  "Name": "附件.txt",
+                  "Format": "txt"
+                },
+                "children": [
+                  {
+                    "name": "o:FileLoc",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "files/a.txt"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "customTags": {
+            "path": "Doc/Custom.xml",
+            "xml": {
+              "name": "x:Custom",
+              "namespace": "urn:custom",
+              "attributes": {
+                "xmlns:x": "urn:custom"
+              },
+              "children": [
+                "keep"
+              ]
+            }
+          },
+          "extensions": {
+            "path": "Doc/Extensions.xml",
+            "xml": {
+              "name": "o:Extensions",
+              "namespace": "urn:ofd",
+              "attributes": {
+                "xmlns:o": "urn:ofd"
+              },
+              "children": [
+                {
+                  "name": "o:Extension",
+                  "namespace": "urn:ofd",
+                  "attributes": {},
+                  "children": []
+                }
+              ]
+            }
+          },
+          "annotations": {
+            "path": "Doc/Annotations.xml",
+            "xml": {
+              "name": "o:Annotations",
+              "namespace": "urn:ofd",
+              "attributes": {
+                "xmlns:o": "urn:ofd"
+              },
+              "children": []
+            }
+          },
+          "signatures": {
+            "path": "Signatures.xml",
+            "xml": {
+              "name": "o:Signatures",
+              "namespace": "urn:ofd",
+              "attributes": {
+                "xmlns:o": "urn:ofd"
+              },
+              "children": []
+            }
+          },
+          "versions": []
+        }
+      ]
+    },
+    {
+      "name": "current-version",
+      "parts": {
+        "OFD.xml": "<o:OFD xmlns:o=\"urn:ofd\"><o:DocBody><o:DocRoot>Doc/old.xml</o:DocRoot><o:Versions><o:Version ID=\"old\" BaseLoc=\"Versions/old.xml\"/><o:Version ID=\"current\" Current=\"1\" BaseLoc=\"Versions/current.xml\"/></o:Versions></o:DocBody></o:OFD>",
+        "Versions/old.xml": "<o:Version xmlns:o=\"urn:ofd\"><o:DocRoot>../Doc/old.xml</o:DocRoot></o:Version>",
+        "Versions/current.xml": "<o:Version xmlns:o=\"urn:ofd\"><o:DocRoot>../Doc/current.xml</o:DocRoot></o:Version>",
+        "Doc/old.xml": "<o:Document xmlns:o=\"urn:ofd\"><o:Pages><o:Page ID=\"old\" BaseLoc=\"old/page.xml\"/></o:Pages></o:Document>",
+        "Doc/current.xml": "<o:Document xmlns:o=\"urn:ofd\"><o:Pages><o:Page ID=\"now\" BaseLoc=\"now/page.xml\"/></o:Pages></o:Document>"
+      },
+      "expected": [
+        {
+          "path": "Doc/current.xml",
+          "outlineItems": [],
+          "root": {
+            "name": "o:Document",
+            "namespace": "urn:ofd",
+            "attributes": {
+              "xmlns:o": "urn:ofd"
+            },
+            "children": [
+              {
+                "name": "o:Pages",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:Page",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "ID": "now",
+                      "BaseLoc": "now/page.xml"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          "pages": [
+            {
+              "id": "now",
+              "path": "Doc/now/page.xml"
+            }
+          ],
+          "outlines": [],
+          "bookmarks": [],
+          "policy": {
+            "edit": true,
+            "annotate": true,
+            "export": true,
+            "sign": true,
+            "watermark": true,
+            "printScreen": true,
+            "print": {
+              "allowed": true,
+              "copies": null
+            },
+            "validPeriod": {}
+          },
+          "view": {
+            "pageMode": "None",
+            "pageLayout": "OneColumn",
+            "tabDisplay": "FileName",
+            "hideToolbar": false,
+            "hideMenubar": false,
+            "hideWindowUI": false,
+            "zoomMode": "Default"
+          },
+          "actions": [],
+          "attachments": [],
+          "versions": [
+            {
+              "id": "old",
+              "path": "Versions/old.xml",
+              "current": false,
+              "xml": {
+                "name": "o:Version",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "xmlns:o": "urn:ofd"
+                },
+                "children": [
+                  {
+                    "name": "o:DocRoot",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "../Doc/old.xml"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "current",
+              "path": "Versions/current.xml",
+              "current": true,
+              "xml": {
+                "name": "o:Version",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "xmlns:o": "urn:ofd"
+                },
+                "children": [
+                  {
+                    "name": "o:DocRoot",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "../Doc/current.xml"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "explicit-version",
+      "parts": {
+        "OFD.xml": "<o:OFD xmlns:o=\"urn:ofd\"><o:DocBody><o:DocRoot>Doc/old.xml</o:DocRoot><o:Versions><o:Version ID=\"old\" BaseLoc=\"Versions/old.xml\"/><o:Version ID=\"current\" Current=\"1\" BaseLoc=\"Versions/current.xml\"/></o:Versions></o:DocBody></o:OFD>",
+        "Versions/old.xml": "<o:Version xmlns:o=\"urn:ofd\"><o:DocRoot>../Doc/old.xml</o:DocRoot></o:Version>",
+        "Versions/current.xml": "<o:Version xmlns:o=\"urn:ofd\"><o:DocRoot>../Doc/current.xml</o:DocRoot></o:Version>",
+        "Doc/old.xml": "<o:Document xmlns:o=\"urn:ofd\"><o:Pages><o:Page ID=\"old\" BaseLoc=\"old/page.xml\"/></o:Pages></o:Document>",
+        "Doc/current.xml": "<o:Document xmlns:o=\"urn:ofd\"><o:Pages><o:Page ID=\"now\" BaseLoc=\"now/page.xml\"/></o:Pages></o:Document>"
+      },
+      "options": {
+        "version": "old"
+      },
+      "expected": [
+        {
+          "path": "Doc/old.xml",
+          "outlineItems": [],
+          "root": {
+            "name": "o:Document",
+            "namespace": "urn:ofd",
+            "attributes": {
+              "xmlns:o": "urn:ofd"
+            },
+            "children": [
+              {
+                "name": "o:Pages",
+                "namespace": "urn:ofd",
+                "attributes": {},
+                "children": [
+                  {
+                    "name": "o:Page",
+                    "namespace": "urn:ofd",
+                    "attributes": {
+                      "ID": "old",
+                      "BaseLoc": "old/page.xml"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          "pages": [
+            {
+              "id": "old",
+              "path": "Doc/old/page.xml"
+            }
+          ],
+          "outlines": [],
+          "bookmarks": [],
+          "policy": {
+            "edit": true,
+            "annotate": true,
+            "export": true,
+            "sign": true,
+            "watermark": true,
+            "printScreen": true,
+            "print": {
+              "allowed": true,
+              "copies": null
+            },
+            "validPeriod": {}
+          },
+          "view": {
+            "pageMode": "None",
+            "pageLayout": "OneColumn",
+            "tabDisplay": "FileName",
+            "hideToolbar": false,
+            "hideMenubar": false,
+            "hideWindowUI": false,
+            "zoomMode": "Default"
+          },
+          "actions": [],
+          "attachments": [],
+          "versions": [
+            {
+              "id": "old",
+              "path": "Versions/old.xml",
+              "current": false,
+              "xml": {
+                "name": "o:Version",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "xmlns:o": "urn:ofd"
+                },
+                "children": [
+                  {
+                    "name": "o:DocRoot",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "../Doc/old.xml"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "current",
+              "path": "Versions/current.xml",
+              "current": true,
+              "xml": {
+                "name": "o:Version",
+                "namespace": "urn:ofd",
+                "attributes": {
+                  "xmlns:o": "urn:ofd"
+                },
+                "children": [
+                  {
+                    "name": "o:DocRoot",
+                    "namespace": "urn:ofd",
+                    "attributes": {},
+                    "children": [
+                      "../Doc/current.xml"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

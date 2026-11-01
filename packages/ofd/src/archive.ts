@@ -1,15 +1,7 @@
-import { unzipSync, zipSync, strToU8 } from "fflate";
+import { FormatsKernel, loadFormatsKernel } from "@cubexp/kernels";
 import { DOMParser, type Element } from "@xmldom/xmldom";
 import { abort, type ReadOptions } from "./types.js";
 export type XmlElement = Element;
-export function escapeXml(value: unknown): string {
-	return String(value ?? "")
-		.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "\ufffd")
-		.replace(
-			/[&<>"']/g,
-			(c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!,
-		);
-}
 export function children(node: XmlElement, local?: string): XmlElement[] {
 	return Array.from(node.childNodes).filter(
 		(child): child is XmlElement =>
@@ -80,8 +72,61 @@ export function resolvePath(base: string, reference: string): string {
 	return parts.join("/");
 }
 export class Archive {
-	constructor(readonly files: Record<string, Uint8Array>) {
-		this.files = Object.assign(Object.create(null), files);
+	private kernel?: FormatsKernel;
+	constructor(
+		readonly files: Record<string, Uint8Array>,
+		kernel?: FormatsKernel,
+		readonly renderOverrides: ReadonlyMap<string, Uint8Array> = new Map(),
+	) {
+		this.files = kernel ? files : Object.assign(Object.create(null), files);
+		this.kernel = kernel;
+	}
+	core(): FormatsKernel {
+		if (!this.kernel) {
+			const core = new FormatsKernel("ofd");
+			core.request({ op: "initParts" });
+			try {
+				for (const [path, data] of Object.entries(this.files)) core.setPart(path, data);
+				this.kernel = core;
+			} catch (error) {
+				core.close();
+				throw error;
+			}
+		}
+		return this.kernel;
+	}
+	static fromKernel(kernel: FormatsKernel): Archive {
+		const paths = new Set(kernel.request<{ paths: string[] }>({ op: "state" }).paths),
+			cache = new Map<string, Uint8Array>(),
+			overrides = new Map<string, Uint8Array>();
+		const get = (path: string) => {
+			if (overrides.has(path)) return overrides.get(path);
+			if (!paths.has(path)) return undefined;
+			let value = cache.get(path);
+			if (!value) {
+				kernel.request({ op: "part", path });
+				value = kernel.save();
+				cache.set(path, value);
+			}
+			return value;
+		};
+		const files = new Proxy(Object.create(null) as Record<string, Uint8Array>, {
+			get: (_target, path) => (typeof path === "string" ? get(path) : undefined),
+			ownKeys: () => [...new Set([...paths, ...overrides.keys()])],
+			has: (_target, path) =>
+				typeof path === "string" && (paths.has(path) || overrides.has(path)),
+			getOwnPropertyDescriptor: (_target, path) =>
+				typeof path === "string" && (paths.has(path) || overrides.has(path))
+					? { enumerable: true, configurable: true }
+					: undefined,
+			set: (_target, path, value) => {
+				if (typeof path !== "string" || !(value instanceof Uint8Array))
+					throw TypeError("Archive resources must be bytes.");
+				overrides.set(path, value);
+				return true;
+			},
+		});
+		return new Archive(files, kernel, overrides);
 	}
 	static async open(
 		input: Blob | Uint8Array | ArrayBuffer,
@@ -109,27 +154,23 @@ export class Archive {
 				: input instanceof Uint8Array
 					? input
 					: new Uint8Array(input);
-		let total = 0,
-			entries = 0;
-		const names = new Set<string>();
-		const files = unzipSync(bytes, {
-			filter: (entry) => {
-				if (++entries > (options.maxEntries ?? 10000))
-					throw new RangeError("Too many archive entries.");
-				total += entry.originalSize;
-				if (total > (options.maxExpandedBytes ?? 128 * 1024 * 1024))
-					throw new RangeError("Document exceeds the expanded size budget.");
-				if (entry.name.endsWith("/")) return false;
-				const name = resolvePath("", entry.name);
-				if (name !== entry.name || names.has(name))
-					throw new Error("Non-canonical or duplicate archive entry.");
-				names.add(name);
-				return true;
-			},
-		});
+		await loadFormatsKernel();
 		abort(options.signal);
-		return new Archive(files);
+		const kernel = new FormatsKernel(
+			"ofd",
+			"utf-8",
+			Object.fromEntries(Object.entries(options).filter(([key]) => key.startsWith("max"))),
+		);
+		try {
+			kernel.open(bytes);
+			abort(options.signal);
+			return Archive.fromKernel(kernel);
+		} catch (error) {
+			kernel.close();
+			throw error;
+		}
 	}
+
 	text(path: string): string {
 		const data = this.files[path];
 		if (!data) throw new Error(`Missing document part: ${path}`);
@@ -146,23 +187,6 @@ export class Archive {
 		return parseXml(this.text(path));
 	}
 }
-export function zip(parts: Record<string, string | Uint8Array>): Uint8Array {
-	return zipSync(
-		Object.fromEntries(
-			Object.entries(parts).map(([key, value]) => [
-				key,
-				typeof value === "string" ? strToU8(value) : value,
-			]),
-		),
-		{ level: 0 },
-	);
-}
-export function dataUri(bytes: Uint8Array, mime: string): string {
-	let data = "";
-	for (let i = 0; i < bytes.length; i += 8192)
-		data += String.fromCharCode(...bytes.subarray(i, i + 8192));
-	return `data:${mime};base64,${btoa(data)}`;
-}
 export function rasterMime(bytes: Uint8Array): "image/png" | "image/jpeg" | undefined {
 	if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71)
 		return "image/png";
@@ -172,16 +196,4 @@ export function rasterMime(bytes: Uint8Array): "image/png" | "image/jpeg" | unde
 export function number(value: string | undefined, fallback = 0): number {
 	const result = Number(value);
 	return value?.trim() && Number.isFinite(result) ? result : fallback;
-}
-export function length(value: string, fallback = 0): number {
-	const match = /^(-?\d+(?:\.\d+)?)(mm|cm|in|pt|pc|px)?$/.exec(value.trim());
-	if (!match) return fallback;
-	return (
-		Number(match[1]) *
-		({ mm: 96 / 25.4, cm: 96 / 2.54, in: 96, pt: 96 / 72, pc: 16, px: 1 }[match[2] || "px"] ??
-			1)
-	);
-}
-export function svgPage(width: number, height: number, content: string, defs = ""): string {
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs>${defs}</defs><rect width="100%" height="100%" fill="white"/>${content}</svg>`;
 }

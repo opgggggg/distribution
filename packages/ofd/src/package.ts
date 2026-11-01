@@ -1,9 +1,5 @@
-import {
-	permissions,
-	viewPreferences,
-	type OfdPermissions,
-	type OfdViewPreferences,
-} from "./policy.js";
+import { loadFormatsKernel, FormatsKernel } from "@cubexp/kernels";
+import type { OfdPermissions, OfdViewPreferences } from "./policy.js";
 import {
 	Archive,
 	attr,
@@ -11,7 +7,6 @@ import {
 	first,
 	descendants,
 	resolvePath,
-	zip,
 	type XmlElement,
 } from "./archive.js";
 import { abort, blob, type ReadOptions } from "./types.js";
@@ -76,14 +71,6 @@ export interface OfdOutline {
 	actions: OfdAction[];
 	children: OfdOutline[];
 }
-function outline(node: XmlElement): OfdOutline {
-	return {
-		title: attr(node, "Title"),
-		expanded: attr(node, "Expanded", "true") === "true",
-		actions: readActions(node),
-		children: children(node, "OutlineElem").map(outline),
-	};
-}
 export interface OfdPackageDocument {
 	policy: OfdPermissions;
 	view: OfdViewPreferences;
@@ -105,140 +92,43 @@ export interface OfdPackageDocument {
 }
 /** Select the explicitly requested version, or the version marked Current. */
 export function documentPath(archive: Archive, body: XmlElement, version?: string): string {
-	const versions = children(body, "Versions")[0],
-		entries = versions ? children(versions, "Version") : [];
-	const chosen =
-		version === undefined
-			? entries.find((v) => attr(v, "Current") === "true")
-			: entries.find((v) => attr(v, "ID") === version);
-	if (version !== undefined && !chosen) throw new Error(`Unknown OFD version ${version}.`);
-	if (chosen) {
-		const path = resolvePath("OFD.xml", attr(chosen, "BaseLoc"));
-		return resolvePath(path, first(archive.xml(path), "DocRoot")?.textContent?.trim() ?? "");
-	}
-	return resolvePath("OFD.xml", first(body, "DocRoot")?.textContent?.trim() ?? "");
+	const parent = body.parentNode as XmlElement | null;
+	const index = parent ? children(parent, "DocBody").indexOf(body) : -1;
+	if (index < 0) throw Error("Unknown OFD document.");
+	return archive.core().request<{ path: string }>({ op: "documentPath", index, version }).path;
 }
 export function describePackage(archive: Archive, options: ReadOptions = {}): OfdPackageDocument[] {
-	const root = archive.xml("OFD.xml");
-	if (root.localName !== "OFD") throw new Error("Invalid OFD root element.");
-	return children(root, "DocBody").map((body, index) => {
-		const path = documentPath(
-			archive,
-			body,
-			options.documentIndex === undefined || options.documentIndex === index
-				? options.version
-				: undefined,
-		);
-		const document = archive.xml(path);
-		const external = (owner: XmlElement, name: string, base: string) => {
-			const reference = children(owner, name)[0]?.textContent?.trim();
-			if (!reference) return undefined;
-			const location = resolvePath(base, reference);
-			return archive.files[location]
-				? { path: location, xml: xmlNode(archive.xml(location)) }
-				: undefined;
-		};
-		const attachments: OfdEmbeddedFile[] = [];
-		const ref = children(document, "Attachments")[0]?.textContent?.trim();
-		if (ref) {
-			const location = resolvePath(path, ref);
-			if (archive.files[location])
-				for (const file of children(archive.xml(location), "Attachment")) {
-					const source = first(file, "FileLoc")?.textContent?.trim();
-					if (source)
-						attachments.push({
-							id: attr(file, "ID"),
-							name: attr(file, "Name"),
-							path: resolvePath(location, source),
-							mediaType: attr(file, "Format"),
-							metadata: xmlNode(file),
-						});
-				}
-		}
-		const versionsNode = children(body, "Versions")[0];
-		const versions = versionsNode
-			? children(versionsNode, "Version").map((version) => {
-					const location = resolvePath("OFD.xml", attr(version, "BaseLoc"));
-					return {
-						id: attr(version, "ID"),
-						path: location,
-						current: attr(version, "Current") === "true",
-						...(archive.files[location] ? { xml: xmlNode(archive.xml(location)) } : {}),
-					};
-				})
-			: [];
-		const info = children(body, "DocInfo")[0],
-			permissionNode = children(document, "Permissions")[0];
-		return {
-			path,
-			outlineItems: children(document, "Outlines").flatMap((n) =>
-				children(n, "OutlineElem").map(outline),
-			),
-			root: xmlNode(document),
-			...(info ? { info: xmlNode(info) } : {}),
-			pages: descendants(document, "Page")
-				.filter((p) => p.hasAttribute("BaseLoc"))
-				.map((page) => ({
-					id: attr(page, "ID"),
-					path: resolvePath(path, attr(page, "BaseLoc")),
-				})),
-			outlines: children(document, "Outlines").flatMap((n) =>
-				children(n).map((node) => xmlNode(node)),
-			),
-			bookmarks: children(document, "Bookmarks").flatMap((n) =>
-				children(n).map((node) => xmlNode(node)),
-			),
-			...(permissionNode ? { permissions: xmlNode(permissionNode) } : {}),
-			policy: permissions(permissionNode),
-			view: viewPreferences(children(document, "VPreferences")[0]),
-			actions: readActions(document),
-			attachments,
-			customTags: external(document, "CustomTags", path),
-			extensions: external(document, "Extensions", path),
-			annotations: external(document, "Annotations", path),
-			signatures: external(body, "Signatures", "OFD.xml"),
-			versions,
-		};
+	return archive.core().request({
+		op: "describe",
+		documentIndex: options.documentIndex,
+		version: options.version,
 	});
 }
 
 /** Package editing keeps every untouched part byte-for-byte, including extensions. */
 export class OfdPackage {
-	private readonly originallySigned: boolean;
-	private readonly changes = new Map<string, Uint8Array | null>();
+	private readonly kernel: FormatsKernel;
 	get documents(): OfdPackageDocument[] {
-		return describePackage(this.currentArchive());
+		return this.kernel.request({ op: "describe" });
 	}
-	constructor(
-		private readonly archive: Archive,
-		private readonly original: Uint8Array,
-	) {
-		this.originallySigned = describePackage(archive).some(
-			(doc) => doc.signatures !== undefined,
-		);
+	constructor(archive: Archive, _original?: Uint8Array) {
+		this.kernel = archive.core();
+		this.kernel.request({ op: "beginEdit" });
 	}
 	private currentArchive(): Archive {
-		const files = { ...this.archive.files };
-		for (const [path, value] of this.changes) {
-			if (value === null) delete files[path];
-			else files[path] = value;
-		}
-		return new Archive(files);
+		return Archive.fromKernel(this.kernel);
 	}
 	get paths(): string[] {
-		return [...new Set([...Object.keys(this.archive.files), ...this.changes.keys()])].filter(
-			(path) => this.changes.get(path) !== null,
-		);
+		return this.kernel.request<{ paths: string[] }>({ op: "state" }).paths;
 	}
 	get dirty(): boolean {
-		return this.changes.size > 0;
+		return this.kernel.request<{ dirty: boolean }>({ op: "state" }).dirty;
 	}
 	read(path: string): Uint8Array {
-		if (resolvePath("", path) !== path) throw new Error("Package paths must be canonical.");
-		const value = this.changes.has(path) ? this.changes.get(path) : this.archive.files[path];
-		if (!value) throw new Error(`Missing document part: ${path}`);
-		return value.slice();
+		this.kernel.request({ op: "part", path });
+		return this.kernel.save();
 	}
+
 	media(
 		id: string,
 		options: { documentIndex?: number; pageId?: string } = {},
@@ -317,27 +207,21 @@ export class OfdPackage {
 		return blob(this.read(attachment.path), types[extension] ?? "application/octet-stream");
 	}
 	readXml(path: string): OfdXmlNode {
-		return xmlNode(new Archive({ [path]: this.read(path) }).xml(path));
+		return this.kernel.request({ op: "xml", path });
 	}
 	set(path: string, data: Uint8Array | string): void {
-		if (resolvePath("", path) !== path) throw new Error("Package paths must be canonical.");
-		this.changes.set(
-			path,
-			typeof data === "string" ? new TextEncoder().encode(data) : data.slice(),
-		);
+		this.kernel.setPart(path, typeof data === "string" ? new TextEncoder().encode(data) : data);
 	}
 	remove(path: string): void {
-		this.read(path);
-		this.changes.set(path, null);
+		this.kernel.request({ op: "remove", path });
 	}
-	/** Changes to signed packages require explicit acknowledgement or re-signing. */
+	/** Rust snapshots package parts and enforces the original signed-file policy. */
 	write(options: { allowInvalidSignatures?: boolean } = {}): Blob {
-		if (!this.dirty) return blob(this.original, "application/ofd");
-		if (this.originallySigned && !options.allowInvalidSignatures)
-			throw new Error("Editing a signed OFD requires re-signing or allowInvalidSignatures.");
-		const parts = this.currentArchive().files;
-		describePackage(new Archive(parts));
-		return blob(zip(parts), "application/ofd");
+		this.kernel.request({
+			op: "write",
+			allowInvalidSignatures: options.allowInvalidSignatures === true,
+		});
+		return blob(this.kernel.save(), "application/ofd");
 	}
 }
 export async function openOfdPackage(
@@ -346,18 +230,29 @@ export async function openOfdPackage(
 ): Promise<OfdPackage> {
 	const archive = await Archive.open(source, options);
 	abort(options.signal);
-	const bytes =
-		source instanceof Blob
-			? new Uint8Array(await source.arrayBuffer())
-			: source instanceof Uint8Array
-				? source
-				: new Uint8Array(source);
-	return new OfdPackage(archive, bytes.slice());
+	// The Rust archive already owns the original bytes; do not read/copy a Blob twice.
+	return new OfdPackage(archive);
 }
 
 export async function createOfdPackage(
 	parts: Record<string, string | Uint8Array>,
 	options: ReadOptions = {},
 ): Promise<OfdPackage> {
-	return openOfdPackage(zip(parts), options);
+	abort(options.signal);
+	await loadFormatsKernel();
+	const archive = new Archive(
+			Object.fromEntries(
+				Object.entries(parts).map(([path, value]) => [
+					path,
+					typeof value === "string" ? new TextEncoder().encode(value) : value,
+				]),
+			),
+		),
+		core = archive.core();
+	try {
+		core.request({ op: "write" });
+		return await openOfdPackage(core.save(), options);
+	} finally {
+		core.close();
+	}
 }

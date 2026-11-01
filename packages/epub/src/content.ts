@@ -1,4 +1,12 @@
-import { isExternalHref, parseXml, resolvePath, XLINK_NS, type EpubBook, type EpubSpineItem } from "./book.js";
+import { searchText } from "@cubexp/kernels";
+import {
+	isExternalHref,
+	parseXml,
+	resolvePath,
+	XLINK_NS,
+	type EpubBook,
+	type EpubSpineItem,
+} from "./book.js";
 
 /**
  * Turns archive resources into object URLs. Stylesheets are inlined instead:
@@ -17,7 +25,9 @@ export class EpubResources {
 		if (!url) {
 			const bytes = this.book.read(name);
 			if (!bytes) return undefined;
-			url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: this.book.mediaType(name) }));
+			url = URL.createObjectURL(
+				new Blob([bytes as BlobPart], { type: this.book.mediaType(name) }),
+			);
 			this.urls.set(name, url);
 		}
 		return url;
@@ -37,10 +47,14 @@ export class EpubResources {
 
 	rewriteCss(css: string, base: string, seen = new Set<string>()): string {
 		return css
-			.replace(/@import\s+(?:url\(\s*)?(['"]?)([^'")\s;]+)\1\s*\)?([^;]*);/gi, (_, __, href: string) =>
-				isExternalHref(href) ? "" : this.stylesheet(resolvePath(base, href), seen))
+			.replace(
+				/@import\s+(?:url\(\s*)?(['"]?)([^'")\s;]+)\1\s*\)?([^;]*);/gi,
+				(_, __, href: string) =>
+					isExternalHref(href) ? "" : this.stylesheet(resolvePath(base, href), seen),
+			)
 			.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (match, _quote: string, href: string) => {
-				if (isExternalHref(href) || href.startsWith("#")) return /^(data|blob):/i.test(href) ? match : "none";
+				if (isExternalHref(href) || href.startsWith("#"))
+					return /^(data|blob):/i.test(href) ? match : "none";
 				const url = this.url(resolvePath(base, href));
 				return url ? `url("${url}")` : "none";
 			});
@@ -54,20 +68,38 @@ export class EpubResources {
 }
 
 const URL_ATTRIBUTES: ReadonlyArray<[selector: string, attribute: string]> = [
-	["img", "src"], ["video", "src"], ["video", "poster"], ["audio", "src"], ["source", "src"], ["track", "src"],
-	["input", "src"], ["object", "data"], ["embed", "src"], ["iframe", "src"],
+	["img", "src"],
+	["video", "src"],
+	["video", "poster"],
+	["audio", "src"],
+	["source", "src"],
+	["track", "src"],
+	["input", "src"],
+	["object", "data"],
+	["embed", "src"],
+	["iframe", "src"],
 ];
 
 /** Parse a spine document, strip active content, and point every resource at `resources`. */
-export function prepareChapter(book: EpubBook, item: EpubSpineItem, resources?: EpubResources): Document {
+export function prepareChapter(
+	book: EpubBook,
+	item: EpubSpineItem,
+	resources?: EpubResources,
+): Document {
 	const source = book.readText(item.href) ?? "";
 	let document: Document;
 	if (/svg/.test(item.mediaType)) {
-		document = parseXml(`<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body></body></html>`, "application/xhtml+xml");
+		document = parseXml(
+			`<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body></body></html>`,
+			"application/xhtml+xml",
+		);
 		const svg = parseXml(source, "image/svg+xml").documentElement;
 		document.body.append(document.importNode(svg, true));
 	} else {
-		document = parseXml(source, /x?html\+xml|xml/.test(item.mediaType) ? "application/xhtml+xml" : "text/html");
+		document = parseXml(
+			source,
+			/x?html\+xml|xml/.test(item.mediaType) ? "application/xhtml+xml" : "text/html",
+		);
 	}
 	if (!document.body) {
 		const body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
@@ -79,9 +111,16 @@ export function prepareChapter(book: EpubBook, item: EpubSpineItem, resources?: 
 }
 
 function sanitize(document: Document): void {
-	for (const element of Array.from(document.querySelectorAll("script, base, meta[http-equiv], form button[type=submit]"))) element.remove();
+	for (const element of Array.from(
+		document.querySelectorAll("script, base, meta[http-equiv], form button[type=submit]"),
+	))
+		element.remove();
 	const walker = document.createTreeWalker(document.documentElement, 1 /* SHOW_ELEMENT */);
-	for (let node = walker.currentNode as Element | null; node; node = walker.nextNode() as Element | null) {
+	for (
+		let node = walker.currentNode as Element | null;
+		node;
+		node = walker.nextNode() as Element | null
+	) {
 		for (const attribute of Array.from(node.attributes)) {
 			const name = attribute.name.toLowerCase();
 			if (name.startsWith("on")) node.removeAttribute(attribute.name);
@@ -105,13 +144,19 @@ function resolveResources(document: Document, base: string, resources: EpubResou
 		if (!value || isExternalHref(value)) continue;
 		const url = resources.url(resolvePath(base, value));
 		if (!url) continue;
-		if (element.hasAttributeNS(XLINK_NS, "href")) element.setAttributeNS(XLINK_NS, "xlink:href", url);
+		if (element.hasAttributeNS(XLINK_NS, "href"))
+			element.setAttributeNS(XLINK_NS, "xlink:href", url);
 		else element.setAttribute("href", url);
 	}
 	for (const link of Array.from(document.getElementsByTagNameNS("*", "link"))) {
 		const rel = (link.getAttribute("rel") ?? "").toLowerCase().split(/\s+/);
 		const href = link.getAttribute("href");
-		if (rel.includes("stylesheet") && href && !isExternalHref(href) && !rel.includes("alternate")) {
+		if (
+			rel.includes("stylesheet") &&
+			href &&
+			!isExternalHref(href) &&
+			!rel.includes("alternate")
+		) {
 			const style = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
 			style.textContent = resources.stylesheet(resolvePath(base, href));
 			const media = link.getAttribute("media");
@@ -148,7 +193,10 @@ export interface EpubSearchOptions {
 /** Text nodes in document order: the shared coordinate space for search and anchors. */
 export function textNodes(root: Node): Text[] {
 	const nodes: Text[] = [];
-	const walker = (root.ownerDocument ?? (root as Document)).createTreeWalker(root, 4 /* SHOW_TEXT */);
+	const walker = (root.ownerDocument ?? (root as Document)).createTreeWalker(
+		root,
+		4 /* SHOW_TEXT */,
+	);
 	for (let node = walker.nextNode(); node; node = walker.nextNode()) {
 		const parent = node.parentElement?.localName;
 		if (parent !== "style" && parent !== "title") nodes.push(node as Text);
@@ -160,7 +208,11 @@ export function normalizeForSearch(value: string): string {
 	return value.toLocaleLowerCase();
 }
 
-export async function* searchBook(book: EpubBook, query: string, options: EpubSearchOptions = {}): AsyncGenerator<EpubSearchResult> {
+export async function* searchBook(
+	book: EpubBook,
+	query: string,
+	options: EpubSearchOptions = {},
+): AsyncGenerator<EpubSearchResult> {
 	const needle = normalizeForSearch(query.trim());
 	if (!needle) return;
 	const limit = options.limit ?? 500;
@@ -168,21 +220,30 @@ export async function* searchBook(book: EpubBook, query: string, options: EpubSe
 	for (const item of book.spine) {
 		options.signal?.throwIfAborted();
 		const body = prepareChapter(book, item).body;
-		const content = textNodes(body).map(node => node.data).join("");
-		const haystack = normalizeForSearch(content);
+		const content = textNodes(body)
+			.map((node) => node.data)
+			.join("");
+		const matches = searchText(content, query, Math.min(10000, limit - found));
 		let occurrence = 0;
-		for (let at = haystack.indexOf(needle); at >= 0; at = haystack.indexOf(needle, at + needle.length)) {
+		for (const { from: at, to } of matches) {
 			yield {
-				index: item.index, occurrence: occurrence++,
-				before: content.slice(Math.max(0, at - 32), at).replace(/\s+/g, " ").trimStart(),
-				match: content.slice(at, at + needle.length),
-				after: content.slice(at + needle.length, at + needle.length + 48).replace(/\s+/g, " ").trimEnd(),
+				index: item.index,
+				occurrence: occurrence++,
+				before: content
+					.slice(Math.max(0, at - 32), at)
+					.replace(/\s+/g, " ")
+					.trimStart(),
+				match: content.slice(at, to),
+				after: content
+					.slice(to, to + 48)
+					.replace(/\s+/g, " ")
+					.trimEnd(),
 			};
 			if (++found >= limit) return;
 		}
 		options.onProgress?.(item.index + 1, book.spine.length);
 		// Yield to the event loop so typing and page turns stay responsive.
-		await new Promise(resolve => setTimeout(resolve, 0));
+		await new Promise((resolve) => setTimeout(resolve, 0));
 	}
 }
 
@@ -191,13 +252,12 @@ export function findOccurrence(root: Node, query: string, occurrence: number): R
 	const nodes = textNodes(root);
 	const needle = normalizeForSearch(query.trim());
 	if (!needle) return undefined;
-	const haystack = normalizeForSearch(nodes.map(node => node.data).join(""));
-	let at = -1;
-	for (let count = 0; count <= occurrence; count++) {
-		at = haystack.indexOf(needle, at < 0 ? 0 : at + needle.length);
-		if (at < 0) return undefined;
-	}
-	return rangeFromOffsets(nodes, at, at + needle.length);
+	const match = searchText(
+		nodes.map((node) => node.data).join(""),
+		query,
+		Math.min(10000, occurrence + 1),
+	)[occurrence];
+	return match ? rangeFromOffsets(nodes, match.from, match.to) : undefined;
 }
 
 function rangeFromOffsets(nodes: Text[], start: number, end: number): Range | undefined {
@@ -223,7 +283,11 @@ function rangeFromOffsets(nodes: Text[], start: number, end: number): Range | un
 /** "3/0/2:17" — child indexes from <body> to a text node, then a character offset. */
 export function serializePoint(root: Node, node: Node, offset: number): string | undefined {
 	const path: number[] = [];
-	for (let current: Node | null = node; current && current !== root; current = current.parentNode) {
+	for (
+		let current: Node | null = node;
+		current && current !== root;
+		current = current.parentNode
+	) {
 		const parent: Node | null = current.parentNode;
 		if (!parent) return undefined;
 		path.unshift(Array.prototype.indexOf.call(parent.childNodes, current));
@@ -231,7 +295,10 @@ export function serializePoint(root: Node, node: Node, offset: number): string |
 	return `${path.join("/")}:${offset}`;
 }
 
-export function resolvePoint(root: Node, point: string): { node: Node; offset: number } | undefined {
+export function resolvePoint(
+	root: Node,
+	point: string,
+): { node: Node; offset: number } | undefined {
 	const [path, offsetText] = point.split(":");
 	let node: Node | undefined = root;
 	for (const step of (path ?? "").split("/").filter(Boolean)) {
@@ -242,14 +309,18 @@ export function resolvePoint(root: Node, point: string): { node: Node; offset: n
 	return { node, offset: Math.min(Number(offsetText) || 0, length) };
 }
 
-export function serializeRange(root: Node, range: Range): { start: string; end: string } | undefined {
+export function serializeRange(
+	root: Node,
+	range: Range,
+): { start: string; end: string } | undefined {
 	const start = serializePoint(root, range.startContainer, range.startOffset);
 	const end = serializePoint(root, range.endContainer, range.endOffset);
 	return start && end ? { start, end } : undefined;
 }
 
 export function resolveRange(root: Node, start: string, end: string): Range | undefined {
-	const from = resolvePoint(root, start), to = resolvePoint(root, end);
+	const from = resolvePoint(root, start),
+		to = resolvePoint(root, end);
 	if (!from || !to) return undefined;
 	try {
 		const range = (root.ownerDocument ?? (root as Document)).createRange();

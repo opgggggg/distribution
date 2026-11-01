@@ -1,0 +1,245 @@
+{
+  "erasePath": [
+    "M3 18h5m8 0h5",
+    "M11 3l7 5-5 8-7-5z"
+  ],
+  "eraseStroke": [
+    "M3 18h18M6 15l12 6",
+    "M11 3l7 5-5 8-7-5z"
+  ],
+  "rotate": [
+    "M20 8V3h-5M20 3l-4 4a8 8 0 1 0 3 8",
+    "M8 9h5v7H8z"
+  ],
+  "image": [
+    "M3 4h18v16H3z",
+    "M3 17l6-6 4 4 3-3 5 5M8 8h.01"
+  ],
+  "eyedropper": [
+    "M16 3l5 5-3 3-2-2-9 9H4v-3l9-9-2-2 3-3 2 2z",
+    "M4 18l-1 3 3-1M12 5l7 7"
+  ],
+  "tape": [
+    "M5 9h14v7H5z",
+    "M5 9l-2 2 2 2-2 3M19 9l2 2-2 2 2 3"
+  ],
+  "scene": [
+    "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4",
+    "M8 8h8v8H8z"
+  ],
+  "snap": [
+    "M4 4h6v6H4zM14 14h6v6h-6z",
+    "M17 4v6M14 7h6M4 17h6M7 14v6"
+  ],
+  "connector": [
+    "M3 3h6v6H3zM15 15h6v6h-6z",
+    "M9 6h9v9M15 12l3 3 3-3"
+  ],
+  "edit": [
+    "M15 4l5 5L8 21H3v-5L15 4zM13 6l5 5"
+  ],
+  "shapes": [
+    "M4 4h8v8H4z",
+    "M16 11l6 10H10l6-10z"
+  ],
+  "palette": [
+    "M12 3a9 9 0 100 18h1a2 2 0 001-4c-1-1 0-3 2-3h3c4 0 3-11-7-11z",
+    "M7 9h.01M10 6h.01M15 7h.01M18 10h.01"
+  ],
+  "paper": [
+    "M5 3h10l4 4v14H5V3z",
+    "M15 3v5h4M8 12h8M8 16h6"
+  ],
+  "pen": [
+    "M16 3l5 5L9 20H4v-5L16 3z",
+    "M14 5l5 5"
+  ],
+  "highlighter": [
+    "M13 3l8 8-8 8-8-8 8-8z",
+    "M5 11l-2 7 3 3 7-2",
+    "M2 22h12"
+  ],
+  "eraser": [
+    "M15 3l7 7L10 22H6l-5-5L15 3z",
+    "M8 10l7 7",
+    "M10 22h12"
+  ],
+  "lasso": [
+    "M4 16C-1 9 6 3 13 4s11 9 5 13-17 1-11-4",
+    "M7 13c6 0 4 6 0 8l-2 2"
+  ],
+  "hand": [
+    "M8 13V5a2 2 0 014 0v6",
+    "M12 8a2 2 0 014 0v4",
+    "M16 10a2 2 0 014 0v5c0 5-3 7-7 7-3 0-5-2-7-5l-3-4a2 2 0 013-2l2 2"
+  ],
+  "text": [
+    "M4 4h16M12 4v17M8 21h8"
+  ],
+  "line": [
+    "M4 20L20 4"
+  ],
+  "rectangle": [
+    "M4 4h16v16H4z"
+  ],
+  "ellipse": [
+    "M12 3a9 9 0 110 18 9 9 0 010-18"
+  ],
+  "undo": [
+    "M3 10h12a6 6 0 010 12",
+    "M7 6l-4 4 4 4"
+  ],
+  "redo": [
+    "M21 10H9a6 6 0 000 12",
+    "M17 6l4 4-4 4"
+  ],
+  "pages": [
+    "M3 3h6v18H3z",
+    "M13 3h8v18h-8z"
+  ],
+  "minus": [
+    "M5 12h14"
+  ],
+  "plus": [
+    "M12 5v14M5 12h14"
+  ],
+  "more": [
+    "M4 12h1M11 12h1M18 12h1"
+  ],
+  "close": [
+    "M6 6l12 12M18 6L6 18"
+  ],
+  "left": [
+    "M15 5l-7 7 7 7"
+  ],
+  "right": [
+    "M9 5l7 7-7 7"
+  ],
+  "up": [
+    "M5 15l7-7 7 7"
+  ],
+  "down": [
+    "M5 9l7 7 7-7"
+  ],
+  "bookmark": [
+    "M6 3h12v19l-6-4-6 4V3z"
+  ],
+  "save": [
+    "M4 3h14l3 3v15H3V3h1z",
+    "M7 3v6h10V3M7 21v-8h10v8"
+  ],
+  "copy": [
+    "M8 8h13v13H8z",
+    "M16 8V3H3v13h5"
+  ],
+  "trash": [
+    "M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"
+  ],
+  "export": [
+    "M12 15V3M7 8l5-5 5 5",
+    "M4 13v8h16v-8"
+  ],
+  "settings": [
+    "M4 6h16M4 12h16M4 18h16",
+    "M8 3v6M16 9v6M10 15v6"
+  ],
+  "check": [
+    "M5 12l4 4L19 6"
+  ],
+  "fit": [
+    "M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"
+  ],
+  "bar:share": [
+    "M12 16V3m-5 5 5-5 5 5M5 12v9h14v-9"
+  ],
+  "bar:star": [
+    "m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"
+  ],
+  "bar:print": [
+    "M6 8V3h12v5M6 17H3V9h18v8h-3M6 14h12v7H6v-7Z"
+  ],
+  "bar:align-left": [
+    "M4 5h16M4 10h10M4 15h16M4 20h10"
+  ],
+  "bar:align-center": [
+    "M4 5h16M7 10h10M4 15h16M7 20h10"
+  ],
+  "bar:align-right": [
+    "M4 5h16M10 10h10M4 15h16M10 20h10"
+  ],
+  "bar:align-justify": [
+    "M4 5h16M4 10h16M4 15h16M4 20h16"
+  ],
+  "bar:list-bullet": [
+    "M8 6h12M8 12h12M8 18h12M3 6h.01M3 12h.01M3 18h.01"
+  ],
+  "bar:list-number": [
+    "M9 6h11M9 12h11M9 18h11M3 4h1v5M2 9h4M2 14c0-2 3-2 3 0l-3 5h3"
+  ],
+  "bar:back": [
+    "m12 5-7 7 7 7M5 12h15"
+  ],
+  "bar:trash": [
+    "M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"
+  ],
+  "bar:close": [
+    "m6 6 12 12M18 6 6 18"
+  ],
+  "bar:more": [
+    "M12 5h.01M12 12h.01M12 19h.01"
+  ],
+  "bar:search": [
+    "M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0"
+  ],
+  "bar:folder": [
+    "M3 7V5h6l2 2h10v13H3V7Z"
+  ],
+  "bar:plus": [
+    "M12 5v14M5 12h14"
+  ],
+  "bar:pages": [
+    "M3 4h7v16H3V4Zm11 0h7v16h-7V4Z"
+  ],
+  "bar:file": [
+    "M14 3H5v18h14V8l-5-5Zm0 0v5h5M8 12h8M8 16h6"
+  ],
+  "bar:recent": [
+    "M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2"
+  ],
+  "bar:settings": [
+    "M4 7h16M4 17h16M8 4v6M16 14v6"
+  ],
+  "bar:edit": [
+    "m4 20 4-1L20 7l-3-3L5 16l-1 4Zm10-13 3 3"
+  ],
+  "bar:check": [
+    "m5 12 4 4L19 6"
+  ],
+  "bar:save": [
+    "M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"
+  ],
+  "bar:undo": [
+    "m8 4-5 5 5 5M3 9h10a7 7 0 0 1 7 7"
+  ],
+  "bar:redo": [
+    "m16 4 5 5-5 5M21 9h-10a7 7 0 0 0-7 7"
+  ],
+  "bar:chevron": [
+    "m9 5 7 7-7 7"
+  ],
+  "bar:keyboard": [
+    "M3 4h18v12H3V4Zm3 4h.01M10 8h.01M14 8h.01M18 8h.01M7 12h10m-8 7 3 3 3-3"
+  ],
+  "bar:play": [
+    "m8 4 12 8-12 8V4Z"
+  ],
+  "bar:bold": [
+    "M7 4h6a4 4 0 0 1 0 8H7V4Zm0 8h7a4 4 0 0 1 0 8H7v-8Z"
+  ],
+  "bar:format": [
+    "M4 5h16M12 5v15M8 20h8"
+  ],
+  "bar:image": [
+    "M3 4h18v16H3V4Zm1 13 5-5 4 4 3-3 5 5M8 8h.01"
+  ]
+}

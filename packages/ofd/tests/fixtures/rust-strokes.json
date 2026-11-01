@@ -1,0 +1,305 @@
+{
+  "sourceCommit": "43022d3584827e6adb89c18f1d7fa5b50ed17b21",
+  "cases": [
+    {
+      "scale": 0.1,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; >\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width='1' d=\"M 0 0 L 40 40\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\".5\" stroke-miterlimit=\"10\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\"/></g></svg>",
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; &gt;\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width=\"2.645833333333333\" d=\"M 0 0 L 40 40\" stroke-miterlimit=\"1.3334173228346458\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\"105.83333333333331\" stroke-miterlimit=\"1\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\" stroke-width=\"5.291666666666666\" stroke-miterlimit=\"1.8897637795275593\"/></g></svg>"
+    },
+    {
+      "scale": 0.5,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; >\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width='1' d=\"M 0 0 L 40 40\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\".5\" stroke-miterlimit=\"10\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\"/></g></svg>",
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; &gt;\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width=\"0.5291666666666666\" d=\"M 0 0 L 40 40\" stroke-miterlimit=\"6.66708661417323\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\"21.166666666666664\" stroke-miterlimit=\"1\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\" stroke-width=\"2\" stroke-miterlimit=\"5\"/></g></svg>"
+    },
+    {
+      "scale": 1,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; >\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width='1' d=\"M 0 0 L 40 40\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\".5\" stroke-miterlimit=\"10\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\"/></g></svg>",
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; &gt;\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width=\"0.2645833333333333\" d=\"M 0 0 L 40 40\" stroke-miterlimit=\"13.33417322834646\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\"10.583333333333332\" stroke-miterlimit=\"1\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\" stroke-width=\"2\" stroke-miterlimit=\"5\"/></g></svg>"
+    },
+    {
+      "scale": 2,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; >\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width='1' d=\"M 0 0 L 40 40\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\".5\" stroke-miterlimit=\"10\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\"/></g></svg>",
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; &gt;\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width=\"0.13229166666666664\" d=\"M 0 0 L 40 40\" stroke-miterlimit=\"26.66834645669292\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\"5.291666666666666\" stroke-miterlimit=\"1\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\" stroke-width=\"2\" stroke-miterlimit=\"5\"/></g></svg>"
+    },
+    {
+      "scale": 8,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; >\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width='1' d=\"M 0 0 L 40 40\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\".5\" stroke-miterlimit=\"10\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\"/></g></svg>",
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\"><!-- keep > &lt; -->\n<g data-note=\"中文 &amp; &quot; &gt;\"><path data-ofd-line-width=\"0\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"3.528\" stroke-width=\"0.03307291666666666\" d=\"M 0 0 L 40 40\" stroke-miterlimit=\"106.67338582677168\"/>\n<path data-ofd-line-width=\".001\" data-ofd-stroke-scale=\".05\" data-ofd-miter-length=\"1\" stroke-width=\"1.3229166666666665\" stroke-miterlimit=\"1\" d=\"M 0 40 L 40 0\"/>\n<path data-ofd-line-width=\"2\" data-ofd-stroke-scale=\"1\" data-ofd-miter-length=\"10\" d=\"M 10 0 L 10 40\" stroke-width=\"2\" stroke-miterlimit=\"5\"/></g></svg>"
+    }
+  ],
+  "matrices": [
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "matrix": [
+        1000,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "matrix": [
+        2,
+        0.3,
+        -0.2,
+        3,
+        5,
+        8
+      ],
+      "expected": 2.009975124224178
+    },
+    {
+      "matrix": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "matrix": [
+        0.01,
+        10,
+        7,
+        0.04,
+        0,
+        0
+      ],
+      "expected": 6.999804916416063
+    }
+  ],
+  "widths": [
+    {
+      "width": 0,
+      "transformScale": 0.02,
+      "deviceScale": 0.1,
+      "expected": 132.29166666666663
+    },
+    {
+      "width": 0,
+      "transformScale": 0.02,
+      "deviceScale": 1,
+      "expected": 13.229166666666664
+    },
+    {
+      "width": 0,
+      "transformScale": 0.02,
+      "deviceScale": 8,
+      "expected": 1.653645833333333
+    },
+    {
+      "width": 0,
+      "transformScale": 1,
+      "deviceScale": 0.1,
+      "expected": 2.645833333333333
+    },
+    {
+      "width": 0,
+      "transformScale": 1,
+      "deviceScale": 1,
+      "expected": 0.2645833333333333
+    },
+    {
+      "width": 0,
+      "transformScale": 1,
+      "deviceScale": 8,
+      "expected": 0.03307291666666666
+    },
+    {
+      "width": 0,
+      "transformScale": 100,
+      "deviceScale": 0.1,
+      "expected": 0.02645833333333333
+    },
+    {
+      "width": 0,
+      "transformScale": 100,
+      "deviceScale": 1,
+      "expected": 0.0026458333333333334
+    },
+    {
+      "width": 0,
+      "transformScale": 100,
+      "deviceScale": 8,
+      "expected": 0.00033072916666666667
+    },
+    {
+      "width": 0.001,
+      "transformScale": 0.02,
+      "deviceScale": 0.1,
+      "expected": 264.58333333333326
+    },
+    {
+      "width": 0.001,
+      "transformScale": 0.02,
+      "deviceScale": 1,
+      "expected": 26.45833333333333
+    },
+    {
+      "width": 0.001,
+      "transformScale": 0.02,
+      "deviceScale": 8,
+      "expected": 3.307291666666666
+    },
+    {
+      "width": 0.001,
+      "transformScale": 1,
+      "deviceScale": 0.1,
+      "expected": 5.291666666666666
+    },
+    {
+      "width": 0.001,
+      "transformScale": 1,
+      "deviceScale": 1,
+      "expected": 0.5291666666666666
+    },
+    {
+      "width": 0.001,
+      "transformScale": 1,
+      "deviceScale": 8,
+      "expected": 0.06614583333333332
+    },
+    {
+      "width": 0.001,
+      "transformScale": 100,
+      "deviceScale": 0.1,
+      "expected": 0.05291666666666666
+    },
+    {
+      "width": 0.001,
+      "transformScale": 100,
+      "deviceScale": 1,
+      "expected": 0.005291666666666667
+    },
+    {
+      "width": 0.001,
+      "transformScale": 100,
+      "deviceScale": 8,
+      "expected": 0.001
+    },
+    {
+      "width": 0.5,
+      "transformScale": 0.02,
+      "deviceScale": 0.1,
+      "expected": 264.58333333333326
+    },
+    {
+      "width": 0.5,
+      "transformScale": 0.02,
+      "deviceScale": 1,
+      "expected": 26.45833333333333
+    },
+    {
+      "width": 0.5,
+      "transformScale": 0.02,
+      "deviceScale": 8,
+      "expected": 3.307291666666666
+    },
+    {
+      "width": 0.5,
+      "transformScale": 1,
+      "deviceScale": 0.1,
+      "expected": 5.291666666666666
+    },
+    {
+      "width": 0.5,
+      "transformScale": 1,
+      "deviceScale": 1,
+      "expected": 0.5291666666666666
+    },
+    {
+      "width": 0.5,
+      "transformScale": 1,
+      "deviceScale": 8,
+      "expected": 0.5
+    },
+    {
+      "width": 0.5,
+      "transformScale": 100,
+      "deviceScale": 0.1,
+      "expected": 0.5
+    },
+    {
+      "width": 0.5,
+      "transformScale": 100,
+      "deviceScale": 1,
+      "expected": 0.5
+    },
+    {
+      "width": 0.5,
+      "transformScale": 100,
+      "deviceScale": 8,
+      "expected": 0.5
+    },
+    {
+      "width": 5,
+      "transformScale": 0.02,
+      "deviceScale": 0.1,
+      "expected": 264.58333333333326
+    },
+    {
+      "width": 5,
+      "transformScale": 0.02,
+      "deviceScale": 1,
+      "expected": 26.45833333333333
+    },
+    {
+      "width": 5,
+      "transformScale": 0.02,
+      "deviceScale": 8,
+      "expected": 5
+    },
+    {
+      "width": 5,
+      "transformScale": 1,
+      "deviceScale": 0.1,
+      "expected": 5.291666666666666
+    },
+    {
+      "width": 5,
+      "transformScale": 1,
+      "deviceScale": 1,
+      "expected": 5
+    },
+    {
+      "width": 5,
+      "transformScale": 1,
+      "deviceScale": 8,
+      "expected": 5
+    },
+    {
+      "width": 5,
+      "transformScale": 100,
+      "deviceScale": 0.1,
+      "expected": 5
+    },
+    {
+      "width": 5,
+      "transformScale": 100,
+      "deviceScale": 1,
+      "expected": 5
+    },
+    {
+      "width": 5,
+      "transformScale": 100,
+      "deviceScale": 8,
+      "expected": 5
+    }
+  ]
+}

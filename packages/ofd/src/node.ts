@@ -2,7 +2,7 @@ import { svgAtDeviceScale } from "./strokes.js";
 import { renderNativeSvg } from "./render-node.js";
 import { fileURLToPath } from "node:url";
 /** Node-only conversion backend. Never import this entry point into a browser bundle. */
-import { PDFDocument } from "pdf-lib";
+import { writePdfImages } from "@cubexp/kernels";
 import { readOfdDocument } from "./read.js";
 import { convertDocument, conversionTargets, baseName, selected, rasterSize } from "./convert.js";
 import { writeImageOfd, extension, type OfdImagePage } from "./write.js";
@@ -134,20 +134,17 @@ async function outputImages(
 ): Promise<ConversionResult> {
 	const name = baseName(options);
 	if (to === "pdf") {
-		const pdf = await PDFDocument.create();
-		for (const page of pages) {
-			abort(options.signal);
-			const image = await pdf.embedPng(page.bytes),
-				target = pdf.addPage([page.width * 0.75, page.height * 0.75]);
-			target.drawImage(image, {
-				x: 0,
-				y: 0,
-				width: target.getWidth(),
-				height: target.getHeight(),
-			});
-		}
+		abort(options.signal);
+		const pdf = await writePdfImages(
+			pages.map((page) => ({
+				bytes: page.bytes,
+				width: page.width * 0.75,
+				height: page.height * 0.75,
+			})),
+		);
+		abort(options.signal);
 		return {
-			files: [{ name: `${name}.pdf`, blob: blob(await pdf.save(), "application/pdf") }],
+			files: [{ name: `${name}.pdf`, blob: blob(pdf, "application/pdf") }],
 			diagnostics: [
 				{
 					code: "raster-pdf",

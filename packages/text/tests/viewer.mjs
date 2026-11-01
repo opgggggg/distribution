@@ -36,7 +36,8 @@ test('viewer updates language and wrap, and reports errors', async () => {
   assert.equal(find(root, 'code').props.innerHTML, 'const answer = 42;');
   assert.equal(find(root, 'pre').props.style.whiteSpace, 'pre-wrap');
   props.source = new Uint8Array([0xff]);
-  await flush();
+  // A cold Rust WASM load crosses actual I/O, beyond Vue's microtask queue.
+  for(let i=0;i<200&&!errors.length;i++){await new Promise(resolve=>setTimeout(resolve,5));await flush();}
   assert.equal(errors.length, 1);
   assert.equal(find(root, 'code'), undefined);
   assert.equal(find(root, 'p').props.role, 'alert');

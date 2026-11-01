@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = ["crates/notes-core", "crates/formats-core", "crates/ofd-writer"]
+exclude = ["als-office", "packages/ofd-host/native", "crates/vendor/resvg"]
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0"
+rust-version = "1.88"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+panic = "abort"
+strip = true
+
+
+[patch.crates-io]
+resvg = { path = "crates/vendor/resvg" }

@@ -2,6 +2,14 @@
 
 CubeOffice's own paginated handwriting editor, using the same Vue surface on desktop, Android, iOS and HarmonyOS. It owns its notebook model, editing history, pointer interactions and UI. Xournal++ is a file interchange reference; its application and GPL editor code are not embedded. The small MIT-licensed `perfect-freehand` library generates pen outlines.
 
+The Vue editor and headless Office session use the shared Rust notes authority for
+validation, transactions, undo/redo and `.cubenote`/XOPP persistence. WebView hosts
+load its WASM build; native static/C libraries and a handle-based C API are available
+from [`crates/notes-core`](../../crates/notes-core/README.md). Input, brush rendering
+and UI still use the existing host code while the native-view migration remains open.
+The synchronous TypeScript model/history/codec exports are retained as compatibility
+APIs and roundtrip oracles, not the default editor's state authority.
+
 ## Features
 
 - Resizable page sidebar with remembered width, keyboard adjustment and double-click reset.
@@ -34,24 +42,24 @@ CubeOffice's own paginated handwriting editor, using the same Vue surface on des
 
 ## Source navigation
 
-| Module                                     | Responsibility                                                                |
-| ------------------------------------------ | ----------------------------------------------------------------------------- |
-| `src/model.ts`                             | Versioned document schema, physical coordinates and validation limits         |
-| `src/codec.ts`                             | Native archive and guarded Xournal XML interchange                            |
-| `src/history.ts`                           | Transactions, undo/redo and revision-aware save acknowledgement               |
-| `src/manipulation.ts`                      | Selection transforms, alignment/grid/spacing and connected shape anchors      |
-| `src/geometry.ts`                          | Hit testing, lasso selection, movement and shape geometry                     |
-| `src/texture.ts`                           | Deterministic paper grain shared by Canvas and SVG, with bounded tile caching |
-| `src/render.ts`                            | Canvas appearance and safe SVG thumbnails                                     |
-| `src/vue/sidebar-resize.ts`                | Page rail resizing, pointer/keyboard handling and local UI preference         |
-| `src/vue/canvas.ts`                        | Pointer capture, pen/palm handling, gesture cancellation and navigation       |
-| `src/eraser.ts`, `src/erasure-geometry.ts` | Swept local erasing, overlap-safe mask geometry and hit testing               |
-| `src/vue/pencil-menu.ts`                   | Transient pen-tip tools, viewport bounds and dismissal                        |
-| `src/vue/editor.ts`                        | Notebook tools, pages, paper, layers, live text and export UI                 |
-| `src/pdf.ts`                               | Appearance-only PDF export                                                    |
-| `src/image.ts`                             | Full-page PNG rendering shared with PDF, and numbered image ZIP export        |
-| `src/office.ts`, `src/office-vue.ts`       | Headless session and graphical host contribution                              |
-| `src/thumbnail.ts`                         | Recent-file preview integration                                               |
+| Module                                           | Responsibility                                                                       |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `../../crates/notes-core/src/`                   | Rust model validation, transactions/history, native archive/XOPP and native/WASM ABI |
+| `src/kernel/`                                    | Rust loading, ABI calls and immutable UI projections; Node and WebView adapters      |
+| `src/model.ts`, `src/codec.ts`, `src/history.ts` | Compatibility types/helpers and legacy roundtrip oracles                             |
+| `src/manipulation.ts`                            | Selection transforms, alignment/grid/spacing and connected shape anchors             |
+| `src/geometry.ts`                                | Hit testing, lasso selection, movement and shape geometry                            |
+| `src/texture.ts`                                 | Deterministic paper grain shared by Canvas and SVG, with bounded tile caching        |
+| `src/render.ts`                                  | Canvas appearance and safe SVG thumbnails                                            |
+| `src/vue/sidebar-resize.ts`                      | Page rail resizing, pointer/keyboard handling and local UI preference                |
+| `src/vue/canvas.ts`                              | Pointer capture, pen/palm handling, gesture cancellation and navigation              |
+| `src/eraser.ts`, `src/erasure-geometry.ts`       | Swept local erasing, overlap-safe mask geometry and hit testing                      |
+| `src/vue/pencil-menu.ts`                         | Transient pen-tip tools, viewport bounds and dismissal                               |
+| `src/vue/editor.ts`                              | Notebook tools, pages, paper, layers, live text and export UI                        |
+| `src/pdf.ts`                                     | Appearance-only PDF export                                                           |
+| `src/image.ts`                                   | Full-page PNG rendering shared with PDF, and numbered image ZIP export               |
+| `src/office.ts`, `src/office-vue.ts`             | Headless session and graphical host contribution                                     |
+| `src/thumbnail.ts`                               | Recent-file preview integration                                                      |
 
 ## Native file format
 
@@ -83,6 +91,8 @@ Register `NOTES_ARTIFACT_PLUGIN` from `@cubexp/notes/office` for headless creati
 
 The UI exposes `getNotebook`, `getRevision`, `isDirty`, `subscribe`, `exportFile`, `saveFile`, `undo`, `redo` and `setDocumentName`. The headless session exposes `getNotebook` and transaction-based `update` in addition to the shared artifact interface.
 
+Native UI saves encode undo/redo history and compress ZIP in a short-lived inline worker, keeping pen input responsive during autosave. Immutable snapshots preserve revision isolation; custom brush metadata is validated without executing plugin rendering in the worker. Reading/writing the native format through the headless API stays synchronous. Whole-board preview painting is skipped while a drawing or navigation gesture is active.
+
 Exports do not clear dirty state. `saveFile({ deliver })` acknowledges the captured revision only after successful delivery; cancellation, I/O failure and later edits keep the document dirty. Plain `saveFile()` without a delivery callback cannot acknowledge a persisted file. Export commands use the host's `export` intent, which never replaces a notebook with PDF bytes or rebases its save path.
 
 Unfinished text is included in autosave snapshots without closing the text editor. Its transient revision changes on input. Switching to reading mode commits pending text before it removes editing controls.
@@ -108,6 +118,7 @@ node packages/notes/tests/eraser.cjs
 node packages/notes/tests/pencil-menu.cjs
 node packages/notes/tests/pencil-color-sample.cjs
 node packages/notes/tests/canvas-colors.cjs
+node packages/notes/tests/save-performance.cjs
 node packages/notes/tests/touch-identifiers.cjs
 ```
 

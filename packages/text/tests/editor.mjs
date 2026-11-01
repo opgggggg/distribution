@@ -71,6 +71,26 @@ test('Java parser supplies real fold ranges', async () => {
   } finally { editor.close(); }
 });
 
+test('Rust undo uses a minimal patch, preserves unrelated folds and restores selection',async()=>{
+ const editor=await mount('public class Hello {\n    void greet() {\n        System.out.println("hello");\n    }\n}\n');
+ try{
+  for(let i=0;i<50&&!foldedRanges(editor.view.state).size;i++){editor.api.foldAll();await new Promise(resolve=>setTimeout(resolve,10));}
+  const folded=foldedRanges(editor.view.state).size;assert.ok(folded>0);
+  const end=editor.view.state.doc.length;editor.view.dispatch({selection:{anchor:end}});
+  editor.view.dispatch({changes:{from:end,insert:'// new tail'},selection:{anchor:end+11}});
+  assert.equal(foldedRanges(editor.view.state).size,folded);assert.ok(editor.api.undo());
+  assert.equal(editor.view.state.selection.main.head,end);assert.equal(foldedRanges(editor.view.state).size,folded);
+  assert.ok(editor.api.redo());assert.equal(editor.view.state.selection.main.head,end+11);assert.equal(foldedRanges(editor.view.state).size,folded);
+ }finally{editor.close();}
+});
+
+test('a rejected Unicode edit leaves both the displayed text and Rust buffer intact',async()=>{
+ const editor=await mount('😀safe');try{
+  editor.view.dispatch({changes:{from:0,to:1,insert:''}});
+  assert.equal(editor.errors.length,1);assert.equal(editor.view.state.doc.toString(),'😀safe');assert.equal(editor.api.getText(),'😀safe');assert.equal(editor.api.isDirty(),false);
+ }finally{editor.close();}
+});
+
 test('failed/cancelled saves stay dirty; edits during save are not acknowledged', async () => {
   const buffer = await createTextBuffer('original');
   buffer.setText('changed');

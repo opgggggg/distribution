@@ -1,0 +1,4288 @@
+[
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 30,
+    "dy": 3,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 30,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 255
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 7,
+      "dy": 9,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": true,
+    "align": false,
+    "expected": {
+      "dx": -1,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "x",
+          "position": 200,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 0,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": -2,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 130,
+          "start": 121,
+          "end": 319,
+          "label": "78 pt"
+        },
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 255
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": -300,
+    "dy": -200,
+    "threshold": 6,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": -301,
+      "dy": -199,
+      "guides": [
+        {
+          "axis": "x",
+          "position": -100,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": -100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 3,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": -2,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 130,
+          "start": 121,
+          "end": 319,
+          "label": "78 pt"
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 12,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": -2,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 130,
+          "start": 121,
+          "end": 319,
+          "label": "78 pt"
+        },
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 255
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25eb53e3-0d20-49cb-8cf4-1733438ec31e",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "d6242de2-b3cf-4fb7-9066-780dc8fa9638",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 1000,
+    "dy": 1000,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 1000,
+      "dy": 1000,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 30,
+    "dy": 3,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 30,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 333
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 7,
+      "dy": 9,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": true,
+    "align": false,
+    "expected": {
+      "dx": 1,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "x",
+          "position": 40,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 0,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 0,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 333
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": -300,
+    "dy": -200,
+    "threshold": 6,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": -299,
+      "dy": -199,
+      "guides": [
+        {
+          "axis": "x",
+          "position": -260,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": -100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 3,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": 1,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "x",
+          "position": 40,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 12,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 0,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 333
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "7047d24e-5a7c-4987-b598-6e76da6222cb",
+      "infinite": true,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "e89164e9-6114-4334-a1ea-22353c04bd5b",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 1000,
+    "dy": 1000,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 1000,
+      "dy": 1000,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 30,
+    "dy": 3,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 30,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 255
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 7,
+      "dy": 9,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": true,
+    "align": false,
+    "expected": {
+      "dx": -1,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "x",
+          "position": 200,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 0,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": -2,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 130,
+          "start": 121,
+          "end": 319,
+          "label": "78 pt"
+        },
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 255
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": -300,
+    "dy": -200,
+    "threshold": 6,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": -201,
+      "dy": -99,
+      "guides": [
+        {
+          "axis": "x",
+          "position": -100,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": -100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 3,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": -2,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 130,
+          "start": 121,
+          "end": 319,
+          "label": "78 pt"
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 12,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": -2,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 130,
+          "start": 121,
+          "end": 319,
+          "label": "78 pt"
+        },
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 255
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "25b7eace-da54-4913-a1a2-0519a36afc2e",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "fe74eb14-25ce-4786-8f67-71d773b59c4d",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 242,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 202,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "left",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "right",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 400,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 1000,
+    "dy": 1000,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 352.28,
+      "dy": 680.89,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 30,
+    "dy": 3,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 30,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 333
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 7,
+      "dy": 9,
+      "guides": []
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 7,
+    "dy": 9,
+    "threshold": 6,
+    "grid": true,
+    "align": false,
+    "expected": {
+      "dx": 1,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "x",
+          "position": 40,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 0,
+    "threshold": 6,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 0,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 333
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": -300,
+    "dy": -200,
+    "threshold": 6,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": -39,
+      "dy": -99,
+      "guides": [
+        {
+          "axis": "x",
+          "position": -260,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": -100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 3,
+    "grid": true,
+    "align": true,
+    "expected": {
+      "dx": 1,
+      "dy": 1,
+      "guides": [
+        {
+          "axis": "x",
+          "position": 40,
+          "start": 0,
+          "end": 841.89
+        },
+        {
+          "axis": "y",
+          "position": 100,
+          "start": 0,
+          "end": 595.28
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 0,
+    "dy": 8,
+    "threshold": 12,
+    "grid": false,
+    "align": true,
+    "expected": {
+      "dx": 0,
+      "dy": 0,
+      "guides": [
+        {
+          "axis": "y",
+          "position": 99,
+          "start": 27,
+          "end": 333
+        }
+      ]
+    }
+  },
+  {
+    "page": {
+      "id": "11caf40b-c2f0-47a0-aae9-7f2120cf46fc",
+      "infinite": false,
+      "width": 595.28,
+      "height": 841.89,
+      "paper": "grid",
+      "color": "#fffdf7",
+      "bookmarked": false,
+      "layers": [
+        {
+          "id": "bf8dfae9-1288-4ad1-85b0-059d559ba0fd",
+          "name": "Ink",
+          "visible": true,
+          "elements": [
+            {
+              "id": "a",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 120,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 40,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            },
+            {
+              "id": "b",
+              "kind": "stroke",
+              "tool": "pen",
+              "shape": "rectangle",
+              "color": "#222b40",
+              "width": 2,
+              "opacity": 1,
+              "pressure": false,
+              "points": [
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 100,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 320,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 160,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 240,
+                  "y": 100,
+                  "pressure": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ids": [
+      "a"
+    ],
+    "dx": 1000,
+    "dy": 1000,
+    "threshold": 6,
+    "grid": false,
+    "align": false,
+    "expected": {
+      "dx": 474.28,
+      "dy": 680.89,
+      "guides": []
+    }
+  }
+]

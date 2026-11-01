@@ -8,15 +8,15 @@
 | -------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | 6 文件结构                 | ZIP/XML 读取、路径与容量限制、原始包及所有未改动文件的字节保留、包级创建与编辑               | `openOfdPackage`、`createOfdPackage`、`OfdPackage.write`                                |
 | 7 基本结构                 | 多文档、文档信息、页树、页/模板资源、大纲、书签、权限与视图首选项                            | `OfdPackage.documents`、`OfdDocument.documents`                                         |
-| 8.1–8.2 坐标和绘制参数     | 仿射矩阵、参数继承、端点/连接、虚线、透明度、设备相关零线宽及最小线宽                        | `geometry.ts`、`strokes.ts`、像素测试                                                   |
-| 8.3 颜色                   | Gray/RGB/CMYK、位深、十六进制通道、调色板、内置 QCMS ICC 转换                                | `paint.ts`、`icc.ts`                                                                    |
-| 8.3 底纹/渐变              | 单元间距、行列翻转、页面/对象基准、轴向/径向/高洛德/网格高洛德、区间和延伸                   | `paint.ts`、规范颜色样例测试                                                            |
-| 8.4–8.5 裁剪和图元         | 路径/文字裁剪、Area 并集、Clip 交集、Boundary 裁剪、隐藏对象与页面外对象处理                 | `ofd.ts`、裁剪与边界像素测试                                                            |
-| 9 图形                     | 紧缩路径及动作 Region 的 Move/Line/QuadraticBezier/CubicBezier/Arc/Close                     | `ofd.ts`、`geometry.ts`                                                                 |
-| 10 图像                    | PNG/JPEG、BMP、单页 TIFF 及方向；替换图、图像蒙版、边框                                      | `codecs.ts`、`ofd.ts`                                                                   |
-| 11 文字                    | 转义字符、字距、TextCode 原点继承、阅读/字符方向、横向缩放、OpenType 轮廓、字形索引变换      | `text.ts`、一对多字形定位及样式测试                                                     |
+| 8.1–8.2 坐标和绘制参数     | 仿射矩阵、参数继承、端点/连接、虚线、透明度、设备相关零线宽及最小线宽                        | `ofd/render/geometry.rs`、`ofd/strokes.rs`、像素测试                                    |
+| 8.3 颜色                   | Gray/RGB/CMYK、位深、十六进制通道、调色板、内置 QCMS ICC 转换                                | `ofd/render/paint.rs`、`icc.ts`                                                         |
+| 8.3 底纹/渐变              | 单元间距、行列翻转、页面/对象基准、轴向/径向/高洛德/网格高洛德、区间和延伸                   | `ofd/render/paint.rs`、规范颜色样例测试                                                 |
+| 8.4–8.5 裁剪和图元         | 路径/文字裁剪、Area 并集、Clip 交集、Boundary 裁剪、隐藏对象与页面外对象处理                 | `ofd/render/mod.rs`、裁剪与边界像素测试                                                 |
+| 9 图形                     | 紧缩路径及动作 Region 的 Move/Line/QuadraticBezier/CubicBezier/Arc/Close                     | `ofd/render/mod.rs`、`ofd/render/geometry.rs`                                           |
+| 10 图像                    | PNG/JPEG、BMP、单页 TIFF 及方向；替换图、图像蒙版、边框                                      | `ofd/codecs.rs`、`ofd/render/mod.rs`                                                    |
+| 11 文字                    | 转义字符、字距、TextCode 原点继承、阅读/字符方向、横向缩放、OpenType 轮廓、字形索引变换      | `ofd/render/text.rs`、一对多字形定位及样式测试                                          |
 | 12–14 视频、复合对象、动作 | 复合资源及边界；Goto/GotoA/URI/Sound/Movie 有序分派；目标区域、书签、循环/同步音频、视频操作 | `executeOfdActions`、Vue `actionHost`                                                   |
-| 15 注释                    | 注释索引、静态外观、可见性、打印意图；原始属性和参数保留                                     | `ofd.ts`、包级 XML API                                                                  |
+| 15 注释                    | 注释索引、静态外观、可见性、打印意图；原始属性和参数保留                                     | `ofd/render/mod.rs`、包级 XML API                                                       |
 | 16–17 自定义标引和扩展     | 索引检查、XML 信息、任意外部数据的读取与无损保留                                             | `OfdPackage`                                                                            |
 | 18 数字签名                | 签名索引/描述/引用；生成摘要及调用签名提供者；摘要校验、签名验证及信任状态分别报告           | `signOfdDocument`、`verifyOfdSignatures`；Node 提供 SM3 等摘要及原始 RSA/ECDSA 验证适配 |
 | 19 版本                    | 版本元数据、Current 版本、显式版本与文档选择                                                 | `version`、`documentIndex`                                                              |
@@ -45,6 +45,15 @@
 
 ## 验证
 
-49 项自动测试覆盖结构、签名篡改、ICC、字形映射、设备线宽、渐变/裁剪像素、字体样式、资源与版本、BMP/TIFF、动作及 Vue 生命周期。另以 28 份 OFDRW converter/reader 样例完成解析与全部 51 页 PNG 转换，包含发票、签章、缺资源和嵌套页块。
+原有规范测试覆盖结构、签名篡改、ICC、字形映射、设备线宽、渐变/裁剪像素、字体样式、资源与版本、BMP/TIFF、动作及 Vue 生命周期。另以 28 份 OFDRW converter/reader 样例完成解析与全部 51 页 PNG 转换，包含发票、签章、缺资源和嵌套页块。
 
 真实样例曾暴露原生渲染器对页面外文本的崩溃：现按页面边界剔除不可见对象，并将原生渲染放入可取消的子进程，底层故障不会终止调用方。两份缺少命名表的子集字体样例在修复后单独重跑通过。样例通过不表示所有可能的页面、设备或安全提供者均已完成验证。
+
+## Rust 迁移对照
+
+`crates/formats-core/src/ofd` 已接管包/元数据/签名结构、XML/ZIP 写出、完整
+SVG 绘制、字体轮廓、BMP/TIFF、设备线宽和结构校验。迁移前实现固定于
+`43022d3584827e6adb89c18f1d7fa5b50ed17b21`，只用于开发对照，不作为运行时回退。
+8 组整页图形对照验证动作/文字与实际像素；86 组图像对照验证位深、压缩、方向、
+透明度和错误；5 组结构报告检查问题顺序及 XSD 细节，5 个缩放档位检查最终线宽。
+保留原查看组件和外部安全/ICC/XSD/像素输出绑定，不等同于所有原生平台界面完成。

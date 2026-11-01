@@ -17,6 +17,9 @@ final class WorkspaceViewController: UIViewController {
 	private var splash: StartupSplashView?
 	private var splashTimeout: DispatchWorkItem?
 	private var presentationLandscape = false
+  #if CUBE_NATIVE_NOTES
+    private lazy var notebooks = NativeNotebookHost(presenter: self)
+  #endif
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -27,7 +30,12 @@ final class WorkspaceViewController: UIViewController {
 		AssistantCommandCenter.register(self)
 	}
 
-	func reportActivity() { services.reportActivity() }
+  func reportActivity() {
+    services.reportActivity()
+    #if CUBE_NATIVE_NOTES
+      notebooks.editor?.resumeNativeTiming()
+    #endif
+  }
 
 	// MARK: - Web view
 
@@ -47,6 +55,13 @@ final class WorkspaceViewController: UIViewController {
 		configuration.defaultWebpagePreferences.allowsContentJavaScript = true
 
 		let controller = configuration.userContentController
+    #if CUBE_NATIVE_NOTES
+      controller.addUserScript(
+        WKUserScript(
+          source: "window.__cubeNativeNotesAvailable = true;", injectionTime: .atDocumentStart,
+          forMainFrameOnly: true))
+      bridge.notesHost = notebooks
+    #endif
 		controller.add(bridge, name: DocumentBridge.messageHandlerName)
 		controller.add(services, name: ClientServices.messageHandlerName)
 		controller.addScriptMessageHandler(
@@ -138,9 +153,24 @@ final class WorkspaceViewController: UIViewController {
 
     func flushDraftsForBackground() {
         var task = UIBackgroundTaskIdentifier.invalid
-        let finish = { if task != .invalid { UIApplication.shared.endBackgroundTask(task); task = .invalid } }
-        task = UIApplication.shared.beginBackgroundTask(withName: "Save document drafts", expirationHandler: finish)
-        webView.callAsyncJavaScript("return await window.auroraFlushDrafts?.();", arguments: [:], in: nil, in: .page) { _ in finish() }
+    let finish = {
+      if task != .invalid {
+        UIApplication.shared.endBackgroundTask(task)
+        task = .invalid
+      }
+    }
+    task = UIApplication.shared.beginBackgroundTask(
+      withName: "Save document drafts", expirationHandler: finish)
+    let pending = DispatchGroup()
+    #if CUBE_NATIVE_NOTES
+      pending.enter()
+      notebooks.flushForBackground { pending.leave() }
+    #endif
+    pending.enter()
+    webView.callAsyncJavaScript(
+      "return await window.auroraFlushDrafts?.();", arguments: [:], in: nil, in: .page
+    ) { _ in pending.leave() }
+    pending.notify(queue: .main, execute: finish)
     }
 
 	static var appDisplayName: String {
@@ -169,7 +199,8 @@ final class WorkspaceViewController: UIViewController {
 			return
 		}
 		bridge.enqueueDocument(
-			at: copy, fileName: url.lastPathComponent, mimeType: Self.mimeType(for: url), source: bridge.reference(at: url))
+      at: copy, fileName: url.lastPathComponent, mimeType: Self.mimeType(for: url),
+      source: bridge.reference(at: url))
 	}
 
 	func handle(_ url: URL) {
@@ -204,7 +235,8 @@ final class WorkspaceViewController: UIViewController {
 	// MARK: - Immersive presentation
 
 	override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-		presentationLandscape ? .landscape : (UIDevice.current.userInterfaceIdiom == .pad ? .all : .allButUpsideDown)
+    presentationLandscape
+      ? .landscape : (UIDevice.current.userInterfaceIdiom == .pad ? .all : .allButUpsideDown)
 	}
 
 	override var prefersStatusBarHidden: Bool { presentationLandscape }
@@ -220,7 +252,8 @@ final class WorkspaceViewController: UIViewController {
 			// Ignored while an iPad app is resizable — a slide show there simply stays in
 			// whichever orientation the user is holding, which is the platform behaviour.
 			scene.requestGeometryUpdate(
-				.iOS(interfaceOrientations: enabled ? .landscape : .all)) { _ in }
+        .iOS(interfaceOrientations: enabled ? .landscape : .all)
+      ) { _ in }
 		}
 	}
 
@@ -244,7 +277,8 @@ extension WorkspaceViewController: UIPencilInteractionDelegate {
 		// Only the visible, editable notebook consumes this event. Native dialogs
 		// and other document editors retain their own interaction behavior.
 		webView.evaluateJavaScript(
-			"window.dispatchEvent(new CustomEvent('cubeoffice:pencil-double-tap'))", completionHandler: nil)
+      "window.dispatchEvent(new CustomEvent('cubeoffice:pencil-double-tap'))",
+      completionHandler: nil)
 	}
 
 	func pencilInteractionDidTap(_ interaction: UIPencilInteraction) {
@@ -252,7 +286,9 @@ extension WorkspaceViewController: UIPencilInteractionDelegate {
 	}
 
 	@available(iOS 17.5, *)
-	func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+  func pencilInteraction(
+    _ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap
+  ) {
 		togglePencilEraser()
 	}
 }
@@ -289,7 +325,8 @@ extension WorkspaceViewController: WKNavigationDelegate {
 	}
 
 	func webView(
-		_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error
+    _ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+    withError error: Error
 	) {
 		hideSplash()
 	}
@@ -315,7 +352,8 @@ extension WorkspaceViewController: WKUIDelegate {
 }
 
 extension WorkspaceViewController: UIDocumentPickerDelegate {
-	func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+  func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL])
+  {
 		for url in urls { open(url) }
 	}
 }

@@ -83,6 +83,26 @@ test("new upstream renderer branding fails packaging even if a transform misses 
 	});
 });
 
+test("the upstream fallback logo URL resolves to the distribution asset", () => {
+	const plugin = cubeOfficeBrandingPlugin();
+	const cubeLogo = path.join(root, "profiles/cubeoffice/desktop/cubeoffice-mark.svg");
+	assert.equal(
+		plugin.resolveId(
+			"./assets/office-editor-mark.svg",
+			path.join(upstream, "src/app-profile.ts"),
+		),
+		cubeLogo,
+	);
+	assert.equal(
+		plugin.resolveId(path.join(upstream, "src/assets/office-editor-mark.svg") + "?url"),
+		cubeLogo + "?url",
+	);
+	assert.equal(
+		plugin.resolveId("./other.svg", path.join(upstream, "src/app-profile.ts")),
+		undefined,
+	);
+});
+
 function fixture(t) {
 	const temp = mkdtempSync(path.join(os.tmpdir(), "cubeoffice-branding-"));
 	t.after(() => rmSync(temp, { recursive: true, force: true }));
@@ -197,6 +217,11 @@ test(
 			path.join(temp, "bin/npm"),
 			`#!${process.execPath}
 const fs = require('node:fs');
+if (process.argv[1].endsWith('/pnpm')) {
+  if (process.argv.includes('--')) throw Error('pnpm forwards the separator to Vite and drops the CubeOffice config');
+  const config = process.argv[process.argv.indexOf('--config') + 1];
+  if (!config?.endsWith('/profiles/cubeoffice/desktop/vite.config.ts')) throw Error('CubeOffice renderer config missing');
+}
 if (process.argv.includes('build') && process.env.CUBEOFFICE_NATIVE_BRANDING_SESSION) {
   if (!fs.readFileSync('src-tauri/src/native_tabs.rs','utf8').includes('.unwrap_or("CubeOffice")')) process.exit(9);
   console.log('nested renderer saw branded native sources');
@@ -204,6 +229,7 @@ if (process.argv.includes('build') && process.env.CUBEOFFICE_NATIVE_BRANDING_SES
 `,
 			{ mode: 0o755 },
 		);
+		writeFileSync(path.join(temp, "bin/pnpm"), readFileSync(path.join(temp, "bin/npm")), { mode: 0o755 });
 		writeFileSync(
 			path.join(temp, "als-office/apps/desktop/scripts/build-desktop.mjs"),
 			`

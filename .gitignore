@@ -1,4 +1,5 @@
 .DS_Store
+/.cache/
 node_modules/
 dist/
 apps/*/dist/
@@ -36,3 +37,12 @@ packages/ofd-host/native/target/
 profiles/cubeoffice/desktop/generated/
 .cache/ofd-media/
 .cache/notes-qa/
+
+# Shared Rust kernels and generated WebAssembly
+/target/
+packages/notes/src/kernel/notes-kernel.wasm
+packages/kernels/src/formats-kernel.wasm
+apps/ios/App/Native/CubeNotes.xcframework/
+apps/ios/CubeOfficeNativeNotes.xcodeproj/
+
+packages/kernels/src/writer-generated.ts

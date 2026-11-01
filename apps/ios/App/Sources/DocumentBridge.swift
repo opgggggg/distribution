@@ -19,6 +19,9 @@ final class DocumentBridge: NSObject {
 	var onReady: (() -> Void)?
 	var onPresentationLandscape: ((Bool) -> Void)?
 	var onDocumentPickerRequested: (() -> Void)?
+  #if CUBE_NATIVE_NOTES
+    var notesHost: NativeNotebookHost?
+  #endif
 
 	private final class SaveSession {
 		let id: String
@@ -43,7 +46,8 @@ final class DocumentBridge: NSObject {
 	}
 
 	private lazy var fileOperations = FileOperations { [weak self] id, result in
-        self?.evaluate("window.__auroraIosHost.settleFileResult(\(Self.jsString(id)), \(Self.jsString(result)))")
+    self?.evaluate(
+      "window.__auroraIosHost.settleFileResult(\(Self.jsString(id)), \(Self.jsString(result)))")
     }
 
     func reference(at url: URL) -> [String: Any]? { fileOperations.reference(at: url) }
@@ -59,7 +63,9 @@ final class DocumentBridge: NSObject {
 	/// Takes ownership of a document the system handed the app. `fileURL` must already be
 	/// a private copy: the security-scoped original is not readable once the opening
 	/// scene callback returns.
-	func enqueueDocument(at fileURL: URL, fileName: String, mimeType: String, source: [String: Any]? = nil) {
+  func enqueueDocument(
+    at fileURL: URL, fileName: String, mimeType: String, source: [String: Any]? = nil
+  ) {
 		queuedDocuments.append(
 			QueuedDocument(fileURL: fileURL, fileName: fileName, mimeType: mimeType, source: source))
 		flushQueuedWork()
@@ -141,6 +147,42 @@ final class DocumentBridge: NSObject {
 
 		case "openDocumentPicker":
             onDocumentPickerRequested?()
+    #if CUBE_NATIVE_NOTES
+      case "editNativeNotes":
+        guard let id = body["sessionId"] as? String else { return }
+        guard let session = saveSessions.removeValue(forKey: id) else {
+          replyNativeNotes(id, metadata: ["error": "笔记数据传输未完成。"])
+          return
+        }
+        try? session.handle.close()
+        guard !session.failed, let notesHost, let draftId = body["draftId"] as? String,
+          !draftId.isEmpty
+        else {
+          discard(session)
+          replyNativeNotes(id, metadata: ["error": "无法打开原生笔记。"])
+          return
+        }
+        notesHost.open(
+          temporary: session.fileURL, name: session.fileName, id: draftId,
+          readonly: body["readonly"] as? Bool ?? true
+        ) { [weak self] result in
+          self?.replyNativeNotes(id, result: result)
+        }
+      case "listNativeNotes":
+        guard let id = body["sessionId"] as? String, let notesHost else { return }
+        notesHost.list { [weak self] items in self?.replyNativeNotes(id, metadata: ["items": items])
+        }
+      case "readNativeNotes":
+        guard let id = body["sessionId"] as? String, let draft = body["draftId"] as? String,
+          let notesHost
+        else { return }
+        notesHost.read(id: draft) { [weak self] result in self?.replyNativeNotes(id, result: result)
+        }
+      case "ackNativeNotes":
+        if let id = body["draftId"] as? String, let digest = body["digest"] as? String {
+          notesHost?.acknowledge(id: id, digest: digest)
+        }
+    #endif
 
 		case "setPresentationLandscape":
 			onPresentationLandscape?(body["enabled"] as? Bool ?? false)
@@ -170,14 +212,21 @@ final class DocumentBridge: NSObject {
 
 		case "finishSave", "finishFileOperation":
 			guard let sessionId = body["sessionId"] as? String else { return }
-			finishSave(sessionId: sessionId, intent: body["intent"] as? String ?? "export", source: body["source"] as? String)
+      finishSave(
+        sessionId: sessionId, intent: body["intent"] as? String ?? "export",
+        source: body["source"] as? String)
 
         case "finishShareFiles":
-            guard let ids = body["ids"] as? [String], let first = ids.first, ids.count <= 50 else { return }
+      guard let ids = body["ids"] as? [String], let first = ids.first, ids.count <= 50 else {
+        return
+      }
             var items: [(String, URL)] = []
             var failed = false
             for id in ids {
-                guard let session = saveSessions.removeValue(forKey: id) else { failed = true; continue }
+        guard let session = saveSessions.removeValue(forKey: id) else {
+          failed = true
+          continue
+        }
                 try? session.handle.close()
                 if session.failed { failed = true }
                 items.append((session.fileName, session.fileURL))
@@ -185,7 +234,9 @@ final class DocumentBridge: NSObject {
             if failed {
                 for item in items { try? FileManager.default.removeItem(at: item.1) }
                 settleSave(first, ok: false, message: "分享文件传输失败。")
-            } else { fileOperations.shareMany(id: first, items: items, presenter: presenter) }
+      } else {
+        fileOperations.shareMany(id: first, items: items, presenter: presenter)
+      }
 
 		case "abortSave":
 			guard let sessionId = body["sessionId"] as? String else { return }
@@ -200,6 +251,37 @@ final class DocumentBridge: NSObject {
 	}
 
 	// MARK: - Save As
+  #if CUBE_NATIVE_NOTES
+    private func replyNativeNotes(
+      _ id: String, result: Swift.Result<NativeNotebookHost.Result, Error>
+    ) {
+      switch result {
+      case .success(let value): replyNativeNotes(id, metadata: value.metadata, data: value.bytes)
+      case .failure(let error):
+        replyNativeNotes(id, metadata: ["error": error.localizedDescription])
+      }
+    }
+    private func replyNativeNotes(_ id: String, metadata: [String: Any], data: Data = Data()) {
+      evaluate("window.__auroraIosHost.beginNativeNotesResult(\(Self.jsString(id)), \(data.count))")
+      { [weak self] in
+        self?.stageNativeNotes(id, data: data, offset: 0, metadata: metadata)
+      }
+    }
+    private func stageNativeNotes(_ id: String, data: Data, offset: Int, metadata: [String: Any]) {
+      guard offset < data.count else {
+        evaluate(
+          "window.__auroraIosHost.finishNativeNotesResult(\(Self.jsString(id)), \(Self.jsonValue(metadata)))"
+        )
+        return
+      }
+      let end = min(data.count, offset + Self.stageChunkBytes)
+      let chunk = data[offset..<end].base64EncodedString()
+      evaluate("window.__auroraIosHost.stageNativeNotesResult(\(Self.jsString(id)), \"\(chunk)\")")
+      { [weak self] in
+        self?.stageNativeNotes(id, data: data, offset: end, metadata: metadata)
+      }
+    }
+  #endif
 
 	private func beginSave(sessionId: String, fileName: String) {
 		let safeName = Self.safeFileName(fileName)
@@ -223,8 +305,12 @@ final class DocumentBridge: NSObject {
 			return
 		}
 
-        let reference = source.flatMap { $0.data(using: .utf8) }.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any]
-        fileOperations.finish(id: sessionId, name: session.fileName, temporary: session.fileURL,
+    let reference =
+      source.flatMap { $0.data(using: .utf8) }.flatMap {
+        try? JSONSerialization.jsonObject(with: $0)
+      } as? [String: Any]
+    fileOperations.finish(
+      id: sessionId, name: session.fileName, temporary: session.fileURL,
                               intent: intent, source: reference, presenter: presenter)
     }
 
@@ -268,7 +354,8 @@ final class DocumentBridge: NSObject {
 	/// own `evaluateJavaScript` calls with it too.
 	static func jsonValue(_ value: [String: Any]?) -> String {
         guard let value, let data = try? JSONSerialization.data(withJSONObject: value),
-              let json = String(data: data, encoding: .utf8) else { return "null" }
+      let json = String(data: data, encoding: .utf8)
+    else { return "null" }
         return json
     }
 
@@ -300,7 +387,8 @@ extension DocumentBridge: WKScriptMessageHandler {
 }
 
 extension DocumentBridge: UIDocumentPickerDelegate {
-	func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+  func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL])
+  {
 		cleanUpExports()
 	}
 

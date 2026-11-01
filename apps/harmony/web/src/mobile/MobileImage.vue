@@ -7,6 +7,7 @@ import {
 	imageCanvas,
 	canvasBlob,
 } from "./image-document";
+import { transformMobileImage } from "./image-kernel";
 const props = defineProps<{ source: Blob; fileName: string; readonly?: boolean }>();
 const toolsDialog = ref<HTMLDialogElement>();
 let toolsFocus: HTMLElement | null = null;
@@ -118,15 +119,24 @@ async function mutate(operation: (image: HTMLImageElement) => Promise<Blob>) {
 		busy.value = false;
 	}
 }
+async function kernelSource(image: HTMLImageElement): Promise<Blob> {
+	if (preview.value && ["image/png", "image/jpeg", "image/webp"].includes(preview.value.type))
+		return preview.value;
+	// Native-only/TIFF/SVG/GIF decoders remain host adapters. Give the kernel
+	// the selected decoded page, never discard other source pages on open/save.
+	const canvas = imageCanvas(image.naturalWidth, image.naturalHeight);
+	canvas.getContext("2d")!.drawImage(image, 0, 0);
+	return canvasBlob(canvas);
+}
 function rotate() {
-	return mutate(async (image) => {
-		const canvas = imageCanvas(image.naturalHeight, image.naturalWidth),
-			ctx = canvas.getContext("2d")!;
-		ctx.translate(canvas.width, 0);
-		ctx.rotate(Math.PI / 2);
-		ctx.drawImage(image, 0, 0);
-		return canvasBlob(canvas);
-	});
+	return mutate(
+		async (image) =>
+			(
+				await transformMobileImage(await kernelSource(image), [
+					{ type: "image.transform", rotation: 90 },
+				])
+			).blob,
+	);
 }
 function applyCrop() {
 	return mutate(async (image) => {
@@ -141,41 +151,33 @@ function applyCrop() {
 			y + height > 100
 		)
 			throw new Error("裁剪范围必须在图片内，宽高须大于零。");
-		const canvas = imageCanvas(
-			Math.max(1, (image.naturalWidth * width) / 100),
-			Math.max(1, (image.naturalHeight * height) / 100),
-		);
-		canvas
-			.getContext("2d")!
-			.drawImage(
-				image,
-				(image.naturalWidth * x) / 100,
-				(image.naturalHeight * y) / 100,
-				(image.naturalWidth * width) / 100,
-				(image.naturalHeight * height) / 100,
-				0,
-				0,
-				canvas.width,
-				canvas.height,
-			);
+		const result = await transformMobileImage(await kernelSource(image), [
+			{
+				type: "image.crop.set",
+				crop: {
+					left: x / 100,
+					top: y / 100,
+					right: (100 - x - width) / 100,
+					bottom: (100 - y - height) / 100,
+				},
+			},
+		]);
 		crop.value = { x: 0, y: 0, width: 100, height: 100 };
-		return canvasBlob(canvas);
+		return result.blob;
 	});
 }
 function resize() {
 	return mutate(async (image) => {
 		if (!Number.isFinite(maxSide.value) || maxSide.value < 1 || maxSide.value > 8192)
 			throw new Error("最长边须在 1–8192 像素之间。");
-		const ratio = Math.min(
-			1,
-			maxSide.value / Math.max(image.naturalWidth, image.naturalHeight),
-		);
-		const canvas = imageCanvas(
-			Math.max(1, image.naturalWidth * ratio),
-			Math.max(1, image.naturalHeight * ratio),
-		);
-		canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
-		return canvasBlob(canvas);
+		return (
+			await transformMobileImage(await kernelSource(image), [
+				{
+					type: "output.settings.set",
+					maxDimension: Math.round(maxSide.value),
+				},
+			])
+		).blob;
 	});
 }
 function text() {
@@ -254,8 +256,11 @@ async function applyInk() {
 }
 async function exportFile(format?: string): Promise<Blob> {
 	const snapshot = current.value,
-		name = props.fileName, exportQuality = quality.value / 100, exportPage = page.value;
-    if (snapshot === props.source && (!format || format === "image" || format === "original")) return snapshot;
+		name = props.fileName,
+		exportQuality = quality.value / 100,
+		exportPage = page.value;
+	if (snapshot === props.source && (!format || format === "image" || format === "original"))
+		return snapshot;
 	if (!format || format === "image" || format === "original") {
 		if (
 			!revision.value ||

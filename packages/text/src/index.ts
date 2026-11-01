@@ -1,3 +1,4 @@
+import { FormatsKernel, loadFormatsKernel } from "@cubexp/kernels";
 import hljs from "highlight.js/lib/common";
 import dart from "highlight.js/lib/languages/dart";
 import dos from "highlight.js/lib/languages/dos";
@@ -32,19 +33,79 @@ export interface TextDocument {
 }
 
 const extensions: Record<string, string> = {
-	js: "javascript", mjs: "javascript", cjs: "javascript", jsx: "javascript",
-	ts: "typescript", mts: "typescript", cts: "typescript", tsx: "typescript",
-	json: "json", css: "css", html: "xml", htm: "xml", xml: "xml", svg: "xml", vue: "xml",
-	md: "markdown", markdown: "markdown", py: "python", rb: "ruby", sh: "bash",
-	bash: "bash", zsh: "bash", yml: "yaml", yaml: "yaml", toml: "ini", ini: "ini",
-	java: "java", c: "c", h: "c", cpp: "cpp", hpp: "cpp", cc: "cpp", cs: "csharp",
-	go: "go", rs: "rust", sql: "sql", php: "php", swift: "swift", kt: "kotlin",
-	less: "less", scss: "scss", diff: "diff", patch: "diff", txt: "plaintext", log: "plaintext",
-	jsonl: "json", jsonc: "json", pyw: "python", cxx: "cpp", kts: "kotlin",
-	properties: "ini", conf: "ini", cfg: "ini", env: "ini", gradle: "groovy", groovy: "groovy",
-	ps1: "powershell", psm1: "powershell", bat: "dos", cmd: "dos", lua: "lua", r: "r",
-	pl: "perl", pm: "perl", dart: "dart", scala: "scala", proto: "protobuf", graphql: "graphql",
-	gql: "graphql", tex: "latex", ipynb: "json", editorconfig: "ini", npmrc: "ini",
+	js: "javascript",
+	mjs: "javascript",
+	cjs: "javascript",
+	jsx: "javascript",
+	ts: "typescript",
+	mts: "typescript",
+	cts: "typescript",
+	tsx: "typescript",
+	json: "json",
+	css: "css",
+	html: "xml",
+	htm: "xml",
+	xml: "xml",
+	svg: "xml",
+	vue: "xml",
+	md: "markdown",
+	markdown: "markdown",
+	py: "python",
+	rb: "ruby",
+	sh: "bash",
+	bash: "bash",
+	zsh: "bash",
+	yml: "yaml",
+	yaml: "yaml",
+	toml: "ini",
+	ini: "ini",
+	java: "java",
+	c: "c",
+	h: "c",
+	cpp: "cpp",
+	hpp: "cpp",
+	cc: "cpp",
+	cs: "csharp",
+	go: "go",
+	rs: "rust",
+	sql: "sql",
+	php: "php",
+	swift: "swift",
+	kt: "kotlin",
+	less: "less",
+	scss: "scss",
+	diff: "diff",
+	patch: "diff",
+	txt: "plaintext",
+	log: "plaintext",
+	jsonl: "json",
+	jsonc: "json",
+	pyw: "python",
+	cxx: "cpp",
+	kts: "kotlin",
+	properties: "ini",
+	conf: "ini",
+	cfg: "ini",
+	env: "ini",
+	gradle: "groovy",
+	groovy: "groovy",
+	ps1: "powershell",
+	psm1: "powershell",
+	bat: "dos",
+	cmd: "dos",
+	lua: "lua",
+	r: "r",
+	pl: "perl",
+	pm: "perl",
+	dart: "dart",
+	scala: "scala",
+	proto: "protobuf",
+	graphql: "graphql",
+	gql: "graphql",
+	tex: "latex",
+	ipynb: "json",
+	editorconfig: "ini",
+	npmrc: "ini",
 };
 
 // highlight.js/lib/common leaves these out; registering them keeps the bundle to the
@@ -55,24 +116,39 @@ for (const [name, language] of Object.entries({ dart, dos, latex, powershell, pr
 
 export function detectTextLanguage(fileName = ""): string {
 	const name = fileName.split(/[\\/]/).pop()!.toLowerCase();
-	const language = name === "dockerfile" ? "dockerfile"
-		: name === "makefile" ? "makefile"
-		: extensions[name.split(".").pop()!] ?? "plaintext";
+	const language =
+		name === "dockerfile"
+			? "dockerfile"
+			: name === "makefile"
+				? "makefile"
+				: (extensions[name.split(".").pop()!] ?? "plaintext");
 	return hljs.getLanguage(language) ? language : "plaintext";
 }
 
 function escapeHtml(text: string): string {
-	return text.replace(/[&<>"']/g, (char) => ({
-		"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;",
-	})[char]!);
+	return text.replace(
+		/[&<>"']/g,
+		(char) =>
+			({
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				'"': "&quot;",
+				"'": "&#x27;",
+			})[char]!,
+	);
 }
 
 function budget(value: number, name: string): number {
-	if (!Number.isSafeInteger(value) || value < 0) throw new RangeError(`${name} must be a non-negative safe integer.`);
+	if (!Number.isSafeInteger(value) || value < 0)
+		throw new RangeError(`${name} must be a non-negative safe integer.`);
 	return value;
 }
 
-export function highlightText(text: string, options: Pick<TextOptions, "fileName" | "language" | "maxHighlightLength"> = {}) {
+export function highlightText(
+	text: string,
+	options: Pick<TextOptions, "fileName" | "language" | "maxHighlightLength"> = {},
+) {
 	const limit = budget(options.maxHighlightLength ?? 200_000, "maxHighlightLength");
 	const requested = options.language?.toLowerCase() ?? detectTextLanguage(options.fileName);
 	const language = hljs.getLanguage(requested) ? requested : "plaintext";
@@ -80,16 +156,25 @@ export function highlightText(text: string, options: Pick<TextOptions, "fileName
 		return { html: escapeHtml(text), language, highlighted: false };
 	}
 	try {
-		return { html: hljs.highlight(text, { language, ignoreIllegals: true }).value, language, highlighted: true };
+		return {
+			html: hljs.highlight(text, { language, ignoreIllegals: true }).value,
+			language,
+			highlighted: true,
+		};
 	} catch {
 		return { html: escapeHtml(text), language, highlighted: false };
 	}
 }
 
-export async function readTextDocument(source: TextSource, options: TextOptions = {}): Promise<TextDocument> {
+export async function readTextDocument(
+	source: TextSource,
+	options: TextOptions = {},
+): Promise<TextDocument> {
 	options.signal?.throwIfAborted();
 	const maxBytes = budget(options.maxBytes ?? 8 * 1024 * 1024, "maxBytes");
-	const fileName = options.fileName ?? (typeof File !== "undefined" && source instanceof File ? source.name : "document.txt");
+	const fileName =
+		options.fileName ??
+		(typeof File !== "undefined" && source instanceof File ? source.name : "document.txt");
 	let text: string;
 	let encoding = "unicode";
 	if (typeof source === "string") {
@@ -100,20 +185,27 @@ export async function readTextDocument(source: TextSource, options: TextOptions 
 	} else {
 		const size = source instanceof Blob ? source.size : source.byteLength;
 		if (size > maxBytes) throw new RangeError(`Text file exceeds ${maxBytes} bytes.`);
-		const bytes = source instanceof Uint8Array ? source
-			: new Uint8Array(source instanceof Blob ? await source.arrayBuffer() : source);
+		const bytes =
+			source instanceof Uint8Array
+				? source
+				: new Uint8Array(source instanceof Blob ? await source.arrayBuffer() : source);
 		options.signal?.throwIfAborted();
-		const label = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? "utf-8"
-			: bytes[0] === 0xff && bytes[1] === 0xfe ? "utf-16le"
-			: bytes[0] === 0xfe && bytes[1] === 0xff ? "utf-16be" : options.encoding ?? "utf-8";
-		const decoder = new TextDecoder(label, { fatal: true });
-		encoding = decoder.encoding;
-		text = decoder.decode(bytes);
-		if (text.includes("\0")) throw new TypeError("The file contains binary data and cannot be displayed as text.");
+		await loadFormatsKernel();
+		options.signal?.throwIfAborted();
+		const kernel = new FormatsKernel("text", options.encoding, { decodeOnly: true });
+		try {
+			const decoded = kernel.open<{ text: string; encoding: string }>(bytes);
+			text = decoded.text;
+			encoding = decoded.encoding;
+		} finally {
+			kernel.close();
+		}
 	}
 	options.signal?.throwIfAborted();
 	return {
-		fileName, text, encoding,
+		fileName,
+		text,
+		encoding,
 		lineCount: text.split(/\r\n|\r|\n/).length,
 		...highlightText(text, { ...options, fileName }),
 	};

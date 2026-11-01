@@ -30,6 +30,15 @@
 	var assistantCommands = [];
 	var saveSettlers = Object.create(null);
 	var imageDecodes = Object.create(null);
+    var nativeNotes = Object.create(null);
+    function notesRequest(name, payload) {
+        var id = payload.sessionId || uuid();
+        payload.sessionId = id;
+        return new Promise(function (resolve, reject) {
+            nativeNotes[id] = { resolve: resolve, reject: reject, bytes: null, written: 0 };
+            if (!post(name, payload)) { delete nativeNotes[id]; reject(new Error("原生笔记没有响应。")); }
+        });
+    }
 
 	function send(handler, name, payload) {
 		var message = { name: name };
@@ -80,6 +89,13 @@
 	}
 
 	window.auroraHarmonyHost = {
+        nativeNotesAvailable: function () { return window.__cubeNativeNotesAvailable === true; },
+        editNativeNotes: function (sessionId, draftId, readonly) {
+            return notesRequest("editNativeNotes", {sessionId:sessionId, draftId:draftId, readonly:readonly});
+        },
+        listNativeNotes: function () { return notesRequest("listNativeNotes", {}).then(function (r) {return r.items || [];}); },
+        readNativeNotes: function (draftId) { return notesRequest("readNativeNotes", {draftId:draftId}); },
+        ackNativeNotes: function (draftId, digest) { return post("ackNativeNotes", {draftId:draftId, digest:digest}); },
 		appReady: function () {
 			return post("appReady");
 		},
@@ -299,6 +315,30 @@
 
 	/** Private surface for WorkspaceViewController; the Web shell never calls it. */
 	window.__auroraIosHost = {
+        beginNativeNotesResult: function (id, size) {
+            if (!nativeNotes[id] || !Number.isSafeInteger(size) || size < 0) return false;
+            nativeNotes[id].bytes = new Uint8Array(size);
+            nativeNotes[id].written = 0;
+            return true;
+        },
+        stageNativeNotesResult: function (id, encoded) {
+            var result = nativeNotes[id];
+            if (!result || !result.bytes) return false;
+            var chunk = base64ToBytes(encoded);
+            if (result.written + chunk.length > result.bytes.length) return false;
+            result.bytes.set(chunk, result.written); result.written += chunk.length;
+            return true;
+        },
+        finishNativeNotesResult: function (id, metadata) {
+            var result = nativeNotes[id];
+            if (!result) return false;
+            delete nativeNotes[id];
+            if (metadata.error) { result.reject(new Error(metadata.error)); return true; }
+            if (!result.bytes || result.written !== result.bytes.length) {result.reject(new Error("笔记数据传输不完整。")); return false;}
+            metadata.blob = new Blob([result.bytes], {type:"application/vnd.cubeoffice.notebook"});
+            result.resolve(metadata);
+            return true;
+        },
 		beginStagedDocument: function (id, size) {
 			openDocuments.push({
 				id: id,

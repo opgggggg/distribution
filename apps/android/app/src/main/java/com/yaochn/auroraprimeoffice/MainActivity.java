@@ -28,6 +28,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -40,6 +41,7 @@ import android.widget.Toast;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 import androidx.core.content.FileProvider;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -563,6 +565,30 @@ public final class MainActivity extends Activity {
       // Module scripts hold back the load event until they have run, so this
       // fires after the entry chunk executed even if appReady() never arrives.
       hideStartupSplash();
+    }
+
+    /** Serve only packaged immutable kernels. The document origin and its drafts stay unchanged. */
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+      Uri uri = request.getUrl();
+      if (!"https".equals(uri.getScheme())
+          || !"appassets.androidplatform.net".equals(uri.getHost())) return null;
+      String prefix = "/assets/web/assets/";
+      String path = uri.getPath();
+      String name = path != null && path.startsWith(prefix) ? path.substring(prefix.length()) : "";
+      Map<String, String> headers =
+          Map.of(
+              "Access-Control-Allow-Origin", "*", "Cache-Control", "max-age=31536000, immutable");
+      if (name.matches("[A-Za-z0-9._-]+[.]wasm") && "GET".equals(request.getMethod())) {
+        try {
+          return new WebResourceResponse(
+              "application/wasm", null, 200, "OK", headers, getAssets().open("web/assets/" + name));
+        } catch (IOException ignored) {
+          /* Return a local failure, never fetch a kernel online. */
+        }
+      }
+      return new WebResourceResponse(
+          "text/plain", "UTF-8", 404, "Not Found", headers, new ByteArrayInputStream(new byte[0]));
     }
 
     @Override

@@ -1,6 +1,8 @@
 import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
+// @ts-expect-error Distribution build plugin is a JavaScript module.
+import { cubeOfficeKernelAssetsPlugin } from "../../profiles/cubeoffice/desktop/kernel-assets-plugin.mjs";
 
 const fromHere = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
@@ -30,7 +32,7 @@ export default defineConfig(({ mode }) => {
 	return {
 		root: fromHere("./web"),
 		base: "./",
-		plugins: [vue()],
+		plugins: [vue(), cubeOfficeKernelAssetsPlugin()],
 		resolve: {
 			alias: {
 				"@yaochn/als-office-editor-ui/document-preview": fromHere(

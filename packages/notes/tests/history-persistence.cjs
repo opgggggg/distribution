@@ -139,11 +139,10 @@ const { chromium } = require("playwright");
 		await phone.getByRole("button", { name: "编辑文档", exact: true }).first().click();
 		await phone.getByRole("button", { name: "重做", exact: true }).click();
 		await phone.getByRole("button", { name: "重做", exact: true }).click();
+		await phone.getByRole("button", { name: "更多文档操作", exact: true }).click();
+		await phone.getByRole("button", { name: "转换、分享与打印", exact: true }).click();
 		const download = phone.waitForEvent("download");
-		await phone
-			.locator(".cube-notes__header")
-			.getByRole("button", { name: "保存", exact: true })
-			.click();
+		await phone.getByRole("button", { name: "另存所选格式", exact: true }).click();
 		const file = await download;
 		const final = readNotebookState(new Uint8Array(await fs.readFile(await file.path())));
 		assert.equal(final.document.pages[0].layers[0].elements.length, 2);

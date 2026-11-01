@@ -5,11 +5,12 @@
 	"type": "module",
 	"packageManager": "npm@10.9.8",
 	"engines": {
-		"node": ">=20"
+		"node": ">=22.13.0"
 	},
 	"workspaces": [
 		"apps/*",
 		"als-office/packages/*",
+		"als-office/packages/fonts/*",
 		"als-office/apps/desktop",
 		"packages/*"
 	],
@@ -17,7 +18,7 @@
 		"build": "npm run build:web",
 		"profile:sync": "node scripts/sync-app-profile.mjs && node scripts/sync-open-formats.mjs",
 		"prepare:upstream": "node scripts/link-upstream-node-modules.mjs",
-		"build:packages": "npm run prepare:upstream && npm --prefix als-office run build:packages && npm run build:ofd && npm run build:text && npm run build:epub && npm run build:notes",
+		"build:packages": "npm run prepare:upstream && node scripts/run-upstream.mjs build:packages && npm run build:ofd && npm run build:text && npm run build:epub && npm run build:notes",
 		"build:web": "npm run build:packages && npm run build:web -w @cubexp/office-harmony",
 		"build:android": "npm run build:packages && npm run build -w @cubexp/office-android",
 		"build:android:release": "npm run build:packages && npm run build:release -w @cubexp/office-android",
@@ -28,7 +29,7 @@
 		"desktop:dev": "npm run prepare:upstream && node scripts/run-cubeoffice-desktop.mjs --command dev",
 		"desktop:config": "node scripts/run-cubeoffice-desktop.mjs --print-config",
 		"test:open-formats": "node --test scripts/tests/open-formats.test.mjs",
-		"test:desktop-branding": "node --test scripts/tests/desktop-branding.test.mjs",
+		"test:desktop-branding": "node --test scripts/tests/desktop-branding.test.mjs scripts/tests/run-upstream.test.mjs",
 		"desktop:build": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs",
 		"desktop:build:linux-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-unknown-linux-gnu --bundles appimage,deb",
 		"desktop:build:win-x64": "npm run build:packages && node scripts/run-cubeoffice-desktop.mjs --target x86_64-pc-windows-msvc --bundles nsis",
@@ -42,7 +43,11 @@
 		"test:epub": "npm test -w @cubexp/epub",
 		"build:notes": "npm run build -w @cubexp/notes",
 		"test:notes": "npm test -w @cubexp/notes",
-		"test:desktop-startup": "node scripts/tests/desktop-startup.cjs"
+		"test:notes:native": "cargo test --locked -p cubeoffice-notes-core --features native-renderer",
+		"build:notes:ios-native": "npm run build:ios",
+		"test:desktop-startup": "node scripts/tests/desktop-startup.cjs",
+		"build:kernels": "npm run build -w @cubexp/kernels",
+		"test:formats:rust": "cargo test --locked -p cubeoffice-formats-core"
 	},
 	"devDependencies": {
 		"prettier": "3.6.2",

@@ -1,93 +1,268 @@
-import { Text } from '@codemirror/state';
-import { type TextOptions, type TextSource } from './index.js';
-import { TEXT_EXTENSIONS } from './formats.js';
-import { EDITABLE_TEXT_MAX_BYTES, textSourceSize } from './large-file.js';
+import { Text } from "@codemirror/state";
+import { FormatsKernel, loadFormatsKernel } from "@cubexp/kernels";
+import { type TextOptions, type TextSource } from "./index.js";
+import { TEXT_EXTENSIONS } from "./formats.js";
+import { EDITABLE_TEXT_MAX_BYTES, textSourceSize } from "./large-file.js";
 
-export interface TextSaveOptions { signal?: AbortSignal; deliver?: (blob: Blob) => Promise<void>; }
-
-/** Persistent CodeMirror trees avoid materializing the entire file on each keystroke. */
+export interface TextSaveOptions {
+	signal?: AbortSignal;
+	deliver?: (blob: Blob) => Promise<void>;
+}
+interface State {
+	revision: number;
+	dirty: boolean;
+	encoding: string;
+	lineSeparator: string;
+	canUndo: boolean;
+	canRedo: boolean;
+	selection: unknown;
+	patch?: { from: number; to: number; insert: string };
+}
+/** Rust owns the buffer, history, encoding and save snapshots. CodeMirror is a view projection. */
 export class TextBuffer {
-	private doc: Text;
-	private cleanDoc: Text;
-	private original: Blob;
-	private dirty = false;
+	private doc?: Text;
 	private listeners = new Set<() => void>();
-	private revision = 0;
+	private state: State;
+	private kernel: FormatsKernel;
+	private saves?: Promise<unknown>;
 	readonly lineSeparator: string;
-	constructor(text: string, original: Uint8Array | Blob, readonly encoding: string, private readonly bom = false) {
-		this.doc = this.cleanDoc = Text.of(text.split(/\r\n|\r|\n/));
-		this.original = original instanceof Blob ? original : new Blob([original.slice().buffer as ArrayBuffer]);
-		this.lineSeparator = text.match(/\r\n|\r|\n/)?.[0] ?? '\n';
+	readonly encoding: string;
+	constructor(
+		text: string,
+		original: Uint8Array | Blob,
+		encoding: string,
+		_bom = false,
+		kernel?: FormatsKernel,
+		state?: State,
+	) {
+		if (!kernel && original instanceof Blob)
+			throw Error("Use createTextBuffer() for Blob sources.");
+		this.kernel = kernel ?? new FormatsKernel("text", encoding);
+		this.state = state ?? this.kernel.open<State>(original as Uint8Array);
+		this.encoding = this.state.encoding;
+		this.lineSeparator = this.state.lineSeparator;
 	}
-	getDocument() { return this.doc; }
-	getText() { return this.doc.sliceString(0, this.doc.length, this.lineSeparator); }
-	getPrefix(length = 24_000) { return this.doc.sliceString(0, Math.min(this.doc.length, length), this.lineSeparator); }
-	getRevision() { return this.revision; }
-	isDirty() { return this.dirty; }
-	subscribe(listener: () => void) { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; }
-	private notify() { for (const listener of this.listeners) listener(); }
-	setText(text: string) { this.setDocument(Text.of(text.split(/\r\n|\r|\n/))); }
+	getDocument() {
+		return (this.doc ??= Text.of(
+			this.kernel.request<{ text: string }>({ op: "text" }).text.split(/\r\n|\r|\n/),
+		));
+	}
+	getText() {
+		return this.kernel.request<{ text: string }>({ op: "text" }).text;
+	}
+	getPrefix(length = 24000) {
+		return this.kernel.request<{ text: string }>({ op: "prefix", length }).text;
+	}
+	getRevision() {
+		return this.state.revision;
+	}
+	isDirty() {
+		return this.state.dirty;
+	}
+	canUndo() {
+		return this.state.canUndo;
+	}
+	canRedo() {
+		return this.state.canRedo;
+	}
+	subscribe(listener: () => void) {
+		this.listeners.add(listener);
+		return () => {
+			this.listeners.delete(listener);
+		};
+	}
+	private notify() {
+		for (const listener of this.listeners) listener();
+	}
+	private update(request: unknown, doc?: Text) {
+		const revision = this.state.revision;
+		this.state = this.kernel.request<State>(request);
+		if (revision !== this.state.revision) {
+			this.doc =
+				doc ??
+				(this.state.patch && this.doc
+					? this.doc.replace(
+							this.state.patch.from,
+							this.state.patch.to,
+							Text.of(this.state.patch.insert.split("\n")),
+						)
+					: undefined);
+			this.notify();
+		}
+	}
+	setText(text: string) {
+		this.update({ op: "set", text });
+	}
 	setDocument(doc: Text) {
 		if (doc === this.doc) return;
-		this.doc = doc; this.revision++;
-		this.dirty = !doc.eq(this.cleanDoc);
-		this.notify();
-	}
-	private async encode(snapshot: Text, signal?: AbortSignal): Promise<Blob> {
-		signal?.throwIfAborted();
-		if (snapshot === this.cleanDoc || snapshot.eq(this.cleanDoc)) return this.original;
-		const utf16 = this.encoding === 'utf-16le' || this.encoding === 'utf-16be';
-		if (!utf16 && !['unicode', 'utf-8'].includes(this.encoding)) throw new Error(`Editing ${this.encoding} files is not supported; convert the file to UTF-8 first.`);
-		const parts: BlobPart[] = [];
-		if (this.bom) parts.push(new Uint8Array(utf16 ? this.encoding === 'utf-16le' ? [255,254] : [254,255] : [239,187,191]));
-		for (let from = 0; from < snapshot.length;) {
-			let to = Math.min(snapshot.length, from + 256 * 1024);
-			const last = snapshot.sliceString(to - 1, to).charCodeAt(0);
-			if (to < snapshot.length && last >= 0xd800 && last <= 0xdbff) to--;
-			const text = snapshot.sliceString(from, to, this.lineSeparator);
-			if (utf16) {
-				const bytes = new Uint8Array(text.length * 2), view = new DataView(bytes.buffer);
-				for (let i = 0; i < text.length; i++) view.setUint16(i * 2, text.charCodeAt(i), this.encoding === 'utf-16le');
-				parts.push(bytes);
-			} else parts.push(new TextEncoder().encode(text));
-			from = to;
-			if (from < snapshot.length) { await new Promise(resolve => setTimeout(resolve, 0)); signal?.throwIfAborted(); }
+		const old = this.getDocument();
+		let prefix = 0,
+			suffix = 0;
+		// Compare bounded tree slices; never build two complete file strings.
+		const limit = Math.min(old.length, doc.length);
+		while (prefix < limit) {
+			const size = Math.min(4096, limit - prefix);
+			const a = old.sliceString(prefix, prefix + size),
+				b = doc.sliceString(prefix, prefix + size);
+			if (a === b) {
+				prefix += size;
+				continue;
+			}
+			let i = 0;
+			while (i < size && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+			prefix += i;
+			break;
 		}
-		return new Blob(parts, { type: 'text/plain' });
+		while (suffix < limit - prefix) {
+			const size = Math.min(4096, limit - prefix - suffix);
+			const a = old.sliceString(old.length - suffix - size, old.length - suffix),
+				b = doc.sliceString(doc.length - suffix - size, doc.length - suffix);
+			if (a === b) {
+				suffix += size;
+				continue;
+			}
+			let i = 0;
+			while (i < size && a.charCodeAt(size - i - 1) === b.charCodeAt(size - i - 1)) i++;
+			suffix += i;
+			break;
+		}
+		// Never cut a surrogate pair at either side of the replacement.
+		if (
+			prefix > 0 &&
+			prefix < old.length &&
+			/[\uDC00-\uDFFF]/.test(old.sliceString(prefix, prefix + 1))
+		)
+			prefix--;
+		if (
+			suffix > 0 &&
+			/[\uD800-\uDBFF]/.test(old.sliceString(old.length - suffix - 1, old.length - suffix))
+		)
+			suffix--;
+		this.applyChanges(
+			[
+				{
+					from: prefix,
+					to: old.length - suffix,
+					insert: doc.sliceString(prefix, doc.length - suffix, "\n"),
+				},
+			],
+			doc,
+		);
+	}
+	applyChanges(
+		changes: { from: number; to: number; insert: string }[],
+		doc: Text,
+		options: Record<string, unknown> = {},
+	) {
+		this.update({ op: "changes", changes, ...options }, doc);
+	}
+	validateChanges(changes: { from: number; to: number; insert: string }[]) {
+		this.kernel.request({ op: "changes", changes, validateOnly: true });
+	}
+	getSelection() {
+		return this.state.selection;
+	}
+	adoptViewDocument(doc: Text) {
+		this.doc = doc;
+	}
+	undo() {
+		this.update({ op: "undo" });
+		return this.state.patch;
+	}
+	redo() {
+		this.update({ op: "redo" });
+		return this.state.patch;
+	}
+	setReadonly(value: boolean) {
+		this.state = this.kernel.request<State>({ op: "readonly", value });
+	}
+	private capture() {
+		return this.kernel.request<{ token: number }>({ op: "snapshot" }).token;
+	}
+	private async encode(token: number, signal?: AbortSignal): Promise<Blob> {
+		const parts: BlobPart[] = [];
+		let from = 0;
+		for (;;) {
+			signal?.throwIfAborted();
+			const chunk = this.kernel.request<{ next: number; done: boolean }>({
+				op: "encodeChunk",
+				token,
+				from,
+			});
+			parts.push(this.kernel.save());
+			if (chunk.done) break;
+			from = chunk.next;
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		}
+		signal?.throwIfAborted();
+		return new Blob(parts, { type: "text/plain" });
 	}
 	async exportFile(format?: string, options: TextSaveOptions = {}): Promise<Blob> {
-		if (format && format !== 'text' && !(TEXT_EXTENSIONS as readonly string[]).includes(format)) throw new Error('Text conversion is not supported.');
-		return this.encode(this.doc, options.signal);
+		if (format && format !== "text" && !(TEXT_EXTENSIONS as readonly string[]).includes(format))
+			throw Error("Text conversion is not supported.");
+		const token = this.capture();
+		try {
+			return await this.encode(token, options.signal);
+		} finally {
+			this.kernel.request({ op: "release", token });
+		}
 	}
 	async saveFile(options: TextSaveOptions = {}): Promise<Blob> {
-		const snapshot = this.doc;
-		const blob = await this.encode(snapshot, options.signal);
-		await options.deliver?.(blob); options.signal?.throwIfAborted();
-		this.cleanDoc = snapshot; this.original = blob; this.dirty = !this.doc.eq(snapshot); this.notify();
-		return blob;
+		// Capture now, before waiting for the destination queue. Edits remain available.
+		options.signal?.throwIfAborted();
+		const token = this.capture();
+		const execute = async () => {
+			try {
+				const blob = await this.encode(token, options.signal);
+				await options.deliver?.(blob);
+				options.signal?.throwIfAborted();
+				this.state = this.kernel.request<State>({ op: "acknowledge", token });
+				this.notify();
+				return blob;
+			} finally {
+				this.kernel.request({ op: "release", token });
+			}
+		};
+		const save = this.saves ? this.saves.then(execute) : execute();
+		const completion = save.catch(() => {});
+		this.saves = completion;
+		void completion.then(() => {
+			if (this.saves === completion) this.saves = undefined;
+		});
+		return save;
+	}
+	close() {
+		this.kernel.close();
+		this.listeners.clear();
 	}
 }
-
-export async function createTextBuffer(source: TextSource, options: TextOptions = {}): Promise<TextBuffer> {
+export async function createTextBuffer(
+	source: TextSource,
+	options: TextOptions = {},
+): Promise<TextBuffer> {
 	options.signal?.throwIfAborted();
 	const maxBytes = options.maxBytes ?? EDITABLE_TEXT_MAX_BYTES;
-	if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw new RangeError('Invalid maxBytes.');
-	if (textSourceSize(source) > maxBytes) throw new RangeError(`File exceeds the ${maxBytes}-byte editing budget; use paged browsing.`);
-	const blob = source instanceof Blob ? source : new Blob([typeof source === 'string' ? source : source instanceof Uint8Array ? source.slice().buffer as ArrayBuffer : source]);
-	if (blob.size > maxBytes) throw new RangeError(`File exceeds the ${maxBytes}-byte editing budget; use paged browsing.`);
-	const head = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
-	const utf8Bom = head[0] === 239 && head[1] === 187 && head[2] === 191;
-	const little = head[0] === 255 && head[1] === 254, big = head[0] === 254 && head[1] === 255;
-	const decoder = new TextDecoder(utf8Bom ? 'utf-8' : little ? 'utf-16le' : big ? 'utf-16be' : options.encoding ?? 'utf-8', { fatal: true });
-	const chunks: string[] = [];
-	for (let start = 0; start < blob.size; start += 256 * 1024) {
-		options.signal?.throwIfAborted();
-		const bytes = await blob.slice(start, start + 256 * 1024).arrayBuffer();
-		const text = decoder.decode(bytes, { stream: true });
-		if (text.includes('\0')) throw new TypeError('The file contains binary data.');
-		chunks.push(text);
-		if (blob.size > 1024 * 1024) await new Promise(resolve => setTimeout(resolve, 0));
+	if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw new RangeError("Invalid maxBytes.");
+	if (textSourceSize(source) > maxBytes)
+		throw new RangeError(
+			`File exceeds the ${maxBytes}-byte editing budget; use paged browsing.`,
+		);
+	await loadFormatsKernel();
+	options.signal?.throwIfAborted();
+	const bytes =
+		typeof source === "string"
+			? new TextEncoder().encode(source)
+			: source instanceof Uint8Array
+				? source
+				: new Uint8Array(source instanceof Blob ? await source.arrayBuffer() : source);
+	if (bytes.length > maxBytes) throw new RangeError("Text exceeds the editing budget.");
+	options.signal?.throwIfAborted();
+	const kernel = new FormatsKernel("text", options.encoding, { maxBytes });
+	try {
+		const state = kernel.open<State>(bytes);
+		return new TextBuffer("", bytes, state.encoding, false, kernel, state);
+	} catch (error) {
+		kernel.close();
+		throw error;
 	}
-	chunks.push(decoder.decode()); options.signal?.throwIfAborted();
-	return new TextBuffer(chunks.join(''), blob, decoder.encoding, utf8Bom || little || big);
 }

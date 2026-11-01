@@ -49,17 +49,18 @@
 		}
 	},
 	"scripts": {
-		"build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/style.css', 'dist/style.css')\"",
+		"build": "npm run build -w @cubexp/kernels && node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/style.css', 'dist/style.css')\"",
 		"check:types": "tsc -p tsconfig.json",
 		"test": "npm run build && node --test tests/*.mjs",
 		"prepack": "npm run build"
 	},
 	"dependencies": {
-		"fflate": "^0.8.2"
+		"fflate": "^0.8.2",
+		"@cubexp/kernels": "0.1.0"
 	},
 	"peerDependencies": {
-		"@yaochn/als-office-editor-core": "^0.72.0 || ^0.73.0 || ^0.74.0 || ^0.83.2 || ^0.84.0 || ^0.85.2",
-		"@yaochn/als-office-editor-ui": "^0.72.0 || ^0.73.0 || ^0.74.0 || ^0.83.2 || ^0.84.0 || ^0.85.2",
+		"@yaochn/als-office-editor-core": "^0.72.0 || ^0.73.0 || ^0.74.0 || ^0.83.2 || ^0.84.0 || ^0.85.2 || ^0.88.0",
+		"@yaochn/als-office-editor-ui": "^0.72.0 || ^0.73.0 || ^0.74.0 || ^0.83.2 || ^0.84.0 || ^0.85.2 || ^0.88.0",
 		"vue": "^3.5.0"
 	},
 	"peerDependenciesMeta": {

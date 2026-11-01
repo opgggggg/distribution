@@ -7,23 +7,27 @@ export async function readOfdDocument(
 	options: ReadOptions = {},
 ): Promise<OfdDocument> {
 	const archive = await Archive.open(source, options);
-	if (!archive.files["OFD.xml"]) throw new Error("The source is not an OFD document.");
-	const resources = await prepareImages(archive, options);
-	const hasProfiles = [...resources].some(
-		(path) =>
-			archive.files[path] &&
-			descendants(archive.xml(path), "ColorSpace").some((space) =>
-				space.hasAttribute("Profile"),
-			),
-	);
-	if (hasProfiles && !options.colorConverter) {
-		const { createIccConverter } = await import("./icc.js"),
-			context = await createIccConverter();
-		try {
-			return readOfd(archive, { ...options, colorConverter: context.convert });
-		} finally {
-			context.dispose();
+	try {
+		if (!archive.files["OFD.xml"]) throw new Error("The source is not an OFD document.");
+		const resources = await prepareImages(archive, options);
+		const hasProfiles = [...resources].some(
+			(path) =>
+				archive.files[path] &&
+				descendants(archive.xml(path), "ColorSpace").some((space) =>
+					space.hasAttribute("Profile"),
+				),
+		);
+		if (hasProfiles && !options.colorConverter) {
+			const { createIccConverter } = await import("./icc.js"),
+				context = await createIccConverter();
+			try {
+				return readOfd(archive, { ...options, colorConverter: context.convert }, resources);
+			} finally {
+				context.dispose();
+			}
 		}
+		return readOfd(archive, options, resources);
+	} finally {
+		archive.core().close();
 	}
-	return readOfd(archive, options);
 }

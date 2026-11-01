@@ -77,8 +77,8 @@ if (!rendererOnly && !rendererDev && !args.includes("--print-config")) {
 const command =
 	rendererOnly || rendererDev
 		? [
-				process.platform === "win32" ? "npm.cmd" : "npm",
-				["run", rendererDev ? "dev" : "build", "--", "--config", rendererConfig],
+				process.platform === "win32" ? "pnpm.cmd" : "pnpm",
+				["run", rendererDev ? "dev" : "build", "--config", rendererConfig],
 			]
 		: [
 				process.execPath,
@@ -93,7 +93,7 @@ const command =
 const run = (environment) =>
 	spawnSync(command[0], command[1], {
 		cwd: desktopRoot,
-		// Only the renderer branch spawns `npm.cmd`, which Node will not start
+		// Only the renderer branch spawns `pnpm.cmd`, which Node will not start
 		// without a shell; the other branch runs node itself and must stay unshelled
 		// so its arguments are not re-parsed.
 		shell: process.platform === "win32" && (rendererOnly || rendererDev),

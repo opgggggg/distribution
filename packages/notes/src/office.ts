@@ -3,9 +3,8 @@ import {
 	type ArtifactPlugin,
 	type ArtifactSession,
 } from "@yaochn/als-office-editor-core";
-import { readNotebookState, writeNotebook, writeXopp } from "./codec.js";
 import { NOTES_FORMAT_MANIFEST, nativeNotesFormat } from "./formats.js";
-import { NoteHistory, type NoteHistoryState } from "./history.js";
+import { RustNoteHistory } from "./kernel/history.js";
 import { clone, createNotebook, type Notebook } from "./model.js";
 
 export interface NotesArtifactSession extends ArtifactSession {
@@ -13,12 +12,11 @@ export interface NotesArtifactSession extends ArtifactSession {
 	update(change: (draft: Notebook) => void): void;
 }
 function session(
-	book: Notebook,
+	history: RustNoteHistory,
 	input: { fileName?: string; artifactId?: string; access?: string },
-	state?: NoteHistoryState,
 ): NotesArtifactSession {
-	const readonly = input.access === "read",
-		history = new NoteHistory(book, readonly, state);
+	const readonly = input.access === "read";
+	history.setReadonly(readonly);
 	let closed = false;
 	const ensureOpen = () => {
 		if (closed) throw new Error("The notebook session is closed.");
@@ -48,19 +46,20 @@ function session(
 		},
 		undo() {
 			ensureOpen();
-			history.undo();
+			if (!readonly) history.undo();
 		},
 		redo() {
 			ensureOpen();
-			history.redo();
+			if (!readonly) history.redo();
 		},
 		async export(request) {
 			ensureOpen();
 			request?.signal?.throwIfAborted();
 			const format = request?.format ?? nativeNotesFormat(input.fileName);
 			if (["notes", "cubenote"].includes(format))
-				return writeNotebook(history.document, history.capture());
-			if (["xopp", "xoj"].includes(format)) return writeXopp(history.document);
+				return history.exportNotebook(request?.signal);
+			if (["xopp", "xoj"].includes(format))
+				return history.exportXopp(undefined, request?.signal);
 			throw new Error(`Notebook export to ${format} requires a graphical surface.`);
 		},
 		close() {
@@ -73,15 +72,28 @@ export const NOTES_ARTIFACT_PLUGIN: ArtifactPlugin = {
 	manifest: NOTES_FORMAT_MANIFEST,
 	async create(input, context) {
 		context?.signal?.throwIfAborted();
-		return session(createNotebook(input.fileName?.replace(/\.cubenote$/i, ""), true), input);
+		const history = await RustNoteHistory.create(
+			createNotebook(input.fileName?.replace(/\.cubenote$/i, ""), true),
+		);
+		if (context?.signal?.aborted) {
+			history.close();
+			context.signal.throwIfAborted();
+		}
+		return session(history, input);
 	},
 	async open(input, context) {
 		context?.signal?.throwIfAborted();
-		const restored =
+		const history =
 			input.source === undefined
-				? { document: createNotebook(undefined, true) }
-				: readNotebookState(await artifactSourceToUint8Array(input.source), input.fileName);
-		context?.signal?.throwIfAborted();
-		return session(restored.document, input, restored.history);
+				? await RustNoteHistory.create(createNotebook(undefined, true))
+				: await RustNoteHistory.open(
+						await artifactSourceToUint8Array(input.source),
+						input.fileName,
+					);
+		if (context?.signal?.aborted) {
+			history.close();
+			context.signal.throwIfAborted();
+		}
+		return session(history, input);
 	},
 };

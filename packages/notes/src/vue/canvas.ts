@@ -1507,7 +1507,8 @@ export const NoteCanvas = defineComponent({
 			resize();
 			if (base.value)
 				Object.assign(base.value, {
-					boardPreview: () => captureNotesBoardPreview(props.page),
+					boardPreview: () =>
+						captureNotesBoardPreview(props.page, () => !gesture && !pinch && !pan),
 				});
 			viewportObserver = new ResizeObserver(() => {
 				if (

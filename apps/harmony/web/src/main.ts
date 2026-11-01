@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { setUiEditorTheme } from "@yaochn/als-office-editor-ui/vue";
 
+import "../../../../profiles/cubeoffice/wasm-assets";
 import App from "./App.vue";
 import PrivacyGate from "./PrivacyGate.vue";
 import { APP_PROFILE } from "./app-profile.generated";
