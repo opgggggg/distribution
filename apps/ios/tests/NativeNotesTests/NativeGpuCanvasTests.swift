@@ -281,6 +281,57 @@ import CubeNotes
     try button(100).sendActions(for:.touchUpInside);settled();XCTAssertEqual(pixels(),blank)
     try button(101).sendActions(for:.touchUpInside);settled();XCTAssertEqual(pixels(),reopened)
   }
+  func testLargeBackgroundPhotoAppearsAndSurvivesUndoRedoAndReopen() throws {
+    try button(205).sendActions(for: .touchUpInside)
+    let blank = pixels()
+    let photo = try NativePhotoFixtures.noisyPhoto()
+    controller.importPhoto(photo, destination: controller.photoDestination(background: true))
+    XCTAssertTrue(until(timeout: 20) { (try? self.button(100).isEnabled) == true }, "Photo import failed")
+    settled()
+    let painted = pixels()
+    XCTAssertNotEqual(painted, blank, "Imported background never reached the actual GPU canvas")
+    XCTAssertNil(controller.presentedViewController, "Import displayed an error")
+    try button(100).sendActions(for: .touchUpInside); settled()
+    XCTAssertEqual(pixels(), blank)
+    try button(101).sendActions(for: .touchUpInside); settled()
+    XCTAssertEqual(pixels(), painted)
+    var saved = false
+    controller.flushNativeDraft { saved = true }
+    XCTAssertTrue(until(timeout: 20) { saved })
+    let file = directory.appendingPathComponent("GPU.cubenote")
+    let sequence = controller.gpuSequence
+    try controller.prepareEmbedded(at: file, fileName: file.lastPathComponent, readonly: false) { _, _, _ in }
+    controller.resumeNativeTiming()
+    XCTAssertTrue(until(timeout: 20) { self.controller.gpuSequence > sequence })
+    XCTAssertEqual(pixels(), painted, "Saved background changed after reopening")
+    // Background imports remain backgrounds: drawing and undo affect only the ink.
+    try button(0).sendActions(for: .touchUpInside)
+    canvas.input?(0, -881, true, [pixelSample(200, 200)])
+    canvas.input?(1, -881, true, [pixelSample(400, 400, 10)])
+    canvas.input?(2, -881, true, []); settled()
+    XCTAssertNotEqual(pixels(), painted)
+    try button(100).sendActions(for: .touchUpInside); settled()
+    XCTAssertEqual(pixels(), painted)
+  }
+  func testPhotoPanelDismissalFinishesBeforePresentingNextStep() throws {
+    let first = UIAlertController(title: "插入图片", message: nil, preferredStyle: .alert)
+    controller.present(first, animated: false)
+    let second = UIAlertController(title: "图片来源", message: nil, preferredStyle: .alert)
+    var transitioned = false
+    controller.dismissPhotoPanel(first) {
+      XCTAssertNil(self.controller.presentedViewController)
+      self.controller.present(second, animated: false)
+      transitioned = true
+    }
+    XCTAssertTrue(until { transitioned })
+    XCTAssertTrue(controller.presentedViewController === second)
+    var closed = false
+    controller.dismissPhotoPanel(second) {
+      XCTAssertNil(self.controller.presentedViewController)
+      closed = true
+    }
+    XCTAssertTrue(until { closed })
+  }
   func testSelectionMenuMoveDeleteAndColorStillUseOriginalChrome() throws {
     try button(205).sendActions(for:.touchUpInside)
     try button(301).sendActions(for:.touchUpInside)

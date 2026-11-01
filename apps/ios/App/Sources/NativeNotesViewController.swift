@@ -376,7 +376,12 @@
       subsystem: Bundle.main.bundleIdentifier ?? "com.cubexp.office", category: "native-ink")
     private let canvas = NativeInkView(frame: .zero)
     private let canvasHost = UIView()
-    private var photoBackground = false
+    struct PhotoDestination {
+      let background: Bool
+      let documentEpoch: UInt64
+      let pageIndex: Int
+    }
+    private var pendingPhoto: PhotoDestination?
     private var sampling = false
     private var sampleBackground = false
     private var samplingGesture = false
@@ -1316,93 +1321,146 @@
         showPanel("tip", anchor: gesture.location(in: view))
       }
     }
+    func photoDestination(background: Bool) -> PhotoDestination {
+      PhotoDestination(background: background,
+        documentEpoch: state["documentEpoch"] as? UInt64 ?? 0,
+        pageIndex: state["pageIndex"] as? Int ?? 0)
+    }
+    /// A new system panel can only be presented after the previous one finishes
+    /// dismissing. UIAlertAction handlers run before that transition completes.
+    func dismissPhotoPanel(_ panel: UIViewController, then completion: @escaping () -> Void) {
+      if panel.isBeingDismissed, let transition = panel.transitionCoordinator {
+        transition.animate(alongsideTransition: nil) { _ in completion() }
+      } else if panel.presentingViewController != nil {
+        panel.dismiss(animated: !UIAccessibility.isReduceMotionEnabled, completion: completion)
+      } else {
+        completion()
+      }
+    }
+    private func anchorPhotoMenu(_ menu: UIAlertController) {
+      let anchor = buttons[202] ?? view!
+      menu.popoverPresentationController?.sourceView = anchor
+      menu.popoverPresentationController?.sourceRect = buttons[202]?.bounds
+        ?? CGRect(x: anchor.bounds.midX, y: anchor.bounds.midY, width: 1, height: 1)
+    }
     private func choosePhoto() {
+      guard state["readonly"] as? Bool != true else { return }
+      canvas.cancelInput()
       let menu = UIAlertController(title: "插入图片", message: nil, preferredStyle: .actionSheet)
       for (title, background) in [("作为普通内容", false), ("作为背景用于描摹", true)] {
+        let destination = photoDestination(background: background)
         menu.addAction(
-          UIAlertAction(title: title, style: .default) { [weak self] _ in
-            self?.photoBackground = background
-            self?.choosePhotoSource()
+          UIAlertAction(title: title, style: .default) { [weak self, weak menu] _ in
+            guard let self, let menu else { return }
+            self.dismissPhotoPanel(menu) { [weak self] in self?.choosePhotoSource(destination) }
           })
       }
       menu.addAction(UIAlertAction(title: "取消", style: .cancel))
-      menu.popoverPresentationController?.sourceView = buttons[202]
-      menu.popoverPresentationController?.sourceRect = buttons[202]?.bounds ?? .zero
+      anchorPhotoMenu(menu)
       present(menu, animated: true)
     }
-    private func choosePhotoSource() {
+    private func choosePhotoSource(_ destination: PhotoDestination) {
       let menu = UIAlertController(title: "图片来源", message: nil, preferredStyle: .actionSheet)
       menu.addAction(
-        UIAlertAction(title: "选择照片", style: .default) { [weak self] _ in
-          var config = PHPickerConfiguration()
-          config.filter = .images
-          config.selectionLimit = 1
-          let picker = PHPickerViewController(configuration: config)
-          picker.delegate = self
-          self?.present(picker, animated: true)
+        UIAlertAction(title: "选择照片", style: .default) { [weak self, weak menu] _ in
+          guard let self, let menu else { return }
+          self.dismissPhotoPanel(menu) { [weak self] in
+            guard let self else { return }
+            var config = PHPickerConfiguration()
+            config.filter = .images
+            config.selectionLimit = 1
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = self
+            self.pendingPhoto = destination
+            self.present(picker, animated: true)
+          }
         })
       if UIImagePickerController.isSourceTypeAvailable(.camera) {
         menu.addAction(
-          UIAlertAction(title: "拍照", style: .default) { [weak self] _ in
-            let picker = UIImagePickerController()
-            picker.sourceType = .camera
-            picker.delegate = self
-            self?.present(picker, animated: true)
+          UIAlertAction(title: "拍照", style: .default) { [weak self, weak menu] _ in
+            guard let self, let menu else { return }
+            self.dismissPhotoPanel(menu) { [weak self] in
+              guard let self else { return }
+              let picker = UIImagePickerController()
+              picker.sourceType = .camera
+              picker.delegate = self
+              self.pendingPhoto = destination
+              self.present(picker, animated: true)
+            }
           })
       }
       menu.addAction(UIAlertAction(title: "取消", style: .cancel))
-      menu.popoverPresentationController?.sourceView = buttons[202]
-      menu.popoverPresentationController?.sourceRect = buttons[202]?.bounds ?? .zero
+      anchorPhotoMenu(menu)
       present(menu, animated: true)
     }
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-      picker.dismiss(animated: true)
-      guard let provider = results.first?.itemProvider,
-        provider.canLoadObject(ofClass: UIImage.self)
-      else { return }
-      provider.loadObject(ofClass: UIImage.self) { [weak self] object, error in
-        guard let image = object as? UIImage else { return }
-        self?.importPhoto(image)
+      let destination = pendingPhoto
+      pendingPhoto = nil
+      dismissPhotoPanel(picker) { [weak self] in
+        guard let self, let destination, let provider = results.first?.itemProvider else { return }
+        guard provider.canLoadObject(ofClass: UIImage.self) else {
+          self.showError("无法读取这张图片，请重新选择照片。")
+          return
+        }
+        provider.loadObject(ofClass: UIImage.self) { [weak self] object, error in
+          DispatchQueue.main.async {
+            guard let self else { return }
+            guard let image = object as? UIImage else {
+              self.showError(error?.localizedDescription ?? "无法读取这张图片，请重新选择照片。")
+              return
+            }
+            self.importPhoto(image, destination: destination)
+          }
+        }
       }
     }
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+      pendingPhoto = nil
       picker.dismiss(animated: true)
     }
     func imagePickerController(
       _ picker: UIImagePickerController,
       didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
     ) {
-      picker.dismiss(animated: true)
-      if let image = info[.originalImage] as? UIImage { importPhoto(image) }
+      let destination = pendingPhoto
+      pendingPhoto = nil
+      dismissPhotoPanel(picker) { [weak self] in
+        guard let self, let destination else { return }
+        guard let image = info[.originalImage] as? UIImage else {
+          self.showError("无法读取拍摄的照片，请重试。")
+          return
+        }
+        self.importPhoto(image, destination: destination)
+      }
     }
-    private func importPhoto(_ image: UIImage) {
-      DispatchQueue.main.async { [weak self] in
-        guard let self else { return }
-        let background = self.photoBackground
-        let epoch = self.state["documentEpoch"] as? UInt64
-        self.saveQueue.async {
-          let ratio = min(1, 2048 / max(image.size.width, image.size.height))
-          let size = CGSize(
-            width: max(1, image.size.width * ratio), height: max(1, image.size.height * ratio))
-          let format = UIGraphicsImageRendererFormat()
-          format.scale = 1
-          let normalized = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-          }
-          guard let data = normalized.pngData() else { return }
-          let source = "data:image/png;base64," + data.base64EncodedString()
-          DispatchQueue.main.async { [weak self] in
-            guard let self, epoch == self.state["documentEpoch"] as? UInt64 else { return }
+    func importPhoto(_ image: UIImage, destination: PhotoDestination) {
+      guard acceptsPhoto(destination) else { return }
+      statusLabel.text = "正在插入图片…"
+      saveQueue.async { [weak self] in
+        let result = Result { try NativePhotoImport.encode(image) }
+        DispatchQueue.main.async { [weak self] in
+          guard let self, self.acceptsPhoto(destination) else { return }
+          switch result {
+          case .success(let payload):
             if self.request([
-              "op": "change", "kind": "photo", "src": source, "pixelWidth": size.width,
-              "pixelHeight": size.height, "background": background,
+              "op": "change", "kind": "photo", "src": payload.source,
+              "pixelWidth": payload.size.width, "pixelHeight": payload.size.height,
+              "background": destination.background,
             ]) {
               self.refresh()
               self.needsFrame = true
             }
+          case .failure(let error):
+            self.refresh()
+            self.showError(error.localizedDescription)
           }
         }
       }
+    }
+    private func acceptsPhoto(_ destination: PhotoDestination) -> Bool {
+      destination.documentEpoch == state["documentEpoch"] as? UInt64
+        && destination.pageIndex == state["pageIndex"] as? Int
+        && state["readonly"] as? Bool != true
     }
     private func sample(_ point: InputSample) {
       let viewport = state["viewport"] as? [String: Double] ?? [:]
