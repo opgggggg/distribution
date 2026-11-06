@@ -20,7 +20,7 @@ const compiler = spawnSync(
 if (compiler.status !== 0) throw Error("Install Rust 1.88.0 with target wasm32-unknown-unknown.");
 // Prime the locked sources before generating notices from offline metadata.
 // Fresh release hosts do not yet have the complete workspace dependency cache.
-const fetched = spawnSync("cargo", ["fetch", "--locked", "--target", "wasm32-unknown-unknown"], {
+const fetched = spawnSync("cargo", ["fetch", "--locked"], {
 	cwd: root,
 	stdio: "inherit",
 	env: { ...process.env, RUSTC: compiler.stdout.trim() },
