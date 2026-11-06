@@ -24,7 +24,7 @@ await server.listen();
 try {
 	const address = server.httpServer.address();
 	for (const engine of [chromium, webkit]) {
-		const browser = await engine.launch();
+		const browser = await engine.launch(engine === chromium ? { channel: "chrome" } : {});
 		try {
 			const page = await browser.newPage();
 			const warnings = [];

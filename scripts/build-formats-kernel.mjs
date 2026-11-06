@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync, copyFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { readFileSync, copyFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import os from "node:os";
@@ -10,10 +10,22 @@ const rustup = path.join(
 	"bin",
 	process.platform === "win32" ? "rustup.exe" : "rustup",
 );
-const compiler = spawnSync(rustup, ["which", "--toolchain", "1.88.0", "rustc"], {
-	encoding: "utf8",
-});
+const compiler = spawnSync(
+	existsSync(rustup) ? rustup : "rustup",
+	["which", "--toolchain", "1.88.0", "rustc"],
+	{
+		encoding: "utf8",
+	},
+);
 if (compiler.status !== 0) throw Error("Install Rust 1.88.0 with target wasm32-unknown-unknown.");
+// Prime the locked sources before generating notices from offline metadata.
+// Fresh release hosts do not yet have the complete workspace dependency cache.
+const fetched = spawnSync("cargo", ["fetch", "--locked", "--target", "wasm32-unknown-unknown"], {
+	cwd: root,
+	stdio: "inherit",
+	env: { ...process.env, RUSTC: compiler.stdout.trim() },
+});
+if (fetched.status !== 0) process.exit(fetched.status || 1);
 writeFormatNotices(root, { ...process.env, RUSTC: compiler.stdout.trim() });
 for (const name of ["cubeoffice-formats-core", "cubeoffice-ofd-writer"]) {
 	const result = spawnSync(

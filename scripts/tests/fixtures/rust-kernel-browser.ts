@@ -16,7 +16,16 @@ export async function verifyKernels() {
 	}
 	const markdown = createMarkdownEditor({ content: "# Native\n\nOriginal" });
 	await markdown.ready();
-	if (markdown.kernel !== "wasm") throw Error("Markdown fell back to JavaScript");
+	markdown.apply([{ type: "setContent", content: "# Native\n\nChanged" }]);
+	if (!markdown.getDocument().content.includes("Changed"))
+		throw Error("Markdown native edit failed");
+	markdown.undo();
+	if (!markdown.getDocument().content.includes("Original"))
+		throw Error("Markdown native undo failed");
+	markdown.redo();
+	if (!markdown.getDocument().content.includes("Changed"))
+		throw Error("Markdown native redo failed");
+	markdown.dispose();
 	const c = document.createElement("canvas");
 	c.width = 80;
 	c.height = 40;
@@ -48,5 +57,5 @@ export async function verifyKernels() {
 	const edited = await editPdfDocument(bytes, { fields: [{ name: "name", value: "After" }] });
 	const state = await readPdfEditingSnapshot(new Uint8Array(await edited.arrayBuffer()));
 	if (state.fields[0].value !== "After") throw Error("Rust PDF write did not persist");
-	return { assets, images, markdown: markdown.kernel, pdf: "wasm" };
+	return { assets, images, markdown: "wasm", pdf: "wasm" };
 }

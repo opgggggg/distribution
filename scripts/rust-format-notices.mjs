@@ -30,7 +30,11 @@ export function writeFormatNotices(root, env) {
 		.filter((p) => ["cubeoffice-formats-core", "cubeoffice-ofd-writer"].includes(p.name))
 		.forEach((p) => visit(p.id));
 	const packages = metadata.packages
-		.filter((p) => seen.has(p.id) && p.source)
+		.filter(
+			(p) =>
+				seen.has(p.id) &&
+				(p.source || p.manifest_path.replaceAll("\\", "/").includes("/vendor/")),
+		)
 		.sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
 	const sections = [
 		"CubeOffice portable-format Rust dependency notices\nGenerated from Cargo.lock. This includes transitive build dependencies.\nSource archives are available at the versioned URLs below.\n",
@@ -51,7 +55,10 @@ export function writeFormatNotices(root, env) {
 			!files.includes(pkg.license_file)
 		)
 			files.push(pkg.license_file);
-		let text = `${pkg.name} ${pkg.version}\nLicense: ${pkg.license ?? "See included license"}\nSource: https://crates.io/api/v1/crates/${pkg.name}/${pkg.version}/download\n`;
+		const location = pkg.source
+			? `https://crates.io/api/v1/crates/${pkg.name}/${pkg.version}/download`
+			: `Vendored source: ${path.relative(root, directory).split(path.sep).join("/")} (pinned in release source)`;
+		let text = `${pkg.name} ${pkg.version}\nLicense: ${pkg.license ?? "See included license"}\nSource: ${location}\n`;
 		if (files.length === 0) {
 			// These published archives omit standalone license files. Retain
 			// their source headers/authors and include the declared license.
@@ -91,9 +98,15 @@ export function writeFormatNotices(root, env) {
 	// The pinned upstream parser also carries source/data notices outside Cargo
 	// registry packages. Keep those together with its Apache-2.0 project license.
 	const pdf = path.join(root, "als-office/crates/pdf-core");
-	for (const name of readdirSync(pdf).filter((name) => name.endsWith("-LICENSE")).sort())
-		sections.push(`Pinned upstream pdf-core: ${name}\n${readFileSync(path.join(pdf, name), "utf8").trim()}\n`);
-	sections.push(`Pinned upstream project license\n${readFileSync(path.join(root, "als-office/LICENSE"), "utf8").trim()}\n`);
+	for (const name of readdirSync(pdf)
+		.filter((name) => name.endsWith("-LICENSE"))
+		.sort())
+		sections.push(
+			`Pinned upstream pdf-core: ${name}\n${readFileSync(path.join(pdf, name), "utf8").trim()}\n`,
+		);
+	sections.push(
+		`Pinned upstream project license\n${readFileSync(path.join(root, "als-office/LICENSE"), "utf8").trim()}\n`,
+	);
 	// Historical Group-3 compatibility behavior retains the original provider's
 	// semantics; keep its attribution with the independent Rust implementation.
 	sections.push(

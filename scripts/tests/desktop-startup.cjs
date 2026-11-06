@@ -17,13 +17,15 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || "playwright")
 			const target = file.endsWith(path.sep) ? path.join(file, "index.html") : file;
 			response.setHeader(
 				"Content-Type",
-				target.endsWith(".js")
-					? "text/javascript"
-					: target.endsWith(".css")
-						? "text/css"
-						: target.endsWith(".html")
-							? "text/html"
-							: "application/octet-stream",
+				target.endsWith(".wasm")
+					? "application/wasm"
+					: target.endsWith(".js")
+						? "text/javascript"
+						: target.endsWith(".css")
+							? "text/css"
+							: target.endsWith(".html")
+								? "text/html"
+								: "application/octet-stream",
 			);
 			response.end(await fs.readFile(target));
 		} catch {

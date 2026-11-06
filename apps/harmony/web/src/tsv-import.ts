@@ -1,5 +1,5 @@
 import type { UiArtifactFormatContribution } from "@yaochn/als-office-editor-ui/vue";
-import { SpreadsheetWorkbook } from "@yaochn/als-office-xlsx";
+import { openDelimitedEditing } from "@yaochn/als-office-xlsx";
 
 type ArtifactConverter = NonNullable<UiArtifactFormatContribution["converters"]>[number];
 
@@ -37,14 +37,25 @@ export const TSV_TO_XLSX_CONVERTER: ArtifactConverter = {
 			throw new RangeError("TSV source exceeds the 64 MiB import budget.");
 		}
 		if (context?.signal?.aborted) throw new DOMException("Import aborted", "AbortError");
-		const workbook = await SpreadsheetWorkbook.fromDelimited(input.blob, {
-			delimiter: "\t",
-			encoding: await delimitedEncoding(input.blob),
-			allowFormulas: false,
-			sheetName: sheetName(input.fileName),
-		});
-		if (context?.signal?.aborted) throw new DOMException("Import aborted", "AbortError");
-		return workbook.toBlob();
+		const { session } = await openDelimitedEditing(
+			input.blob,
+			{
+				delimiter: "\t",
+				encoding: await delimitedEncoding(input.blob),
+				allowFormulas: false,
+				sheetName: sheetName(input.fileName),
+			},
+			{ signal: context?.signal },
+		);
+		try {
+			const bytes = await session.exportXlsx();
+			if (context?.signal?.aborted) throw new DOMException("Import aborted", "AbortError");
+			return new Blob([bytes], {
+				type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			});
+		} finally {
+			if ("dispose" in session && typeof session.dispose === "function") session.dispose();
+		}
 	},
 };
 

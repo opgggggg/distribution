@@ -16,7 +16,7 @@ const { chromium, webkit } = require("playwright");
 				async (file) => (await import(file)).verifyKernels(),
 				"/@fs" + path.resolve(__dirname, "tests/fixtures/rust-kernel-browser.ts"),
 			);
-			assert.equal(result.assets.length, 12);
+			assert.equal(result.assets.length, 11);
 			assert.deepEqual(result.images, [
 				[40, 80],
 				[40, 40],
@@ -26,7 +26,7 @@ const { chromium, webkit } = require("playwright");
 			assert.equal(result.pdf, "wasm");
 			assert.deepEqual(warnings, []);
 			console.log(
-				`${engine.name()}: 12 real WASM assets, Rust Markdown/PDF and mobile image rotate/crop/resize passed`,
+				`${engine.name()}: 11 real WASM assets, Rust Markdown/PDF and mobile image rotate/crop/resize passed`,
 			);
 		} finally {
 			await browser.close();

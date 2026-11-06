@@ -12,7 +12,7 @@ for (const match of source.matchAll(/import \w+ from "([^"]+\.wasm)\?url"/g)) {
 	if (!WebAssembly.validate(bytes)) throw Error(`Invalid upstream kernel ${path}`);
 	expected.set(path.split("/").pop(), createHash("sha256").update(bytes).digest("hex"));
 }
-if (expected.size !== 12) throw Error(`Expected 12 matching kernel assets, got ${expected.size}`);
+if (expected.size !== 11) throw Error(`Expected 11 matching kernel assets, got ${expected.size}`);
 const notes = await readFile(resolve(root, "packages/notes/src/kernel/notes-kernel.wasm"));
 if (!WebAssembly.validate(notes)) throw Error("Invalid CubeOffice notes Rust kernel");
 expected.set("notes-kernel.wasm", createHash("sha256").update(notes).digest("hex"));

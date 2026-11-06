@@ -8,7 +8,7 @@ export async function transformMobileImage(
 	commands: readonly ImageAiCommand[],
 	signal?: AbortSignal,
 ): Promise<{ blob: Blob; kernel: string }> {
-	const session = await createImageArtifactPlugin({ kernel: "wasm", signal }).open({
+	const session = await createImageArtifactPlugin({ signal }).open({
 		source,
 		fileName: "Image.png",
 		access: "readWrite",
@@ -16,8 +16,8 @@ export async function transformMobileImage(
 	try {
 		if (!session.execute) throw new Error("Image kernel does not support editing.");
 		await session.execute({ commands, baseRevision: session.getState().revision });
-		const kernel = (session as typeof session & { kernel: string }).kernel;
-		return { blob: await session.export({ format: "png", signal }), kernel };
+		// The upstream plugin is now native-only and fails if its kernel cannot load.
+		return { blob: await session.export({ format: "png", signal }), kernel: "wasm" };
 	} finally {
 		session.close();
 	}

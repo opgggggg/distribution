@@ -246,6 +246,7 @@ macos_build() {
   cd "$SOURCE"
   OFFICE_UPDATER_SIGNING_PRIVATE_KEY="$UPDATER_KEY" TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}" node scripts/run-cubeoffice-desktop.mjs --target aarch64-apple-darwin
   npm run test:desktop-startup
+  node scripts/check-office-kernel-assets.mjs als-office/apps/desktop/dist
   local bundle="$SOURCE/als-office/apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle"
   codesign --verify --deep --strict "$bundle/macos/CubeOffice.app"
   hdiutil verify "$bundle/dmg/CubeOffice_${VERSION}_aarch64.dmg"
@@ -260,6 +261,7 @@ android_build() {
   receipt_ok android && return 0
   cd "$SOURCE"
   APP_PROFILE=cubeoffice npm run build:release -w @cubexp/office-android
+  node scripts/check-office-kernel-assets.mjs apps/android/app/src/main/assets/web
   local out="$WORK/artifacts/android" tools="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS"
   mkdir -p "$out"
   "$tools/zipalign" -P 16 -f 4 apps/android/app/build/outputs/apk/release/app-release-unsigned.apk "$out/aligned.apk"

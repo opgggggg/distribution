@@ -12567,7 +12567,7 @@ DEALINGS IN THE SOFTWARE.
 
 read-fonts 0.41.0
 License: MIT OR Apache-2.0
-Source: https://crates.io/api/v1/crates/read-fonts/0.41.0/download
+Source: Vendored source: als-office/crates/pdf-core/vendor/read-fonts (pinned in release source)
 
 --- LICENSE-APACHE ---
 Apache License
@@ -17477,7 +17477,7 @@ SOFTWARE.
 
 tiny-skia 0.11.4
 License: BSD-3-Clause
-Source: https://crates.io/api/v1/crates/tiny-skia/0.11.4/download
+Source: Vendored source: als-office/crates/pdf-core/vendor/tiny-skia (pinned in release source)
 
 --- LICENSE ---
 Copyright (c) 2011 Google Inc. All rights reserved.
@@ -17515,7 +17515,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 tiny-skia-path 0.11.4
 License: BSD-3-Clause
-Source: https://crates.io/api/v1/crates/tiny-skia-path/0.11.4/download
+Source: Vendored source: als-office/crates/pdf-core/vendor/tiny-skia-path (pinned in release source)
 
 --- LICENSE ---
 Copyright (c) 2011 Google Inc. All rights reserved.
