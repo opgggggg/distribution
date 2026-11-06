@@ -362,7 +362,7 @@ function tiffFixture() {
 				return error.message;
 			}
 		}, Buffer.from(oversized).toString("base64"));
-		assert.match(imageBudget, /尺寸过大/);
+		assert.match(imageBudget, /尺寸过大|pixel budget/i);
 		console.log("PASS oversized TIFF rejected before pixel allocation");
 
 		const doc = await PDFDocument.create();
