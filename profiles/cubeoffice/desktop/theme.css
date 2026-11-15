@@ -388,8 +388,9 @@ button.unsaved-dialog__primary {
 	--ui-focus: var(--cubeoffice-primary);
 }
 
-.desktop-app .als-ofs-ui-workspace-tabs__kind {
-	color: var(--cubeoffice-strong);
+/* The tabs and their drag preview share the same scoped upstream color rule. */
+.als-ofs-ui-workspace-tabs__kind {
+	color: var(--cubeoffice-primary) !important;
 }
 
 .desktop-app .agent-link,
