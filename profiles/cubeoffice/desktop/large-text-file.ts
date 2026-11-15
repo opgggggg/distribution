@@ -1,4 +1,4 @@
-import { open, SeekMode } from "@tauri-apps/plugin-fs";
+import { open, SeekMode, stat, type FileInfo } from "@tauri-apps/plugin-fs";
 import { RangeTextBlob, EDITABLE_TEXT_MAX_BYTES } from "@cubexp/text/large-file";
 import { TEXT_EXTENSIONS } from "@cubexp/text/formats";
 
@@ -10,6 +10,14 @@ export function isLargeTextFile(size: number, fileName: string): boolean {
 	);
 }
 
+function rangeFingerprint(info: FileInfo): string {
+	return `range:${info.dev ?? ""}:${info.ino ?? ""}:${info.size}:${info.mtime?.getTime() ?? ""}`;
+}
+
+export async function largeTextFingerprint(path: string): Promise<string> {
+	return rangeFingerprint(await stat(path));
+}
+
 /** Native reads are bounded; no readFile or whole-file IPC occurs for large source files. */
 export async function readLargeTextArtifact(path: string) {
 	const name = path.split(/[\\/]/).pop() ?? path;
@@ -17,22 +25,16 @@ export async function readLargeTextArtifact(path: string) {
 		!(TEXT_EXTENSIONS as readonly string[]).includes(name.split(".").pop()?.toLowerCase() ?? "")
 	)
 		return;
-	const handle = await open(path, { read: true });
-	let info;
-	try {
-		info = await handle.stat();
-	} finally {
-		await handle.close();
-	}
+	const info = await stat(path);
 	if (!isLargeTextFile(info.size, name)) return;
-	const size = info.size,
-		modified = info.mtime?.getTime();
+	const size = info.size;
+	const sourceFingerprint = rangeFingerprint(info);
 	const source = new RangeTextBlob(async (start, end, signal) => {
 		signal?.throwIfAborted();
 		const file = await open(path, { read: true });
 		try {
 			const current = await file.stat();
-			if (current.size !== size || current.mtime?.getTime() !== modified)
+			if (rangeFingerprint(current) !== sourceFingerprint)
 				throw new Error("The file changed on disk. Reopen it to continue browsing.");
 			await file.seek(start, SeekMode.Start);
 			const result = new Uint8Array(end - start);
@@ -54,6 +56,7 @@ export async function readLargeTextArtifact(path: string) {
 		format: name.split(".").pop()!.toLowerCase(),
 		bytes: new Uint8Array(),
 		source,
+		sourceFingerprint,
 		openedAt: new Date().toISOString(),
 	};
 }

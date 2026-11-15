@@ -11,6 +11,7 @@
 	--cubeoffice-soft: #ede4ff;
 	--cubeoffice-stage: #f5f3ff;
 	--cubeoffice-highlight: #ddd0ff;
+	--als-ofs-ui-workspace-tab-kind-color: var(--cubeoffice-primary);
 }
 
 .desktop-app {
@@ -374,6 +375,30 @@ button.unsaved-dialog__primary {
 	--als-ofs-docx-office-style-guide: var(--cubeoffice-primary);
 }
 
+.desktop-app .als-ofs-xlsx-office-editor {
+	--als-ofs-xlsx-green: var(--cubeoffice-primary);
+	--als-ofs-xlsx-green-dark: var(--cubeoffice-strong);
+	--als-ofs-xlsx-green-soft: var(--cubeoffice-soft);
+	--als-ofs-xlsx-selection-fill: var(--cubeoffice-surface);
+	--als-ofs-xlsx-focus: var(--cubeoffice-primary);
+}
+
+.desktop-app .als-ofs-vsdx-editor[data-editor-palette="alphalife"] {
+	--als-ofs-ui-accent: var(--cubeoffice-primary) !important;
+	--als-ofs-ui-accent-hover: var(--cubeoffice-strong) !important;
+	--als-ofs-ui-accent-soft: var(--cubeoffice-soft) !important;
+	--als-ofs-ui-accent-subtle: var(--cubeoffice-surface) !important;
+	--als-ofs-ui-focus: var(--cubeoffice-primary) !important;
+}
+
+.desktop-app
+	.als-ofs-ui-editor-shell[data-editor-palette="alphalife"]
+	.als-ofs-ui-editor-titlebar
+	.als-ofs-ui-office-titlebar__app-mark {
+	background: var(--cubeoffice-soft);
+	color: var(--cubeoffice-primary);
+}
+
 [data-editor-palette="alphalife"] .als-ofs-pdf-viewer {
 	--als-ofs-pdf-accent: var(--cubeoffice-primary);
 	--als-ofs-pdf-accent-soft: var(--cubeoffice-soft);
@@ -391,6 +416,27 @@ button.unsaved-dialog__primary {
 /* The tabs and their drag preview share the same scoped upstream color rule. */
 .als-ofs-ui-workspace-tabs__kind {
 	color: var(--cubeoffice-primary) !important;
+}
+
+:is(.als-ofs-ui-workspace-tabs__tab, .als-ofs-ui-workspace-tabs__overflow-item)
+	> .als-ofs-ui-workspace-tabs__close {
+	margin-inline-end: 6px;
+}
+
+@media (hover: hover) {
+	:is(.als-ofs-ui-workspace-tabs__tab, .als-ofs-ui-workspace-tabs__overflow-item):not(
+			:hover,
+			:has(:focus-visible)
+		)
+		> .als-ofs-ui-workspace-tabs__close {
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+
+.als-ofs-ui-workspace-tabs__drag-preview > .als-ofs-ui-workspace-tabs__close {
+	visibility: hidden;
+	margin-inline-end: 6px;
 }
 
 .desktop-app .agent-link,
@@ -414,6 +460,20 @@ button.unsaved-dialog__primary {
 	--als-ofs-ui-accent: var(--cubeoffice-light) !important;
 	--als-ofs-ui-accent-hover: var(--cubeoffice-highlight) !important;
 	--als-ofs-ui-accent-soft: #493866 !important;
+}
+
+.desktop-app .cubexp-text-viewer pre:focus-visible {
+	outline-color: var(--cubeoffice-primary);
+}
+
+.desktop-app .cubexp-text-editor :is(.cm-activeLine, .cm-activeLineGutter) {
+	background: var(--cubeoffice-surface);
+}
+
+.desktop-app .cubexp-text-editor .cm-foldPlaceholder {
+	background: var(--cubeoffice-soft);
+	border-color: var(--cubeoffice-border);
+	color: var(--cubeoffice-strong);
 }
 
 .desktop-app .cubexp-epub {

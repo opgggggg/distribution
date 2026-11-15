@@ -18,7 +18,7 @@ export function cubeOfficeLargeTextPlugin() {
 		"desktop-host.ts": [
 			[
 				"\tbytes: Uint8Array;\n\topenedAt: string;",
-				"\tbytes: Uint8Array;\n\tsource?: Blob;\n\topenedAt: string;",
+				"\tbytes: Uint8Array;\n\tsource?: Blob;\n\tsourceFingerprint?: string;\n\topenedAt: string;",
 			],
 			[
 				"export async function readArtifact(\n\tpath: string,\n\tkernel: ConversionKernelOptions = {},\n): Promise<DesktopArtifact> {",
@@ -41,6 +41,10 @@ export function cubeOfficeLargeTextPlugin() {
 			[
 				"await ports.withMemoryOpening(tab.id, await artifactSize(path), load)",
 				"await ports.withMemoryOpening(tab.id, size, load)",
+			],
+			[
+				"tab.diskFingerprint = await contentFingerprint(",
+				"tab.diskFingerprint = next.sourceFingerprint ?? await contentFingerprint(",
 			],
 			[
 				"const source = next.bytes.byteLength\n\t\t\t? new Blob([next.bytes as BlobPart], { type: mimeTypeForFormat(next.format) })\n\t\t\t: null;",
@@ -79,6 +83,14 @@ export function cubeOfficeLargeTextPlugin() {
 		],
 		"app/disk-sync.ts": [
 			[
+				"const fingerprint = await contentFingerprint(next.conversion?.sourceBytes ?? next.bytes);",
+				"const fingerprint = next.sourceFingerprint ?? await contentFingerprint(next.conversion?.sourceBytes ?? next.bytes);",
+			],
+			[
+				'const current = await invoke<string>("artifact_fingerprint", {',
+				'const current = original.sourceFingerprint ? await largeTextFingerprint(original.path) : await invoke<string>("artifact_fingerprint", {',
+			],
+			[
 				"const source = new Blob([next.bytes as BlobPart], { type: mimeTypeForFormat(next.format) });",
 				"const source = next.source ?? new Blob([next.bytes as BlobPart], { type: mimeTypeForFormat(next.format) });",
 			],
@@ -95,6 +107,8 @@ export function cubeOfficeLargeTextPlugin() {
 				source = replaceOnce(source, before, after);
 			if (name === "desktop-host.ts")
 				source = `import { readLargeTextArtifact } from ${JSON.stringify(helper)};\n${source}`;
+			if (name === "app/disk-sync.ts")
+				source = `import { largeTextFingerprint } from ${JSON.stringify(helper)};\n${source}`;
 			if (name === "app/lifecycle.ts")
 				source = `import { isLargeTextFile } from ${JSON.stringify(helper)};\n${source}`;
 			return { code: source, map: null };

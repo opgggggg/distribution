@@ -25,8 +25,9 @@ export function cubeOfficeConversionLayoutPlugin() {
 					"surfaceProps: desktopSurfaceProps(tab.document.format),",
 					`surfaceProps: {
 			...desktopSurfaceProps(tab.document.format),
-			...(useOfficeEditor && tab.document.format === "pptx" ? { editor: true } : {}),
-			...(tab.document.conversion?.sourceFormat === "rtf" ? { rightPanel: false } : {}),
+			...(useOfficeEditor ? { ribbon: false } : {}),
+			...(useOfficeEditor && tab.document.format === "docx" ? { rightPanel: false } : {}),
+			...(useOfficeEditor && tab.document.format === "pptx" ? { editor: true, rightPanel: false } : {}),
 		},`,
 				],
 				[
@@ -36,13 +37,13 @@ export function cubeOfficeConversionLayoutPlugin() {
 		["docx", "xlsx", "pptx", "vsdx"].includes(tab.document.format));
 }
 const activeConversion = computed(() => activeTab.value?.document.conversion ?? null);
-const useOfficeConversionEditor = computed(() => usesOfficeConversionEditor(activeTab.value));`,
+`,
 				],
 				[
 					'<div class="desktop-titlebar__actions" data-no-drag>',
 					`<div class="desktop-titlebar__actions" data-no-drag>
 				<button
-					v-if="activeConversion && useOfficeConversionEditor && !activeTab?.opening && !activeTab?.openError"
+					v-if="activeConversion && !activeTab?.opening && !activeTab?.openError"
 					type="button"
 					:disabled="busy"
 					@click="convertCurrentReadonlyArtifact"
@@ -50,13 +51,7 @@ const useOfficeConversionEditor = computed(() => usesOfficeConversionEditor(acti
 					{{ shellCopy.convertToFormat.replace('{format}', activeConversion.targetFormat.toUpperCase()) }}
 				</button>`,
 				],
-				[
-					`<ReadonlyConversionRibbon
-					v-if="activeConversion && !activeTab?.opening && !activeTab?.openError"`,
-					`<ReadonlyConversionRibbon
-					v-if="activeConversion && !useOfficeConversionEditor && !activeTab?.opening && !activeTab?.openError"
-					data-editor-palette="alphalife"`,
-				],
+				['import ReadonlyConversionRibbon from "./ReadonlyConversionRibbon.vue";', ""],
 			];
 			for (const [before, after] of replacements) {
 				if (source.split(before).length !== 2) {
@@ -66,7 +61,10 @@ const useOfficeConversionEditor = computed(() => usesOfficeConversionEditor(acti
 				}
 				source = source.replace(before, after);
 			}
-			return { code: source, map: null };
+			const ribbon = /<ReadonlyConversionRibbon\b[^]*?\n[ \t]*\/>/gu;
+			if ([...source.matchAll(ribbon)].length !== 1)
+				throw new Error("Upstream read-only conversion ribbon changed.");
+			return { code: source.replace(ribbon, ""), map: null };
 		},
 	};
 }
