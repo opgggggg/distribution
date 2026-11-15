@@ -826,6 +826,7 @@ button.unsaved-dialog__primary {
 .document-host[data-shared-history="true"]
 	:is(
 		.als-ofs-docx-office-editor__compact-history,
+		.als-ofs-vsdx-editor > .als-ofs-ui-editor-titlebar .als-ofs-ui-quick-access-toolbar,
 		.als-ofs-html-editor .als-ofs-ui-ribbon-tab-actions .als-ofs-ui-quick-access-toolbar,
 		.als-ofs-docx-office-editor__compact-actions > button:has([data-icon-name="save"]),
 		.als-ofs-xlsx-compact-actions .als-ofs-ui-quick-access-toolbar,
