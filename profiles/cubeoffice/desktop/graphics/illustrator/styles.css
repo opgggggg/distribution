@@ -461,3 +461,35 @@
 		padding-inline: 20px;
 	}
 }
+
+.vector-commandbar__context {
+	min-width: 0;
+	overflow: auto;
+}
+.vector-marquee {
+	fill: var(--vector-outline);
+	fill-opacity: 0.12;
+	stroke: var(--vector-outline);
+	stroke-dasharray: 4 3;
+}
+.vector-arrange {
+	border-top: 1px solid var(--vector-border);
+}
+.vector-arrange select {
+	min-width: 0;
+	padding: 3px 7px;
+	border: 1px solid var(--vector-border);
+	border-radius: 5px;
+	background: var(--vector-panel);
+	color: var(--vector-text);
+	font: inherit;
+}
+.vector-arrange__buttons {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 4px;
+}
+.vector-arrange__buttons button {
+	padding-inline: 3px;
+	border-color: var(--vector-border);
+}

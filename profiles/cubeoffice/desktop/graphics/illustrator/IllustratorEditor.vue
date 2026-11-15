@@ -28,10 +28,22 @@ import {
 	transformPoint,
 	type Artboard,
 	type Point,
+	type Matrix,
 	type VectorObject,
 	type VectorProject,
 	type VectorText,
 } from "./model";
+import {
+	alignObjects,
+	alignmentCommands,
+	boxBetween,
+	distributeObjects,
+	enclosed,
+	selectionUnits,
+	transformObjects,
+	unionBounds,
+	type Alignment,
+} from "./selection";
 import IllustratorArtwork from "./IllustratorArtwork.vue";
 import "./styles.css";
 
@@ -47,7 +59,8 @@ const listeners = new Set<() => void>();
 const undoStack = shallowRef<VectorProject[]>([]);
 const redoStack = shallowRef<VectorProject[]>([]);
 const currentIndex = ref(0);
-const selectedId = ref("");
+const selectedIds = shallowRef<Set<string>>(new Set());
+const alignTo = ref<"selection" | "artboard">("selection");
 const panel = ref<"layers" | "artboards">("layers");
 const scale = ref(1);
 const view = ref<HTMLElement>();
@@ -69,14 +82,55 @@ type Tool = (typeof tools)[number]["id"];
 const tool = ref<Tool>("select");
 const selectedTool = computed(() => tools.find((item) => item.id === tool.value)!);
 const board = computed(() => project.value?.artboards[currentIndex.value]);
-const selected = computed(() =>
-	board.value?.objects.find((object) => object.id === selectedId.value),
+const picked = computed(
+	() => board.value?.objects.filter((object) => selectedIds.value.has(object.id)) ?? [],
 );
+const selected = computed(() => (picked.value.length === 1 ? picked.value[0] : undefined));
+const editable = computed(() => picked.value.filter((object) => !object.locked && !object.hidden));
 const draft = shallowRef<VectorObject>();
-const selection = computed(() =>
-	draft.value?.id === selectedId.value ? draft.value : selected.value,
-);
+const draftObjects = shallowRef<Map<string, VectorObject>>();
+const marquee = shallowRef<Bounds>();
+const selection = computed(() => (selected.value ? displayObject(selected.value) : undefined));
 const bounds = computed(() => selection.value && objectBounds(selection.value));
+const units = computed(() => selectionUnits(editable.value));
+const editBounds = computed(() =>
+	unionBounds(editable.value.map((object) => objectBounds(displayObject(object)))),
+);
+const canGroup = computed(() => !props.readonly && units.value.length > 1);
+const canUngroup = computed(
+	() => !props.readonly && editable.value.some((object) => object.groupId),
+);
+
+function displayObject(object: VectorObject): VectorObject {
+	return (
+		draftObjects.value?.get(object.id) ?? (draft.value?.id === object.id ? draft.value : object)
+	);
+}
+
+function setSelection(ids: Iterable<string> = []) {
+	selectedIds.value = new Set(ids);
+}
+function groupMembers(object: VectorObject, individual = false): VectorObject[] {
+	return !individual && object.groupId && !object.hidden && !object.locked
+		? board.value!.objects.filter(
+				(member) => member.groupId === object.groupId && !member.hidden && !member.locked,
+			)
+		: [object];
+}
+function selectObject(object: VectorObject, toggle = false, individual = false) {
+	const members = groupMembers(object, individual);
+	if (!toggle) {
+		setSelection(members.map((member) => member.id));
+		return;
+	}
+	const next = new Set(selectedIds.value);
+	const remove = members.every((member) => next.has(member.id));
+	for (const member of members) {
+		if (remove) next.delete(member.id);
+		else next.add(member.id);
+	}
+	setSelection(next);
+}
 const nodes = computed(() =>
 	tool.value === "anchor" &&
 	selection.value?.kind === "path" &&
@@ -109,7 +163,7 @@ function commit(next: VectorProject) {
 function restore(next: VectorProject) {
 	project.value = next;
 	currentIndex.value = Math.min(currentIndex.value, next.artboards.length - 1);
-	selectedId.value = "";
+	setSelection();
 	cancelDrawing();
 	changed();
 }
@@ -133,14 +187,21 @@ function updateBoard(next: Artboard) {
 	artboards[currentIndex.value] = next;
 	commit({ ...project.value, artboards });
 }
-function replaceObject(next: VectorObject, includeLocked = false) {
-	if (!board.value) return;
-	const before = board.value.objects.find((o) => o.id === next.id);
-	if (!before || (before.locked && !includeLocked)) return;
+function replaceObjects(changes: readonly VectorObject[], includeLocked = false) {
+	if (!board.value || !changes.length) return;
+	const replacements = new Map(changes.map((change) => [change.id, change]));
 	updateBoard({
 		...board.value,
-		objects: board.value.objects.map((o) => (o.id === next.id ? next : o)),
+		objects: board.value.objects.map((object) =>
+			object.locked && !includeLocked ? object : (replacements.get(object.id) ?? object),
+		),
 	});
+}
+function replaceObject(next: VectorObject, includeLocked = false) {
+	replaceObjects([next], includeLocked);
+}
+function transformSelection(matrix: Matrix) {
+	replaceObjects(transformObjects(editable.value, matrix));
 }
 function addObject(object: VectorObject) {
 	if (!project.value || !board.value || props.readonly) return;
@@ -149,37 +210,84 @@ function addObject(object: VectorObject) {
 		return;
 	}
 	updateBoard({ ...board.value, objects: [...board.value.objects, object] });
-	selectedId.value = object.id;
+	setSelection([object.id]);
 }
 function patchObject(patch: Partial<VectorObject>) {
 	if (selected.value) replaceObject({ ...selected.value, ...patch } as VectorObject);
 }
 function erase() {
-	if (!board.value || !selected.value || selected.value.locked) return;
+	if (!board.value || !editable.value.length || props.readonly) return;
+	const remove = new Set(editable.value.map((object) => object.id));
 	updateBoard({
 		...board.value,
-		objects: board.value.objects.filter((o) => o.id !== selectedId.value),
+		objects: board.value.objects.filter((object) => !remove.has(object.id)),
 	});
-	selectedId.value = "";
+	setSelection();
 }
 function duplicate() {
-	const object = selected.value;
-	if (!object || object.locked) return;
-	addObject({
-		...object,
-		id: crypto.randomUUID(),
-		name: `${object.name.slice(0, 120)} copy`,
-		matrix: multiply([1, 0, 0, 1, 12, 12], object.matrix),
+	if (!project.value || !board.value || !editable.value.length || props.readonly) return;
+	if (
+		project.value.artboards.reduce((n, b) => n + b.objects.length, 0) + editable.value.length >
+		MAX_OBJECTS
+	) {
+		issue.value = "The document has reached its object limit.";
+		return;
+	}
+	const groups = new Map<string, string>();
+	const copies = transformObjects(editable.value, [1, 0, 0, 1, 12, 12]).map((object) => {
+		let groupId: string | undefined;
+		if (object.groupId) {
+			groupId = groups.get(object.groupId) ?? crypto.randomUUID();
+			groups.set(object.groupId, groupId);
+		}
+		return {
+			...object,
+			id: crypto.randomUUID(),
+			name: `${object.name.slice(0, 120)} copy`,
+			groupId,
+		};
 	});
+	updateBoard({ ...board.value, objects: [...board.value.objects, ...copies] });
+	setSelection(copies.map((object) => object.id));
 }
-function reorder(step: number) {
-	if (!board.value || selected.value?.locked) return;
+function reorder(step: 1 | -1) {
+	if (!board.value || !editable.value.length || props.readonly) return;
 	const objects = [...board.value.objects];
-	const index = objects.findIndex((o) => o.id === selectedId.value),
-		to = index + step;
-	if (index < 0 || to < 0 || to >= objects.length) return;
-	[objects[index], objects[to]] = [objects[to], objects[index]];
-	updateBoard({ ...board.value, objects });
+	const members = new Set(editable.value.map((object) => object.id));
+	let changed = false;
+	// Process from the leading edge so an adjacent selection moves as a block.
+	for (let i = step === 1 ? objects.length - 2 : 1; i >= 0 && i < objects.length; i -= step) {
+		const neighbor = objects[i + step];
+		if (!neighbor || !members.has(objects[i].id) || members.has(neighbor.id) || neighbor.locked)
+			continue;
+		[objects[i], objects[i + step]] = [neighbor, objects[i]];
+		changed = true;
+	}
+	if (changed) updateBoard({ ...board.value, objects });
+}
+function groupSelection() {
+	if (!canGroup.value) return;
+	const groupId = crypto.randomUUID();
+	replaceObjects(editable.value.map((object) => ({ ...object, groupId })));
+}
+function ungroupSelection() {
+	if (!canUngroup.value) return;
+	replaceObjects(
+		editable.value
+			.filter((object) => object.groupId)
+			.map((object) => ({ ...object, groupId: undefined })),
+	);
+}
+function align(alignment: Alignment) {
+	if (!board.value || !editBounds.value || props.readonly) return;
+	const target =
+		alignTo.value === "artboard"
+			? { x: 0, y: 0, width: board.value.width, height: board.value.height }
+			: editBounds.value;
+	replaceObjects(alignObjects(units.value, alignment, target));
+}
+function distribute(axis: "x" | "y") {
+	if (!props.readonly) replaceObjects(distributeObjects(units.value, axis));
 }
 function changeNumber(event: Event, min: number, max: number, apply: (value: number) => void) {
 	const input = event.target as HTMLInputElement;
@@ -188,36 +296,33 @@ function changeNumber(event: Event, min: number, max: number, apply: (value: num
 	else input.value = input.defaultValue;
 }
 function changeBounds(key: keyof Bounds, value: number) {
-	const object = selected.value,
-		box = bounds.value;
-	if (!object || !box) return;
+	const box = editBounds.value;
+	if (!box) return;
 	if (key === "x" || key === "y") {
-		const dx = key === "x" ? value - box.x : 0;
-		const dy = key === "y" ? value - box.y : 0;
-		patchObject({ matrix: multiply([1, 0, 0, 1, dx, dy], object.matrix) });
+		transformSelection([
+			1,
+			0,
+			0,
+			1,
+			key === "x" ? value - box.x : 0,
+			key === "y" ? value - box.y : 0,
+		]);
 	} else {
 		if (box[key] < 0.001) return;
-		const sx = key === "width" ? value / box.width : 1;
-		const sy = key === "height" ? value / box.height : 1;
-		patchObject({
-			matrix: multiply([sx, 0, 0, sy, box.x * (1 - sx), box.y * (1 - sy)], object.matrix),
-		});
+		const sx = key === "width" ? value / box.width : 1,
+			sy = key === "height" ? value / box.height : 1;
+		transformSelection([sx, 0, 0, sy, box.x * (1 - sx), box.y * (1 - sy)]);
 	}
 }
 function rotate(degrees: number) {
-	if (!selected.value || !bounds.value) return;
-	const { x, y, width, height } = bounds.value;
+	if (!editBounds.value) return;
+	const { x, y, width, height } = editBounds.value;
 	const cx = x + width / 2,
 		cy = y + height / 2,
 		angle = (degrees * Math.PI) / 180;
 	const c = Math.cos(angle),
 		s = Math.sin(angle);
-	patchObject({
-		matrix: multiply(
-			[c, s, -s, c, cx - c * cx + s * cy, cy - s * cx - c * cy],
-			selected.value.matrix,
-		),
-	});
+	transformSelection([c, s, -s, c, cx - c * cx + s * cy, cy - s * cx - c * cy]);
 }
 function changeColor(event: Event, key: "fill" | "stroke") {
 	const color = (event.target as HTMLInputElement).value;
@@ -235,7 +340,7 @@ function chooseBoard(index: number, scroll = true) {
 	if (index !== currentIndex.value) {
 		cancelDrawing();
 		currentIndex.value = index;
-		selectedId.value = "";
+		setSelection();
 	}
 	if (scroll)
 		void nextTick(() => {
@@ -262,7 +367,7 @@ function deleteBoard() {
 	const artboards = project.value.artboards.filter((_, i) => i !== currentIndex.value);
 	commit({ ...project.value, artboards });
 	cancelDrawing();
-	selectedId.value = "";
+	setSelection();
 	chooseBoard(Math.min(currentIndex.value, artboards.length - 1));
 }
 function changeBoard(patch: Partial<Artboard>) {
@@ -284,8 +389,9 @@ function fitBoard() {
 }
 
 type PointerEdit =
-	| { kind: "move"; start: Point; object: VectorObject }
-	| { kind: "resize"; start: Point; object: VectorObject; bounds: Bounds }
+	| { kind: "move"; start: Point; objects: VectorObject[] }
+	| { kind: "marquee"; start: Point; add: boolean }
+	| { kind: "resize"; start: Point; objects: VectorObject[]; bounds: Bounds }
 	| {
 			kind: "node";
 			start: Point;
@@ -305,6 +411,8 @@ function selectTool(next: Tool) {
 }
 function cancelDrawing() {
 	draft.value = undefined;
+	draftObjects.value = undefined;
+	marquee.value = undefined;
 	pen.value = [];
 	penHover.value = undefined;
 	penDrag.value = undefined;
@@ -345,7 +453,7 @@ function pointerDown(event: PointerEvent, index: number) {
 		return;
 	}
 	if (tool.value === "rectangle" || tool.value === "ellipse") {
-		selectedId.value = "";
+		setSelection();
 		capture(event, svg, { kind: "draw", start, tool: tool.value, id: crypto.randomUUID() });
 		return;
 	}
@@ -377,25 +485,32 @@ function pointerDown(event: PointerEvent, index: number) {
 		capture(event, svg, { kind: "node", start, object: selected.value, index, pointIndex });
 		return;
 	}
-	if (
-		element?.hasAttribute("data-resize") &&
-		selection.value &&
-		bounds.value &&
-		!selection.value.locked
-	) {
+	if (element?.hasAttribute("data-resize") && editBounds.value && editable.value.length) {
 		capture(event, svg, {
 			kind: "resize",
 			start,
-			object: selection.value,
-			bounds: bounds.value,
+			objects: editable.value,
+			bounds: editBounds.value,
 		});
 		return;
 	}
-	const id = element?.closest<SVGElement>("[data-vector-id]")?.dataset.vectorId ?? "";
-	selectedId.value = id;
-	const object = selected.value;
-	if (object && !object.locked && tool.value === "select")
-		capture(event, svg, { kind: "move", start, object });
+	const id = element?.closest<SVGElement>("[data-vector-id]")?.dataset.vectorId;
+	const object = board.value?.objects.find((candidate) => candidate.id === id);
+	if (!object || object.locked) {
+		if (tool.value === "select")
+			capture(event, svg, { kind: "marquee", start, add: event.shiftKey });
+		else if (!event.shiftKey) setSelection();
+		return;
+	}
+	const individual = event.altKey || tool.value === "anchor";
+	if (
+		event.shiftKey ||
+		individual ||
+		!groupMembers(object).every((member) => selectedIds.value.has(member.id))
+	)
+		selectObject(object, event.shiftKey, individual);
+	if (!event.shiftKey && tool.value === "select" && editable.value.length)
+		capture(event, svg, { kind: "move", start, objects: editable.value });
 }
 function pointerMove(event: PointerEvent, index: number) {
 	const point = eventPoint(event, event.currentTarget as SVGSVGElement);
@@ -405,19 +520,24 @@ function pointerMove(event: PointerEvent, index: number) {
 		dy = point[1] - drag.start[1];
 	if (drag.kind === "pen") {
 		penDrag.value = { point: drag.start, handle: point };
+	} else if (drag.kind === "marquee") {
+		marquee.value = boxBetween(drag.start, point);
 	} else if (drag.kind === "move") {
-		draft.value = {
-			...drag.object,
-			matrix: multiply([1, 0, 0, 1, dx, dy], drag.object.matrix),
-		};
+		draftObjects.value = new Map(
+			transformObjects(drag.objects, [1, 0, 0, 1, dx, dy]).map((object) => [
+				object.id,
+				object,
+			]),
+		);
 	} else if (drag.kind === "resize") {
 		const { x, y, width, height } = drag.bounds;
 		const sx = Math.max(0.01, 1 + dx / Math.max(width, 0.001));
 		const sy = event.shiftKey ? sx : Math.max(0.01, 1 + dy / Math.max(height, 0.001));
-		draft.value = {
-			...drag.object,
-			matrix: multiply([sx, 0, 0, sy, x * (1 - sx), y * (1 - sy)], drag.object.matrix),
-		};
+		draftObjects.value = new Map(
+			transformObjects(drag.objects, [sx, 0, 0, sy, x * (1 - sx), y * (1 - sy)]).map(
+				(object) => [object.id, object],
+			),
+		);
 	} else if (drag.kind === "node") {
 		const undoMatrix = inverse(drag.object.matrix);
 		if (undoMatrix)
@@ -470,11 +590,28 @@ function pointerUp(event: PointerEvent) {
 			];
 		penHover.value = undefined;
 		penDrag.value = undefined;
+	} else if (ending.kind === "marquee") {
+		const ids = ending.add ? new Set(selectedIds.value) : new Set<string>();
+		if (distance >= 2 && marquee.value && board.value) {
+			for (const object of board.value.objects) {
+				if (
+					!object.hidden &&
+					!object.locked &&
+					enclosed(objectBounds(object), marquee.value)
+				)
+					for (const member of groupMembers(object)) ids.add(member.id);
+			}
+		}
+		setSelection(ids);
+	} else if (draftObjects.value && distance >= 2) {
+		replaceObjects([...draftObjects.value.values()]);
 	} else if (draft.value && distance >= 2) {
 		if (ending.kind === "draw") addObject(draft.value);
 		else replaceObject(draft.value);
 	}
 	draft.value = undefined;
+	draftObjects.value = undefined;
+	marquee.value = undefined;
 	drag = undefined;
 	dragSvg = undefined;
 	dragPointer = undefined;
@@ -505,6 +642,17 @@ function keyboard(event: KeyboardEvent) {
 		event.preventDefault();
 		if (event.shiftKey) redo();
 		else undo();
+	} else if (modified && key === "a") {
+		event.preventDefault();
+		setSelection(
+			board.value?.objects
+				.filter((object) => !object.hidden && !object.locked)
+				.map((object) => object.id),
+		);
+	} else if (modified && key === "g") {
+		event.preventDefault();
+		if (event.shiftKey) ungroupSelection();
+		else groupSelection();
 	} else if (modified && key === "d") {
 		event.preventDefault();
 		duplicate();
@@ -515,14 +663,18 @@ function keyboard(event: KeyboardEvent) {
 			selectTool(next.id);
 		} else if (key === "escape") {
 			cancelDrawing();
-			selectedId.value = "";
+			setSelection();
 		} else if (key === "enter" && tool.value === "pen" && pen.value.length) {
 			event.preventDefault();
 			finishPen();
 		} else if (key === "delete" || key === "backspace") {
 			event.preventDefault();
 			erase();
-		} else if (event.target === root.value && selected.value && key.startsWith("arrow")) {
+		} else if (
+			event.target === root.value &&
+			editable.value.length &&
+			key.startsWith("arrow")
+		) {
 			event.preventDefault();
 			const step = event.shiftKey ? 10 : 1;
 			const delta = {
@@ -531,10 +683,7 @@ function keyboard(event: KeyboardEvent) {
 				arrowleft: [-step, 0],
 				arrowright: [step, 0],
 			}[key];
-			if (delta)
-				patchObject({
-					matrix: multiply([1, 0, 0, 1, delta[0], delta[1]], selected.value.matrix),
-				});
+			if (delta) transformSelection([1, 0, 0, 1, delta[0], delta[1]]);
 		}
 	}
 }
@@ -709,21 +858,33 @@ defineExpose({
 							Close path
 						</button>
 					</template>
-					<template v-else-if="selected">
-						<button
-							type="button"
-							:disabled="selected.locked || readonly"
-							@click="duplicate"
-						>
+					<template v-else-if="editable.length">
+						<button type="button" :disabled="readonly" @click="duplicate">
 							<UiIcon name="duplicate" /> Duplicate
 						</button>
 						<button
 							type="button"
-							:disabled="selected.locked || readonly"
+							:disabled="readonly"
 							@click="rotate(15)"
 							title="Rotate 15°"
 						>
 							Rotate 15°
+						</button>
+						<button
+							v-if="canGroup"
+							type="button"
+							aria-keyshortcuts="Control+G Meta+G"
+							@click="groupSelection"
+						>
+							<UiIcon name="group" /> Group
+						</button>
+						<button
+							v-if="canUngroup"
+							type="button"
+							aria-keyshortcuts="Control+Shift+G Meta+Shift+G"
+							@click="ungroupSelection"
+						>
+							<UiIcon name="ungroup" /> Ungroup
 						</button>
 					</template>
 				</div>
@@ -861,47 +1022,53 @@ defineExpose({
 								<IllustratorArtwork
 									v-for="object in sheet.objects"
 									:key="object.id"
-									:object="
-										index === currentIndex && draft?.id === object.id
-											? draft
-											: object
-									"
+									:object="displayObject(object)"
 								/>
 								<template v-if="index === currentIndex">
 									<IllustratorArtwork
-										v-if="draft && !selectedId"
+										v-if="draft && !picked.length"
 										:object="draft"
 									/>
+									<rect
+										v-if="marquee"
+										class="vector-marquee"
+										:x="marquee.x"
+										:y="marquee.y"
+										:width="marquee.width"
+										:height="marquee.height"
+										vector-effect="non-scaling-stroke"
+										pointer-events="none"
+									/>
 									<g
-										v-if="selection && !selection.hidden && bounds"
+										v-if="editBounds && tool !== 'anchor'"
 										class="vector-selection"
 									>
 										<rect
-											v-if="tool !== 'anchor'"
 											fill="none"
-											:x="bounds.x"
-											:y="bounds.y"
-											:width="bounds.width"
-											:height="bounds.height"
+											:x="editBounds.x"
+											:y="editBounds.y"
+											:width="editBounds.width"
+											:height="editBounds.height"
 											vector-effect="non-scaling-stroke"
 											pointer-events="none"
 										/>
 										<rect
 											v-if="
 												tool === 'select' &&
-												!selection.locked &&
 												!readonly &&
-												bounds.width > 0.01 &&
-												bounds.height > 0.01
+												editBounds.width > 0.01 &&
+												editBounds.height > 0.01
 											"
 											class="vector-handle vector-resize"
 											data-resize
-											:x="bounds.x + bounds.width - 4 / scale"
-											:y="bounds.y + bounds.height - 4 / scale"
+											:x="editBounds.x + editBounds.width - 4 / scale"
+											:y="editBounds.y + editBounds.height - 4 / scale"
 											:width="8 / scale"
 											:height="8 / scale"
 											vector-effect="non-scaling-stroke"
 										/>
+									</g>
+									<g v-if="nodes.length" class="vector-selection">
 										<template
 											v-for="node in nodes"
 											:key="`${node.index}:${node.pointIndex}`"
@@ -966,7 +1133,13 @@ defineExpose({
 						<h2>
 							Properties
 							<span>{{
-								selected?.kind === "text" ? "Text" : selected ? "Path" : "Artboard"
+								picked.length > 1
+									? `${picked.length} objects`
+									: selected?.kind === "text"
+										? "Text"
+										: selected
+											? "Path"
+											: "Artboard"
 							}}</span>
 						</h2>
 						<div v-if="selected && bounds" class="vector-properties__body">
@@ -985,7 +1158,7 @@ defineExpose({
 									"
 								/>
 							</label>
-							<fieldset :disabled="selected.locked || readonly">
+							<fieldset :disabled="selected.locked || selected.hidden || readonly">
 								<legend>Transform</legend>
 								<div class="vector-property-grid">
 									<label
@@ -1115,6 +1288,35 @@ defineExpose({
 								</label>
 							</fieldset>
 						</div>
+						<div
+							v-else-if="editBounds && picked.length > 1"
+							class="vector-properties__body"
+						>
+							<fieldset :disabled="readonly">
+								<legend>Transform selection</legend>
+								<div class="vector-property-grid">
+									<label
+										v-for="key in ['x', 'y', 'width', 'height'] as const"
+										:key="key"
+									>
+										{{ { x: "X", y: "Y", width: "W", height: "H" }[key] }}
+										<input
+											type="number"
+											:aria-label="`Selection ${key}`"
+											:value="Number(editBounds[key].toFixed(2))"
+											@change="
+												changeNumber(
+													$event,
+													key === 'x' || key === 'y' ? -100000 : 0.01,
+													100000,
+													(v) => changeBounds(key, v),
+												)
+											"
+										/>
+									</label>
+								</div>
+							</fieldset>
+						</div>
 						<div v-else class="vector-properties__body">
 							<label class="vector-property-line"
 								>Name
@@ -1163,6 +1365,49 @@ defineExpose({
 								Original artwork is a locked background. Draw new objects on top.
 							</p>
 						</div>
+						<div v-if="editable.length" class="vector-properties__body vector-arrange">
+							<fieldset :disabled="readonly">
+								<legend>Align and distribute</legend>
+								<label class="vector-property-line"
+									>Align to
+									<select v-model="alignTo" aria-label="Align to">
+										<option value="selection">Selection</option>
+										<option value="artboard">Artboard</option>
+									</select>
+								</label>
+								<div class="vector-arrange__buttons">
+									<button
+										type="button"
+										v-for="[command, label, icon] in alignmentCommands"
+										:key="command"
+										:aria-label="label"
+										:title="label"
+										:disabled="alignTo === 'selection' && units.length < 2"
+										@click="align(command)"
+									>
+										<UiIcon :name="icon" />
+									</button>
+									<button
+										type="button"
+										aria-label="Distribute horizontal gaps"
+										title="Distribute horizontal gaps"
+										:disabled="units.length < 3"
+										@click="distribute('x')"
+									>
+										<UiIcon name="distribute-horizontal" />
+									</button>
+									<button
+										type="button"
+										aria-label="Distribute vertical gaps"
+										title="Distribute vertical gaps"
+										:disabled="units.length < 3"
+										@click="distribute('y')"
+									>
+										<UiIcon name="distribute-vertical" />
+									</button>
+								</div>
+							</fieldset>
+						</div>
 					</section>
 					<section class="vector-structure">
 						<div class="vector-panel-tabs" aria-label="Structure panel">
@@ -1190,7 +1435,8 @@ defineExpose({
 								v-for="object in [...board.objects].reverse()"
 								:key="object.id"
 								class="vector-layer"
-								:data-selected="object.id === selectedId"
+								:data-selected="selectedIds.has(object.id)"
+								:data-group="object.groupId"
 							>
 								<button
 									type="button"
@@ -1206,10 +1452,17 @@ defineExpose({
 									type="button"
 									class="vector-layer__name"
 									:title="object.name"
-									@click="selectedId = object.id"
+									:aria-pressed="selectedIds.has(object.id)"
+									@click="selectObject(object, $event.shiftKey, $event.altKey)"
 								>
 									<UiIcon
-										:name="object.kind === 'text' ? 'text' : 'shape'"
+										:name="
+											object.groupId
+												? 'group'
+												: object.kind === 'text'
+													? 'text'
+													: 'shape'
+										"
 										:size="15"
 									/>
 									{{ object.name }}
@@ -1255,7 +1508,7 @@ defineExpose({
 								type="button"
 								aria-label="Bring forward"
 								title="Bring forward"
-								:disabled="!selected || selected.locked || readonly"
+								:disabled="!editable.length || readonly"
 								@click="reorder(1)"
 							>
 								<UiIcon name="arrow-up" />
@@ -1264,16 +1517,20 @@ defineExpose({
 								type="button"
 								aria-label="Send backward"
 								title="Send backward"
-								:disabled="!selected || selected.locked || readonly"
+								:disabled="!editable.length || readonly"
 								@click="reorder(-1)"
 							>
 								<UiIcon name="arrow-down" />
 							</button>
 							<button
 								type="button"
-								aria-label="Delete object"
+								:aria-label="
+									editable.length > 1
+										? 'Delete selected objects'
+										: 'Delete object'
+								"
 								title="Delete object"
-								:disabled="!selected || selected.locked || readonly"
+								:disabled="!editable.length || readonly"
 								@click="erase"
 							>
 								<UiIcon name="trash" />

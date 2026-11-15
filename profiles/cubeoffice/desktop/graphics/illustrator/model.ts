@@ -12,6 +12,7 @@ interface Artwork {
 	matrix: Matrix;
 	hidden: boolean;
 	locked: boolean;
+	groupId?: string;
 	fill: string | null;
 	fillAlpha: number;
 }
@@ -220,6 +221,8 @@ export function parseVectorProject(serialized: string): VectorProject {
 				!object.matrix.every((entry) => validNumber(entry)) ||
 				typeof object.hidden !== "boolean" ||
 				typeof object.locked !== "boolean" ||
+				(object.groupId !== undefined &&
+					(!validString(object.groupId, 80) || !/^[\w-]+$/.test(object.groupId))) ||
 				!colorOrNone(object.fill) ||
 				!validNumber(object.fillAlpha, 0, 1)
 			)
