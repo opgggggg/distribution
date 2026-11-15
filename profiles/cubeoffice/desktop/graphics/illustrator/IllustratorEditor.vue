@@ -44,6 +44,7 @@ import {
 	unionBounds,
 	type Alignment,
 } from "./selection";
+import type { IllustratorCommand, IllustratorMenuState } from "./menu-commands";
 import IllustratorArtwork from "./IllustratorArtwork.vue";
 import "./styles.css";
 
@@ -62,6 +63,8 @@ const currentIndex = ref(0);
 const selectedIds = shallowRef<Set<string>>(new Set());
 const alignTo = ref<"selection" | "artboard">("selection");
 const panel = ref<"layers" | "artboards">("layers");
+const showProperties = ref(true);
+const showStructure = ref(true);
 const scale = ref(1);
 const view = ref<HTMLElement>();
 const root = ref<HTMLElement>();
@@ -250,10 +253,29 @@ function duplicate() {
 	updateBoard({ ...board.value, objects: [...board.value.objects, ...copies] });
 	setSelection(copies.map((object) => object.id));
 }
-function reorder(step: 1 | -1) {
+function reorder(step: 1 | -1, toEdge = false) {
 	if (!board.value || !editable.value.length || props.readonly) return;
 	const objects = [...board.value.objects];
 	const members = new Set(editable.value.map((object) => object.id));
+	if (toEdge) {
+		// A locked layer is a boundary, matching the one-step Arrange commands.
+		let start = 0;
+		for (let end = 0; end <= objects.length; end++) {
+			if (end < objects.length && !objects[end].locked) continue;
+			const segment = objects.slice(start, end);
+			const moved = segment.filter((item) => members.has(item.id));
+			const rest = segment.filter((item) => !members.has(item.id));
+			objects.splice(
+				start,
+				segment.length,
+				...(step === 1 ? [...rest, ...moved] : [...moved, ...rest]),
+			);
+			start = end + 1;
+		}
+		if (objects.some((item, index) => item !== board.value!.objects[index]))
+			updateBoard({ ...board.value, objects });
+		return;
+	}
 	let changed = false;
 	// Process from the leading edge so an adjacent selection moves as a block.
 	for (let i = step === 1 ? objects.length - 2 : 1; i >= 0 && i < objects.length; i -= step) {
@@ -790,7 +812,104 @@ async function output(format: VectorExportFormat) {
 		working.value = false;
 	}
 }
+function selectableObjects() {
+	return board.value?.objects.filter((object) => !object.locked && !object.hidden) ?? [];
+}
+
+function getIllustratorMenuState(): IllustratorMenuState | null {
+	if (!board.value) return null;
+	const canEdit = !props.readonly && !working.value;
+	const selected = new Set(editable.value.map((object) => object.id));
+	const objects = board.value.objects;
+	const canArrange = (step: 1 | -1) =>
+		canEdit &&
+		objects.some((object, index) => {
+			const neighbor = objects[index + step];
+			return (
+				selected.has(object.id) &&
+				neighbor &&
+				!neighbor.locked &&
+				!selected.has(neighbor.id)
+			);
+		});
+	const forward = canArrange(1),
+		backward = canArrange(-1);
+	const selectable = selectableObjects();
+	return {
+		enabled: {
+			group: canEdit && canGroup.value,
+			ungroup: canEdit && canUngroup.value,
+			bringToFront: forward,
+			bringForward: forward,
+			sendBackward: backward,
+			sendToBack: backward,
+			selectAll: selectable.some((object) => !selectedIds.value.has(object.id)),
+			deselect: selectedIds.value.size > 0,
+			inverse: selectable.length > 0,
+			zoomIn: scale.value < 4,
+			zoomOut: scale.value > 0.05,
+			actualSize: scale.value !== 1,
+			fitArtboard: true,
+			layers: true,
+			properties: true,
+			artboards: true,
+		},
+		checked: {
+			layers: showStructure.value && panel.value === "layers",
+			properties: showProperties.value,
+			artboards: showStructure.value && panel.value === "artboards",
+		},
+	};
+}
+
+function toggleStructure(next: "layers" | "artboards") {
+	showStructure.value = !showStructure.value || panel.value !== next;
+	panel.value = next;
+}
+
+function selectAllObjects() {
+	setSelection(selectableObjects().map((object) => object.id));
+}
+
+const illustratorActions: Record<IllustratorCommand, () => void> = {
+	group: groupSelection,
+	ungroup: ungroupSelection,
+	bringToFront: () => reorder(1, true),
+	bringForward: () => reorder(1),
+	sendBackward: () => reorder(-1),
+	sendToBack: () => reorder(-1, true),
+	selectAll: selectAllObjects,
+	deselect: () => {
+		cancelDrawing();
+		setSelection();
+	},
+	inverse: () =>
+		setSelection(
+			selectableObjects()
+				.filter((object) => !selectedIds.value.has(object.id))
+				.map((object) => object.id),
+		),
+	zoomIn: () => zoom(scale.value * 1.2),
+	zoomOut: () => zoom(scale.value / 1.2),
+	actualSize: () => {
+		zoom(1);
+		chooseBoard(currentIndex.value);
+	},
+	fitArtboard: fitBoard,
+	layers: () => toggleStructure("layers"),
+	properties: () => {
+		showProperties.value = !showProperties.value;
+	},
+	artboards: () => toggleStructure("artboards"),
+};
+
+function runIllustratorCommand(command: IllustratorCommand) {
+	if (getIllustratorMenuState()?.enabled[command]) illustratorActions[command]();
+}
+
 defineExpose({
+	getIllustratorMenuState,
+	runIllustratorCommand,
 	isDirty,
 	subscribe,
 	waitReady,
@@ -936,7 +1055,7 @@ defineExpose({
 				<span>{{ issue }}</span
 				><button type="button" @click="issue = ''">Close</button>
 			</div>
-			<div class="vector-workspace">
+			<div class="vector-workspace" :data-inspector="showProperties || showStructure">
 				<div
 					class="vector-tools"
 					role="toolbar"
@@ -1128,8 +1247,16 @@ defineExpose({
 						</section>
 					</div>
 				</main>
-				<aside v-if="board" class="vector-inspector" aria-label="Artwork panels">
-					<section class="vector-properties">
+				<aside
+					v-if="board && (showProperties || showStructure)"
+					class="vector-inspector"
+					aria-label="Artwork panels"
+				>
+					<section
+						v-if="showProperties"
+						class="vector-properties"
+						:class="{ 'vector-properties--full': !showStructure }"
+					>
 						<h2>
 							Properties
 							<span>{{
@@ -1409,7 +1536,7 @@ defineExpose({
 							</fieldset>
 						</div>
 					</section>
-					<section class="vector-structure">
+					<section v-if="showStructure" class="vector-structure">
 						<div class="vector-panel-tabs" aria-label="Structure panel">
 							<button
 								type="button"

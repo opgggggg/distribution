@@ -8,6 +8,13 @@ const output = fileURLToPath(new URL("./graphics/output.ts", import.meta.url));
 const download = root + "download-bridge.ts";
 const illustrator = fileURLToPath(new URL("./graphics/illustrator.ts", import.meta.url));
 
+const illustratorMenuCommands = fileURLToPath(
+	new URL("./graphics/illustrator/menu-commands.ts", import.meta.url),
+);
+const illustratorNativeMenu = fileURLToPath(
+	new URL("./graphics/illustrator/native-menu.ts", import.meta.url),
+);
+
 function replaceOnce(source, before, after) {
 	if (source.split(before).length !== 2) {
 		throw new Error("Upstream graphics integration point changed.");
@@ -125,13 +132,15 @@ async function canOverwriteVectorFile(path: string): Promise<boolean> {
 					source,
 					"print(): void;",
 					`print(): void;
-	exportDocument?(format: "pdf" | "png"): void;`,
+	exportDocument?(format: "pdf" | "png"): void;
+	illustratorCommand?(command: IllustratorCommand): void;`,
 				);
 				source = replaceOnce(
 					source,
 					"setCheckingForUpdates(checking: boolean): void;",
 					`setCheckingForUpdates(checking: boolean): void;
-	setExportEnabled?(enabled: boolean): void;`,
+	setExportEnabled?(enabled: boolean): void;
+	setIllustratorState?(state: IllustratorMenuState | null, interactive: boolean): void;`,
 				);
 				source = replaceOnce(
 					source,
@@ -155,17 +164,36 @@ async function canOverwriteVectorFile(path: string): Promise<boolean> {
 				);
 				source = replaceOnce(
 					source,
+					"const menu = await Menu.new({ items: [appMenu, fileMenu, editMenu] });",
+					`const menu = await Menu.new({ items: [appMenu, fileMenu, editMenu] });
+	const illustratorMenu = focusedActions.illustratorCommand
+		? await createIllustratorNativeMenu(menu, menuItemId, focusedActions.illustratorCommand, menuCopy.file === "文件")
+		: undefined;`,
+				);
+				source = replaceOnce(
+					source,
+					"void menu.close();",
+					`illustratorMenu?.dispose();
+			void menu.close();`,
+				);
+				source = replaceOnce(
+					source,
 					"setMenuCopy: (next) => {",
-					`setExportEnabled: (enabled) => {
+					`setIllustratorState: illustratorMenu?.setState,
+		setExportEnabled: (enabled) => {
 			for (const [, item] of exportItems) void item.setEnabled(enabled);
 		},
 		setMenuCopy: (next) => {
+			illustratorMenu?.setLanguage(next.file === "文件");
 			for (const [format, item] of exportItems)
 				void item.setText(graphicsExportLabel(format, next.file === "文件"));`,
 				);
 				return {
 					code:
-						`import { graphicsExportLabel } from ${JSON.stringify(output)};\n` + source,
+						`import { graphicsExportLabel } from ${JSON.stringify(output)};
+import { createIllustratorNativeMenu } from ${JSON.stringify(illustratorNativeMenu)};
+import type { IllustratorCommand, IllustratorMenuState } from ${JSON.stringify(illustratorMenuCommands)};
+` + source,
 					map: null,
 				};
 			}
@@ -176,15 +204,22 @@ async function canOverwriteVectorFile(path: string): Promise<boolean> {
 					`createDesktopLifecycle(
 	ports: DesktopLifecyclePorts,
 	exportDocument?: (format: "pdf" | "png") => Promise<void>,
+	illustratorCommand?: (command: IllustratorCommand) => void,
 )`,
 				);
 				source = replaceOnce(
 					source,
 					"print: () => void ports.printCurrent(),",
 					`print: () => void ports.printCurrent(),
-					exportDocument,`,
+					exportDocument,
+					illustratorCommand,`,
 				);
-				return { code: source, map: null };
+				return {
+					code:
+						`import type { IllustratorCommand } from ${JSON.stringify(illustratorMenuCommands)};\n` +
+						source,
+					map: null,
+				};
 			}
 			if (path !== root + "App.vue") return;
 			source = replaceOnce(
@@ -194,6 +229,18 @@ async function canOverwriteVectorFile(path: string): Promise<boolean> {
 import { graphicsAppearance, toggleGraphicsAppearance } from ${JSON.stringify(appearance)};
 import { canOutputDocument, graphicsExportLabel, rasterizePdfFirstPage } from ${JSON.stringify(output)};
 import { saveBlobToChosenPath } from ${JSON.stringify(download)};
+
+import type { IllustratorCommand, IllustratorMenuSurface } from ${JSON.stringify(illustratorMenuCommands)};
+
+function activeIllustratorSurface(): IllustratorMenuSurface | undefined {
+	const editor = activeTab.value?.editor;
+	return editor?.format === "ai" ? editor.exposed as IllustratorMenuSurface : undefined;
+}
+
+function runIllustratorMenuCommand(command: IllustratorCommand) {
+	if (!busy.value && !transferBusy.value)
+		activeIllustratorSurface()?.runIllustratorCommand?.(command);
+}
 
 async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 	const tab = activeTab.value;
@@ -233,7 +280,7 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 			source = replaceOnce(
 				source,
 				"createDesktopLifecycle(desktopOwnerPorts.desktopLifecycle(desktopPorts))",
-				`createDesktopLifecycle(desktopOwnerPorts.desktopLifecycle(desktopPorts), exportGraphicsDocument)`,
+				`createDesktopLifecycle(desktopOwnerPorts.desktopLifecycle(desktopPorts), exportGraphicsDocument, runIllustratorMenuCommand)`,
 			);
 			source = replaceOnce(
 				source,
@@ -242,6 +289,14 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 watch(
 	[menuHandle, () => !busy.value && canOutputDocument(activeTab.value?.editor)],
 	([menu, enabled]) => menu?.setExportEnabled?.(enabled),
+);
+watch(
+	[
+		menuHandle,
+		() => activeIllustratorSurface()?.getIllustratorMenuState?.() ?? null,
+		() => !busy.value && !transferBusy.value,
+	],
+	([menu, state, interactive]) => menu?.setIllustratorState?.(state, interactive),
 );`,
 			);
 			source = replaceOnce(

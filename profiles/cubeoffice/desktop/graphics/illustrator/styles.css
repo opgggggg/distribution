@@ -493,3 +493,11 @@
 	padding-inline: 3px;
 	border-color: var(--vector-border);
 }
+
+.vector-workspace[data-inspector="false"] {
+	grid-template-columns: 44px minmax(0, 1fr);
+}
+.vector-properties--full {
+	flex: 1;
+	max-height: none;
+}
