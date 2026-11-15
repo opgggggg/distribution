@@ -59,6 +59,16 @@ export function cubeOfficeGraphicsPlugin() {
 				],
 			};
 			const historyEditorPath = path.split("/als-office/packages/").at(-1);
+			if (historyEditorPath === "editor-ui/src/vue/components/UiWorkspaceTabStrip.vue") {
+				return {
+					code: replaceOnce(
+						source,
+						':title="overflowLabel"',
+						':title="overflowLabel"\n\t\t\t\t:aria-label="overflowLabel"',
+					),
+					map: null,
+				};
+			}
 			if (historyEditorPath === "editor-ui/src/vue/components/UiRibbonTabs.vue") {
 				for (const [before, after] of [
 					[
@@ -120,7 +130,11 @@ export function cubeOfficeGraphicsPlugin() {
 			if (path === root + "DesktopPdfSurface.vue") {
 				return {
 					code: replaceOnce(
-						source,
+						replaceOnce(
+							source,
+							':editable="!readonly"',
+							':compact-header="true"\n\t\t:editable="!readonly"',
+						),
 						'<template #file="{ loading }">',
 						`<template #file="{ loading }">
 			<UiRibbonCommandButton
@@ -132,6 +146,21 @@ export function cubeOfficeGraphicsPlugin() {
 					),
 					map: null,
 				};
+			}
+			if (historyEditorPath === "pdf/src/vue/PdfViewer.vue") {
+				for (const [before, after] of [
+					[
+						"withDefaults(defineProps<PdfViewerProps>(), {",
+						"withDefaults(defineProps<PdfViewerProps & { compactHeader?: boolean }>(), {",
+					],
+					[':titlebar-hidden="!chrome"', ':titlebar-hidden="!chrome || compactHeader"'],
+					[
+						':ribbon-hidden="!chrome || (!editable && !redactable)"',
+						':ribbon-hidden="!chrome || (!compactHeader && !editable && !redactable)"',
+					],
+				])
+					source = replaceOnce(source, before, after);
+				return { code: source, map: null };
 			}
 			if (path === root + "format-contributions.ts") {
 				return {
@@ -424,6 +453,13 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 				source,
 				'class="document-host"',
 				`class="document-host" :data-shared-history="showDesktopQuickAccess ? 'true' : undefined"`,
+			);
+			source = replaceOnce(
+				source,
+				':aria-label="shellCopy.openDocuments"',
+				`:aria-label="shellCopy.openDocuments"
+				:min-tab-width="152"
+				:overflow-label="appLanguage === 'zh-CN' ? '更多打开的文档' : 'More open documents'"`,
 			);
 			source = replaceOnce(
 				source,

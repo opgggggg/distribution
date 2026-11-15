@@ -94,7 +94,7 @@ const appearanceOpen = ref(false);
 					/>
 					<UiRibbonPopover
 						v-model="appearanceOpen"
-						icon="font-size"
+						icon="font"
 						size="lg"
 						:label="appearanceLabel"
 						:content-aria-label="appearanceLabel"

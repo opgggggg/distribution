@@ -420,6 +420,22 @@ button.unsaved-dialog__primary {
 }
 
 /* The tabs and their drag preview share the same scoped upstream color rule. */
+.desktop-titlebar .als-ofs-ui-workspace-tabs__tab:not([data-fixed="true"]) {
+	min-inline-size: min(152px, 100%);
+}
+
+.desktop-app
+	.als-ofs-pdf-viewer
+	.als-ofs-ui-ribbon-command-button[data-active="true"]:not(:disabled) {
+	background: var(--als-ofs-ui-accent-soft) !important;
+}
+.desktop-app
+	.als-ofs-pdf-viewer
+	.als-ofs-ui-ribbon-command-button[data-active="true"]:not(:disabled)
+	.als-ofs-ui-icon {
+	color: var(--als-ofs-ui-accent) !important;
+}
+
 .als-ofs-ui-workspace-tabs__kind {
 	color: var(--cubeoffice-primary) !important;
 }
