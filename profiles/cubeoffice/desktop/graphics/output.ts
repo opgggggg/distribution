@@ -18,6 +18,11 @@ const pdfSurfaces = new Set([
 	"text",
 ]);
 
+export function graphicsExportLabel(format: "pdf" | "png", chinese: boolean): string {
+	if (format === "pdf") return chinese ? "导出 PDF…" : "Export PDF…";
+	return chinese ? "导出首页 PNG…" : "Export First Page as PNG…";
+}
+
 export function canOutputDocument(editor: UiArtifactSurfaceHandle | null | undefined): boolean {
 	if (!editor || !pdfSurfaces.has(editor.format)) return false;
 	if (editor.format !== "text") return true;

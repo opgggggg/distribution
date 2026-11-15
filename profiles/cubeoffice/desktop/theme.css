@@ -540,14 +540,16 @@ button.unsaved-dialog__primary {
 }
 
 .desktop-app[data-graphics-appearance="dark"] {
-	--graphics-panel: #242132;
-	--graphics-muted: #2e2a3f;
-	--graphics-stage: #191724;
-	--graphics-border: #49425e;
-	--graphics-text: #f4efff;
-	--graphics-secondary: #c4bad8;
+	--graphics-panel: #24242e;
+	--graphics-muted: #2c2b38;
+	--graphics-stage: #191a20;
+	--graphics-border: #403e50;
+	--graphics-text: #eeeaf5;
+	--graphics-secondary: #bbb5cb;
 	--graphics-accent: #c9afff;
-	--graphics-selected: #443362;
+	--graphics-selected: #403254;
+	--graphics-hover: #353340;
+	--graphics-disabled: #8d879b;
 }
 
 .desktop-app[data-graphics-appearance]
@@ -572,7 +574,8 @@ button.unsaved-dialog__primary {
 	.als-ofs-editor-ui {
 	--als-ofs-ui-surface: var(--graphics-panel) !important;
 	--als-ofs-ui-surface-muted: var(--graphics-muted) !important;
-	--als-ofs-ui-surface-hover: var(--graphics-selected) !important;
+	--als-ofs-ui-surface-hover: var(--graphics-hover, var(--graphics-selected)) !important;
+	--als-ofs-ui-surface-subtle: var(--graphics-muted) !important;
 	--als-ofs-ui-border: var(--graphics-border) !important;
 	--als-ofs-ui-border-strong: var(--graphics-border) !important;
 	--als-ofs-ui-text: var(--graphics-text) !important;
@@ -581,11 +584,13 @@ button.unsaved-dialog__primary {
 	--als-ofs-ui-accent: var(--graphics-accent) !important;
 	--als-ofs-ui-accent-soft: var(--graphics-selected) !important;
 	--als-ofs-ui-selection-indicator: var(--graphics-accent) !important;
+	--als-ofs-ui-gallery-selected-surface: var(--graphics-selected) !important;
 	--als-ofs-ui-focus: var(--graphics-accent) !important;
 }
 
 .desktop-app[data-graphics-appearance="dark"] > .desktop-titlebar {
 	color-scheme: dark;
+	border-color: var(--graphics-border);
 	background: var(--graphics-muted);
 	color: var(--graphics-text);
 }
@@ -621,26 +626,120 @@ button.unsaved-dialog__primary {
 	background-color: var(--graphics-stage);
 }
 
-.desktop-output-menu {
-	min-height: 24px;
-	padding-inline: 8px;
-	border: 1px solid #c9cbd1;
-	border-radius: 6px;
-	background: #fff;
-	color: #24262b;
-	font: inherit;
-	font-size: 11.5px;
+/* Match the shared dark surfaces where the desktop ribbon specifies light colors. */
+.desktop-app[data-graphics-appearance="dark"]
+	.als-ofs-psd-editor__shell
+	.als-ofs-ui-ribbon-surface
+	.als-ofs-ui-ribbon-tabs
+	.als-ofs-ui-ribbon-tabs__tab[data-ribbon-context] {
+	background-color: var(--graphics-selected);
+	color: var(--graphics-accent);
 }
 
-.desktop-output-menu:focus-visible {
-	outline: 2px solid var(--cubeoffice-primary);
-	outline-offset: 2px;
+/* The Office palette assigns fixed light colors to large command labels and separators. */
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview)
+	.als-ofs-ui-ribbon-group {
+	border-right-color: var(--graphics-border) !important;
 }
 
-.desktop-app[data-graphics-appearance="dark"] .desktop-output-menu {
-	background: var(--graphics-panel);
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview)
+	.als-ofs-ui-ribbon-command-button[data-size="lg"]
+	.als-ofs-ui-ribbon-command-button__label {
+	color: inherit !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview)
+	:is(.als-ofs-ui-ribbon-command-button, .als-ofs-ui-icon-button):disabled {
+	color: var(--graphics-disabled);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-pdf-viewer__viewport {
+	background: var(--graphics-stage);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-pdf-viewer__page-rail
+	.als-ofs-ui-slide-thumbnail {
+	background: var(--graphics-muted);
 	color: var(--graphics-text);
 	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-pdf-viewer__page-rail
+	.als-ofs-ui-slide-thumbnail:is([aria-pressed="true"], [data-active="true"]) {
+	background: var(--graphics-selected);
+	border-color: var(--graphics-accent);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-ui-editor-titlebar {
+	border-color: var(--graphics-border) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-ui-office-titlebar__copy
+	> strong {
+	color: var(--graphics-text) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-ui-office-titlebar__copy
+	> span {
+	color: var(--graphics-secondary) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-ui-search-box__field {
+	background: var(--graphics-stage) !important;
+	border-color: var(--graphics-border) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-ui-search-box__input {
+	color: var(--graphics-text) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.cubeoffice-illustrator-preview
+	.als-ofs-ui-search-box__input::placeholder {
+	color: var(--graphics-secondary) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"] .desktop-window-controls button {
+	color: var(--graphics-secondary);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.desktop-window-controls
+	button:hover:not(.desktop-window-controls__close) {
+	background: var(--graphics-hover);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .desktop-app-menu__menu {
+	background: var(--graphics-panel);
+	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .desktop-app-menu__menu button {
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.desktop-app-menu__menu button, .desktop-titlebar__actions button):hover:not(:disabled) {
+	background: var(--graphics-hover);
 }
 
 .desktop-app[data-graphics-appearance]
@@ -656,7 +755,6 @@ button.unsaved-dialog__primary {
 	:is(
 		.als-ofs-ui-ribbon-command-button,
 		.als-ofs-ui-ribbon-command-button__icon,
-		.als-ofs-ui-ribbon-command-button__label,
 		.als-ofs-ui-icon-button
 	):not(:disabled) {
 	color: var(--graphics-text);

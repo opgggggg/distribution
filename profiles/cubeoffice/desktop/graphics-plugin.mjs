@@ -80,26 +80,84 @@ export function cubeOfficeGraphicsPlugin() {
 					map: null,
 				};
 			}
+			if (path === root + "desktop-host.ts") {
+				source = replaceOnce(
+					source,
+					"print(): void;",
+					`print(): void;
+	exportDocument?(format: "pdf" | "png"): void;`,
+				);
+				source = replaceOnce(
+					source,
+					"setCheckingForUpdates(checking: boolean): void;",
+					`setCheckingForUpdates(checking: boolean): void;
+	setExportEnabled?(enabled: boolean): void;`,
+				);
+				source = replaceOnce(
+					source,
+					"const fileMenu = await Submenu.new({",
+					`const exportItems = actions.exportDocument ? await Promise.all(
+		(["pdf", "png"] as const).map(async (format) => [format, await MenuItem.new({
+			id: menuItemId("export-" + format),
+			text: graphicsExportLabel(format, menuCopy.file === "文件"),
+			enabled: false,
+			action: () => focusedActions.exportDocument?.(format),
+		})] as const),
+	) : [];
+	const fileMenu = await Submenu.new({`,
+				);
+				source = replaceOnce(
+					source,
+					"saveAsItem,\n\t\t\tprintItem,",
+					`saveAsItem,
+			...exportItems.map(([, item]) => item),
+			printItem,`,
+				);
+				source = replaceOnce(
+					source,
+					"setMenuCopy: (next) => {",
+					`setExportEnabled: (enabled) => {
+			for (const [, item] of exportItems) void item.setEnabled(enabled);
+		},
+		setMenuCopy: (next) => {
+			for (const [format, item] of exportItems)
+				void item.setText(graphicsExportLabel(format, next.file === "文件"));`,
+				);
+				return {
+					code:
+						`import { graphicsExportLabel } from ${JSON.stringify(output)};\n` + source,
+					map: null,
+				};
+			}
+			if (path === root + "app/lifecycle.ts") {
+				source = replaceOnce(
+					source,
+					"createDesktopLifecycle(ports: DesktopLifecyclePorts)",
+					`createDesktopLifecycle(
+	ports: DesktopLifecyclePorts,
+	exportDocument?: (format: "pdf" | "png") => Promise<void>,
+)`,
+				);
+				source = replaceOnce(
+					source,
+					"print: () => void ports.printCurrent(),",
+					`print: () => void ports.printCurrent(),
+					exportDocument,`,
+				);
+				return { code: source, map: null };
+			}
 			if (path !== root + "App.vue") return;
 			source = replaceOnce(
 				source,
 				'<script setup lang="ts">',
 				`<script setup lang="ts">
 import { graphicsAppearance, toggleGraphicsAppearance } from ${JSON.stringify(appearance)};
-import { canOutputDocument, rasterizePdfFirstPage } from ${JSON.stringify(output)};
+import { canOutputDocument, graphicsExportLabel, rasterizePdfFirstPage } from ${JSON.stringify(output)};
 import { saveBlobToChosenPath } from ${JSON.stringify(download)};
 
-async function chooseDocumentOutput(event: Event): Promise<void> {
-	const select = event.target as HTMLSelectElement;
-	const action = select.value;
-	select.value = "";
+async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 	const tab = activeTab.value;
-	if (!tab?.editor || !canOutputDocument(tab.editor)) return;
-	if (action === "print") {
-		await printCurrent();
-		return;
-	}
-	if (action !== "pdf" && action !== "png") return;
+	if (busy.value || !tab?.editor || !canOutputDocument(tab.editor)) return;
 	const editor = tab.editor;
 	await withBusy(appLanguage.value === "zh-CN" ? "正在准备导出…" : "Preparing export…", async () => {
 		const pdf = () => editor.format === "ofd" ? editor.export({ format: "pdf" }) : exportFileOf(tab, true)("pdf");
@@ -123,18 +181,6 @@ async function chooseDocumentOutput(event: Event): Promise<void> {
 				source,
 				'<div class="desktop-titlebar__actions" data-no-drag>',
 				`<div class="desktop-titlebar__actions" data-no-drag>
-				<select
-					v-if="nativeRuntime && canOutputDocument(activeTab?.editor)"
-					class="desktop-output-menu"
-					:disabled="busy"
-					:aria-label="appLanguage === 'zh-CN' ? '打印或导出' : 'Print or export'"
-					@change="chooseDocumentOutput"
-				>
-					<option value="">{{ appLanguage === 'zh-CN' ? '输出…' : 'Output…' }}</option>
-					<option v-if="!isWindowsHost()" value="print">{{ appLanguage === 'zh-CN' ? '打印' : 'Print' }}</option>
-					<option value="pdf">{{ appLanguage === 'zh-CN' ? '导出 PDF' : 'Export PDF' }}</option>
-					<option value="png">{{ appLanguage === 'zh-CN' ? '首页图片（PNG）' : 'First page (PNG)' }}</option>
-				</select>
 				<button
 					v-if="document?.format === 'psd' || document?.format === 'ai'"
 					type="button"
@@ -143,6 +189,33 @@ async function chooseDocumentOutput(event: Event): Promise<void> {
 				>
 					{{ appLanguage === 'zh-CN' ? '深色外观' : 'Dark appearance' }}
 				</button>`,
+			);
+			source = replaceOnce(
+				source,
+				"createDesktopLifecycle(desktopOwnerPorts.desktopLifecycle(desktopPorts))",
+				`createDesktopLifecycle(desktopOwnerPorts.desktopLifecycle(desktopPorts), exportGraphicsDocument)`,
+			);
+			source = replaceOnce(
+				source,
+				"watch(menuCopy, (next) => menuHandle.value?.setMenuCopy(next));",
+				`watch(menuCopy, (next) => menuHandle.value?.setMenuCopy(next));
+watch(
+	[menuHandle, () => !busy.value && canOutputDocument(activeTab.value?.editor)],
+	([menu, enabled]) => menu?.setExportEnabled?.(enabled),
+);`,
+			);
+			source = replaceOnce(
+				source,
+				'<button type="button" role="menuitem" @click="showSettingsFromInWindowMenu">',
+				`<template v-if="nativeRuntime && canOutputDocument(activeTab?.editor)">
+						<button type="button" role="menuitem" :disabled="busy" @click="closeInWindowMenu(); exportGraphicsDocument('pdf')">
+							{{ graphicsExportLabel('pdf', appLanguage === 'zh-CN') }}
+						</button>
+						<button type="button" role="menuitem" :disabled="busy" @click="closeInWindowMenu(); exportGraphicsDocument('png')">
+							{{ graphicsExportLabel('png', appLanguage === 'zh-CN') }}
+						</button>
+					</template>
+					<button type="button" role="menuitem" @click="showSettingsFromInWindowMenu">`,
 			);
 			return { code: source, map: null };
 		},
