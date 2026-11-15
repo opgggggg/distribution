@@ -1,3 +1,4 @@
+import { cubeOfficeGraphicsPlugin } from "./graphics-plugin.mjs";
 import { cubeOfficeConversionLayoutPlugin } from "./conversion-layout-plugin.mjs";
 import { cubeOfficeKernelAssetsPlugin } from "./kernel-assets-plugin.mjs";
 import { cubeOfficeLargeTextPlugin } from "./large-text-plugin.mjs";
@@ -17,6 +18,7 @@ export default defineConfig(async (environment) =>
 			cubeOfficeKernelAssetsPlugin(),
 			cubeOfficeBrandingPlugin(),
 			cubeOfficeEditorThemePlugin(),
+			cubeOfficeGraphicsPlugin(),
 			cubeOfficeConversionLayoutPlugin(),
 			cubeOfficeLargeTextPlugin(),
 			cubeOfficeTextContributionPlugin(),

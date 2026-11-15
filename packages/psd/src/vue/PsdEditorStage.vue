@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ showDocumentBar?: boolean }>();
 import {
 	computed,
 	nextTick,
@@ -4194,7 +4195,7 @@ const documentTabMeta = computed(() => {
 			:description="editor.loadError.value.message"
 		/>
 		<template v-else>
-			<div class="als-ofs-psd-stage__document-bar" aria-label="Open document">
+			<div v-if="showDocumentBar" class="als-ofs-psd-stage__document-bar" aria-label="Open document">
 				<div class="als-ofs-psd-stage__document-tab" aria-current="page">
 					<span class="als-ofs-psd-stage__document-mark" aria-hidden="true">P</span>
 					<span class="als-ofs-psd-stage__document-name">{{

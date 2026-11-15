@@ -5,6 +5,9 @@ export { createDocumentPreviewCache } from "../../../als-office/packages/editor-
 
 /** Distribution-owned formats extend the shared persistent recent-file preview pipeline. */
 export async function captureDocumentPreview(surface: HTMLElement): Promise<string | undefined> {
+	if (surface.matches(".als-ofs-psd-editor") || surface.querySelector(".als-ofs-psd-editor")) {
+		return (await import("@cubexp/psd/vue")).capturePsdPreview(surface);
+	}
 	if (surface.matches(".cube-notes") || surface.querySelector(".cube-notes")) {
 		return (await import("@cubexp/notes/thumbnail")).captureNotesPreview(surface);
 	}

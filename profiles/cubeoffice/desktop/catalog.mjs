@@ -42,6 +42,7 @@ const cubeOfficeProfile = {
 			...TEXT_EXTENSIONS,
 			"ofd",
 			"psd",
+			"ai",
 			"tsv",
 			...EPUB_EXTENSIONS,
 			...NOTES_EXTENSIONS,
@@ -53,6 +54,7 @@ const cubeOfficeProfile = {
 			...TEXT_EXTENSIONS,
 			"ofd",
 			"psd",
+			"ai",
 			"tsv",
 			...EPUB_EXTENSIONS,
 			...NOTES_EXTENSIONS,
@@ -69,6 +71,7 @@ const cubeOfficeProfile = {
 		"XML",
 		"PY",
 		"PSD",
+		"AI",
 		"TSV",
 		"EPUB",
 		"CUBENOTE",
@@ -80,6 +83,12 @@ const cubeOfficeProfile = {
 		"tsv",
 	],
 	formatContributions: [
+		{
+			format: "AI",
+			specifier: fromHere("./graphics/illustrator.ts"),
+			binding: "CUBEOFFICE_ILLUSTRATOR_CONTRIBUTION",
+			extensions: ["ai"],
+		},
 		{
 			format: "PSD",
 			specifier: fromHere("../../../packages/psd-host/src/desktop-contribution.ts"),
@@ -228,6 +237,12 @@ const cubeOfficeProfile = {
 				{
 					ext: ["tsv"],
 					mimeType: "text/tab-separated-values",
+					role: "Viewer",
+					rank: "Alternate",
+				},
+				{
+					ext: ["ai"],
+					mimeType: "application/illustrator",
 					role: "Viewer",
 					rank: "Alternate",
 				},

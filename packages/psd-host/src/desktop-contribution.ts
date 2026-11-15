@@ -1,3 +1,5 @@
+import { pngAsPdf } from "../../../profiles/cubeoffice/desktop/graphics/output";
+import { graphicsAppearance } from "../../../profiles/cubeoffice/desktop/graphics/appearance";
 import { save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { PSD_VUE_FORMAT_CONTRIBUTION, createPsdImageServicesFromTransport } from "@cubexp/psd/vue";
@@ -39,6 +41,19 @@ const imageServices = createPsdImageServicesFromTransport(async (operation, byte
 });
 export const CUBEOFFICE_PSD_CONTRIBUTION = {
 	...PSD_VUE_FORMAT_CONTRIBUTION,
+	adaptExposed(...args: Parameters<typeof PSD_VUE_FORMAT_CONTRIBUTION.adaptExposed>) {
+		const surface = PSD_VUE_FORMAT_CONTRIBUTION.adaptExposed(...args);
+		if (!surface) return null;
+		return {
+			...surface,
+			export: async (request: Parameters<typeof surface.export>[0] = {}) => {
+				if (request.format !== "pdf") return surface.export(request);
+				const png = await surface.export({ ...request, format: "png" });
+				return pngAsPdf(png, request.signal);
+			},
+		};
+	},
+
 	createBinding(input: Parameters<typeof PSD_VUE_FORMAT_CONTRIBUTION.createBinding>[0]) {
 		const binding = PSD_VUE_FORMAT_CONTRIBUTION.createBinding(input);
 		let destination: string | null = null;
@@ -61,6 +76,15 @@ export const CUBEOFFICE_PSD_CONTRIBUTION = {
 			fingerprint = await invoke<string>("artifact_fingerprint", { path: destination });
 			return { persisted: true, versionId: fingerprint };
 		};
-		return { ...binding, props: { ...binding.props, imageServices, persistPsd } };
+		return {
+			...binding,
+			props: {
+				...binding.props,
+				imageServices,
+				persistPsd,
+				getAppearance: () => graphicsAppearance.value,
+				showAppearanceToggle: false,
+			},
+		};
 	},
 };

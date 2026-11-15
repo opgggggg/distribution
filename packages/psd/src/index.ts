@@ -68,3 +68,5 @@ export { copyPsdMerged, copyPsdLayer, psdClipboardRegion } from "./render/clipbo
 
 export { halvePsdBitmap, PsdDisplayPyramid } from "./render/display-pyramid";
 export { composePsdRegion, PsdTileCache, type PsdTileRegion } from "./render/tile-cache";
+
+export { encodePsdPng } from "./ai-resources";

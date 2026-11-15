@@ -263,22 +263,31 @@
 	background: #ffffff22;
 }
 
-/* Tool parameters stay with the left tool rail. The flyout overlays the
-   workspace so selecting a tool never shifts the canvas or right inspector. */
+/* Reserve a row for controls above the pasteboard, clear of document pixels. */
+.als-ofs-psd-stage-layout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.als-ofs-psd-stage-layout > .als-ofs-psd-stage {
+	flex: 1 1 0;
+	min-height: 0;
+}
+
 .als-ofs-psd-tool-options {
-	position: absolute;
-	top: 8px;
-	left: 43px;
-	z-index: 40;
-	width: 224px;
-	max-height: calc(100% - 16px);
+	display: flex;
+	flex: 0 0 auto;
+	flex-wrap: wrap;
+	align-items: stretch;
+	max-height: 132px;
+	min-width: 0;
 	overflow: auto;
-	border: 1px solid #161616;
-	border-radius: 0 6px 6px 0;
-	box-shadow: 0 10px 28px #00000088;
-	color: var(--als-ofs-psd-text, #d6d6d6);
-	background: var(--als-ofs-psd-panel, #2b2b2b);
-	color-scheme: dark;
+	border-bottom: 1px solid var(--als-ofs-psd-border);
+	color: var(--als-ofs-psd-text);
+	background: var(--als-ofs-psd-panel);
 }
 
 .als-ofs-psd-editor__shell[data-appearance="dark"] .als-ofs-psd-tool-options,
@@ -303,12 +312,12 @@
 
 .als-ofs-psd-tool-options__header {
 	display: flex;
-	height: 36px;
+	min-height: 40px;
 	align-items: center;
 	gap: 8px;
-	padding: 0 10px;
-	border-bottom: 1px solid var(--als-ofs-psd-border, #1a1a1a);
-	background: var(--als-ofs-psd-panel-alt, #333333);
+	padding: 0 12px;
+	border-inline-end: 1px solid var(--als-ofs-psd-border);
+	background: var(--als-ofs-psd-panel-alt);
 }
 
 .als-ofs-psd-tool-options__header h3 {
@@ -347,12 +356,16 @@
 
 .als-ofs-psd-tool-options__body {
 	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding: 12px;
+	flex: 1 1 260px;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 14px;
+	padding: 6px 12px;
+	min-width: 0;
 }
 
 .als-ofs-psd-tool-options__hint {
+	flex-basis: 100%;
 	margin: 0;
 	color: var(--als-ofs-psd-text-dim, #9a9a9a);
 	font-size: 11px;

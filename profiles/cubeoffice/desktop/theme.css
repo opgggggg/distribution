@@ -526,3 +526,147 @@ button.unsaved-dialog__primary {
 	border-color: var(--als-ofs-ui-selection-indicator);
 	background: var(--als-ofs-ui-selection-indicator);
 }
+
+/* One graphics appearance, shared by the desktop chrome and both image surfaces. */
+.desktop-app[data-graphics-appearance="light"] {
+	--graphics-panel: #ffffff;
+	--graphics-muted: #f5f4f8;
+	--graphics-stage: #eae8f1;
+	--graphics-border: #dedbe8;
+	--graphics-text: #231d35;
+	--graphics-secondary: #605777;
+	--graphics-accent: var(--cubeoffice-primary);
+	--graphics-selected: var(--cubeoffice-soft);
+}
+
+.desktop-app[data-graphics-appearance="dark"] {
+	--graphics-panel: #242132;
+	--graphics-muted: #2e2a3f;
+	--graphics-stage: #191724;
+	--graphics-border: #49425e;
+	--graphics-text: #f4efff;
+	--graphics-secondary: #c4bad8;
+	--graphics-accent: #c9afff;
+	--graphics-selected: #443362;
+}
+
+.desktop-app[data-graphics-appearance]
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview) {
+	--als-ofs-psd-panel: var(--graphics-panel);
+	--als-ofs-psd-panel-alt: var(--graphics-muted);
+	--als-ofs-psd-workspace: var(--graphics-stage);
+	--als-ofs-psd-border: var(--graphics-border);
+	--als-ofs-psd-text: var(--graphics-text);
+	--als-ofs-psd-text-dim: var(--graphics-secondary);
+	--als-ofs-psd-accent: var(--graphics-accent);
+	--als-ofs-psd-active: var(--graphics-selected);
+	--als-ofs-psd-active-text: var(--graphics-text);
+	--als-ofs-pdf-accent: var(--graphics-accent);
+	--als-ofs-pdf-accent-soft: var(--graphics-selected);
+}
+
+.desktop-app[data-graphics-appearance]
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview),
+.desktop-app[data-graphics-appearance]
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview)
+	.als-ofs-editor-ui {
+	--als-ofs-ui-surface: var(--graphics-panel) !important;
+	--als-ofs-ui-surface-muted: var(--graphics-muted) !important;
+	--als-ofs-ui-surface-hover: var(--graphics-selected) !important;
+	--als-ofs-ui-border: var(--graphics-border) !important;
+	--als-ofs-ui-border-strong: var(--graphics-border) !important;
+	--als-ofs-ui-text: var(--graphics-text) !important;
+	--als-ofs-ui-text-muted: var(--graphics-secondary) !important;
+	--als-ofs-ui-text-faint: var(--graphics-secondary) !important;
+	--als-ofs-ui-accent: var(--graphics-accent) !important;
+	--als-ofs-ui-accent-soft: var(--graphics-selected) !important;
+	--als-ofs-ui-selection-indicator: var(--graphics-accent) !important;
+	--als-ofs-ui-focus: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"] > .desktop-titlebar {
+	color-scheme: dark;
+	background: var(--graphics-muted);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .als-ofs-ui-workspace-tabs__tab {
+	color: var(--graphics-secondary);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .als-ofs-ui-workspace-tabs__tab[data-active="true"],
+.desktop-app[data-graphics-appearance="dark"] .desktop-titlebar__actions button {
+	background: var(--graphics-panel);
+	border-color: var(--graphics-border);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .als-ofs-ui-workspace-tabs__kind {
+	color: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance] .als-ofs-psd-layers__row[data-selected],
+.desktop-app[data-graphics-appearance] .desktop-titlebar__actions button[aria-pressed="true"] {
+	background: var(--graphics-selected);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.als-ofs-psd-editor__shell
+	.als-ofs-ui-ribbon-tabs__tab.is-active {
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance] .als-ofs-psd-editor__shell .als-ofs-psd-stage__viewport {
+	background-color: var(--graphics-stage);
+}
+
+.desktop-output-menu {
+	min-height: 24px;
+	padding-inline: 8px;
+	border: 1px solid #c9cbd1;
+	border-radius: 6px;
+	background: #fff;
+	color: #24262b;
+	font: inherit;
+	font-size: 11.5px;
+}
+
+.desktop-output-menu:focus-visible {
+	outline: 2px solid var(--cubeoffice-primary);
+	outline-offset: 2px;
+}
+
+.desktop-app[data-graphics-appearance="dark"] .desktop-output-menu {
+	background: var(--graphics-panel);
+	color: var(--graphics-text);
+	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance]
+	.als-ofs-psd-editor__shell[data-appearance]
+	.als-ofs-psd-layers__row[data-selected] {
+	background: var(--graphics-selected);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.als-ofs-psd-editor__shell
+	.als-ofs-ui-ribbon-surface
+	:is(
+		.als-ofs-ui-ribbon-command-button,
+		.als-ofs-ui-ribbon-command-button__icon,
+		.als-ofs-ui-ribbon-command-button__label,
+		.als-ofs-ui-icon-button
+	):not(:disabled) {
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.als-ofs-psd-editor__shell
+	.als-ofs-ui-ribbon-surface
+	:is(input:not([type="checkbox"]), select) {
+	background: var(--graphics-panel);
+	color: var(--graphics-text);
+	border-color: var(--graphics-border);
+}

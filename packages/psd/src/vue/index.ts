@@ -29,3 +29,5 @@ export {
 	type PsdImageServices,
 	type PsdBackgroundSettings,
 } from "./image-services";
+
+export { capturePsdPreview } from "./thumbnail";

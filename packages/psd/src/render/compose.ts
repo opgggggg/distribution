@@ -8,6 +8,7 @@
  * with source-over alpha.
  */
 
+import { blendGraphicsNormal } from "@cubexp/graphics";
 import { applyLiveAdjustment } from "./adjustment-layers";
 import { applyCurves } from "./curves";
 import {
@@ -150,6 +151,27 @@ export function blendOver(target: PsdBitmap, layer: ComposeLayerInput): void {
 
 	const src = bitmap.data;
 	const dst = target.data;
+
+	if (
+		!mask &&
+		!blend &&
+		!nonSeparable &&
+		Number.isInteger(layer.left) &&
+		Number.isInteger(layer.top)
+	) {
+		const count = (endX - startX) * 4;
+		if (count <= 0) return;
+		for (let y = startY; y < endY; y++) {
+			const s = (y * bitmap.width + startX) * 4;
+			const d = ((layer.top + y) * target.width + (layer.left + startX)) * 4;
+			blendGraphicsNormal(
+				src.subarray(s, s + count),
+				dst.subarray(d, d + count),
+				layerOpacity,
+			);
+		}
+		return;
+	}
 
 	for (let y = startY; y < endY; y++) {
 		for (let x = startX; x < endX; x++) {
@@ -320,7 +342,12 @@ export function composePsdDocument(document: PsdDocument): PsdBitmap {
 	return target;
 }
 
-function composeCurves(target: PsdBitmap, layer: Exclude<PsdLayerNode, { kind: "group" }>, originX = 0, originY = 0): void {
+function composeCurves(
+	target: PsdBitmap,
+	layer: Exclude<PsdLayerNode, { kind: "group" }>,
+	originX = 0,
+	originY = 0,
+): void {
 	if (!layer.curves && !layer.adjustment) return;
 	if (layer.blendMode === "normal" && layer.curves) {
 		applyCurves(target, layer.curves, layer.opacity, layer.mask);

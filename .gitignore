@@ -46,3 +46,5 @@ apps/ios/App/Native/CubeNotes.xcframework/
 apps/ios/CubeOfficeNativeNotes.xcodeproj/
 
 packages/kernels/src/writer-generated.ts
+
+packages/graphics/src/kernel.generated.ts

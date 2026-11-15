@@ -1,3 +1,4 @@
+import { probeGraphicsSource } from "@cubexp/graphics";
 import type {
 	ArtifactCommandResult,
 	ArtifactCreateInput,
@@ -114,16 +115,10 @@ export const PSD_ARTIFACT_PLUGIN: ArtifactPlugin = {
 	async canOpen(input) {
 		if (input.source === undefined) return false;
 		try {
-			const bytes = await artifactSourceToUint8Array(input.source);
-			return (
-				bytes.length >= 6 &&
-				bytes[0] === 0x38 &&
-				bytes[1] === 0x42 &&
-				bytes[2] === 0x50 &&
-				bytes[3] === 0x53 &&
-				bytes[4] === 0 &&
-				bytes[5] === 1
+			const bytes = await artifactSourceToUint8Array(
+				input.source instanceof Blob ? input.source.slice(0, 6) : input.source,
 			);
+			return probeGraphicsSource(bytes) === "psd" && bytes[4] === 0 && bytes[5] === 1;
 		} catch {
 			return false;
 		}

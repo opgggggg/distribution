@@ -281,6 +281,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "cubeoffice-graphics-core"
+version = "0.1.0"
+dependencies = [
+ "png",
+]
+
+[[package]]
 name = "cubeoffice-notes-core"
 version = "0.1.0"
 dependencies = [

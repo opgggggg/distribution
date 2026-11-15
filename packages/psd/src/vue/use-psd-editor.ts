@@ -518,7 +518,7 @@ export function usePsdEditor(options: {
 	const zoom = ref(1);
 	const saveAsOpen = ref(false);
 	const tool = ref<PsdToolId>("move");
-	const toolOptionsOpen = ref(true);
+	const toolOptionsOpen = ref(false);
 	const spacePanActive = ref(false);
 	const viewCommand = ref<"fit" | "actual" | "center" | null>(null);
 	const moveAutoSelect = ref(true);

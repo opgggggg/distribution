@@ -210,9 +210,12 @@ export interface PdfImagePage {
 /** One bounded raw frame and one Rust write for all raster pages. */
 export async function writePdfImages(
 	pages: readonly PdfImagePage[],
+	metadata: { title?: string; creator?: string } = {},
 ): Promise<Uint8Array<ArrayBuffer>> {
 	const header = new TextEncoder().encode(
 		JSON.stringify({
+			title: metadata.title,
+			creator: metadata.creator,
 			pages: pages.map((page) => ({
 				length: page.bytes.byteLength,
 				width: page.width,

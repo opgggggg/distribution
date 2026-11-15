@@ -1,4 +1,4 @@
-import { scaleBitmap, type PsdBitmap } from "@cubexp/psd";
+import { encodePsdPng, scaleBitmap, type PsdBitmap } from "@cubexp/psd";
 
 export type PsdRasterExportFormat = "png" | "jpeg" | "webp";
 
@@ -59,8 +59,18 @@ export function psdBitmapPreviewUrl(bitmap: PsdBitmap, maxWidth = 320, maxHeight
 	).toDataURL("image/png");
 }
 
-export function exportPsdBitmap(bitmap: PsdBitmap, options: PsdRasterExportOptions): Promise<Blob> {
+export async function exportPsdBitmap(
+	bitmap: PsdBitmap,
+	options: PsdRasterExportOptions,
+): Promise<Blob> {
 	const mimeType = `image/${options.format}`;
+	if (options.format === "png" && !options.matte && options.width * options.height <= 16_000_000) {
+		const resized =
+			options.width === bitmap.width && options.height === bitmap.height
+				? bitmap
+				: scaleBitmap(bitmap, options.width, options.height);
+		return new Blob([await encodePsdPng(resized)], { type: mimeType });
+	}
 	const canvas = renderPsdBitmapToCanvas(bitmap, options.width, options.height, options.matte);
 	return new Promise((resolve, reject) => {
 		canvas.toBlob(

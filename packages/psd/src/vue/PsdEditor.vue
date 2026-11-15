@@ -22,6 +22,7 @@ import type {
 } from "./component-types";
 import { PSD_PROJECT_ID, registerProject, registerProjectActivation } from "./psd-project-drag";
 import { PSD_EDITOR_CONTEXT } from "./psd-editor-context";
+import { registerPsdPreview } from "./thumbnail";
 import { usePsdEditor } from "./use-psd-editor";
 import PsdToolStrip from "./PsdToolStrip.vue";
 import PsdToolOptionsPanel from "./PsdToolOptionsPanel.vue";
@@ -55,8 +56,8 @@ const emit = defineEmits<{
 	"update:appearance": [appearance: PsdEditorAppearance];
 }>();
 
-const localAppearance = ref<PsdEditorAppearance>(props.appearance ?? "dark");
-watch(() => props.appearance, value => { if (value) localAppearance.value = value; });
+const localAppearance = ref<PsdEditorAppearance>(props.getAppearance?.() ?? props.appearance ?? "light");
+watch(() => props.getAppearance?.() ?? props.appearance, value => { if (value) localAppearance.value = value; });
 function toggleAppearance() {
  localAppearance.value = localAppearance.value === "dark" ? "light" : "dark";
  emit("update:appearance", localAppearance.value);
@@ -487,6 +488,10 @@ const saveAsName = ref("");
 watch(editor.saveAsOpen, open => { if (open) saveAsName.value = editor.fileName.value; });
 watch(editor.fileName, name => emit("filename", name));
 const rootElement = ref<HTMLElement | null>(null);
+watch(rootElement, (element, _previous, cleanup) => {
+	if (element) cleanup(registerPsdPreview(element, editor.composite));
+});
+
 onMounted(() => {
 	rootElement.value?.addEventListener("keydown", onKeydown);
  if (rootElement.value) {
@@ -605,12 +610,14 @@ defineExpose(api);
 			<template v-if="leftPanel" #left-dock>
 				<div class="als-ofs-psd-left">
 					<PsdToolStrip />
-					<PsdToolOptionsPanel />
 				</div>
 			</template>
 
 			<template #stage>
-				<PsdEditorStage />
+				<div class="als-ofs-psd-stage-layout">
+					<PsdToolOptionsPanel />
+					<PsdEditorStage :show-document-bar="headerMode === 'default'" />
+				</div>
 			</template>
 
 			<template v-if="rightPanel && anyRightPaneVisible && !narrowLayout" #right-dock>

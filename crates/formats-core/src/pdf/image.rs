@@ -411,6 +411,22 @@ pub(super) fn pages_frame(bytes: &[u8]) -> Result<Vec<u8>> {
         .filter(|p| p.len() <= 1000)
         .ok_or_else(|| invalid("Select at most 1000 image pages."))?;
     let mut file = blank()?;
+    let mut info = BTreeMap::new();
+    for (key, field) in [("Title", "title"), ("Creator", "creator")] {
+        if let Some(value) = config[field].as_str() {
+            let mut encoded = vec![0xfe, 0xff];
+            for unit in value.encode_utf16().take(1024) {
+                encoded.extend_from_slice(&unit.to_be_bytes());
+            }
+            info.insert(key.into(), Object::String(encoded));
+        }
+    }
+    if !info.is_empty() {
+        let reference = allocate(&mut file, Object::Dict(info))?;
+        if let Object::Dict(trailer) = &mut file.trailer {
+            trailer.insert("Info".into(), Object::Reference(reference));
+        }
+    }
     // pdf-lib's empty writer added one default A4 page. Retain that behavior
     // for OFD packages with no selected pages, while validating the raw frame.
     if pages.is_empty() {

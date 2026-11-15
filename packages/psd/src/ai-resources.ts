@@ -1,3 +1,4 @@
+import { encodeGraphicsPng } from "@cubexp/graphics";
 import { PsdAiError } from './ai-errors';
 import { psdBase64ToBytes, psdBytesToBase64 } from './codec/base64';
 import type { PsdBitmap } from './codec/document';
@@ -45,22 +46,7 @@ export class PsdAiResources {
  clear() {this.entries.clear(); this.used = 0;}
 }
 
-/** Portable PNG encoder using the platform's standard deflate stream. */
-export async function encodePsdPng(bitmap: PsdBitmap): Promise<Uint8Array> {
- const {width, height, data} = bitmap;
- const raw = new Uint8Array(height * (1 + width * 4));
- for (let y=0; y<height; y++) raw.set(data.subarray(y*width*4,(y+1)*width*4),y*(width*4+1)+1);
- const compressed = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
- const chunk = (type: string, bytes: Uint8Array) => {
-  const out = new Uint8Array(bytes.length+12), view = new DataView(out.buffer);
-  view.setUint32(0, bytes.length); out.set(new TextEncoder().encode(type),4); out.set(bytes,8);
-  let crc=0xffffffff;
-  for (const b of out.subarray(4,out.length-4)) {crc^=b; for(let i=0;i<8;i++) crc=(crc>>>1)^((crc&1)?0xedb88320:0);}
-  view.setUint32(out.length-4,(crc^0xffffffff)>>>0); return out;
- };
- const header = new Uint8Array(13), view = new DataView(header.buffer);
- view.setUint32(0,width);view.setUint32(4,height);header[8]=8;header[9]=6;
- const parts=[new Uint8Array([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',compressed),chunk('IEND',new Uint8Array())];
- const out = new Uint8Array(parts.reduce((n,p)=>n+p.length,0));let offset=0;
- for(const part of parts){out.set(part,offset);offset+=part.length;}return out;
+/** Encode the artwork with the same portable Rust writer as bitmap export. */
+export async function encodePsdPng(bitmap: PsdBitmap): Promise<Uint8Array<ArrayBuffer>> {
+	return encodeGraphicsPng(bitmap.data, bitmap.width, bitmap.height);
 }

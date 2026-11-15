@@ -79,6 +79,8 @@ export interface PsdEditorProps {
 	ribbon?: boolean;
 	/** Controlled shared-shell color scheme. Omit to use the persisted shell preference. */
 	appearance?: PsdEditorAppearance;
+	/** Reactive host appearance for embedded workspaces. */
+	getAppearance?: () => PsdEditorAppearance;
 	/** Show the shared-shell light/dark toggle in the titlebar. */
 	showAppearanceToggle?: boolean;
 	/** Show the label along the bottom of every Ribbon group. */
