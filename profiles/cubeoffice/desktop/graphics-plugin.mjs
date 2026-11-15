@@ -221,12 +221,60 @@ import type { IllustratorCommand, IllustratorMenuState } from ${JSON.stringify(i
 					map: null,
 				};
 			}
+			if (path === root + "SettingsDialog.vue") {
+				source = replaceOnce(
+					source,
+					'<script setup lang="ts">',
+					`<script setup lang="ts">
+import { useUiEditorI18n } from "@yaochn/als-office-editor-ui/vue";
+import { graphicsAppearancePreference, setGraphicsAppearancePreference } from ${JSON.stringify(appearance)};
+
+const i18n = useUiEditorI18n();
+const appearanceCopy = computed(() => i18n.value.locale === "zh-CN"
+	? { label: "外观", help: "设置 PSD 和 Illustrator 编辑器的外观。", system: "跟随系统", light: "浅色", dark: "深色" }
+	: { label: "Appearance", help: "Choose the appearance of the PSD and Illustrator editors.", system: "Follow System", light: "Light", dark: "Dark" });
+const appearanceOptions = computed<UiSelectOption[]>(() => [
+	{ value: "system", label: appearanceCopy.value.system },
+	{ value: "light", label: appearanceCopy.value.light },
+	{ value: "dark", label: appearanceCopy.value.dark },
+]);`,
+				);
+				source = replaceOnce(
+					source,
+					"function restoreDefaults(): void {",
+					`function restoreDefaults(): void {
+	setGraphicsAppearancePreference("system");`,
+				);
+				source = replaceOnce(
+					source,
+					'</section>\n\n\t\t\t<section\n\t\t\t\tv-if="autoUpdateEnabled"',
+					`	<div class="settings-dialog__row settings-dialog__row--select">
+					<span>
+						<strong>{{ appearanceCopy.label }}</strong>
+						<small>{{ appearanceCopy.help }}</small>
+					</span>
+					<div class="settings-dialog__language-select">
+						<UiSelect
+							:aria-label="appearanceCopy.label"
+							:model-value="graphicsAppearancePreference"
+							:options="appearanceOptions"
+							@update:model-value="setGraphicsAppearancePreference"
+						/>
+					</div>
+				</div>
+			</section>
+
+			<section
+				v-if="autoUpdateEnabled"`,
+				);
+				return { code: source, map: null };
+			}
 			if (path !== root + "App.vue") return;
 			source = replaceOnce(
 				source,
 				'<script setup lang="ts">',
 				`<script setup lang="ts">
-import { graphicsAppearance, toggleGraphicsAppearance } from ${JSON.stringify(appearance)};
+import { graphicsAppearance } from ${JSON.stringify(appearance)};
 import { canOutputDocument, graphicsExportLabel, rasterizePdfFirstPage } from ${JSON.stringify(output)};
 import { saveBlobToChosenPath } from ${JSON.stringify(download)};
 
@@ -263,19 +311,6 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 				'class="desktop-app"',
 				`class="desktop-app"
 				:data-graphics-appearance="document?.format === 'psd' || document?.format === 'ai' ? graphicsAppearance : undefined"`,
-			);
-			source = replaceOnce(
-				source,
-				'<div class="desktop-titlebar__actions" data-no-drag>',
-				`<div class="desktop-titlebar__actions" data-no-drag>
-				<button
-					v-if="document?.format === 'psd' || document?.format === 'ai'"
-					type="button"
-					:aria-pressed="graphicsAppearance === 'dark'"
-					@click="toggleGraphicsAppearance"
-				>
-					{{ appLanguage === 'zh-CN' ? '深色外观' : 'Dark appearance' }}
-				</button>`,
 			);
 			source = replaceOnce(
 				source,
