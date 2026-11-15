@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType, type VNode, type VNodeChild } from "vue";
+import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type Component, type PropType, type VNode, type VNodeChild } from "vue";
 import { openEpub, type EpubBook, type EpubTocItem } from "../book.js";
 import type { EpubSource } from "../archive.js";
 import { searchBook, type EpubSearchResult } from "../content.js";
@@ -53,6 +53,8 @@ export const EpubReader = defineComponent({
 		exitable: { type: Boolean, default: false },
 		/** Hosts share document navigation; reader actions stay in the bottom controls. */
 		hostNavigation: { type: Boolean, default: false },
+		/** Optional desktop host commands. The reader owns navigation and search state. */
+		desktopToolbar: { type: Object as PropType<Component> },
 		/** "auto" picks the touch layout for coarse pointers and narrow hosts. */
 		form: { type: String as PropType<"auto" | "touch" | "desktop">, default: "auto" },
 	},
@@ -275,7 +277,13 @@ export const EpubReader = defineComponent({
 			const mod = event.metaKey || event.ctrlKey;
 			const rtl = book.value?.direction === "rtl";
 			const handled = () => { event.preventDefault(); event.stopPropagation(); };
-			if (mod && event.key.toLowerCase() === "f") { handled(); openPanel("search", undefined, true); return; }
+			if (mod && event.key.toLowerCase() === "f") {
+				handled();
+				const field = root.value?.querySelector<HTMLInputElement>("[data-epub-host-toolbar] input");
+				if (field) field.focus();
+				else openPanel("search", undefined, true);
+				return;
+			}
 			if (mod && (event.key === "=" || event.key === "+")) { handled(); stepFont(1); return; }
 			if (mod && event.key === "-") { handled(); stepFont(-1); return; }
 			if (mod && event.key.toLowerCase() === "d") { handled(); toggleBookmark(); return; }
@@ -746,7 +754,9 @@ export const EpubReader = defineComponent({
 					h("span", { class: "cubexp-epub-menu__divider" }),
 					button({ icon: "note", label: m.note, onClick: () => addHighlight("yellow", true) }),
 					button({ icon: "copy", label: m.copy, onClick: () => void copy(current.text) }),
-					button({ icon: "search", label: m.searchSelection, onClick: () => { const text = current.text.slice(0, 80); view?.clearSelection(); openPanel("search", undefined, true); scheduleSearch(text, true); } }),
+					button({ icon: "search", label: m.searchSelection, onClick: () => { const text = current.text.slice(0, 80); view?.clearSelection(); if (props.desktopToolbar && !touch.value) root.value?.querySelector<HTMLInputElement>("[data-epub-host-toolbar] input")?.focus();
+						else openPanel("search", undefined, true);
+						scheduleSearch(text, true); } }),
 				]));
 			}
 			if (annotationMenu.value) {
@@ -919,6 +929,37 @@ export const EpubReader = defineComponent({
 
 		function renderToolbar(): VNode {
 			const m = t.value;
+			if (props.desktopToolbar) {
+				const state = search.value;
+				return h(props.desktopToolbar, {
+					"data-epub-host-toolbar": "",
+					searchLabel: m.searchPlaceholder,
+					query: state.query,
+					results: state.ran === state.query.trim() ? state.results.map((result, index) => ({
+						id: String(index),
+						label: chapterLabel(result.index),
+						description: result.before + result.match + result.after,
+						descriptionRange: { start: result.before.length, end: result.before.length + result.match.length },
+					})) : [],
+					activeResult: state.active >= 0 ? String(state.active) : undefined,
+					sidebarLabel: m.toggleSidebar,
+					sidebarOpen: sidebar.value,
+					bookmarkLabel: currentBookmark.value ? m.removeBookmark : m.addBookmark,
+					bookmarked: Boolean(currentBookmark.value),
+					appearanceLabel: m.appearance,
+					ready: Boolean(book.value && !opening.value),
+					onSearch: scheduleSearch,
+					onSelectResult: (id: string) => openSearchResult(Number(id)),
+					onSubmitSearch: (direction: 1 | -1) => {
+						const count = state.results.length;
+						if (!count || state.ran !== state.query.trim()) { scheduleSearch(state.query, true); return; }
+						const position = state.active < 0 && direction < 0 ? count - 1 : (state.active + direction + count) % count;
+						openSearchResult(position);
+					},
+					onToggleSidebar: () => { sidebar.value = !sidebar.value; if (sidebar.value) scrollCurrentIntoView(); },
+					onToggleBookmark: toggleBookmark,
+				}, { default: renderAppearance });
+			}
 			return h("header", { class: "cubexp-epub-toolbar" }, [
 				button({ icon: "sidebar", label: m.toggleSidebar, active: sidebar.value, pressed: sidebar.value, onClick: () => { sidebar.value = !sidebar.value; if (sidebar.value) scrollCurrentIntoView(); } }),
 				h("div", { class: "cubexp-epub-toolbar__title" }, [h("strong", book.value?.metadata.title ?? props.fileName), currentChapter.value && currentChapter.value !== book.value?.metadata.title ? h("span", currentChapter.value) : null]),

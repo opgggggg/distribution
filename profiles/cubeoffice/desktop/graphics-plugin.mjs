@@ -95,6 +95,16 @@ export function cubeOfficeGraphicsPlugin() {
 					map: null,
 				};
 			}
+			if (historyEditorPath === "html/src/vue/HtmlEditor.vue") {
+				return {
+					code: replaceOnce(
+						source,
+						"defineExpose({ ...api, api });",
+						"defineExpose({ ...api, api, getHistoryState: () => ({ canUndo: api.canUndo(), canRedo: api.canRedo() }) });",
+					),
+					map: null,
+				};
+			}
 			if (historyEditorPath === "xlsx/src/vue/use-xlsx-editor.ts") {
 				return {
 					code: replaceOnce(
@@ -103,6 +113,22 @@ export function cubeOfficeGraphicsPlugin() {
 						`watch(grid, (current, _previous, onCleanup) => {
 				if (current) onCleanup(current.subscribe(listener));
 			}, { immediate: true }),`,
+					),
+					map: null,
+				};
+			}
+			if (path === root + "DesktopPdfSurface.vue") {
+				return {
+					code: replaceOnce(
+						source,
+						'<template #file="{ loading }">',
+						`<template #file="{ loading }">
+			<UiRibbonCommandButton
+				data-editor-file-command="open"
+				icon="open-file"
+				:label="i18n.t('common.open')"
+				size="lg"
+			/>`,
 					),
 					map: null,
 				};

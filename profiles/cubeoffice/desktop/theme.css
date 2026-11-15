@@ -357,7 +357,13 @@ button.unsaved-dialog__primary {
 	--als-ofs-ui-color-accent-subtle: var(--cubeoffice-surface) !important;
 }
 
-/* Match the desktop ribbon height for formats with dedicated read-only viewers. */
+/* Read-only conversions use the same ribbon as the document surfaces. */
+.desktop-app .cubeoffice-conversion-ribbon {
+	flex: 0 0 auto;
+	width: 100%;
+	height: auto;
+}
+
 .desktop-app .desktop-readonly-conversion-ribbon {
 	--als-ofs-ui-ribbon-tabs-height: 36px;
 	--als-ofs-ui-ribbon-commands-height: 98px;
@@ -820,6 +826,7 @@ button.unsaved-dialog__primary {
 .document-host[data-shared-history="true"]
 	:is(
 		.als-ofs-docx-office-editor__compact-history,
+		.als-ofs-html-editor .als-ofs-ui-ribbon-tab-actions .als-ofs-ui-quick-access-toolbar,
 		.als-ofs-docx-office-editor__compact-actions > button:has([data-icon-name="save"]),
 		.als-ofs-xlsx-compact-actions .als-ofs-ui-quick-access-toolbar,
 		.als-ofs-image-editor__compact-actions .als-ofs-ui-quick-access-toolbar,

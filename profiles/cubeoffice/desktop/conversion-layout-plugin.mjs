@@ -10,12 +10,33 @@ export function cubeOfficeConversionLayoutPlugin() {
 		name: "cubeoffice-conversion-layout",
 		enforce: "pre",
 		transform(source, id) {
-			if (id.replaceAll("\\", "/") !== app) return;
+			const modulePath = id.replaceAll("\\", "/");
+			if (modulePath === app.replace(/App\.vue$/, "ReadonlyConversionRibbon.vue")) {
+				return {
+					code: source
+						.replace("useUiEditorI18n,", "useUiEditorI18n,\n\tuseUiEditorPalette,")
+						.replace(
+							"const i18n = useUiEditorI18n();",
+							"const i18n = useUiEditorI18n();\nconst palette = useUiEditorPalette();",
+						)
+						.replace(
+							"<template>\n\t<UiRibbonSurface",
+							`<template>
+	<div class="cubeoffice-conversion-ribbon als-ofs-ui-editor-shell als-ofs-editor-ui"
+		:data-editor-palette="palette" data-editor-ribbon-mode="desktop">
+	<UiRibbonSurface mode="desktop"`,
+						)
+						.replace("\n</template>\n\n<style", "\n\t</div>\n</template>\n\n<style"),
+					map: null,
+				};
+			}
+			if (modulePath !== app) return;
 			const replacements = [
 				[
 					"const conversionReadonly = Boolean(tab.document.conversion);",
 					`const conversionReadonly = Boolean(tab.document.conversion);
-	const useOfficeEditor = usesOfficeConversionEditor(tab);`,
+	const useOfficeEditor = conversionReadonly &&
+		["docx", "pptx", "vsdx"].includes(tab.document.format);`,
 				],
 				[
 					'{ role: "viewer" as const, readonly: true }',
@@ -30,28 +51,6 @@ export function cubeOfficeConversionLayoutPlugin() {
 			...(useOfficeEditor && tab.document.format === "pptx" ? { editor: true, rightPanel: false } : {}),
 		},`,
 				],
-				[
-					"const activeConversion = computed(() => activeTab.value?.document.conversion ?? null);",
-					`function usesOfficeConversionEditor(tab: ArtifactTab | null): boolean {
-	return Boolean(tab?.document.conversion &&
-		["docx", "pptx", "vsdx"].includes(tab.document.format));
-}
-const activeConversion = computed(() => activeTab.value?.document.conversion ?? null);
-`,
-				],
-				[
-					'<div class="desktop-titlebar__actions" data-no-drag>',
-					`<div class="desktop-titlebar__actions" data-no-drag>
-				<button
-					v-if="activeConversion && !activeTab?.opening && !activeTab?.openError"
-					type="button"
-					:disabled="busy"
-					@click="convertCurrentReadonlyArtifact"
-				>
-					{{ shellCopy.convertToFormat.replace('{format}', activeConversion.targetFormat.toUpperCase()) }}
-				</button>`,
-				],
-				['import ReadonlyConversionRibbon from "./ReadonlyConversionRibbon.vue";', ""],
 			];
 			for (const [before, after] of replacements) {
 				if (source.split(before).length !== 2) {
@@ -61,10 +60,7 @@ const activeConversion = computed(() => activeTab.value?.document.conversion ?? 
 				}
 				source = source.replace(before, after);
 			}
-			const ribbon = /<ReadonlyConversionRibbon\b[^]*?\n[ \t]*\/>/gu;
-			if ([...source.matchAll(ribbon)].length !== 1)
-				throw new Error("Upstream read-only conversion ribbon changed.");
-			return { code: source.replace(ribbon, ""), map: null };
+			return { code: source, map: null };
 		},
 	};
 }
