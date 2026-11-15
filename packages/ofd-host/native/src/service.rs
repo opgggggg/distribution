@@ -20,6 +20,7 @@ struct Upload {
     height: f64,
 }
 pub struct Service {
+    images: crate::psd_images::Images,
     state_dir: PathBuf,
     input_dir: PathBuf,
     sessions: Mutex<HashMap<String, Arc<Session>>>,
@@ -59,6 +60,7 @@ impl Service {
         let trust = TrustStore::load(&state_dir)?;
         let ledger = Ledger::load(&state_dir)?;
         Ok(Self {
+            images: crate::psd_images::Images::new(state_dir.join("psd-images"), resource_dir)?,
             media: MediaEngine::load(resource_dir),
             state_dir,
             input_dir,
@@ -88,6 +90,9 @@ impl Service {
     }
     pub fn dispatch(&self, method: &str, p: Value) -> Result<Value> {
         match method {
+            "psd.image.read" => self.images.read(&p),
+            "psd.image.release" => self.images.release(&p),
+            "psd.image.capabilities" => Ok(json!({"available": self.images.available()})),
             "capabilities" => Ok(
                 json!({"media":self.media.capabilities,"printing":printing::capabilities(),"signatures":{"cms":true,"ses":[1,4,5],"sm2":true,"sm3":true},"sourceLimit":MAX_SOURCE}),
             ),
@@ -107,6 +112,9 @@ impl Service {
                 }
                 if std::fs::metadata(&path).map_err(|e| e.to_string())?.len() > MAX_SOURCE {
                     return Err("Upload is too large".into());
+                }
+                if meta["kind"] == "psd-image" {
+                    return self.images.process(&path, meta);
                 }
                 if meta["kind"] == "document" {
                     let name = meta["name"].as_str().unwrap_or("document.ofd");

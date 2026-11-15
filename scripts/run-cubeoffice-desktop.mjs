@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { withNativeBranding } from "./cubeoffice-branding.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
-for (const script of ["build:text", "build:ofd"]) {
+for (const script of ["build:text", "build:ofd", "build:psd"]) {
 	const build = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", script], {
 		cwd: repositoryRoot,
 		// Node refuses to spawn a .cmd without a shell, so a Windows build dies

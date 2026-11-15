@@ -1,0 +1,21 @@
+{
+	"extends": "./tsconfig.vue.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"declarationMap": false,
+		"outDir": "dist/vue",
+		"rootDir": "src/vue",
+		"skipLibCheck": true,
+		"paths": {
+			"@cubexp/psd": [
+				"dist/types/index.d.ts"
+			]
+		}
+	},
+	"files": [
+		"src/vue/index.ts"
+	],
+	"include": []
+}

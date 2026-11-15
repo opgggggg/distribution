@@ -27,6 +27,22 @@ export function cubeOfficeLargeTextPlugin() {
 		],
 		"app/document-opening.ts": [
 			[
+				"\t/** Publish the tab before permission checks, file IO or model preparation. */",
+				"\t/** Publish the tab before loading file contents or preparing the model. */",
+			],
+			[
+				"\t\tconst name = path.split(",
+				'\t\tif (access === "recent") await allowRecentDocument(path);\n\t\tif (access === "drop") await allowDroppedDocument(path);\n\t\tconst size = await artifactSize(path);\n\t\tconst existing = await activateOpenPath(path);\n\t\tif (existing) return existing;\n\t\tconst name = path.split(',
+			],
+			[
+				'\t\t\tif (access === "recent") await allowRecentDocument(path);\n\t\t\tif (access === "drop") await allowDroppedDocument(path);\n',
+				"",
+			],
+			[
+				"await ports.withMemoryOpening(tab.id, await artifactSize(path), load)",
+				"await ports.withMemoryOpening(tab.id, size, load)",
+			],
+			[
 				"const source = next.bytes.byteLength\n\t\t\t? new Blob([next.bytes as BlobPart], { type: mimeTypeForFormat(next.format) })\n\t\t\t: null;",
 				"const source = next.source ?? (next.bytes.byteLength\n\t\t\t? new Blob([next.bytes as BlobPart], { type: mimeTypeForFormat(next.format) })\n\t\t\t: null);",
 			],

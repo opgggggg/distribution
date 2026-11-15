@@ -5,5 +5,3 @@ import DesktopWelcomePanel from "../../../als-office/apps/desktop/src/DesktopWel
 <template>
 	<DesktopWelcomePanel v-bind="$attrs" />
 </template>
-
-<style src="./theme.css"></style>

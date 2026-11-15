@@ -1,0 +1,402 @@
+{
+  "reference": "Compositor a19db90",
+  "fixture": "64x64 RGB ramps; opaque and 0/64/128/255 alpha; premultiplied 8-bit comparison",
+  "rows": [
+    {
+      "operation": "grain",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "lens",
+      "alpha": false,
+      "mae": 0.0037,
+      "rmse": 0.0605,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "noise",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "gradient-map",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "normal",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "multiply",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "screen",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "overlay",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "darken",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "lighten",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "color-dodge",
+      "alpha": false,
+      "mae": 26.9929,
+      "rmse": 45.7529,
+      "max": 124,
+      "over2Percent": 53.888,
+      "status": "known-semantic-difference"
+    },
+    {
+      "operation": "color-burn",
+      "alpha": false,
+      "mae": 23.6492,
+      "rmse": 51.981,
+      "max": 237,
+      "over2Percent": 33.411,
+      "status": "known-semantic-difference"
+    },
+    {
+      "operation": "soft-light",
+      "alpha": false,
+      "mae": 3.0861,
+      "rmse": 5.8825,
+      "max": 15,
+      "over2Percent": 29.382,
+      "status": "known-semantic-difference"
+    },
+    {
+      "operation": "hard-light",
+      "alpha": false,
+      "mae": 0.0046,
+      "rmse": 0.0681,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "difference",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "exclusion",
+      "alpha": false,
+      "mae": 0,
+      "rmse": 0,
+      "max": 0,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "hue",
+      "alpha": false,
+      "mae": 0.0447,
+      "rmse": 0.2142,
+      "max": 3,
+      "over2Percent": 0.006,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "saturation",
+      "alpha": false,
+      "mae": 0.0397,
+      "rmse": 0.2082,
+      "max": 3,
+      "over2Percent": 0.018,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "color",
+      "alpha": false,
+      "mae": 0.0112,
+      "rmse": 0.1057,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "luminosity",
+      "alpha": false,
+      "mae": 0.011,
+      "rmse": 0.1048,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "gaussian",
+      "alpha": false,
+      "mae": 0.2399,
+      "rmse": 0.4927,
+      "max": 2,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "motion",
+      "alpha": false,
+      "mae": 0.0712,
+      "rmse": 0.2668,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "grain",
+      "alpha": true,
+      "mae": 0.0978,
+      "rmse": 0.3128,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "lens",
+      "alpha": true,
+      "mae": 0.1266,
+      "rmse": 0.3559,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "noise",
+      "alpha": true,
+      "mae": 0.0931,
+      "rmse": 0.3051,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "gradient-map",
+      "alpha": true,
+      "mae": 0.0787,
+      "rmse": 0.2806,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "normal",
+      "alpha": true,
+      "mae": 0.1794,
+      "rmse": 0.4235,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "multiply",
+      "alpha": true,
+      "mae": 0.2283,
+      "rmse": 0.4778,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "screen",
+      "alpha": true,
+      "mae": 0.1806,
+      "rmse": 0.425,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "overlay",
+      "alpha": true,
+      "mae": 0.1719,
+      "rmse": 0.4169,
+      "max": 2,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "darken",
+      "alpha": true,
+      "mae": 0.1489,
+      "rmse": 0.3859,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "lighten",
+      "alpha": true,
+      "mae": 0.176,
+      "rmse": 0.4195,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "color-dodge",
+      "alpha": true,
+      "mae": 9.6857,
+      "rmse": 23.9534,
+      "max": 124,
+      "over2Percent": 34.674,
+      "status": "known-semantic-difference"
+    },
+    {
+      "operation": "color-burn",
+      "alpha": true,
+      "mae": 8.2552,
+      "rmse": 25.1427,
+      "max": 237,
+      "over2Percent": 35.901,
+      "status": "known-semantic-difference"
+    },
+    {
+      "operation": "soft-light",
+      "alpha": true,
+      "mae": 1.1133,
+      "rmse": 3.0678,
+      "max": 15,
+      "over2Percent": 11.298,
+      "status": "known-semantic-difference"
+    },
+    {
+      "operation": "hard-light",
+      "alpha": true,
+      "mae": 0.1834,
+      "rmse": 0.4283,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "difference",
+      "alpha": true,
+      "mae": 0.1158,
+      "rmse": 0.3403,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "exclusion",
+      "alpha": true,
+      "mae": 0.1435,
+      "rmse": 0.3788,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "hue",
+      "alpha": true,
+      "mae": 0.1647,
+      "rmse": 0.425,
+      "max": 4,
+      "over2Percent": 0.012,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "saturation",
+      "alpha": true,
+      "mae": 0.1656,
+      "rmse": 0.4367,
+      "max": 7,
+      "over2Percent": 0.079,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "color",
+      "alpha": true,
+      "mae": 0.1608,
+      "rmse": 0.4248,
+      "max": 3,
+      "over2Percent": 0.012,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "luminosity",
+      "alpha": true,
+      "mae": 0.1992,
+      "rmse": 0.4535,
+      "max": 3,
+      "over2Percent": 0.012,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "gaussian",
+      "alpha": true,
+      "mae": 0.1741,
+      "rmse": 0.4173,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    },
+    {
+      "operation": "motion",
+      "alpha": true,
+      "mae": 0.1677,
+      "rmse": 0.4095,
+      "max": 1,
+      "over2Percent": 0,
+      "status": "within-tolerance"
+    }
+  ]
+}

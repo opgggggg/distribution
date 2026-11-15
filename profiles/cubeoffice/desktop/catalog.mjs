@@ -41,6 +41,7 @@ const cubeOfficeProfile = {
 			...officeProfile.supportedExtensions,
 			...TEXT_EXTENSIONS,
 			"ofd",
+			"psd",
 			...EPUB_EXTENSIONS,
 			...NOTES_EXTENSIONS,
 		]),
@@ -50,6 +51,7 @@ const cubeOfficeProfile = {
 			...officeProfile.openDocumentExtensions,
 			...TEXT_EXTENSIONS,
 			"ofd",
+			"psd",
 			...EPUB_EXTENSIONS,
 			...NOTES_EXTENSIONS,
 		]),
@@ -64,12 +66,19 @@ const cubeOfficeProfile = {
 		"JSON",
 		"XML",
 		"PY",
+		"PSD",
 		"EPUB",
 		"CUBENOTE",
 	],
 	id: "cubeoffice",
 	readonlyConversionExtensions: [...(officeProfile.readonlyConversionExtensions ?? []), "ofd"],
 	formatContributions: [
+		{
+			format: "PSD",
+			specifier: fromHere("../../../packages/psd-host/src/desktop-contribution.ts"),
+			binding: "CUBEOFFICE_PSD_CONTRIBUTION",
+			extensions: ["psd"],
+		},
 		{
 			format: "NOTES",
 			specifier: fromHere("./notes-contribution.ts"),
@@ -203,6 +212,12 @@ const cubeOfficeProfile = {
 					role: "Editor",
 					rank: "Alternate",
 				},
+				{
+					ext: ["psd"],
+					mimeType: "image/vnd.adobe.photoshop",
+					role: "Editor",
+					rank: "Alternate",
+				},
 				{ ext: ["ofd"], mimeType: "application/ofd", role: "Viewer", rank: "Alternate" },
 				{
 					ext: [...EPUB_EXTENSIONS],
@@ -216,6 +231,7 @@ const cubeOfficeProfile = {
 			externalBin: [
 				"binaries/cubeoffice",
 				"binaries/cubeoffice-ofd-service",
+				...(process.platform === "darwin" ? ["binaries/cubeoffice-psd-images"] : []),
 				...(bundleOfdMedia
 					? ["binaries/cubeoffice-ffmpeg", "binaries/cubeoffice-ffprobe"]
 					: []),

@@ -10,6 +10,7 @@ Platform distribution shells for AuroraPrime Office:
   payload and serving it through a custom URL scheme handler. The Xcode project is
   generated from `project.yml` (XcodeGen) rather than committed.
 - `als-office`: pinned upstream editor engine dependency.
+- `packages/psd`: PSD parser, writer, layer renderer and Vue editor (`npm run build:psd`, `npm run test:psd`).
 - `packages/text`: text reader, Vue viewer and CodeMirror editor with highlight.js syntax highlighting and CubeOffice Ribbon file actions (`npm run build:text`, `npm run test:text`).
 - `packages/epub`: EPUB parser, paginated iframe renderer and a Vue reader with desktop (sidebar, toolbar) and touch (tap zones, swipe, bottom sheets) layouts; registered on desktop through the CubeOffice profile and on Android, iOS and HarmonyOS through the shared mobile host (`npm run build:epub`, `npm run test:epub`).
 - `packages/notes`: CubeOffice's own paginated handwriting editor, native `.cubenote` storage, basic Xournal interchange and PDF appearance export; registered on desktop and all shared mobile hosts (`npm run build:notes`, `npm run test:notes`). [Design and UX research](docs/cubeoffice-notes.md), [format and package documentation](packages/notes/README.md).

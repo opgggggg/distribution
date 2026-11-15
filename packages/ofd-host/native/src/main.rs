@@ -4,6 +4,7 @@ mod document;
 mod media;
 mod platform_trust;
 mod printing;
+mod psd_images;
 mod revocation;
 mod service;
 mod trust;

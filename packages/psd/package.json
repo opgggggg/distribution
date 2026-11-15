@@ -1,0 +1,68 @@
+{
+	"name": "@cubexp/psd",
+	"version": "0.1.0",
+	"license": "Apache-2.0",
+	"type": "module",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"native",
+		"THIRD_PARTY_NOTICES.md"
+	],
+	"types": "dist/types/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/psd.mjs"
+		},
+		"./vue": {
+			"types": "./dist/vue/index.d.ts",
+			"import": "./dist/vue/index.js"
+		},
+		"./vue/PsdViewer.vue": {
+			"types": "./dist/vue/PsdViewer.vue.d.ts",
+			"import": "./dist/vue/PsdViewer.vue.js"
+		},
+		"./vue/PsdEditor.vue": {
+			"types": "./dist/vue/PsdEditor.vue.d.ts",
+			"import": "./dist/vue/PsdEditor.vue.js"
+		},
+		"./vue/styles.css": "./dist/vue/styles.css",
+		"./vue/PsdWorkspace.vue": {
+			"types": "./dist/vue/PsdWorkspace.vue.d.ts",
+			"import": "./dist/vue/PsdWorkspace.vue.js"
+		},
+		"./native/vite-plugin": "./native/vite-plugin.mjs"
+	},
+	"peerDependencies": {
+		"vue": "^3.5.0"
+	},
+	"dependencies": {
+		"@yaochn/als-office-editor-core": ">=0.85.2 <1",
+		"@yaochn/als-office-editor-ui": ">=0.85.2 <1",
+		"@yaochn/als-office-ooxml-core": ">=0.85.2 <1",
+		"utif": "^3.1.0"
+	},
+	"devDependencies": {
+		"@rollup/plugin-node-resolve": "^16.0.3",
+		"@rollup/plugin-typescript": "^12.1.4",
+		"@vitejs/plugin-vue": "^5.2.0",
+		"rollup": "^4.9.1",
+		"tslib": "^2.4.0",
+		"typescript": "^5.0.3",
+		"vite": "^6.4.3",
+		"vue": "3.5.43",
+		"vue-tsc": "^3.3.8"
+	},
+	"scripts": {
+		"build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && rollup --config rollup.config.mjs && tsc -p tsconfig.dts.json && vue-tsc -p tsconfig.vue-dts.json && vite build --config vite.lib.config.mjs",
+		"check:types": "tsc -p tsconfig.json && vue-tsc -p tsconfig.vue.json --noEmit",
+		"test": "npm run build && npm run test:built",
+		"test:built": "node tests/packbits.mjs && node tests/codec-roundtrip.mjs && node tests/compose.mjs && node tests/raster-ops.mjs && node tests/filters-selection.mjs && node tests/session.mjs && node tests/action-required-fields.mjs && node tests/ai-surface.mjs && node tests/artifact-plugin.mjs && node tests/editing-session-e2e.mjs && node tests/masks.mjs && node tests/non-destructive.mjs && node tests/adjustments-retouch.mjs && node tests/clone-merged.mjs && node tests/grain.mjs && node tests/parity-tools.mjs && node tests/tiles-performance.mjs && node tests/agent-workflows.mjs",
+		"build:native": "node native/build.mjs",
+		"test:quality": "node tests/quality-compare.mjs",
+		"test:performance": "node tests/tiles-performance.mjs --benchmark",
+		"test:native-desktop": "node tests/native-desktop.mjs"
+	}
+}

@@ -27,6 +27,20 @@ const sourceRoot = path.join(root, "packages/ofd-host"),
 	native = path.join(sourceRoot, "native"),
 	destination = path.join(root, "als-office/apps/desktop/src-tauri/binaries");
 mkdirSync(destination, { recursive: true });
+if (target.includes("apple-darwin")) {
+	const arch = target.startsWith("aarch64") ? "arm64" : "x86_64";
+	const built = spawnSync(
+		process.execPath,
+		[path.join(root, "packages/psd/native/build.mjs"), "--arch", arch],
+		{ stdio: "inherit" },
+	);
+	if (built.status !== 0) throw Error("PSD native helper build failed");
+	copyFileSync(
+		path.join(root, "packages/psd/native/bin/psd-images"),
+		path.join(destination, `cubeoffice-psd-images-${target}`),
+	);
+	chmodSync(path.join(destination, `cubeoffice-psd-images-${target}`), 0o755);
+}
 const preparedService = path.join(destination, `cubeoffice-ofd-service-${target}${extension}`);
 // Building the OFD host again is the slowest part of a Windows rebuild and it
 // only depends on the sidecar sources, so let a repeat build reuse it.

@@ -1,16 +1,16 @@
 :root {
-	--cubeoffice-primary: #4f46e5;
-	--cubeoffice-strong: #312e81;
-	--cubeoffice-light: #818cf8;
-	--cubeoffice-shadow: rgb(79 70 229 / 25%);
-	--cubeoffice-ring: rgb(79 70 229 / 32%);
-	--cubeoffice-glow: rgb(129 140 248 / 22%);
-	--cubeoffice-border: rgb(79 70 229 / 22%);
-	--cubeoffice-border-soft: rgb(79 70 229 / 11%);
-	--cubeoffice-surface: #eef2ff;
-	--cubeoffice-soft: #e0e7ff;
+	--cubeoffice-primary: #6d28d9;
+	--cubeoffice-strong: #4c1d95;
+	--cubeoffice-light: #a78bfa;
+	--cubeoffice-shadow: rgb(109 40 217 / 25%);
+	--cubeoffice-ring: rgb(109 40 217 / 32%);
+	--cubeoffice-glow: rgb(167 139 250 / 22%);
+	--cubeoffice-border: rgb(109 40 217 / 22%);
+	--cubeoffice-border-soft: rgb(109 40 217 / 11%);
+	--cubeoffice-surface: #f5f0ff;
+	--cubeoffice-soft: #ede4ff;
 	--cubeoffice-stage: #f5f3ff;
-	--cubeoffice-highlight: #c7d2fe;
+	--cubeoffice-highlight: #ddd0ff;
 }
 
 .desktop-app {
@@ -54,7 +54,7 @@
 
 .desktop-welcome__open {
 	border-color: var(--cubeoffice-strong) !important;
-	background: linear-gradient(var(--cubeoffice-light), var(--cubeoffice-primary)) !important;
+	background: linear-gradient(var(--cubeoffice-primary), var(--cubeoffice-strong)) !important;
 	box-shadow: 0 7px 18px var(--cubeoffice-shadow) !important;
 }
 
@@ -185,11 +185,11 @@
 
 .ai-connect__primary {
 	border-color: var(--cubeoffice-strong) !important;
-	background: linear-gradient(var(--cubeoffice-light), var(--cubeoffice-primary)) !important;
+	background: linear-gradient(var(--cubeoffice-primary), var(--cubeoffice-strong)) !important;
 }
 
 .ai-connect__primary:hover:not(:disabled) {
-	background: linear-gradient(var(--cubeoffice-primary), var(--cubeoffice-strong)) !important;
+	background: var(--cubeoffice-strong) !important;
 }
 
 .ai-connect__secondary:hover:not(:disabled) {
@@ -290,7 +290,7 @@
 
 button.unsaved-dialog__primary {
 	border-color: var(--cubeoffice-strong) !important;
-	background: linear-gradient(var(--cubeoffice-light), var(--cubeoffice-primary)) !important;
+	background: linear-gradient(var(--cubeoffice-primary), var(--cubeoffice-strong)) !important;
 }
 
 .update-dialog__indeterminate::after {
@@ -333,4 +333,135 @@ button.unsaved-dialog__primary {
 .feedback-dialog,
 .client-services-settings {
 	--als-ofs-ui-accent: var(--cubeoffice-primary);
+}
+
+/* Apply the distribution palette to shared editor controls and teleported menus. */
+[data-editor-palette="alphalife"],
+[data-editor-palette="alphalife"] .als-ofs-editor-ui,
+[data-editor-palette="alphalife"] .als-ofs-editor-ui-popover,
+.desktop-readonly-conversion-ribbon {
+	--als-ofs-ui-accent: var(--cubeoffice-primary) !important;
+	--als-ofs-ui-accent-hover: var(--cubeoffice-strong) !important;
+	--als-ofs-ui-accent-soft: var(--cubeoffice-soft) !important;
+	--als-ofs-ui-focus: var(--cubeoffice-primary) !important;
+	--als-ofs-ui-selection-indicator: var(--cubeoffice-primary) !important;
+	--als-ofs-ui-gallery-selected-surface: var(--cubeoffice-surface) !important;
+	--als-ofs-ui-surface-selected: var(--cubeoffice-surface) !important;
+	--als-ofs-ui-primary: var(--cubeoffice-primary) !important;
+	--als-ofs-ui-primary-hover: var(--cubeoffice-strong) !important;
+	--als-ofs-ui-accent-subtle: var(--cubeoffice-surface) !important;
+	--als-ofs-ui-selected: var(--cubeoffice-soft) !important;
+	--als-ofs-ui-selected-text: var(--cubeoffice-strong) !important;
+	--als-ofs-ui-color-accent: var(--cubeoffice-primary) !important;
+	--als-ofs-ui-color-accent-subtle: var(--cubeoffice-surface) !important;
+}
+
+/* Match the desktop ribbon height for formats with dedicated read-only viewers. */
+.desktop-app .desktop-readonly-conversion-ribbon {
+	--als-ofs-ui-ribbon-tabs-height: 36px;
+	--als-ofs-ui-ribbon-commands-height: 98px;
+	flex-basis: 134px;
+	height: 134px;
+	min-height: 134px;
+}
+
+.desktop-app .als-ofs-docx-office-editor[data-editor-palette="alphalife"] {
+	--als-ofs-docx-office-accent: var(--cubeoffice-primary);
+	--als-ofs-docx-office-accent-hover: var(--cubeoffice-strong);
+	--als-ofs-docx-office-accent-soft: var(--cubeoffice-soft);
+	--als-ofs-docx-office-outline-current: var(--cubeoffice-soft);
+	--als-ofs-docx-office-outline-current-hover: var(--cubeoffice-surface);
+	--als-ofs-docx-office-style-guide: var(--cubeoffice-primary);
+}
+
+[data-editor-palette="alphalife"] .als-ofs-pdf-viewer {
+	--als-ofs-pdf-accent: var(--cubeoffice-primary);
+	--als-ofs-pdf-accent-soft: var(--cubeoffice-soft);
+}
+
+.desktop-app .als-ofs-pptx-editor-component[data-editor-palette="alphalife"] {
+	--ui-primary: var(--cubeoffice-primary);
+	--ui-primary-hover: var(--cubeoffice-strong);
+	--ui-primary-soft: var(--cubeoffice-soft);
+	--ui-accent: var(--cubeoffice-primary);
+	--ui-accent-strong: var(--cubeoffice-strong);
+	--ui-focus: var(--cubeoffice-primary);
+}
+
+.desktop-app .als-ofs-ui-workspace-tabs__kind {
+	color: var(--cubeoffice-strong);
+}
+
+.desktop-app .agent-link,
+.desktop-app .cli-activity .als-ofs-ui-ai-activity__tabs button[data-active="true"] {
+	background: var(--cubeoffice-surface);
+	border-color: var(--cubeoffice-border-soft);
+}
+
+.desktop-app .als-ofs-psd-editor__shell {
+	--als-ofs-psd-accent: var(--cubeoffice-primary);
+	--als-ofs-psd-active: var(--cubeoffice-soft);
+	--als-ofs-ui-command-accent: var(--cubeoffice-primary);
+	--als-ofs-ui-command-accent-hover: var(--cubeoffice-strong);
+}
+
+.desktop-app .als-ofs-psd-editor__shell[data-appearance="dark"] {
+	--als-ofs-psd-accent: var(--cubeoffice-light);
+	--als-ofs-psd-active: #493866;
+	--als-ofs-ui-command-accent: var(--cubeoffice-light);
+	--als-ofs-ui-command-accent-hover: var(--cubeoffice-highlight);
+	--als-ofs-ui-accent: var(--cubeoffice-light) !important;
+	--als-ofs-ui-accent-hover: var(--cubeoffice-highlight) !important;
+	--als-ofs-ui-accent-soft: #493866 !important;
+}
+
+.desktop-app .cubexp-epub {
+	--epub-accent: var(--cubeoffice-primary) !important;
+}
+
+/* The upstream desktop ribbon also sets these selected colors directly. */
+.desktop-app
+	.als-ofs-ui-editor-shell[data-editor-palette="alphalife"]
+	.als-ofs-ui-ribbon-group
+	:is(
+		.als-ofs-ui-button,
+		.als-ofs-ui-icon-button,
+		.als-ofs-ui-toggle-button,
+		.als-ofs-ui-ribbon-command-button,
+		.als-ofs-ui-ribbon-split-button
+	):is([aria-pressed="true"], [data-active="true"], .is-active):not(:disabled):not(
+		[data-disabled="true"]
+	) {
+	background: var(--als-ofs-ui-accent-soft);
+}
+
+.desktop-app
+	.als-ofs-ui-editor-shell[data-editor-palette="alphalife"]
+	.als-ofs-ui-ribbon-group
+	:is(
+		.als-ofs-ui-button,
+		.als-ofs-ui-icon-button,
+		.als-ofs-ui-toggle-button,
+		.als-ofs-ui-ribbon-command-button,
+		.als-ofs-ui-ribbon-split-button
+	):is([aria-pressed="true"], [data-active="true"], .is-active):not(:disabled):not(
+		[data-disabled="true"]
+	)
+	:is(.als-ofs-ui-icon, .als-ofs-ui-ribbon-command-button__icon) {
+	color: var(--als-ofs-ui-accent);
+}
+
+.desktop-app
+	.als-ofs-ui-editor-shell[data-editor-palette="alphalife"]
+	.als-ofs-ui-ribbon-gallery
+	.als-ofs-ui-ribbon-gallery__item[data-active="true"] {
+	border-color: var(--als-ofs-ui-selection-indicator);
+	background: var(--als-ofs-ui-gallery-selected-surface);
+}
+
+.desktop-app
+	.als-ofs-ui-editor-shell[data-editor-palette="alphalife"]
+	.als-ofs-ui-ribbon-command-button[data-presentation="check"][aria-pressed="true"]::before {
+	border-color: var(--als-ofs-ui-selection-indicator);
+	background: var(--als-ofs-ui-selection-indicator);
 }
