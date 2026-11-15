@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 import { artifactSourceToUint8Array, type ArtifactSource } from "@yaochn/als-office-editor-core";
-import { UiIcon, deliverUiEditorFile } from "@yaochn/als-office-editor-ui/vue";
+import {
+	UiIcon,
+	UiRibbonCommandButton,
+	UiRibbonGroup,
+	deliverUiEditorFile,
+} from "@yaochn/als-office-editor-ui/vue";
 import { graphicsAppearance } from "../appearance";
 import { exportVectorProject, type VectorExportFormat } from "./export";
 import {
@@ -46,6 +51,7 @@ import {
 } from "./selection";
 import type { IllustratorCommand, IllustratorMenuState } from "./menu-commands";
 import IllustratorArtwork from "./IllustratorArtwork.vue";
+import IllustratorRibbon from "./IllustratorRibbon.vue";
 import "./styles.css";
 
 const props = defineProps<{ source: ArtifactSource; fileName: string; readonly?: boolean }>();
@@ -659,6 +665,12 @@ function keyboard(event: KeyboardEvent) {
 	)
 		return;
 	const key = event.key.toLowerCase();
+	if (
+		key === "enter" &&
+		event.target instanceof Element &&
+		event.target.closest(".vector-ribbon button")
+	)
+		return;
 	const modified = event.ctrlKey || event.metaKey;
 	if (modified && key === "z") {
 		event.preventDefault();
@@ -666,11 +678,7 @@ function keyboard(event: KeyboardEvent) {
 		else undo();
 	} else if (modified && key === "a") {
 		event.preventDefault();
-		setSelection(
-			board.value?.objects
-				.filter((object) => !object.hidden && !object.locked)
-				.map((object) => object.id),
-		);
+		selectAllObjects();
 	} else if (modified && key === "g") {
 		event.preventDefault();
 		if (event.shiftKey) ungroupSelection();
@@ -816,7 +824,7 @@ function selectableObjects() {
 	return board.value?.objects.filter((object) => !object.locked && !object.hidden) ?? [];
 }
 
-function getIllustratorMenuState(): IllustratorMenuState | null {
+const illustratorMenuState = computed<IllustratorMenuState | null>(() => {
 	if (!board.value) return null;
 	const canEdit = !props.readonly && !working.value;
 	const selected = new Set(editable.value.map((object) => object.id));
@@ -860,6 +868,10 @@ function getIllustratorMenuState(): IllustratorMenuState | null {
 			artboards: showStructure.value && panel.value === "artboards",
 		},
 	};
+});
+
+function getIllustratorMenuState(): IllustratorMenuState | null {
+	return illustratorMenuState.value;
 }
 
 function toggleStructure(next: "layers" | "artboards") {
@@ -937,120 +949,93 @@ defineExpose({
 			{{ issue || "Opening Illustrator artboards…" }}
 		</div>
 		<template v-else>
-			<header class="vector-commandbar" aria-label="Vector commands">
-				<div class="vector-commandbar__document">
-					<UiIcon name="shape" :size="17" />
-					<strong>{{ documentName }}</strong>
-					<span
-						v-if="isDirty()"
-						class="vector-dirty"
-						title="Unsaved changes"
-						aria-label="Unsaved changes"
-					/>
-				</div>
-				<div class="vector-commandbar__group">
-					<button
-						type="button"
-						aria-label="Undo"
-						title="Undo"
-						:disabled="!undoStack.length"
-						@click="undo"
-					>
-						<UiIcon name="undo" />
-					</button>
-					<button
-						type="button"
-						aria-label="Redo"
-						title="Redo"
-						:disabled="!redoStack.length"
-						@click="redo"
-					>
-						<UiIcon name="redo" />
-					</button>
-				</div>
-				<div class="vector-commandbar__context">
-					<template v-if="tool === 'pen' && pen.length">
-						<button type="button" :disabled="pen.length < 2" @click="finishPen()">
-							Finish path
-						</button>
-						<button type="button" :disabled="pen.length < 3" @click="finishPen(true)">
-							Close path
-						</button>
-					</template>
-					<template v-else-if="editable.length">
-						<button type="button" :disabled="readonly" @click="duplicate">
-							<UiIcon name="duplicate" /> Duplicate
-						</button>
-						<button
-							type="button"
-							:disabled="readonly"
-							@click="rotate(15)"
-							title="Rotate 15°"
-						>
-							Rotate 15°
-						</button>
-						<button
-							v-if="canGroup"
-							type="button"
-							aria-keyshortcuts="Control+G Meta+G"
-							@click="groupSelection"
-						>
-							<UiIcon name="group" /> Group
-						</button>
-						<button
-							v-if="canUngroup"
-							type="button"
-							aria-keyshortcuts="Control+Shift+G Meta+Shift+G"
-							@click="ungroupSelection"
-						>
-							<UiIcon name="ungroup" /> Ungroup
-						</button>
-					</template>
-				</div>
-				<button
-					type="button"
-					class="vector-save"
-					:disabled="readonly || working"
-					@click="output('ai')"
-				>
-					<UiIcon name="save" /> {{ nativeFormat ? "Save" : "Save editable copy" }}
-				</button>
-				<details class="vector-export">
-					<summary>Export <span aria-hidden="true">⌄</span></summary>
-					<div>
-						<button
-							type="button"
-							:disabled="working"
-							@click="
-								output('svg');
-								($event.target as HTMLElement).closest('details')!.open = false;
+			<IllustratorRibbon :state="illustratorMenuState" @command="runIllustratorCommand">
+				<template #home="{ language }">
+					<UiRibbonGroup :label="language ? '文件' : 'File'">
+						<UiRibbonCommandButton
+							icon="save"
+							size="lg"
+							:label="
+								nativeFormat
+									? language
+										? '保存'
+										: 'Save'
+									: language
+										? '保存可编辑副本'
+										: 'Save editable copy'
 							"
-						>
-							Current artboard · SVG
-						</button>
-						<button
-							type="button"
+							:disabled="readonly || working"
+							@activate="output('ai')"
+						/>
+					</UiRibbonGroup>
+					<UiRibbonGroup :label="language ? '历史记录' : 'History'">
+						<UiRibbonCommandButton
+							icon="undo"
+							:label="language ? '撤销' : 'Undo'"
+							:disabled="!undoStack.length"
+							@activate="undo"
+						/>
+						<UiRibbonCommandButton
+							icon="redo"
+							:label="language ? '重做' : 'Redo'"
+							:disabled="!redoStack.length"
+							@activate="redo"
+						/>
+					</UiRibbonGroup>
+					<UiRibbonGroup :label="language ? '导出' : 'Export'">
+						<UiRibbonCommandButton
+							icon="export-file"
+							:label="language ? '当前画板 · SVG' : 'Current artboard · SVG'"
 							:disabled="working"
-							@click="
-								output('png');
-								($event.target as HTMLElement).closest('details')!.open = false;
-							"
-						>
-							Current artboard · PNG
-						</button>
-						<button
-							type="button"
+							@activate="output('svg')"
+						/>
+						<UiRibbonCommandButton
+							icon="export-file"
+							:label="language ? '当前画板 · PNG' : 'Current artboard · PNG'"
 							:disabled="working"
-							@click="
-								output('pdf');
-								($event.target as HTMLElement).closest('details')!.open = false;
-							"
-						>
-							All artboards · PDF
-						</button>
-					</div>
-				</details>
-			</header>
+							@activate="output('png')"
+						/>
+						<UiRibbonCommandButton
+							icon="export-file"
+							:label="language ? '所有画板 · PDF' : 'All artboards · PDF'"
+							:disabled="working"
+							@activate="output('pdf')"
+						/>
+					</UiRibbonGroup>
+				</template>
+				<template #object="{ language }">
+					<UiRibbonGroup :label="language ? '编辑' : 'Edit'">
+						<UiRibbonCommandButton
+							icon="duplicate"
+							:label="language ? '复制对象' : 'Duplicate'"
+							:disabled="readonly || working || !editable.length"
+							@activate="duplicate"
+						/>
+						<UiRibbonCommandButton
+							icon="rotate-right"
+							:label="language ? '旋转 15°' : 'Rotate 15°'"
+							:disabled="readonly || working || !editable.length"
+							@activate="rotate(15)"
+						/>
+					</UiRibbonGroup>
+				</template>
+				<template #context="{ language }">
+					<UiRibbonGroup v-if="tool === 'pen'" :label="language ? '路径' : 'Path'">
+						<UiRibbonCommandButton
+							icon="check"
+							:label="language ? '结束路径' : 'Finish path'"
+							:disabled="readonly || pen.length < 2"
+							@activate="finishPen()"
+						/>
+						<UiRibbonCommandButton
+							icon="shape"
+							:label="language ? '闭合路径' : 'Close path'"
+							:disabled="readonly || pen.length < 3"
+							@activate="finishPen(true)"
+						/>
+					</UiRibbonGroup>
+				</template>
+			</IllustratorRibbon>
 			<div v-if="issue" class="vector-error" role="alert">
 				<span>{{ issue }}</span
 				><button type="button" @click="issue = ''">Close</button>

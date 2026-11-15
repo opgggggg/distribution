@@ -568,9 +568,9 @@ button.unsaved-dialog__primary {
 }
 
 .desktop-app[data-graphics-appearance]
-	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview),
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview, .vector-ribbon),
 .desktop-app[data-graphics-appearance]
-	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview)
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview, .vector-ribbon)
 	.als-ofs-editor-ui {
 	--als-ofs-ui-surface: var(--graphics-panel) !important;
 	--als-ofs-ui-surface-muted: var(--graphics-muted) !important;
