@@ -14,12 +14,16 @@ import {
 import { useUiEditorI18n } from "@yaochn/als-office-editor-ui/vue/i18n";
 import {
 	UiEditorDock,
+	UiMenu,
 	UiRibbonCommandButton,
 	UiRibbonField,
 	UiRibbonGroup,
+	UiRibbonPopover,
 	UiRibbonSurface,
 	UiRibbonTabs,
 	useUiEditorTheme,
+	useUiEditorPalette,
+	type UiMenuItem,
 } from "@yaochn/als-office-editor-ui/vue";
 import * as native from "./bridge";
 import { acquireSession, type SessionLease } from "./session-lease";
@@ -27,6 +31,7 @@ import type { NativeSession, NativeCapabilities, VerificationReport, PrintStatus
 import SignaturePanel from "./SignaturePanel.vue";
 import TrustSettings from "./TrustSettings.vue";
 const editorTheme = useUiEditorTheme();
+const editorPalette = useUiEditorPalette();
 const props = defineProps<{
 	source: Blob | ArrayBuffer | Uint8Array | string;
 	fileName?: string;
@@ -82,12 +87,24 @@ let preferences: OfdViewPreferences | undefined;
 const i18n = useUiEditorI18n(),
 	zh = computed(() => i18n.value.locale.startsWith("zh"));
 const ribbonTab = ref("home");
-const ribbonCollapsed = ref(false);
+const exportMenuOpen = ref(false);
 const ribbonTabs = computed(() => [
 	{ id: "home", label: zh.value ? "开始" : "Home" },
 	{ id: "view", label: zh.value ? "视图" : "View" },
 ]);
 const controls = computed(() => viewer.value?.getControls());
+const exportItems = computed<UiMenuItem[]>(() =>
+	(controls.value?.exportFormats ?? []).map((format) => ({
+		id: format,
+		label: format.toUpperCase(),
+	})),
+);
+function selectExport(item: UiMenuItem) {
+	exportMenuOpen.value = false;
+	const viewerControls = controls.value;
+	const format = viewerControls?.exportFormats.find((format) => format === item.id);
+	if (format) void viewerControls?.exportFiles(format);
+}
 const zoomLevels = computed(() =>
 	[...new Set([50, 75, 100, 125, 150, 200, controls.value?.zoom ?? 100])].sort((a, b) => a - b),
 );
@@ -500,22 +517,20 @@ defineExpose({
 });
 </script>
 <template>
-	<section ref="element" class="cube-ofd-host als-ofs-editor-ui" :data-editor-theme="editorTheme">
+	<section
+		ref="element"
+		class="cube-ofd-host als-ofs-editor-ui als-ofs-ui-editor-shell"
+		:data-editor-theme="editorTheme"
+		:data-editor-palette="editorPalette"
+		data-editor-ribbon-mode="desktop"
+	>
 		<UiRibbonSurface
 			mode="desktop"
 			:active-tab="ribbonTab"
-			:collapsed="ribbonCollapsed"
 			:aria-label="zh ? 'OFD 功能区' : 'OFD ribbon'"
 		>
 			<template #tabs>
-				<UiRibbonTabs
-					v-model="ribbonTab"
-					v-model:collapsed="ribbonCollapsed"
-					mode="desktop"
-					:items="ribbonTabs"
-					@select="ribbonCollapsed = false"
-					@reselect="ribbonCollapsed = !ribbonCollapsed"
-				/>
+				<UiRibbonTabs v-model="ribbonTab" mode="desktop" :items="ribbonTabs" />
 			</template>
 			<template #commands>
 				<template v-if="ribbonTab === 'home'">
@@ -526,43 +541,27 @@ defineExpose({
 							:label="i18n.t('common.open')"
 							size="lg"
 						/>
-						<template v-if="!controls?.hidden">
-							<UiRibbonCommandButton
-								icon="export-file"
-								:label="i18n.t('common.export')"
-								size="lg"
-								:disabled="
-									!controls?.exportFormats.length ||
-									controls.exporting ||
-									policy?.export === false
-								"
-								@activate="controls?.exportFiles()"
+						<UiRibbonPopover
+							v-if="!controls?.hidden"
+							v-model="exportMenuOpen"
+							icon="export-file"
+							:label="i18n.t('common.export')"
+							:content-aria-label="i18n.t('common.export')"
+							:disabled="
+								!exportItems.length ||
+								controls?.exporting ||
+								policy?.export === false
+							"
+							size="lg"
+							presentation="menu"
+							menu-indicator
+						>
+							<UiMenu
+								:aria-label="i18n.t('common.export')"
+								:items="exportItems"
+								@select="selectExport"
 							/>
-							<UiRibbonField :label="zh ? '导出格式' : 'Export format'">
-								<select
-									:value="controls?.exportFormat"
-									:disabled="
-										!controls?.exportFormats.length ||
-										controls.exporting ||
-										policy?.export === false
-									"
-									@change="
-										controls?.setExportFormat(
-											($event.target as HTMLSelectElement)
-												.value as ConversionFormat,
-										)
-									"
-								>
-									<option
-										v-for="format in controls?.exportFormats"
-										:key="format"
-										:value="format"
-									>
-										{{ format.toUpperCase() }}
-									</option>
-								</select>
-							</UiRibbonField>
-						</template>
+						</UiRibbonPopover>
 						<UiRibbonCommandButton
 							icon="print"
 							:label="i18n.t('common.print')"

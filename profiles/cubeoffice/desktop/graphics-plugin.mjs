@@ -392,7 +392,7 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 				source,
 				'class="desktop-app"',
 				`class="desktop-app"
-				:data-graphics-appearance="document?.format === 'psd' || document?.format === 'ai' ? graphicsAppearance : undefined"`,
+				:data-graphics-appearance="document && ['psd', 'ai', 'ofd'].includes(document.format) ? graphicsAppearance : undefined"`,
 			);
 			source = replaceOnce(
 				source,

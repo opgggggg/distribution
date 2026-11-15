@@ -643,13 +643,13 @@ button.unsaved-dialog__primary {
 
 /* The Office palette assigns fixed light colors to large command labels and separators. */
 .desktop-app[data-graphics-appearance="dark"]
-	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview, .vector-ribbon)
+	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview, .vector-ribbon, .cube-ofd-host)
 	.als-ofs-ui-ribbon-group {
 	border-right-color: var(--graphics-border) !important;
 }
 
 .desktop-app[data-graphics-appearance="dark"]
-	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview, .vector-ribbon)
+	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview, .vector-ribbon, .cube-ofd-host)
 	.als-ofs-ui-ribbon-command-button[data-size="lg"]
 	.als-ofs-ui-ribbon-command-button__label {
 	color: inherit !important;
@@ -755,7 +755,11 @@ button.unsaved-dialog__primary {
 }
 
 .desktop-app[data-graphics-appearance="dark"]
-	:is(.als-ofs-psd-editor__shell .als-ofs-ui-ribbon-surface, .vector-ribbon)
+	:is(
+		.als-ofs-psd-editor__shell .als-ofs-ui-ribbon-surface,
+		.vector-ribbon,
+		.cube-ofd-host .als-ofs-ui-ribbon-surface
+	)
 	:is(
 		.als-ofs-ui-ribbon-command-button,
 		.als-ofs-ui-ribbon-command-button__icon,

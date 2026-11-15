@@ -44,15 +44,13 @@ export interface OfdViewerControls {
 	readonly matchCount: number;
 	readonly outlines: readonly { label: string }[];
 	readonly exportFormats: readonly ConversionFormat[];
-	readonly exportFormat: ConversionFormat;
 	readonly exporting: boolean;
 	selectPage(index: number): void;
 	selectOutline(index: number): void;
 	setZoom(percent: number): void;
 	setQuery(value: string): void;
 	findNext(): void;
-	setExportFormat(format: ConversionFormat): void;
-	exportFiles(): Promise<void>;
+	exportFiles(format: ConversionFormat): Promise<void>;
 }
 export const OfdViewer = defineComponent({
 	name: "OfdViewer",
@@ -198,7 +196,7 @@ export const OfdViewer = defineComponent({
 		watch(available, (formats) => {
 			if (formats.length && !formats.includes(target.value)) target.value = formats[0];
 		});
-		async function exportFiles() {
+		async function exportFiles(format = target.value) {
 			if (!model.value || !original.value || busy.value) return;
 			busy.value = true;
 			const id = generation;
@@ -209,8 +207,8 @@ export const OfdViewer = defineComponent({
 						assertOfdPermission(document.policy, "export");
 				const options = { fileName: props.fileName, signal: controller?.signal };
 				const result = props.convert
-					? await props.convert(original.value, model.value.format, target.value, options)
-					: await exportDocument(model.value, target.value, options);
+					? await props.convert(original.value, model.value.format, format, options)
+					: await exportDocument(model.value, format, options);
 				if (id !== generation || controller?.signal.aborted) return;
 				for (const file of result.files) {
 					const url = URL.createObjectURL(file.blob),
@@ -450,7 +448,6 @@ export const OfdViewer = defineComponent({
 				matchCount: matches.value.length,
 				outlines: outlineOptions.value,
 				exportFormats: available.value,
-				exportFormat: target.value,
 				exporting: busy.value,
 				selectPage,
 				selectOutline,
@@ -461,9 +458,6 @@ export const OfdViewer = defineComponent({
 					query.value = value;
 				},
 				findNext,
-				setExportFormat: (format) => {
-					target.value = format;
-				},
 				exportFiles,
 			};
 		}
