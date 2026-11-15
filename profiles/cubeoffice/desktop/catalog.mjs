@@ -243,7 +243,7 @@ const cubeOfficeProfile = {
 				{
 					ext: ["ai"],
 					mimeType: "application/illustrator",
-					role: "Viewer",
+					role: "Editor",
 					rank: "Alternate",
 				},
 				{ ext: ["ofd"], mimeType: "application/ofd", role: "Viewer", rank: "Alternate" },

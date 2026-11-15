@@ -1,6 +1,7 @@
 import { probeGraphicsSource } from "@cubexp/graphics";
 import {
 	artifactSourceToUint8Array,
+	type ArtifactFormatManifest,
 	type ArtifactPlugin,
 	type ArtifactSource,
 } from "@yaochn/als-office-editor-core";
@@ -8,39 +9,21 @@ import {
 	createUiArtifactSurfaceHandle,
 	type UiArtifactFormatContribution,
 } from "@yaochn/als-office-editor-ui/vue";
-import { PDF_ARTIFACT_PLUGIN } from "@yaochn/als-office-pdf";
-import { PDF_VUE_FORMAT_CONTRIBUTION } from "@yaochn/als-office-pdf/vue";
+import { createPdfArtifactPlugin } from "@yaochn/als-office-pdf";
+import workerUrl from "@yaochn/als-office-pdf/pdf.worker.min.mjs?url";
+import IllustratorEditor from "./illustrator/IllustratorEditor.vue";
 
+export { requireIllustratorPreview } from "./illustrator/import";
+
+const mimeTypes = ["application/illustrator"];
+const pdf = createPdfArtifactPlugin({ workerSrc: workerUrl });
 const manifest = {
 	id: "ai",
 	label: "Adobe Illustrator document",
 	extensions: ["ai"],
-	mimeTypes: ["application/illustrator"],
-	capabilities: PDF_ARTIFACT_PLUGIN.manifest.capabilities,
-};
-
-export function requireIllustratorPreview(bytes: Uint8Array): void {
-	if (probeGraphicsSource(bytes) !== "pdf") {
-		throw new Error(
-			"An Illustrator preview is unavailable. Save the .ai file in Illustrator with Create PDF Compatible File enabled.",
-		);
-	}
-}
-
-async function exportIllustratorPdf(source: ArtifactSource, signal?: AbortSignal): Promise<Blob> {
-	const bytes = await artifactSourceToUint8Array(source);
-	requireIllustratorPreview(bytes);
-	const { compilePdfKernel, PdfKernelDocument } = await import("@yaochn/als-office-pdf");
-	const pdf = await PdfKernelDocument.open(await compilePdfKernel(), bytes, { signal });
-	try {
-		signal?.throwIfAborted();
-		pdf.extractPages(Array.from({ length: pdf.pageCount }, (_, i) => i + 1));
-		signal?.throwIfAborted();
-		return new Blob([new Uint8Array(pdf.save())], { type: "application/pdf" });
-	} finally {
-		pdf.dispose();
-	}
-}
+	mimeTypes,
+	capabilities: pdf.manifest.capabilities,
+} satisfies ArtifactFormatManifest;
 
 const plugin: ArtifactPlugin = {
 	manifest,
@@ -52,54 +35,38 @@ const plugin: ArtifactPlugin = {
 		return bytes !== null && probeGraphicsSource(bytes) === "pdf";
 	},
 	async open(input, context) {
-		if (input.source === undefined) throw new TypeError("Illustrator source is required.");
-		const bytes = await artifactSourceToUint8Array(input.source);
-		requireIllustratorPreview(bytes);
-		const session = await PDF_ARTIFACT_PLUGIN.open({ ...input, source: bytes }, context);
-		return {
-			...session,
-			format: "ai",
-			export: (request) => exportIllustratorPdf(bytes, request?.signal),
-		};
+		const session = await pdf.open(input, context);
+		return { ...session, format: "ai" };
 	},
+};
+
+const editorManifest: ArtifactFormatManifest = {
+	...manifest,
+	capabilities: { edit: true, "undo-redo": true, "pdf-export": true },
 };
 
 export const CUBEOFFICE_ILLUSTRATOR_CONTRIBUTION: UiArtifactFormatContribution = {
 	plugin,
 	createBinding(input) {
-		const binding = PDF_VUE_FORMAT_CONTRIBUTION.createBinding(input);
 		return {
-			...binding,
+			component: IllustratorEditor,
 			props: {
-				...binding.props,
-				class: "cubeoffice-illustrator-preview",
-				editable: false,
-				redactable: false,
-				comments: false,
-				enableScripting: false,
+				source: input.source as ArtifactSource,
+				fileName: input.fileName,
+				readonly: input.readonly || input.role === "viewer",
 			},
 		};
 	},
 	adaptExposed(exposed, input) {
-		const surface = createUiArtifactSurfaceHandle(manifest, exposed, {
-			nativeExportFormat: "pdf",
-			role: "viewer",
-			readonly: true,
+		const engine = exposed as
+			| { waitReady?: (signal?: AbortSignal) => Promise<void> }
+			| undefined;
+		const surface = createUiArtifactSurfaceHandle(editorManifest, exposed, {
+			nativeExportFormat: "ai",
+			role: input.role ?? "editor",
+			readonly: input.readonly || input.role === "viewer",
 		});
-		const source = input.source;
-		if (
-			!surface ||
-			!(
-				typeof source === "string" ||
-				source instanceof Blob ||
-				source instanceof ArrayBuffer ||
-				source instanceof Uint8Array
-			)
-		)
-			return surface;
-		return {
-			...surface,
-			export: (request) => exportIllustratorPdf(source, request?.signal),
-		};
+		if (!surface || !engine?.waitReady) return null;
+		return { ...surface, ready: (signal) => engine.waitReady!(signal) };
 	},
 };

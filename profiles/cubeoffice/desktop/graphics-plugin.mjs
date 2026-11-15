@@ -63,6 +63,46 @@ export function cubeOfficeGraphicsPlugin() {
 					map: null,
 				};
 			}
+			if (path === root + "app/persistence.ts") {
+				const vectorImport = fileURLToPath(
+					new URL("./graphics/illustrator/import.ts", import.meta.url),
+				);
+				source = replaceOnce(
+					source,
+					"let path = destination || tab.document.path;",
+					`const illustrator = tab.document.format === "ai";
+		const vectorSurface = tab.editor.exposed as { requiresSaveAs?: () => boolean } | undefined;
+		const copyingIllustrator = illustrator && vectorSurface?.requiresSaveAs?.() === true;
+		if (illustrator && !destination && tab.document.path &&
+			(copyingIllustrator || !(await canOverwriteVectorFile(tab.document.path)))) {
+			if (!interactive) throw new Error("Save this Illustrator document to a separate .ai file.");
+			const name = tab.document.name.replace(/\\.ai$/i, "") + " - edited.ai";
+			destination = (await chooseSavePath({ name, format: "ai" })) ?? undefined;
+			if (!destination) throw new DOMException("Save As was cancelled.", "AbortError");
+		}
+		let path = destination || tab.document.path;
+		if (illustrator && !/\\.ai$/i.test(path))
+			throw new Error("Use an .ai extension for the editable Illustrator copy.");`,
+				);
+				source = replaceOnce(
+					source,
+					"const fingerprint = await contentFingerprint(new Uint8Array(await blob.arrayBuffer()));",
+					`if (illustrator && expected !== "missing" &&
+				(copyingIllustrator || !(await canOverwriteVectorFile(path))))
+				throw new Error("Choose a new filename to preserve the original Illustrator artwork.");
+			const fingerprint = await contentFingerprint(new Uint8Array(await blob.arrayBuffer()));`,
+				);
+				return {
+					code:
+						`import { readFile as readVectorFile } from "@tauri-apps/plugin-fs";
+import { isCubeOfficeVectorFile } from ${JSON.stringify(vectorImport)};
+async function canOverwriteVectorFile(path: string): Promise<boolean> {
+	return isCubeOfficeVectorFile(await readVectorFile(path));
+}
+` + source,
+					map: null,
+				};
+			}
 			if (path === root + "recent-previews.ts") {
 				return {
 					code:
