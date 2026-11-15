@@ -26,6 +26,7 @@ export function cubeOfficeConversionLayoutPlugin() {
 					`surfaceProps: {
 			...desktopSurfaceProps(tab.document.format),
 			...(useOfficeEditor && tab.document.format === "pptx" ? { editor: true } : {}),
+			...(tab.document.conversion?.sourceFormat === "rtf" ? { rightPanel: false } : {}),
 		},`,
 				],
 				[
