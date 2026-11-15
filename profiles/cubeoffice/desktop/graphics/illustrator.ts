@@ -11,9 +11,16 @@ import {
 } from "@yaochn/als-office-editor-ui/vue";
 import { createPdfArtifactPlugin } from "@yaochn/als-office-pdf";
 import workerUrl from "@yaochn/als-office-pdf/pdf.worker.min.mjs?url";
+import { exportVectorProject } from "./illustrator/export";
+import {
+	LEGACY_AI_HEADER_BYTES,
+	isLegacyIllustrator,
+	readLegacyIllustrator,
+} from "./illustrator/legacy-ai";
+import { MAX_INPUT_BYTES } from "./illustrator/import";
 import IllustratorEditor from "./illustrator/IllustratorEditor.vue";
 
-export { requireIllustratorPreview } from "./illustrator/import";
+export { requireIllustratorSource } from "./illustrator/import";
 
 const mimeTypes = ["application/illustrator"];
 const pdf = createPdfArtifactPlugin({ workerSrc: workerUrl });
@@ -30,11 +37,38 @@ const plugin: ArtifactPlugin = {
 	async canOpen(input) {
 		if (!/\.ai$/i.test(input.fileName ?? "") || input.source === undefined) return false;
 		const bytes = await artifactSourceToUint8Array(
-			input.source instanceof Blob ? input.source.slice(0, 8) : input.source,
+			input.source instanceof Blob
+				? input.source.slice(0, LEGACY_AI_HEADER_BYTES)
+				: input.source,
 		).catch(() => null);
-		return bytes !== null && probeGraphicsSource(bytes) === "pdf";
+		return (
+			bytes !== null && (probeGraphicsSource(bytes) === "pdf" || isLegacyIllustrator(bytes))
+		);
 	},
 	async open(input, context) {
+		const source = input.source;
+		if (source !== undefined) {
+			const header =
+				source instanceof Blob
+					? await artifactSourceToUint8Array(source.slice(0, LEGACY_AI_HEADER_BYTES))
+					: await artifactSourceToUint8Array(source);
+			if (isLegacyIllustrator(header)) {
+				const bytes =
+					source instanceof Blob ? await artifactSourceToUint8Array(source) : header;
+				if (bytes.length > MAX_INPUT_BYTES)
+					throw new Error("This Illustrator file exceeds the 128 MiB editing limit.");
+				const project = readLegacyIllustrator(bytes, context?.signal);
+				const preview = await exportVectorProject(
+					project,
+					input.fileName ?? "Artwork",
+					"pdf",
+					0,
+					context?.signal,
+				);
+				const session = await pdf.open({ ...input, source: preview }, context);
+				return { ...session, format: "ai" };
+			}
+		}
 		const session = await pdf.open(input, context);
 		return { ...session, format: "ai" };
 	},

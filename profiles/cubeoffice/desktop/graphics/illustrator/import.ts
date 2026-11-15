@@ -23,11 +23,13 @@ import {
 	type VectorProject,
 } from "./model";
 
+import { isLegacyIllustrator, readLegacyIllustrator } from "./legacy-ai";
+
 export const PROJECT_KEY = "CubeOfficeVector";
 export const MAX_INPUT_BYTES = 128 * 1024 * 1024;
 
-export function requireIllustratorPreview(bytes: Uint8Array): void {
-	if (probeGraphicsSource(bytes) !== "pdf") {
+export function requireIllustratorSource(bytes: Uint8Array): void {
+	if (probeGraphicsSource(bytes) !== "pdf" && !isLegacyIllustrator(bytes)) {
 		throw new Error(
 			"Save this .ai file in Illustrator with Create PDF Compatible File enabled.",
 		);
@@ -380,7 +382,9 @@ export async function openVectorProject(
 ): Promise<{ project: VectorProject; native: boolean }> {
 	if (bytes.length > MAX_INPUT_BYTES)
 		throw new Error("This Illustrator file exceeds the 128 MiB editing limit.");
-	requireIllustratorPreview(bytes);
+	if (isLegacyIllustrator(bytes))
+		return { project: readLegacyIllustrator(bytes, signal), native: false };
+	requireIllustratorSource(bytes);
 	const container = await PDFDocument.load(bytes, { updateMetadata: false });
 	const embedded = container.catalog.lookup(PDFName.of(PROJECT_KEY));
 	if (embedded) {

@@ -31,11 +31,11 @@ export function cubeOfficeGraphicsPlugin() {
 			if (path === root + "format-contributions.ts") {
 				return {
 					code:
-						`import { requireIllustratorPreview } from ${JSON.stringify(illustrator)};\n` +
+						`import { requireIllustratorSource } from ${JSON.stringify(illustrator)};\n` +
 						replaceOnce(
 							source,
 							"> = {\n\tdocx: async (bytes) => {",
-							"> = {\n\tai: async (bytes) => requireIllustratorPreview(bytes),\n\tdocx: async (bytes) => {",
+							"> = {\n\tai: async (bytes) => requireIllustratorSource(bytes),\n\tdocx: async (bytes) => {",
 						),
 					map: null,
 				};
