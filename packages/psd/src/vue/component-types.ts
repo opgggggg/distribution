@@ -85,6 +85,7 @@ export interface PsdEditorProps {
 	showAppearanceToggle?: boolean;
 	/** Show the label along the bottom of every Ribbon group. */
 	showRibbonGroupLabels?: boolean;
+	showNewDocument?: boolean;
 	leftPanel?: boolean;
 	rightPanel?: boolean;
 	/** @deprecated The built-in AI panel has been removed. */

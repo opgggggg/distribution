@@ -6,6 +6,9 @@ const root = fileURLToPath(
 const appearance = fileURLToPath(new URL("./graphics/appearance.ts", import.meta.url));
 const output = fileURLToPath(new URL("./graphics/output.ts", import.meta.url));
 const download = root + "download-bridge.ts";
+const desktopHistoryControls = fileURLToPath(
+	new URL("./DesktopHistoryControls.vue", import.meta.url),
+);
 const illustrator = fileURLToPath(new URL("./graphics/illustrator.ts", import.meta.url));
 
 const illustratorMenuCommands = fileURLToPath(
@@ -28,6 +31,63 @@ export function cubeOfficeGraphicsPlugin() {
 		enforce: "pre",
 		transform(source, id) {
 			const path = id.replaceAll("\\", "/");
+			const historyEditors = {
+				"docx/src/vue/DocxEditor.vue": [
+					"defineExpose<DocxEditorExposed>(exposed);",
+					"(exposed as DocxEditorExposed)",
+					"history",
+				],
+				"xlsx/src/vue/XlsxEditor.vue": [
+					"defineExpose<XlsxEditorApi>(hostApi);",
+					"hostApi",
+					"history",
+				],
+				"vsdx/src/vue/VsdxEditor.vue": [
+					"defineExpose<VsdxEditorApi>(api);",
+					"api",
+					"history",
+				],
+				"markdown/src/vue/MarkdownEditor.vue": [
+					"defineExpose<MarkdownEditorApi>(editorApi);",
+					"editorApi",
+					"history",
+				],
+				"image/src/vue/ImageEditor.vue": [
+					"defineExpose<ImageEditorApi>(api);",
+					"api",
+					"editorHistory",
+				],
+			};
+			const historyEditorPath = path.split("/als-office/packages/").at(-1);
+			const historyEditor = historyEditors[historyEditorPath];
+			if (historyEditor) {
+				const [anchor, exposed, history] = historyEditor;
+				return {
+					code: replaceOnce(
+						source,
+						anchor,
+						`defineExpose(Object.assign(${exposed}, {
+	getHistoryState: () => ({
+		canUndo: ${history}.canUndo.value,
+		canRedo: ${history}.canRedo.value,
+	}),
+}));`,
+					),
+					map: null,
+				};
+			}
+			if (historyEditorPath === "xlsx/src/vue/use-xlsx-editor.ts") {
+				return {
+					code: replaceOnce(
+						source,
+						"requireGrid().subscribe(listener),",
+						`watch(grid, (current, _previous, onCleanup) => {
+				if (current) onCleanup(current.subscribe(listener));
+			}, { immediate: true }),`,
+					),
+					map: null,
+				};
+			}
 			if (path === root + "format-contributions.ts") {
 				return {
 					code:
@@ -275,6 +335,9 @@ const appearanceOptions = computed<UiSelectOption[]>(() => [
 				'<script setup lang="ts">',
 				`<script setup lang="ts">
 import { graphicsAppearance } from ${JSON.stringify(appearance)};
+import DesktopHistoryControls from ${JSON.stringify(desktopHistoryControls)};
+const showDesktopHistory = computed(() => Boolean(canSave.value && !openingShellVisible.value &&
+	editor.value?.role === "editor" && (editor.value.undo || editor.value.redo)));
 import { canOutputDocument, graphicsExportLabel, rasterizePdfFirstPage } from ${JSON.stringify(output)};
 import { saveBlobToChosenPath } from ${JSON.stringify(download)};
 
@@ -311,6 +374,44 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 				'class="desktop-app"',
 				`class="desktop-app"
 				:data-graphics-appearance="document?.format === 'psd' || document?.format === 'ai' ? graphicsAppearance : undefined"`,
+			);
+			source = replaceOnce(
+				source,
+				'<div class="desktop-titlebar__actions" data-no-drag>',
+				`<div class="desktop-titlebar__actions" data-no-drag>
+				<DesktopHistoryControls
+					v-if="showDesktopHistory && editor"
+					:editor="editor"
+					:busy="busy || transferBusy"
+					@command="runCurrentHistory"
+				/>`,
+			);
+			source = replaceOnce(
+				source,
+				'class="document-host"',
+				`class="document-host" :data-shared-history="showDesktopHistory ? 'true' : undefined"`,
+			);
+			source = replaceOnce(
+				source,
+				'<button type="button" role="menuitem" @click="showSettingsFromInWindowMenu">',
+				`<template v-if="canSave">
+						<button type="button" role="menuitem" :disabled="busy" @click="closeInWindowMenu(); saveCurrent()">
+							{{ menuCopy.save }}
+						</button>
+						<button type="button" role="menuitem" :disabled="busy" @click="closeInWindowMenu(); saveCurrentAs()">
+							{{ menuCopy.saveAs }}
+						</button>
+					</template>
+					<button type="button" role="menuitem" @click="showSettingsFromInWindowMenu">`,
+			);
+			source = replaceOnce(
+				source,
+				"requestNewDocument: () => {",
+				`requestNewDocument: async () => {
+				if (tab.document.format === "ai" || tab.document.format === "psd") {
+					await createArtifact(tab.document.format);
+					return true;
+				}`,
 			);
 			source = replaceOnce(
 				source,

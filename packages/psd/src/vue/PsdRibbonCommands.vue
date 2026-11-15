@@ -2,7 +2,8 @@
 import { computed, ref, watch } from "vue";
 import {
 	UiColorPicker,
-	UiFileButton,
+	UiEditorFileSection,
+	useUiEditorI18n,
 	UiFontRibbonControls,
 	UiRibbonCommandButton,
 	UiRibbonField,
@@ -19,9 +20,10 @@ import { usePsdEditorContext } from "./psd-editor-context";
 import { PSD_PANE_DEFINITIONS, usePsdPaneState } from "./psd-pane-state";
 import { hexToRgb, PSD_BLEND_MODE_OPTIONS, resolvedPsdTextStyle, rgbToHex } from "./use-psd-editor";
 
-const props = defineProps<{ activeTab: string }>();
+const props = defineProps<{ activeTab: string; showNew?: boolean }>();
 
 const editor = usePsdEditorContext();
+const i18n = useUiEditorI18n();
 const paneState = usePsdPaneState();
 const active = computed(() => editor.activeLayer.value);
 const disabled = computed(() => editor.readonly.value);
@@ -284,36 +286,18 @@ const FILTER_DIALOGS: Array<{ kind: PsdDialogKind; label: string; icon: UiIconNa
 			@update:value="savedSelectionName = $event"
 		/>
 		<template v-if="props.activeTab === 'home'">
-			<UiRibbonGroup label="File">
-				<UiFileButton
+			<UiRibbonGroup :label="i18n.locale === 'zh-CN' ? '文件' : 'File'">
+				<UiEditorFileSection
 					accept=".psd,image/*"
-					:disabled="editor.loading.value"
-					icon="open-file"
-					label="Open"
-					presentation="ribbon"
-					ribbon-size="lg"
-					@select="openFile"
-				/>
-				<UiRibbonCommandButton
-					:disabled="disabled || !editor.document.value"
-					icon="save"
-					label="Save"
-					size="lg"
-					@activate="editor.savePsd()"
-				/>
-				<UiRibbonCommandButton
-					:disabled="disabled || !editor.document.value"
-					icon="save-as"
-					label="Save As"
-					size="lg"
-					@activate="editor.saveAsOpen.value = true"
-				/>
-				<UiRibbonCommandButton
-					:disabled="!editor.document.value"
-					icon="export-file"
-					label="Export"
-					size="lg"
-					@activate="openDialog('export')"
+					:readonly="disabled || !editor.document.value"
+					:loading="editor.loading.value"
+					:dirty="editor.dirty.value"
+					:show-new="showNew === true"
+					:exports="editor.document.value ? [{ id: 'image', label: i18n.t('common.export') + '…' }] : []"
+					@open="openFile"
+					@save="editor.savePsd()"
+					@save-as="editor.saveAsOpen.value = true"
+					@export="openDialog('export')"
 				/>
 			</UiRibbonGroup>
 			<UiRibbonGroup label="Layer">

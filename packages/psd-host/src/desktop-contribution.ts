@@ -84,6 +84,7 @@ export const CUBEOFFICE_PSD_CONTRIBUTION = {
 				persistPsd,
 				getAppearance: () => graphicsAppearance.value,
 				showAppearanceToggle: false,
+				showNewDocument: true,
 			},
 		};
 	},

@@ -62,6 +62,7 @@ const OfficeTextEditor = defineComponent({
 			saveFile: (options?: TextSaveOptions) => current().saveFile(options),
 			setDocumentName: (value: string) => { name.value = value; },
 			undo: () => current().undo(), redo: () => current().redo(),
+			getHistoryState: () => ({ canUndo: state.value.canUndo, canRedo: state.value.canRedo }),
 		});
 		function report(reason: unknown) {
 			if (reason instanceof Error && reason.name === "AbortError") return;
@@ -87,7 +88,7 @@ const OfficeTextEditor = defineComponent({
 		}
 		const button = (label: string, icon: UiIconName, action: () => unknown, disabled = false, active = false) =>
 			h(UiRibbonCommandButton, { label, icon, disabled: !ready.value || disabled, active, onActivate: action });
-		const group = (label: string, children: () => unknown) => h(UiRibbonGroup, { label }, { default: children });
+		const group = (label: string, children: () => unknown) => h(UiRibbonGroup, { label, class: label === "History" ? "cubexp-text-history" : undefined }, { default: children });
 		return () => h(UiEditorShell, {
 			class: "cubexp-text-shell", titlebarHidden: true, activeRibbonTab: tab.value,
 			ribbonAriaLabel: "Text editor ribbon", workspaceAriaLabel: "Text editor workspace",

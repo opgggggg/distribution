@@ -638,13 +638,13 @@ button.unsaved-dialog__primary {
 
 /* The Office palette assigns fixed light colors to large command labels and separators. */
 .desktop-app[data-graphics-appearance="dark"]
-	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview)
+	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview, .vector-ribbon)
 	.als-ofs-ui-ribbon-group {
 	border-right-color: var(--graphics-border) !important;
 }
 
 .desktop-app[data-graphics-appearance="dark"]
-	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview)
+	:is(.als-ofs-psd-editor, .cubeoffice-illustrator-preview, .vector-ribbon)
 	.als-ofs-ui-ribbon-command-button[data-size="lg"]
 	.als-ofs-ui-ribbon-command-button__label {
 	color: inherit !important;
@@ -750,8 +750,7 @@ button.unsaved-dialog__primary {
 }
 
 .desktop-app[data-graphics-appearance="dark"]
-	.als-ofs-psd-editor__shell
-	.als-ofs-ui-ribbon-surface
+	:is(.als-ofs-psd-editor__shell .als-ofs-ui-ribbon-surface, .vector-ribbon)
 	:is(
 		.als-ofs-ui-ribbon-command-button,
 		.als-ofs-ui-ribbon-command-button__icon,
@@ -767,4 +766,45 @@ button.unsaved-dialog__primary {
 	background: var(--graphics-panel);
 	color: var(--graphics-text);
 	border-color: var(--graphics-border);
+}
+
+.desktop-titlebar__actions > .cubeoffice-desktop-history {
+	display: flex;
+	flex: none;
+	gap: 2px;
+	padding-inline-end: 5px;
+	border-inline-end: 1px solid var(--graphics-border, #c9cbd1);
+}
+
+.desktop-titlebar__actions .cubeoffice-desktop-history button {
+	width: 26px;
+	min-width: 26px;
+	height: 26px;
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+}
+
+.desktop-titlebar__actions .cubeoffice-desktop-history button:disabled {
+	opacity: 0.42;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.desktop-titlebar__actions
+	.cubeoffice-desktop-history
+	button {
+	color: var(--graphics-text);
+}
+
+.document-host[data-shared-history="true"]
+	:is(
+		.als-ofs-docx-office-editor__compact-history,
+		.als-ofs-xlsx-compact-actions .als-ofs-ui-quick-access-toolbar,
+		.als-ofs-image-editor__compact-actions .als-ofs-ui-quick-access-toolbar,
+		.als-ofs-ui-markdown-editor__compact-actions .als-ofs-ui-quick-access-toolbar,
+		.cubexp-text-history,
+		.cube-notes__history,
+		.cube-notes__tray-history
+	) {
+	display: none;
 }

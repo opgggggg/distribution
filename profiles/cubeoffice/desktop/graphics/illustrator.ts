@@ -18,6 +18,7 @@ import {
 	readLegacyIllustrator,
 } from "./illustrator/legacy-ai";
 import { MAX_INPUT_BYTES } from "./illustrator/import";
+import { newArtboard, type VectorProject } from "./illustrator/model";
 import IllustratorEditor from "./illustrator/IllustratorEditor.vue";
 
 export { requireIllustratorSource } from "./illustrator/import";
@@ -29,7 +30,7 @@ const manifest = {
 	label: "Adobe Illustrator document",
 	extensions: ["ai"],
 	mimeTypes,
-	capabilities: pdf.manifest.capabilities,
+	capabilities: { ...pdf.manifest.capabilities, edit: true },
 } satisfies ArtifactFormatManifest;
 
 const plugin: ArtifactPlugin = {
@@ -44,6 +45,25 @@ const plugin: ArtifactPlugin = {
 		return (
 			bytes !== null && (probeGraphicsSource(bytes) === "pdf" || isLegacyIllustrator(bytes))
 		);
+	},
+	async create(input, context) {
+		const title = input.fileName ?? "Untitled.ai";
+		const project: VectorProject = { version: 1, artboards: [newArtboard("Artboard 1")] };
+		return {
+			format: "ai",
+			artifactId: input.artifactId ?? crypto.randomUUID(),
+			capabilities: manifest.capabilities,
+			getState: () => ({ revision: 0, dirty: false, readonly: input.access === "read" }),
+			export: (request) =>
+				exportVectorProject(
+					project,
+					title,
+					request?.format ?? "ai",
+					0,
+					request?.signal ?? context?.signal,
+				),
+			close() {},
+		};
 	},
 	async open(input, context) {
 		const source = input.source;

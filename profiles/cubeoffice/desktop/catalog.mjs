@@ -60,7 +60,7 @@ const cubeOfficeProfile = {
 			...NOTES_EXTENSIONS,
 		]),
 	],
-	newDocumentExtensions: [...officeProfile.newDocumentExtensions, "cubenote"],
+	newDocumentExtensions: [...officeProfile.newDocumentExtensions, "cubenote", "ai", "psd"],
 	supportedFormatLabels: [
 		...officeProfile.supportedFormatLabels,
 		"TXT",
@@ -77,11 +77,7 @@ const cubeOfficeProfile = {
 		"CUBENOTE",
 	],
 	id: "cubeoffice",
-	readonlyConversionExtensions: [
-		...(officeProfile.readonlyConversionExtensions ?? []),
-		"ofd",
-		"tsv",
-	],
+	readonlyConversionExtensions: [...(officeProfile.readonlyConversionExtensions ?? []), "tsv"],
 	formatContributions: [
 		{
 			format: "AI",

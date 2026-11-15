@@ -326,6 +326,7 @@ export interface NotesEditorApi {
 	isDirty(): boolean;
 	subscribe(listener: () => void): () => void;
 	setDocumentName(value: string): void;
+	getHistoryState(): { canUndo: boolean; canRedo: boolean };
 	undo(): void;
 	redo(): void;
 	togglePages(anchor?: HTMLElement): void;
@@ -1822,6 +1823,10 @@ export const NotesEditor = defineComponent({
 			},
 			exportFile,
 			saveFile,
+			getHistoryState: () => ({
+				canUndo: history.value?.canUndo() ?? false,
+				canRedo: history.value?.canRedo() ?? false,
+			}),
 			undo,
 			redo,
 			togglePages,

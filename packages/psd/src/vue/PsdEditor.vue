@@ -546,7 +546,10 @@ const unregisterProject = registerProject(projectId, api);
 const unregisterActivation = registerProjectActivation(projectId, () => emit("activate"));
 onBeforeUnmount(unregisterActivation);
 onBeforeUnmount(unregisterProject);
-defineExpose(api);
+defineExpose({
+	...api,
+	getHistoryState: () => ({ canUndo: editor.canUndo.value, canRedo: editor.canRedo.value }),
+});
 </script>
 
 <template>
@@ -604,7 +607,7 @@ defineExpose(api);
 				/>
 			</template>
 			<template #ribbon-commands>
-				<PsdRibbonCommands :active-tab="activeRibbonTab" />
+				<PsdRibbonCommands :active-tab="activeRibbonTab" :show-new="props.showNewDocument" />
 			</template>
 
 			<template v-if="leftPanel" #left-dock>

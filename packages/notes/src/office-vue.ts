@@ -38,6 +38,7 @@ const OfficeNotesEditor = defineComponent({
 			getRevision: () => editor.value?.getRevision() ?? 0,
 			isDirty: () => editor.value?.isDirty() ?? false,
 			setDocumentName: (value) => currentEditor().setDocumentName(value),
+			getHistoryState: () => editor.value?.getHistoryState() ?? { canUndo: false, canRedo: false },
 			undo: () => currentEditor().undo(),
 			redo: () => currentEditor().redo(),
 			togglePages: (anchor?: HTMLElement) => currentEditor().togglePages(anchor),

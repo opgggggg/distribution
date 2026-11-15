@@ -2,13 +2,15 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 import { artifactSourceToUint8Array, type ArtifactSource } from "@yaochn/als-office-editor-core";
 import {
+	UiEditorFileSection,
 	UiIcon,
+	useUiEditorPalette,
 	UiRibbonCommandButton,
 	UiRibbonGroup,
 	deliverUiEditorFile,
 } from "@yaochn/als-office-editor-ui/vue";
 import { graphicsAppearance } from "../appearance";
-import { exportVectorProject, type VectorExportFormat } from "./export";
+import { exportVectorProject } from "./export";
 import {
 	objectBounds,
 	pathNodes,
@@ -56,6 +58,7 @@ import "./styles.css";
 
 const props = defineProps<{ source: ArtifactSource; fileName: string; readonly?: boolean }>();
 const documentName = ref(props.fileName);
+const editorPalette = useUiEditorPalette();
 const emit = defineEmits<{ loaded: []; error: [Error] }>();
 const controller = new AbortController();
 const project = shallowRef<VectorProject>();
@@ -794,7 +797,8 @@ async function saveFile(
 	}
 	return blob;
 }
-async function output(format: VectorExportFormat) {
+async function output(format: string, saveAs = false) {
+	if (format !== "ai" && format !== "svg" && format !== "png" && format !== "pdf") return;
 	if (working.value) return;
 	working.value = true;
 	issue.value = "";
@@ -803,7 +807,11 @@ async function output(format: VectorExportFormat) {
 		if (format === "ai") {
 			await saveFile({
 				deliver: async (blob) => {
-					await deliverUiEditorFile({ intent: "save", fileName: `${title}.ai`, blob });
+					await deliverUiEditorFile({
+						intent: saveAs ? "save-as" : "save",
+						fileName: `${title}.ai`,
+						blob,
+					});
 				},
 			});
 		} else {
@@ -822,6 +830,16 @@ async function output(format: VectorExportFormat) {
 }
 function selectableObjects() {
 	return board.value?.objects.filter((object) => !object.locked && !object.hidden) ?? [];
+}
+
+async function openFromRibbon(files: File[]) {
+	const file = files[0];
+	if (!file) return;
+	try {
+		await deliverUiEditorFile({ intent: "open", fileName: file.name, blob: file });
+	} catch (cause) {
+		issue.value = cause instanceof Error ? cause.message : String(cause);
+	}
 }
 
 const illustratorMenuState = computed<IllustratorMenuState | null>(() => {
@@ -921,6 +939,10 @@ function runIllustratorCommand(command: IllustratorCommand) {
 
 defineExpose({
 	getIllustratorMenuState,
+	getHistoryState: () => ({
+		canUndo: undoStack.value.length > 0,
+		canRedo: redoStack.value.length > 0,
+	}),
 	runIllustratorCommand,
 	isDirty,
 	subscribe,
@@ -940,7 +962,9 @@ defineExpose({
 <template>
 	<div
 		ref="root"
-		class="vector-editor"
+		class="vector-editor als-ofs-editor-ui als-ofs-ui-editor-shell"
+		:data-editor-palette="editorPalette"
+		data-editor-ribbon-mode="desktop"
 		:data-appearance="graphicsAppearance"
 		tabindex="-1"
 		@keydown="keyboard"
@@ -952,54 +976,29 @@ defineExpose({
 			<IllustratorRibbon :state="illustratorMenuState" @command="runIllustratorCommand">
 				<template #home="{ language }">
 					<UiRibbonGroup :label="language ? '文件' : 'File'">
-						<UiRibbonCommandButton
-							icon="save"
-							size="lg"
-							:label="
-								nativeFormat
-									? language
-										? '保存'
-										: 'Save'
-									: language
-										? '保存可编辑副本'
-										: 'Save editable copy'
-							"
-							:disabled="readonly || working"
-							@activate="output('ai')"
-						/>
-					</UiRibbonGroup>
-					<UiRibbonGroup :label="language ? '历史记录' : 'History'">
-						<UiRibbonCommandButton
-							icon="undo"
-							:label="language ? '撤销' : 'Undo'"
-							:disabled="!undoStack.length"
-							@activate="undo"
-						/>
-						<UiRibbonCommandButton
-							icon="redo"
-							:label="language ? '重做' : 'Redo'"
-							:disabled="!redoStack.length"
-							@activate="redo"
-						/>
-					</UiRibbonGroup>
-					<UiRibbonGroup :label="language ? '导出' : 'Export'">
-						<UiRibbonCommandButton
-							icon="export-file"
-							:label="language ? '当前画板 · SVG' : 'Current artboard · SVG'"
-							:disabled="working"
-							@activate="output('svg')"
-						/>
-						<UiRibbonCommandButton
-							icon="export-file"
-							:label="language ? '当前画板 · PNG' : 'Current artboard · PNG'"
-							:disabled="working"
-							@activate="output('png')"
-						/>
-						<UiRibbonCommandButton
-							icon="export-file"
-							:label="language ? '所有画板 · PDF' : 'All artboards · PDF'"
-							:disabled="working"
-							@activate="output('pdf')"
+						<UiEditorFileSection
+							accept=".ai,application/illustrator"
+							:readonly="readonly"
+							:loading="working"
+							:dirty="isDirty()"
+							:exports="[
+								{
+									id: 'svg',
+									label: language ? '当前画板 · SVG' : 'Current artboard · SVG',
+								},
+								{
+									id: 'png',
+									label: language ? '当前画板 · PNG' : 'Current artboard · PNG',
+								},
+								{
+									id: 'pdf',
+									label: language ? '所有画板 · PDF' : 'All artboards · PDF',
+								},
+							]"
+							@open="openFromRibbon"
+							@save="output('ai')"
+							@save-as="output('ai', true)"
+							@export="output"
 						/>
 					</UiRibbonGroup>
 				</template>

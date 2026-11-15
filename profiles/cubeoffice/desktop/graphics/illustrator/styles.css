@@ -83,54 +83,7 @@
 	box-sizing: border-box;
 }
 .vector-editor > .vector-ribbon {
-	--als-ofs-ui-ribbon-tabs-height: 36px;
 	flex: none;
-	background: var(--vector-panel);
-	border-color: var(--vector-border);
-}
-.vector-ribbon .als-ofs-ui-ribbon-surface__tabs {
-	display: flex;
-	height: var(--als-ofs-ui-ribbon-tabs-height);
-	padding-inline: 6px;
-}
-.vector-ribbon .als-ofs-ui-ribbon-tabs {
-	flex: 1 1 auto;
-	min-width: 0;
-}
-.vector-ribbon .als-ofs-ui-ribbon-surface__commands:not([hidden]) {
-	min-height: 98px;
-	padding-inline: 6px;
-	border-top: 1px solid var(--vector-border);
-}
-.vector-ribbon .als-ofs-ui-ribbon-group {
-	padding-inline: 8px;
-}
-.vector-ribbon .als-ofs-ui-ribbon-tabs__tab.is-active {
-	font-weight: 600;
-}
-.vector-ribbon .als-ofs-ui-ribbon-tabs__collapse {
-	display: grid;
-	place-items: center;
-	flex: none;
-	align-self: center;
-	width: 30px;
-	height: 30px;
-	padding: 0;
-	border: 0;
-	border-radius: 6px;
-	background: transparent;
-	color: var(--vector-secondary);
-	cursor: pointer;
-}
-.vector-ribbon .als-ofs-ui-ribbon-tabs__collapse:hover {
-	background: var(--vector-hover);
-}
-.vector-ribbon .als-ofs-ui-ribbon-tabs__collapse:focus-visible {
-	outline: 2px solid var(--vector-accent);
-	outline-offset: -2px;
-}
-.vector-ribbon .als-ofs-ui-ribbon-tabs__collapse[aria-expanded="true"] svg {
-	transform: rotate(180deg);
 }
 .vector-ribbon .als-ofs-ui-ribbon-command-button[aria-pressed="true"] {
 	color: var(--vector-accent);
