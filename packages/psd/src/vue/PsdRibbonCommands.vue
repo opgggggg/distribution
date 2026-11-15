@@ -301,7 +301,13 @@ const FILTER_DIALOGS: Array<{ kind: PsdDialogKind; label: string; icon: UiIconNa
 					size="lg"
 					@activate="editor.savePsd()"
 				/>
-				<UiRibbonCommandButton :disabled="disabled || !editor.document.value" icon="save" label="Save As" size="sm" @activate="editor.saveAsOpen.value = true" />
+				<UiRibbonCommandButton
+					:disabled="disabled || !editor.document.value"
+					icon="save-as"
+					label="Save As"
+					size="lg"
+					@activate="editor.saveAsOpen.value = true"
+				/>
 				<UiRibbonCommandButton
 					:disabled="!editor.document.value"
 					icon="export-file"
