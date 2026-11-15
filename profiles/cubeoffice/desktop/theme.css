@@ -395,8 +395,8 @@ button.unsaved-dialog__primary {
 	.als-ofs-ui-editor-shell[data-editor-palette="alphalife"]
 	.als-ofs-ui-editor-titlebar
 	.als-ofs-ui-office-titlebar__app-mark {
-	background: var(--cubeoffice-soft);
-	color: var(--cubeoffice-primary);
+	background: var(--cubeoffice-soft) !important;
+	color: var(--cubeoffice-primary) !important;
 }
 
 [data-editor-palette="alphalife"] .als-ofs-pdf-viewer {
