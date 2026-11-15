@@ -85,7 +85,7 @@ test("theme changes preserve the loaded OFD document and viewer instance", async
 });
 
 test("external toolbar controls use the viewer's page and search state", async (t) => {
-	const mounted = mountViewer(ofd("searchable"), { externalToolbar: true });
+	const mounted = mountViewer(ofd("searchable"), { externalToolbar: true, pageLayout: "single" });
 	t.after(() => mounted.app.unmount());
 	await loaded(mounted);
 	const viewer = mounted.viewer.value;
@@ -96,15 +96,25 @@ test("external toolbar controls use the viewer's page and search state", async (
 	);
 	const controls = viewer.getControls();
 	assert.equal(controls.pages.length, 2);
+	const viewport = mounted.root.children[0].children.find(
+		(node) => node.props.class === "ofd-page-viewport",
+	);
+	const grid = viewport.children[0];
+	assert.equal(grid.props["data-layout"], "single");
+	assert.equal(grid.children.length, 2);
+	assert.equal(grid.children[1].children.length, 0);
 	controls.selectPage(1);
 	controls.setZoom(125);
 	controls.setQuery("searchable");
 	await tick();
 	assert.equal(viewer.getControls().zoom, 125);
-	assert.equal(viewer.getControls().matchCount, 2);
+	assert.deepEqual(viewer.getControls().matchingPages, [0, 1]);
+	assert.equal(grid.children[1].children[0].type, "iframe");
 	assert.equal(viewer.getCurrentPage(), 1);
 	controls.findNext();
 	assert.equal(viewer.getCurrentPage(), 0);
+	controls.findNext(-1);
+	assert.equal(viewer.getCurrentPage(), 1);
 });
 
 test("viewer drops stale loads, aborts prior fetches and uses custom export backend", async (t) => {

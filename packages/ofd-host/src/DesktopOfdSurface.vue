@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
-import { OfdViewer, type OfdViewerControls } from "@cubexp/ofd/vue";
+import { OfdViewer, type OfdPageLayout, type OfdViewerControls } from "@cubexp/ofd/vue";
 import {
 	readOfdDocument,
 	exportDocument,
@@ -13,21 +13,30 @@ import {
 } from "@cubexp/ofd";
 import { useUiEditorI18n } from "@yaochn/als-office-editor-ui/vue/i18n";
 import {
+	UiDocumentOutline,
 	UiEditorDock,
+	UiEditorStatusControls,
+	UiEditorWorkspace,
 	UiMenu,
 	UiRibbonCommandButton,
-	UiRibbonField,
 	UiRibbonGroup,
 	UiRibbonPopover,
 	UiRibbonSurface,
 	UiRibbonTabs,
+	UiSearchBox,
+	UiSlideRail,
+	UiSlideThumbnail,
+	UiStatusBar,
 	useUiEditorTheme,
 	useUiEditorPalette,
 	type UiMenuItem,
+	type UiSearchResultItem,
+	type UiSegmentedItem,
 } from "@yaochn/als-office-editor-ui/vue";
 import * as native from "./bridge";
 import { acquireSession, type SessionLease } from "./session-lease";
 import type { NativeSession, NativeCapabilities, VerificationReport, PrintStatus } from "./types";
+import OfdPagePreview from "./OfdPagePreview.vue";
 import SignaturePanel from "./SignaturePanel.vue";
 import TrustSettings from "./TrustSettings.vue";
 const editorTheme = useUiEditorTheme();
@@ -88,11 +97,81 @@ const i18n = useUiEditorI18n(),
 	zh = computed(() => i18n.value.locale.startsWith("zh"));
 const ribbonTab = ref("home");
 const exportMenuOpen = ref(false);
-const ribbonTabs = computed(() => [
-	{ id: "home", label: zh.value ? "开始" : "Home" },
-	{ id: "view", label: zh.value ? "视图" : "View" },
-]);
+const pageLayout = ref<OfdPageLayout>("single");
+const navigationOpen = ref(true);
+const navigationTab = ref("pages");
+const navigationWidth = ref(232);
+const searchBox = ref<{ focus(): void }>();
 const controls = computed(() => viewer.value?.getControls());
+const navigationTabs = computed(() => [
+	{
+		id: "pages",
+		label: i18n.value.t("pdf.pages"),
+		icon: "metadata" as const,
+		count: controls.value?.pages.length,
+	},
+	...(controls.value?.outlines.length
+		? [
+				{
+					id: "bookmarks",
+					label: i18n.value.t("pdf.bookmarks"),
+					icon: "bookmark" as const,
+					count: controls.value.outlines.length,
+				},
+			]
+		: []),
+]);
+const bookmarkItems = computed(() =>
+	(controls.value?.outlines ?? []).map((outline, index) => ({
+		id: String(index),
+		level: outline.level,
+		text: outline.label,
+	})),
+);
+const viewItems = computed<UiSegmentedItem[]>(() => [
+	{
+		id: "single",
+		icon: "text-columns-one",
+		label: i18n.value.t("pdf.layoutSingle"),
+		title: i18n.value.t("pdf.layoutSingleTitle"),
+	},
+	{
+		id: "multiple",
+		icon: "text-columns-three",
+		label: i18n.value.t("pdf.layoutMultiple"),
+		title: i18n.value.t("pdf.layoutMultipleTitle"),
+	},
+]);
+const pagePosition = computed(() =>
+	controls.value?.pages.length
+		? [
+				{
+					id: "page",
+					label: i18n.value.t("pdf.pagePosition", {
+						page: controls.value.page + 1,
+						total: controls.value.pages.length,
+					}),
+				},
+			]
+		: [],
+);
+const searchItems = computed<UiSearchResultItem[]>(() => {
+	const state = controls.value;
+	if (!state) return [];
+	const query = state.query.trim();
+	return state.matchingPages.map((index) => {
+		const text = state.pages[index].text;
+		const offset = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+		const start = Math.max(0, offset - 24);
+		const snippet = text.slice(start, offset + query.length + 48);
+		return {
+			id: String(index),
+			label: i18n.value.t("pdf.page", { page: index + 1 }),
+			description: snippet,
+			descriptionRange: { start: offset - start, end: offset - start + query.length },
+		};
+	});
+});
 const exportItems = computed<UiMenuItem[]>(() =>
 	(controls.value?.exportFormats ?? []).map((format) => ({
 		id: format,
@@ -105,9 +184,16 @@ function selectExport(item: UiMenuItem) {
 	const format = viewerControls?.exportFormats.find((format) => format === item.id);
 	if (format) void viewerControls?.exportFiles(format);
 }
-const zoomLevels = computed(() =>
-	[...new Set([50, 75, 100, 125, 150, 200, controls.value?.zoom ?? 100])].sort((a, b) => a - b),
-);
+function selectPageLayout(item: UiSegmentedItem) {
+	if (item.id === "single" || item.id === "multiple") pageLayout.value = item.id;
+}
+function findShortcut(event: KeyboardEvent) {
+	if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "f" || !searchBox.value)
+		return;
+	event.preventDefault();
+	event.stopPropagation();
+	searchBox.value.focus();
+}
 const host = native.nativeAvailable();
 const policy = computed(() => session.value?.documents[documentIndex.value]?.policy);
 const readAllowed = computed(
@@ -523,6 +609,8 @@ defineExpose({
 		:data-editor-theme="editorTheme"
 		:data-editor-palette="editorPalette"
 		data-editor-ribbon-mode="desktop"
+		data-editor-shell="true"
+		@keydown.capture="findShortcut"
 	>
 		<UiRibbonSurface
 			mode="desktop"
@@ -530,7 +618,34 @@ defineExpose({
 			:aria-label="zh ? 'OFD 功能区' : 'OFD ribbon'"
 		>
 			<template #tabs>
-				<UiRibbonTabs v-model="ribbonTab" mode="desktop" :items="ribbonTabs" />
+				<UiRibbonTabs
+					v-model="ribbonTab"
+					mode="desktop"
+					:items="[
+						{ id: 'home', label: i18n.t('pdf.home') },
+						{
+							id: 'signatures',
+							label: zh ? '签名与证书' : 'Signatures and certificates',
+						},
+					]"
+				/>
+				<div
+					v-if="!controls?.hidden"
+					class="als-ofs-ui-editor-shell__find als-ofs-ui-ribbon-tab-actions"
+				>
+					<UiSearchBox
+						ref="searchBox"
+						:aria-label="zh ? '查找文档' : 'Search document'"
+						:placeholder="zh ? '查找文档' : 'Search document'"
+						:model-value="controls?.query ?? ''"
+						:items="searchItems"
+						:active-id="controls ? String(controls.page) : undefined"
+						:disabled="!controls?.pages.length"
+						@update:model-value="controls?.setQuery($event)"
+						@select="controls?.selectPage(Number($event.id))"
+						@submit="controls?.findNext($event)"
+					/>
+				</div>
 			</template>
 			<template #commands>
 				<template v-if="ribbonTab === 'home'">
@@ -576,6 +691,21 @@ defineExpose({
 							@activate="showPrint"
 						/>
 					</UiRibbonGroup>
+					<UiRibbonGroup v-if="!controls?.hidden" :label="i18n.t('pdf.view')">
+						<UiRibbonCommandButton
+							v-for="item in viewItems"
+							:key="item.id"
+							:icon="item.icon!"
+							:label="item.label"
+							:title="item.title"
+							size="lg"
+							:disabled="!controls?.pages.length"
+							:active="pageLayout === item.id"
+							@activate="selectPageLayout(item)"
+						/>
+					</UiRibbonGroup>
+				</template>
+				<template v-else>
 					<UiRibbonGroup :label="zh ? '签名与证书' : 'Signatures and certificates'">
 						<UiRibbonCommandButton
 							icon="lock"
@@ -600,133 +730,6 @@ defineExpose({
 							@activate="showTrust"
 						/>
 					</UiRibbonGroup>
-				</template>
-				<template v-else>
-					<UiRibbonGroup
-						v-if="session && session.documents.length > 1"
-						:label="zh ? '文档' : 'Document'"
-					>
-						<UiRibbonField
-							:label="zh ? '当前文档' : 'Current document'"
-							:control-width="180"
-						>
-							<select v-model.number="documentIndex">
-								<option
-									v-for="doc in session.documents"
-									:key="doc.index"
-									:value="doc.index"
-								>
-									{{
-										doc.title || `${zh ? "文档" : "Document"} ${doc.index + 1}`
-									}}
-								</option>
-							</select>
-						</UiRibbonField>
-					</UiRibbonGroup>
-					<template v-if="!controls?.hidden">
-						<UiRibbonGroup :label="zh ? '导航' : 'Navigation'">
-							<UiRibbonCommandButton
-								icon="chevron-left"
-								:label="i18n.t('common.previous')"
-								size="lg"
-								:disabled="!controls || controls.page === 0"
-								@activate="controls && controls.selectPage(controls.page - 1)"
-							/>
-							<UiRibbonField :label="zh ? '页面' : 'Page'" :control-width="100">
-								<select
-									:value="controls?.page"
-									:disabled="!controls?.pages.length"
-									@change="
-										controls?.selectPage(
-											Number(($event.target as HTMLSelectElement).value),
-										)
-									"
-								>
-									<option
-										v-for="(page, index) in controls?.pages"
-										:key="index"
-										:value="index"
-									>
-										{{ page.name }}
-									</option>
-								</select>
-							</UiRibbonField>
-							<UiRibbonCommandButton
-								icon="chevron-right"
-								:label="i18n.t('common.next')"
-								size="lg"
-								:disabled="!controls || controls.page >= controls.pages.length - 1"
-								@activate="controls && controls.selectPage(controls.page + 1)"
-							/>
-							<UiRibbonField
-								v-if="controls?.outlines.length"
-								:label="zh ? '目录' : 'Outline'"
-								:control-width="140"
-							>
-								<select
-									value=""
-									@change="
-										controls.selectOutline(
-											Number(($event.target as HTMLSelectElement).value),
-										)
-									"
-								>
-									<option value="" disabled>
-										{{ zh ? "选择章节" : "Choose a section" }}
-									</option>
-									<option
-										v-for="(outline, index) in controls.outlines"
-										:key="index"
-										:value="index"
-									>
-										{{ outline.label }}
-									</option>
-								</select>
-							</UiRibbonField>
-						</UiRibbonGroup>
-						<UiRibbonGroup :label="zh ? '缩放' : 'Zoom'">
-							<UiRibbonField :label="zh ? '比例' : 'Magnification'">
-								<select
-									:value="controls?.zoom ?? 100"
-									:disabled="!controls?.pages.length"
-									@change="
-										controls?.setZoom(
-											Number(($event.target as HTMLSelectElement).value),
-										)
-									"
-								>
-									<option v-for="level in zoomLevels" :key="level" :value="level">
-										{{ Math.round(level * 10) / 10 }}%
-									</option>
-								</select>
-							</UiRibbonField>
-						</UiRibbonGroup>
-						<UiRibbonGroup :label="i18n.t('common.search')">
-							<UiRibbonField
-								:label="zh ? '查找文本' : 'Find text'"
-								:control-width="150"
-							>
-								<input
-									type="search"
-									:value="controls?.query"
-									:disabled="!controls?.pages.length"
-									@input="
-										controls?.setQuery(
-											($event.target as HTMLInputElement).value,
-										)
-									"
-									@keydown.enter.prevent="controls?.findNext()"
-								/>
-							</UiRibbonField>
-							<UiRibbonCommandButton
-								icon="search"
-								:label="zh ? '查找下一个' : 'Find next'"
-								size="lg"
-								:disabled="!controls?.matchCount"
-								@activate="controls?.findNext()"
-							/>
-						</UiRibbonGroup>
-					</template>
 				</template>
 			</template>
 		</UiRibbonSurface>
@@ -760,48 +763,143 @@ defineExpose({
 					: "This document is outside its allowed validity period."
 			}}
 		</p>
-		<div class="cube-ofd-body">
-			<OfdViewer
-				v-if="source && ready && readAllowed"
-				:key="`${session?.id ?? 'browser'}:${documentIndex}`"
-				ref="viewer"
-				:source="source"
-				:editor-theme="editorTheme"
-				external-toolbar
-				:file-name="fileName ?? 'document.ofd'"
-				:convert="convert"
-				:preview="(blob, options) => readOfdDocument(blob, { ...options, documentIndex })"
-				:action-host="host ? actionHost : undefined"
-				class="cube-ofd-viewer"
-				@preferences="preferencesChanged"
-			/>
-			<UiEditorDock
-				active-tab="signatures"
-				:tabs="[
-					{
-						id: 'signatures',
-						label: zh ? '签名与证书' : 'Signatures and certificates',
-						icon: 'lock',
-					},
-				]"
-				:closed="!signaturesOpen"
-				:width="320"
-				closable
-				@open="signaturesOpen = true"
-				@close="signaturesOpen = false"
-			>
-				<SignaturePanel
-					:report="report"
-					:busy="verifying"
-					:expired="stale"
-					:error="verifyError"
-					:zh="zh"
-					@verify="verify"
-					@cancel="verificationController?.abort()"
-					@close="signaturesOpen = false"
+		<UiEditorWorkspace
+			class="cube-ofd-body"
+			:aria-label="zh ? 'OFD 文档阅读区' : 'OFD document viewer'"
+		>
+			<template #left-dock>
+				<UiSlideRail
+					v-if="controls?.pages.length || (session?.documents.length ?? 0) > 1"
+					v-model:active-tab="navigationTab"
+					v-model:width="navigationWidth"
+					:aria-label="zh ? 'OFD 导航' : 'OFD navigation'"
+					:resize-aria-label="zh ? '调整 OFD 导航宽度' : 'Resize OFD navigation panel'"
+					:closed="!navigationOpen"
+					:tabs="navigationTabs"
+					:title="i18n.t('pdf.pages')"
+					:min-width="172"
+					:max-width="340"
+					closable
+					resizable
+					@open="navigationOpen = true"
+					@close="navigationOpen = false"
+				>
+					<template #content="{ activeTab: selectedTab }">
+						<div
+							v-if="session && session.documents.length > 1"
+							class="cube-ofd-document-picker"
+						>
+							<select
+								v-model.number="documentIndex"
+								:aria-label="zh ? '当前文档' : 'Current document'"
+							>
+								<option
+									v-for="doc in session.documents"
+									:key="doc.index"
+									:value="doc.index"
+								>
+									{{
+										doc.title || `${zh ? "文档" : "Document"} ${doc.index + 1}`
+									}}
+								</option>
+							</select>
+						</div>
+						<div v-if="selectedTab !== 'bookmarks'" class="cube-ofd-page-rail">
+							<UiSlideThumbnail
+								v-for="(sheet, index) in controls?.pages"
+								:key="index"
+								:active="index === controls?.page"
+								:selected="index === controls?.page"
+								:ariaLabel="
+									zh ? `打开第 ${index + 1} 页` : `Open page ${index + 1}`
+								"
+								:slide-index="index"
+								:slide-number="index + 1"
+								@activate="controls?.selectPage(index)"
+							>
+								<template #preview>
+									<OfdPagePreview
+										:svg="sheet.svg"
+										:width="sheet.width"
+										:height="sheet.height"
+									/>
+								</template>
+							</UiSlideThumbnail>
+						</div>
+						<UiDocumentOutline
+							v-else
+							:items="bookmarkItems"
+							@select="controls?.selectOutline(Number($event))"
+						/>
+					</template>
+				</UiSlideRail>
+			</template>
+			<template #stage>
+				<OfdViewer
+					v-if="source && ready && readAllowed"
+					:key="`${session?.id ?? 'browser'}:${documentIndex}`"
+					ref="viewer"
+					:source="source"
+					:editor-theme="editorTheme"
+					external-toolbar
+					:page-layout="pageLayout"
+					:file-name="fileName ?? 'document.ofd'"
+					:convert="convert"
+					:preview="
+						(blob, options) => readOfdDocument(blob, { ...options, documentIndex })
+					"
+					:action-host="host ? actionHost : undefined"
+					class="cube-ofd-viewer"
+					@preferences="preferencesChanged"
 				/>
-			</UiEditorDock>
-		</div>
+			</template>
+			<template #right-dock>
+				<UiEditorDock
+					active-tab="signatures"
+					:tabs="[
+						{
+							id: 'signatures',
+							label: zh ? '签名与证书' : 'Signatures and certificates',
+							icon: 'lock',
+						},
+					]"
+					:closed="!signaturesOpen"
+					:width="320"
+					closable
+					@open="signaturesOpen = true"
+					@close="signaturesOpen = false"
+				>
+					<SignaturePanel
+						:report="report"
+						:busy="verifying"
+						:expired="stale"
+						:error="verifyError"
+						:zh="zh"
+						@verify="verify"
+						@cancel="verificationController?.abort()"
+						@close="signaturesOpen = false"
+					/>
+				</UiEditorDock>
+			</template>
+		</UiEditorWorkspace>
+		<UiStatusBar v-if="!controls?.hidden" :items="pagePosition">
+			<template #zoom>
+				<UiEditorStatusControls
+					:disabled="!controls?.pages.length"
+					:view-aria-label="zh ? 'OFD 页面布局' : 'OFD page layout'"
+					:view-items="viewItems"
+					:view-value="pageLayout"
+					:zoom-aria-label="zh ? 'OFD 缩放' : 'OFD zoom'"
+					:zoom-value="controls?.zoom ?? 100"
+					:zoom-min="25"
+					:zoom-max="400"
+					:zoom-step="5"
+					:zoom-output="`${Math.round(controls?.zoom ?? 100)}%`"
+					@select-view="selectPageLayout"
+					@update:zoom-value="controls?.setZoom($event)"
+				/>
+			</template>
+		</UiStatusBar>
 		<dialog ref="trustDialog" class="cube-ofd-dialog">
 			<header>
 				<strong>{{ zh ? "OFD 信任设置" : "OFD trust settings" }}</strong
@@ -874,7 +972,7 @@ defineExpose({
 .cube-ofd-media button,
 .cube-ofd-dialog button,
 .cube-ofd-dialog input,
-.cube-ofd-host :deep(.als-ofs-ui-ribbon-field__control > :is(select, input)) {
+.cube-ofd-document-picker select {
 	font: inherit;
 	font-size: 12px;
 	border: 1px solid var(--als-ofs-ui-border, #d5e1e3);
@@ -891,7 +989,6 @@ defineExpose({
 	cursor: default;
 }
 .cube-ofd-body {
-	display: flex;
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
@@ -899,6 +996,57 @@ defineExpose({
 .cube-ofd-viewer {
 	flex: 1;
 	min-width: 0;
+}
+.cube-ofd-document-picker {
+	padding: 10px 12px 0;
+}
+.cube-ofd-document-picker select {
+	width: 100%;
+}
+.cube-ofd-page-rail {
+	display: grid;
+	align-content: start;
+	gap: 14px;
+	padding: 16px 13px 24px;
+}
+.cube-ofd-page-rail :deep(.als-ofs-ui-slide-thumbnail) {
+	width: 100%;
+	border: 1px solid var(--als-ofs-ui-border);
+	border-radius: 6px;
+	padding: 4px 6px 6px;
+	background: var(--als-ofs-ui-surface);
+}
+.cube-ofd-page-rail :deep(.als-ofs-ui-slide-thumbnail[data-active="true"]) {
+	border-color: var(--als-ofs-ui-accent);
+	background: var(--als-ofs-ui-accent-soft);
+	box-shadow: inset 3px 0 var(--als-ofs-ui-accent);
+}
+.cube-ofd-host :deep(.als-ofs-ui-ribbon-command-button[data-active="true"]:not(:disabled)) {
+	background: var(--als-ofs-ui-accent-soft) !important;
+}
+.cube-ofd-host
+	:deep(.als-ofs-ui-ribbon-command-button[data-active="true"]:not(:disabled) .als-ofs-ui-icon) {
+	color: var(--als-ofs-ui-accent) !important;
+}
+.cube-ofd-viewer :deep(.ofd-page-grid) {
+	display: flex;
+	gap: 28px;
+}
+.cube-ofd-viewer :deep(.ofd-page-grid[data-layout="single"]) {
+	flex-direction: column;
+	align-items: center;
+	width: max-content;
+	min-width: 100%;
+}
+.cube-ofd-viewer :deep(.ofd-page-grid[data-layout="multiple"]) {
+	flex-flow: row wrap;
+	align-items: flex-start;
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+.cube-ofd-viewer :deep(.ofd-page-frame) {
+	flex: 0 0 auto;
 }
 .cube-ofd-body :deep(.ofd-signatures) {
 	width: 100%;

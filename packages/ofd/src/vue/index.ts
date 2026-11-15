@@ -35,21 +35,24 @@ export type OfdConverter = (
 	to: ConversionFormat,
 	options: ConvertOptions,
 ) => Promise<ConversionResult>;
+export type OfdPageLayout = "single" | "multiple";
+
 export interface OfdViewerControls {
 	readonly hidden: boolean;
-	readonly pages: readonly { name: string }[];
+	readonly pages: OfdDocument["pages"];
 	readonly page: number;
 	readonly zoom: number;
 	readonly query: string;
 	readonly matchCount: number;
-	readonly outlines: readonly { label: string }[];
+	readonly matchingPages: readonly number[];
+	readonly outlines: readonly { label: string; level: number }[];
 	readonly exportFormats: readonly ConversionFormat[];
 	readonly exporting: boolean;
 	selectPage(index: number): void;
 	selectOutline(index: number): void;
 	setZoom(percent: number): void;
 	setQuery(value: string): void;
-	findNext(): void;
+	findNext(direction?: 1 | -1): void;
 	exportFiles(format: ConversionFormat): Promise<void>;
 }
 export const OfdViewer = defineComponent({
@@ -57,6 +60,7 @@ export const OfdViewer = defineComponent({
 	props: {
 		editorTheme: { type: String as PropType<"classic" | "panel">, default: "classic" },
 		externalToolbar: { type: Boolean, default: false },
+		pageLayout: { type: String as PropType<OfdPageLayout> },
 		source: {
 			type: [Blob, ArrayBuffer, Uint8Array, String] as PropType<ArtifactSource>,
 			required: true,
@@ -102,11 +106,8 @@ export const OfdViewer = defineComponent({
 			activeMedia.value = undefined;
 		}
 		const current = computed(() => model.value?.pages[page.value]);
-		const displayedSvg = computed(() =>
-			current.value ? svgAtDeviceScale(current.value.svg, zoom.value / 100) : "",
-		);
 		const matches = computed(() => {
-			const needle = query.value.toLocaleLowerCase();
+			const needle = query.value.trim().toLocaleLowerCase();
 			return needle
 				? (model.value?.pages.flatMap((p, i) =>
 						p.text.toLocaleLowerCase().includes(needle) ? [i] : [],
@@ -227,16 +228,29 @@ export const OfdViewer = defineComponent({
 				busy.value = false;
 			}
 		}
-		function findNext() {
-			const next = matches.value.find((i) => i > page.value) ?? matches.value[0];
-			if (next !== undefined) page.value = next;
+		function findNext(direction: 1 | -1 = 1) {
+			const results = matches.value;
+			const next =
+				direction === 1
+					? (results.find((i) => i > page.value) ?? results[0])
+					: (results
+							.slice()
+							.reverse()
+							.find((i) => i < page.value) ?? results.at(-1));
+			if (next !== undefined) selectPage(next);
 		}
 		const outlineOptions = computed(() => {
-			const items: { label: string; actions: OfdAction[]; documentIndex: number }[] = [];
+			const items: {
+				label: string;
+				level: number;
+				actions: OfdAction[];
+				documentIndex: number;
+			}[] = [];
 			function add(nodes: OfdOutline[], documentIndex: number, depth = 0) {
 				for (const node of nodes) {
 					items.push({
-						label: "　".repeat(depth) + node.title,
+						label: node.title,
+						level: depth + 1,
 						actions: node.actions,
 						documentIndex,
 					});
@@ -270,13 +284,17 @@ export const OfdViewer = defineComponent({
 				zoom.value = Math.min(width / ((w * 96) / 25.4), height / ((h * 96) / 25.4)) * 100;
 			} else if (destination.zoom) zoom.value = destination.zoom * 100;
 			await nextTick();
-			viewport.value?.scrollTo?.({
-				left:
-					(((destination.left * 96) / 25.4) * zoom.value) / 100 +
-					(surface.value?.offsetLeft ?? 0) -
-					(viewport.value?.offsetLeft ?? 0),
-				top: (((destination.top * 96) / 25.4) * zoom.value) / 100,
-			});
+			const left = (((destination.left * 96) / 25.4) * zoom.value) / 100;
+			const top = (((destination.top * 96) / 25.4) * zoom.value) / 100;
+			if (props.pageLayout) {
+				scrollPage(index, left, top);
+			} else {
+				viewport.value?.scrollTo?.({
+					left:
+						left + (surface.value?.offsetLeft ?? 0) - (viewport.value?.offsetLeft ?? 0),
+					top,
+				});
+			}
 		}
 		async function sourcePackage() {
 			if (!original.value) throw new Error("Document is not loaded.");
@@ -432,12 +450,208 @@ export const OfdViewer = defineComponent({
 				false,
 		);
 		function selectPage(index: number) {
-			if (Number.isInteger(index) && model.value?.pages[index]) page.value = index;
+			if (!Number.isInteger(index) || !model.value?.pages[index]) return;
+			page.value = index;
+			if (props.pageLayout) scrollPage(index);
 		}
 		function selectOutline(index: number) {
 			const entry = outlineOptions.value[index];
 			if (entry) void dispatch(entry.actions, true, entry.documentIndex);
 		}
+		const pageFrames = new Map<number, HTMLElement>();
+		const nearby = shallowRef(new Set<number>());
+		let preloadObserver: IntersectionObserver | undefined;
+		let scrollFrame: number | undefined;
+		const pageMarkup = new WeakMap<
+			OfdDocument["pages"][number],
+			{ zoom: number; svg: string }
+		>();
+		function pageSvg(item: OfdDocument["pages"][number]) {
+			const cached = pageMarkup.get(item);
+			if (cached?.zoom === zoom.value) return cached.svg;
+			const svg = svgAtDeviceScale(item.svg, zoom.value / 100);
+			pageMarkup.set(item, { zoom: zoom.value, svg });
+			return svg;
+		}
+		const frameRefs = new Map<number, (node: unknown) => void>();
+		function frameRef(index: number) {
+			let set = frameRefs.get(index);
+			if (!set) {
+				set = (node: unknown) => {
+					const previous = pageFrames.get(index);
+					if (previous === node) return;
+					if (previous) preloadObserver?.unobserve(previous);
+					if (node) {
+						const frame = node as HTMLElement;
+						pageFrames.set(index, frame);
+						preloadObserver?.observe(frame);
+					} else {
+						pageFrames.delete(index);
+					}
+				};
+				frameRefs.set(index, set);
+			}
+			return set;
+		}
+		watch([viewport, () => props.pageLayout], ([root, layout], _, cleanup) => {
+			if (!root || !layout || typeof IntersectionObserver === "undefined") return;
+			const observer = new IntersectionObserver(
+				(entries) => {
+					const next = new Set(nearby.value);
+					for (const entry of entries) {
+						const index = Number((entry.target as HTMLElement).dataset.ofdPage);
+						if (entry.isIntersecting) next.add(index);
+						else next.delete(index);
+					}
+					nearby.value = next;
+				},
+				{ root, rootMargin: "600px" },
+			);
+			preloadObserver = observer;
+			for (const frame of pageFrames.values()) observer.observe(frame);
+			cleanup(() => {
+				observer.disconnect();
+				preloadObserver = undefined;
+				nearby.value = new Set();
+			});
+		});
+		watch(
+			() => props.pageLayout,
+			async (layout) => {
+				if (!layout) return;
+				const index = page.value;
+				await nextTick();
+				if (index === page.value) scrollPage(index);
+			},
+		);
+		onBeforeUnmount(() => {
+			if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame);
+		});
+		function scrollPage(index: number, left?: number, top = 0) {
+			const root = viewport.value;
+			const frame = pageFrames.get(index);
+			if (!root || !frame || typeof root.scrollTo !== "function") return;
+			const bounds = root.getBoundingClientRect();
+			const sheet = frame.getBoundingClientRect();
+			root.scrollTo({
+				left:
+					left === undefined
+						? sheet.left < bounds.left || sheet.right > bounds.right
+							? root.scrollLeft + sheet.left - bounds.left - 20
+							: root.scrollLeft
+						: root.scrollLeft + sheet.left - bounds.left - 20 + left,
+				top: root.scrollTop + sheet.top - bounds.top - 20 + top,
+			});
+		}
+		function schedulePageTracking() {
+			if (!props.pageLayout || scrollFrame !== undefined) return;
+			scrollFrame = requestAnimationFrame(() => {
+				scrollFrame = undefined;
+				const root = viewport.value;
+				if (!root || !props.pageLayout) return;
+				const bounds = root.getBoundingClientRect();
+				let best = page.value;
+				let coverage = 0;
+				for (const index of new Set([page.value, ...nearby.value])) {
+					const frame = pageFrames.get(index)?.getBoundingClientRect();
+					if (!frame) continue;
+					const area =
+						Math.max(
+							0,
+							Math.min(frame.bottom, bounds.bottom) - Math.max(frame.top, bounds.top),
+						) *
+						Math.max(
+							0,
+							Math.min(frame.right, bounds.right) - Math.max(frame.left, bounds.left),
+						);
+					if (area > coverage) {
+						coverage = area;
+						best = index;
+					}
+				}
+				page.value = best;
+			});
+		}
+		function renderPage(item: OfdDocument["pages"][number], index: number) {
+			const layout = props.pageLayout;
+			const rendered = !layout || index === page.value || nearby.value.has(index);
+			return h(
+				"div",
+				{
+					ref: layout ? frameRef(index) : surface,
+					class: "ofd-page-frame",
+					"data-ofd-page": index,
+					style: {
+						position: "relative",
+						width: `${(item.width * zoom.value) / 100}px`,
+						height: `${(item.height * zoom.value) / 100}px`,
+						margin: layout ? undefined : "0 auto",
+					},
+				},
+				rendered
+					? [
+							h("iframe", {
+								title: `${props.fileName} — ${item.name}`,
+								sandbox: "",
+								srcdoc: `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:"><style>html,body{margin:0}svg{display:block;width:100%;height:auto}</style></head><body>${pageSvg(item)}</body></html>`,
+								style: {
+									display: "block",
+									width: `${(item.width * zoom.value) / 100}px`,
+									height: `${(item.height * zoom.value) / 100}px`,
+									border: 0,
+									background: "white",
+									margin: "0 auto",
+									boxShadow: "0 2px 12px #14253b25",
+								},
+							}),
+							h(
+								"svg",
+								{
+									viewBox: `${(item.origin ?? [0, 0]).join(" ")} ${(item.width * 25.4) / 96} ${(item.height * 25.4) / 96}`,
+									style: {
+										position: "absolute",
+										inset: 0,
+										width: "100%",
+										height: "100%",
+										pointerEvents: "none",
+									},
+								},
+								item.hotspots?.map((hotspot) =>
+									h("path", {
+										d: hotspot.region,
+										transform: `matrix(${hotspot.transform.join(" ")})`,
+										fill: "transparent",
+										role: "button",
+										tabindex: 0,
+										"aria-label": `Document action ${hotspot.actions[0]?.type}`,
+										style: {
+											pointerEvents: "all",
+											cursor: "pointer",
+										},
+										onClick: () =>
+											void dispatch(
+												hotspot.actions,
+												true,
+												item.documentIndex,
+											),
+										onKeydown: (event: KeyboardEvent) => {
+											if (event.key === "Enter" || event.key === " ") {
+												event.preventDefault();
+												void dispatch(
+													hotspot.actions,
+													true,
+													item.documentIndex,
+												);
+											}
+										},
+									}),
+								),
+							),
+						]
+					: [],
+			);
+		}
+
 		function getControls(): OfdViewerControls {
 			return {
 				hidden: toolbarHidden.value,
@@ -446,6 +660,7 @@ export const OfdViewer = defineComponent({
 				zoom: zoom.value,
 				query: query.value,
 				matchCount: matches.value.length,
+				matchingPages: matches.value,
 				outlines: outlineOptions.value,
 				exportFormats: available.value,
 				exporting: busy.value,
@@ -453,6 +668,11 @@ export const OfdViewer = defineComponent({
 				selectOutline,
 				setZoom: (value) => {
 					zoom.value = value;
+					const index = page.value;
+					if (props.pageLayout)
+						void nextTick(() => {
+							if (index === page.value) scrollPage(index);
+						});
 				},
 				setQuery: (value) => {
 					query.value = value;
@@ -559,7 +779,11 @@ export const OfdViewer = defineComponent({
 										[
 											h("option", { value: "", disabled: true }, "Outline"),
 											...outlineOptions.value.map((entry, index) =>
-												h("option", { value: index }, entry.label),
+												h(
+													"option",
+													{ value: index },
+													"　".repeat(entry.level - 1) + entry.label,
+												),
 											),
 										],
 									)
@@ -686,74 +910,23 @@ export const OfdViewer = defineComponent({
 						: null,
 					h(
 						"div",
-						{ ref: viewport, style: { overflow: "auto", flex: "1", padding: "20px" } },
-						current.value
+						{
+							ref: viewport,
+							class: "ofd-page-viewport",
+							style: { overflow: "auto", flex: "1", padding: "20px" },
+							onScrollPassive: schedulePageTracking,
+						},
+						props.pageLayout
 							? h(
 									"div",
-									{
-										ref: surface,
-										style: {
-											position: "relative",
-											width: `${(current.value.width * zoom.value) / 100}px`,
-											height: `${(current.value.height * zoom.value) / 100}px`,
-											margin: "0 auto",
-										},
-									},
-									[
-										h("iframe", {
-											title: `${props.fileName} — ${current.value.name}`,
-											sandbox: "",
-											srcdoc: `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:"><style>html,body{margin:0}svg{display:block;width:100%;height:auto}</style></head><body>${displayedSvg.value}</body></html>`,
-											style: {
-												display: "block",
-												width: `${(current.value.width * zoom.value) / 100}px`,
-												height: `${(current.value.height * zoom.value) / 100}px`,
-												border: 0,
-												background: "white",
-												margin: "0 auto",
-												boxShadow: "0 2px 12px #14253b25",
-											},
-										}),
-										h(
-											"svg",
-											{
-												viewBox: `${(current.value.origin ?? [0, 0]).join(" ")} ${(current.value.width * 25.4) / 96} ${(current.value.height * 25.4) / 96}`,
-												style: {
-													position: "absolute",
-													inset: 0,
-													width: "100%",
-													height: "100%",
-													pointerEvents: "none",
-												},
-											},
-											current.value.hotspots?.map((hotspot) =>
-												h("path", {
-													d: hotspot.region,
-													transform: `matrix(${hotspot.transform.join(" ")})`,
-													fill: "transparent",
-													role: "button",
-													tabindex: 0,
-													"aria-label": `Document action ${hotspot.actions[0]?.type}`,
-													style: {
-														pointerEvents: "all",
-														cursor: "pointer",
-													},
-													onClick: () => void dispatch(hotspot.actions),
-													onKeydown: (event: KeyboardEvent) => {
-														if (
-															event.key === "Enter" ||
-															event.key === " "
-														) {
-															event.preventDefault();
-															void dispatch(hotspot.actions);
-														}
-													},
-												}),
-											),
-										),
-									],
+									{ class: "ofd-page-grid", "data-layout": props.pageLayout },
+									model.value?.pages.map((item, index) =>
+										renderPage(item, index),
+									),
 								)
-							: [],
+							: current.value
+								? renderPage(current.value, page.value)
+								: [],
 					),
 				],
 			);
