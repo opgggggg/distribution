@@ -375,7 +375,7 @@ button.unsaved-dialog__primary {
 	--als-ofs-docx-office-style-guide: var(--cubeoffice-primary);
 }
 
-.desktop-app .als-ofs-xlsx-office-editor {
+.desktop-app .als-ofs-xlsx-office-editor[data-editor-palette="alphalife"] {
 	--als-ofs-xlsx-green: var(--cubeoffice-primary);
 	--als-ofs-xlsx-green-dark: var(--cubeoffice-strong);
 	--als-ofs-xlsx-green-soft: var(--cubeoffice-soft);
@@ -383,7 +383,7 @@ button.unsaved-dialog__primary {
 	--als-ofs-xlsx-focus: var(--cubeoffice-primary);
 }
 
-.desktop-app .als-ofs-vsdx-editor[data-editor-palette="alphalife"] {
+.desktop-app .als-ofs-vsdx-editor.als-ofs-editor-ui[data-editor-palette="alphalife"] {
 	--als-ofs-ui-accent: var(--cubeoffice-primary) !important;
 	--als-ofs-ui-accent-hover: var(--cubeoffice-strong) !important;
 	--als-ofs-ui-accent-soft: var(--cubeoffice-soft) !important;

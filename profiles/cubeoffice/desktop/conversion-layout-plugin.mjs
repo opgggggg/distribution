@@ -34,7 +34,7 @@ export function cubeOfficeConversionLayoutPlugin() {
 					"const activeConversion = computed(() => activeTab.value?.document.conversion ?? null);",
 					`function usesOfficeConversionEditor(tab: ArtifactTab | null): boolean {
 	return Boolean(tab?.document.conversion &&
-		["docx", "xlsx", "pptx", "vsdx"].includes(tab.document.format));
+		["docx", "pptx", "vsdx"].includes(tab.document.format));
 }
 const activeConversion = computed(() => activeTab.value?.document.conversion ?? null);
 `,
