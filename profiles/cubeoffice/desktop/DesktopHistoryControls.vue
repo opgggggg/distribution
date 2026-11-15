@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, shallowRef, watch, watchEffect } from "vue";
 import {
+	UiIconButton,
 	UiQuickAccessToolbar,
 	type UiArtifactSurfaceHandle,
 	uiEditorHistoryToolbarItems,
@@ -14,10 +15,42 @@ type HistorySurface = {
 	api?: { getHistoryState?: () => HistoryState };
 };
 
-const props = defineProps<{ editor: UiArtifactSurfaceHandle; busy: boolean }>();
-const emit = defineEmits<{ command: [command: Command] }>();
+const props = defineProps<{
+	artifactId: string;
+	editor: UiArtifactSurfaceHandle;
+	busy: boolean;
+	saveDisabled: boolean;
+}>();
+const emit = defineEmits<{ command: [command: Command]; save: [] }>();
 const i18n = useUiEditorI18n();
 const version = ref(0);
+const anchor = ref<HTMLElement>();
+const target = shallowRef<HTMLElement>();
+
+// The presentation editor mounts its shared Ribbon in a separate Vue app.
+// Attach the shell-owned actions to the active artifact's actual tab row.
+watchEffect(
+	(onCleanup) => {
+		const host = anchor.value?.closest(".document-host");
+		if (!host) return;
+		const artifactId = CSS.escape(props.artifactId);
+		const selector = `.als-ofs-artifact-workspace__surface[data-artifact-id="${artifactId}"]`;
+		const resolve = () => {
+			const surface = host.querySelector(selector);
+			target.value =
+				surface?.querySelector<HTMLElement>(".als-ofs-ui-ribbon-surface__tabs") ??
+				surface?.querySelector<HTMLElement>(".cube-notes__header") ??
+				undefined;
+		};
+		resolve();
+		const observer = new MutationObserver(() => {
+			if (!target.value?.isConnected) resolve();
+		});
+		observer.observe(host, { childList: true, subtree: true });
+		onCleanup(() => observer.disconnect());
+	},
+	{ flush: "post" },
+);
 watch(
 	() => props.editor,
 	(editor, _, cleanup) => {
@@ -50,10 +83,23 @@ const items = computed(() => {
 </script>
 
 <template>
-	<UiQuickAccessToolbar
-		class="cubeoffice-desktop-history"
-		:items="items"
-		:aria-label="i18n.t('history.quickAccess')"
-		@select="emit('command', $event.id === 'undo' ? 'undo' : 'redo')"
-	/>
+	<span ref="anchor" hidden />
+	<Teleport v-if="target" :to="target">
+		<div class="cubeoffice-ribbon-quick-access">
+			<UiIconButton
+				icon="save"
+				size="sm"
+				:aria-label="i18n.t('common.save')"
+				:disabled="busy || saveDisabled"
+				@mousedown.prevent
+				@click="emit('save')"
+			/>
+			<UiQuickAccessToolbar
+				v-if="editor.undo || editor.redo"
+				:items="items"
+				:aria-label="i18n.t('history.quickAccess')"
+				@select="emit('command', $event.id === 'undo' ? 'undo' : 'redo')"
+			/>
+		</div>
+	</Teleport>
 </template>

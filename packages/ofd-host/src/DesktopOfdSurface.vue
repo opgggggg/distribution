@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
-import { OfdViewer } from "@cubexp/ofd/vue";
+import { OfdViewer, type OfdViewerControls } from "@cubexp/ofd/vue";
 import {
 	readOfdDocument,
 	exportDocument,
@@ -12,13 +12,21 @@ import {
 	type OfdActionHost,
 } from "@cubexp/ofd";
 import { useUiEditorI18n } from "@yaochn/als-office-editor-ui/vue/i18n";
-import { UiEditorDock, useUiEditorTheme } from "@yaochn/als-office-editor-ui/vue";
-const editorTheme = useUiEditorTheme();
+import {
+	UiEditorDock,
+	UiRibbonCommandButton,
+	UiRibbonField,
+	UiRibbonGroup,
+	UiRibbonSurface,
+	UiRibbonTabs,
+	useUiEditorTheme,
+} from "@yaochn/als-office-editor-ui/vue";
 import * as native from "./bridge";
 import { acquireSession, type SessionLease } from "./session-lease";
 import type { NativeSession, NativeCapabilities, VerificationReport, PrintStatus } from "./types";
 import SignaturePanel from "./SignaturePanel.vue";
 import TrustSettings from "./TrustSettings.vue";
+const editorTheme = useUiEditorTheme();
 const props = defineProps<{
 	source: Blob | ArrayBuffer | Uint8Array | string;
 	fileName?: string;
@@ -26,6 +34,7 @@ const props = defineProps<{
 }>();
 interface Viewer {
 	getDocument(): OfdDocument | undefined;
+	getControls(): OfdViewerControls;
 	getCurrentPage(): number;
 	goToPage(index: number): void;
 	exportFile(format?: ConversionFormat, options?: ConvertOptions): Promise<Blob>;
@@ -72,6 +81,16 @@ let generation = 0,
 let preferences: OfdViewPreferences | undefined;
 const i18n = useUiEditorI18n(),
 	zh = computed(() => i18n.value.locale.startsWith("zh"));
+const ribbonTab = ref("home");
+const ribbonCollapsed = ref(false);
+const ribbonTabs = computed(() => [
+	{ id: "home", label: zh.value ? "开始" : "Home" },
+	{ id: "view", label: zh.value ? "视图" : "View" },
+]);
+const controls = computed(() => viewer.value?.getControls());
+const zoomLevels = computed(() =>
+	[...new Set([50, 75, 100, 125, 150, 200, controls.value?.zoom ?? 100])].sort((a, b) => a - b),
+);
 const host = native.nativeAvailable();
 const policy = computed(() => session.value?.documents[documentIndex.value]?.policy);
 const readAllowed = computed(
@@ -481,45 +500,237 @@ defineExpose({
 });
 </script>
 <template>
-	<section ref="element" class="cube-ofd-host" :data-editor-theme="editorTheme">
-		<div
-			class="cube-ofd-toolbar"
-			role="toolbar"
-			:aria-label="zh ? 'OFD 桌面功能' : 'OFD desktop controls'"
+	<section ref="element" class="cube-ofd-host als-ofs-editor-ui" :data-editor-theme="editorTheme">
+		<UiRibbonSurface
+			mode="desktop"
+			:active-tab="ribbonTab"
+			:collapsed="ribbonCollapsed"
+			:aria-label="zh ? 'OFD 功能区' : 'OFD ribbon'"
 		>
-			<select
-				v-if="session && session.documents.length > 1"
-				v-model.number="documentIndex"
-				:aria-label="zh ? '文档' : 'Document'"
-			>
-				<option v-for="doc in session.documents" :key="doc.index" :value="doc.index">
-					{{ doc.title || `${zh ? "文档" : "Document"} ${doc.index + 1}` }}
-				</option>
-			</select>
-			<button type="button" :disabled="!session" @click="signaturesOpen = !signaturesOpen">
-				{{ badge }}
-			</button>
-			<button type="button" :disabled="!session || verifying" @click="verify">
-				{{ zh ? "验证签名" : "Verify signatures" }}
-			</button>
-			<button type="button" :disabled="!host" @click="showTrust">
-				{{ zh ? "证书信任" : "Certificate trust" }}
-			</button>
-			<button
-				type="button"
-				:disabled="
-					!ready || !session || !policy?.print || !caps?.printing.available || printing
-				"
-				@click="showPrint"
-			>
-				{{ zh ? "打印…" : "Print…" }}
-			</button>
-			<span v-if="!host" class="cube-ofd-muted">{{
-				zh
-					? "原生验证及专用媒体需要桌面版。"
-					: "Native verification and media require the desktop app."
-			}}</span>
-		</div>
+			<template #tabs>
+				<UiRibbonTabs
+					v-model="ribbonTab"
+					v-model:collapsed="ribbonCollapsed"
+					mode="desktop"
+					:items="ribbonTabs"
+					@select="ribbonCollapsed = false"
+					@reselect="ribbonCollapsed = !ribbonCollapsed"
+				/>
+			</template>
+			<template #commands>
+				<template v-if="ribbonTab === 'home'">
+					<UiRibbonGroup :label="zh ? '文件' : 'File'">
+						<UiRibbonCommandButton
+							data-editor-file-command="open"
+							icon="open-file"
+							:label="i18n.t('common.open')"
+							size="lg"
+						/>
+						<template v-if="!controls?.hidden">
+							<UiRibbonCommandButton
+								icon="export-file"
+								:label="i18n.t('common.export')"
+								size="lg"
+								:disabled="
+									!controls?.exportFormats.length ||
+									controls.exporting ||
+									policy?.export === false
+								"
+								@activate="controls?.exportFiles()"
+							/>
+							<UiRibbonField :label="zh ? '导出格式' : 'Export format'">
+								<select
+									:value="controls?.exportFormat"
+									:disabled="
+										!controls?.exportFormats.length ||
+										controls.exporting ||
+										policy?.export === false
+									"
+									@change="
+										controls?.setExportFormat(
+											($event.target as HTMLSelectElement)
+												.value as ConversionFormat,
+										)
+									"
+								>
+									<option
+										v-for="format in controls?.exportFormats"
+										:key="format"
+										:value="format"
+									>
+										{{ format.toUpperCase() }}
+									</option>
+								</select>
+							</UiRibbonField>
+						</template>
+						<UiRibbonCommandButton
+							icon="print"
+							:label="i18n.t('common.print')"
+							size="lg"
+							:disabled="
+								!ready ||
+								!session ||
+								!policy?.print ||
+								!caps?.printing.available ||
+								printing
+							"
+							@activate="showPrint"
+						/>
+					</UiRibbonGroup>
+					<UiRibbonGroup :label="zh ? '签名与证书' : 'Signatures and certificates'">
+						<UiRibbonCommandButton
+							icon="lock"
+							:label="badge"
+							size="sm"
+							:active="signaturesOpen"
+							:disabled="!session"
+							@activate="signaturesOpen = !signaturesOpen"
+						/>
+						<UiRibbonCommandButton
+							icon="data-check"
+							:label="zh ? '验证签名' : 'Verify signatures'"
+							size="sm"
+							:disabled="!session || verifying"
+							@activate="verify"
+						/>
+						<UiRibbonCommandButton
+							icon="lock"
+							:label="zh ? '证书信任' : 'Certificate trust'"
+							size="sm"
+							:disabled="!host"
+							@activate="showTrust"
+						/>
+					</UiRibbonGroup>
+				</template>
+				<template v-else>
+					<UiRibbonGroup
+						v-if="session && session.documents.length > 1"
+						:label="zh ? '文档' : 'Document'"
+					>
+						<UiRibbonField
+							:label="zh ? '当前文档' : 'Current document'"
+							:control-width="180"
+						>
+							<select v-model.number="documentIndex">
+								<option
+									v-for="doc in session.documents"
+									:key="doc.index"
+									:value="doc.index"
+								>
+									{{
+										doc.title || `${zh ? "文档" : "Document"} ${doc.index + 1}`
+									}}
+								</option>
+							</select>
+						</UiRibbonField>
+					</UiRibbonGroup>
+					<template v-if="!controls?.hidden">
+						<UiRibbonGroup :label="zh ? '导航' : 'Navigation'">
+							<UiRibbonCommandButton
+								icon="chevron-left"
+								:label="i18n.t('common.previous')"
+								size="lg"
+								:disabled="!controls || controls.page === 0"
+								@activate="controls && controls.selectPage(controls.page - 1)"
+							/>
+							<UiRibbonField :label="zh ? '页面' : 'Page'" :control-width="100">
+								<select
+									:value="controls?.page"
+									:disabled="!controls?.pages.length"
+									@change="
+										controls?.selectPage(
+											Number(($event.target as HTMLSelectElement).value),
+										)
+									"
+								>
+									<option
+										v-for="(page, index) in controls?.pages"
+										:key="index"
+										:value="index"
+									>
+										{{ page.name }}
+									</option>
+								</select>
+							</UiRibbonField>
+							<UiRibbonCommandButton
+								icon="chevron-right"
+								:label="i18n.t('common.next')"
+								size="lg"
+								:disabled="!controls || controls.page >= controls.pages.length - 1"
+								@activate="controls && controls.selectPage(controls.page + 1)"
+							/>
+							<UiRibbonField
+								v-if="controls?.outlines.length"
+								:label="zh ? '目录' : 'Outline'"
+								:control-width="140"
+							>
+								<select
+									value=""
+									@change="
+										controls.selectOutline(
+											Number(($event.target as HTMLSelectElement).value),
+										)
+									"
+								>
+									<option value="" disabled>
+										{{ zh ? "选择章节" : "Choose a section" }}
+									</option>
+									<option
+										v-for="(outline, index) in controls.outlines"
+										:key="index"
+										:value="index"
+									>
+										{{ outline.label }}
+									</option>
+								</select>
+							</UiRibbonField>
+						</UiRibbonGroup>
+						<UiRibbonGroup :label="zh ? '缩放' : 'Zoom'">
+							<UiRibbonField :label="zh ? '比例' : 'Magnification'">
+								<select
+									:value="controls?.zoom ?? 100"
+									:disabled="!controls?.pages.length"
+									@change="
+										controls?.setZoom(
+											Number(($event.target as HTMLSelectElement).value),
+										)
+									"
+								>
+									<option v-for="level in zoomLevels" :key="level" :value="level">
+										{{ Math.round(level * 10) / 10 }}%
+									</option>
+								</select>
+							</UiRibbonField>
+						</UiRibbonGroup>
+						<UiRibbonGroup :label="i18n.t('common.search')">
+							<UiRibbonField
+								:label="zh ? '查找文本' : 'Find text'"
+								:control-width="150"
+							>
+								<input
+									type="search"
+									:value="controls?.query"
+									:disabled="!controls?.pages.length"
+									@input="
+										controls?.setQuery(
+											($event.target as HTMLInputElement).value,
+										)
+									"
+									@keydown.enter.prevent="controls?.findNext()"
+								/>
+							</UiRibbonField>
+							<UiRibbonCommandButton
+								icon="search"
+								:label="zh ? '查找下一个' : 'Find next'"
+								size="lg"
+								:disabled="!controls?.matchCount"
+								@activate="controls?.findNext()"
+							/>
+						</UiRibbonGroup>
+					</template>
+				</template>
+			</template>
+		</UiRibbonSurface>
 		<p v-if="opening" role="status" class="cube-ofd-message">
 			{{ zh ? "正在建立文档会话…" : "Opening document session…" }}
 		</p>
@@ -557,6 +768,7 @@ defineExpose({
 				ref="viewer"
 				:source="source"
 				:editor-theme="editorTheme"
+				external-toolbar
 				:file-name="fileName ?? 'document.ofd'"
 				:convert="convert"
 				:preview="(blob, options) => readOfdDocument(blob, { ...options, documentIndex })"
@@ -656,27 +868,20 @@ defineExpose({
 	min-height: 360px;
 	display: flex;
 	flex-direction: column;
-	color: var(--office-text, #172033);
-	background: var(--office-surface, #edf2f3);
+	color: var(--als-ofs-ui-text, #172033);
+	background: var(--als-ofs-ui-surface, #edf2f3);
 }
-.cube-ofd-toolbar {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 8px;
-	padding: 8px 12px;
-	background: var(--office-panel, #fff);
-	border-bottom: 1px solid var(--office-border, #d5e1e3);
-}
-.cube-ofd-host button,
-.cube-ofd-host select,
-.cube-ofd-host input {
+.cube-ofd-message button,
+.cube-ofd-media button,
+.cube-ofd-dialog button,
+.cube-ofd-dialog input,
+.cube-ofd-host :deep(.als-ofs-ui-ribbon-field__control > :is(select, input)) {
 	font: inherit;
 	font-size: 12px;
-	border: 1px solid var(--office-border, #d5e1e3);
+	border: 1px solid var(--als-ofs-ui-border, #d5e1e3);
 	border-radius: 6px;
 	padding: 6px 10px;
-	background: var(--office-panel, #fff);
+	background: var(--als-ofs-ui-surface, #fff);
 	color: inherit;
 }
 .cube-ofd-host button {
@@ -701,10 +906,6 @@ defineExpose({
 	box-sizing: border-box;
 	border-left: 0;
 }
-.cube-ofd-host[data-editor-theme="panel"] .cube-ofd-toolbar {
-	gap: 4px;
-	padding: 6px 8px;
-}
 .cube-ofd-message {
 	margin: 0;
 	padding: 8px 12px;
@@ -714,10 +915,6 @@ defineExpose({
 .cube-ofd-error {
 	color: #a32525;
 	background: #fff0f0;
-}
-.cube-ofd-muted {
-	font-size: 12px;
-	color: var(--office-text-muted, #617076);
 }
 .cube-ofd-media {
 	padding: 10px;

@@ -568,9 +568,14 @@ button.unsaved-dialog__primary {
 }
 
 .desktop-app[data-graphics-appearance]
-	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview, .vector-ribbon),
+	:is(
+		.als-ofs-psd-editor__shell,
+		.cubeoffice-illustrator-preview,
+		.vector-ribbon,
+		.cube-ofd-host
+	),
 .desktop-app[data-graphics-appearance]
-	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview, .vector-ribbon)
+	:is(.als-ofs-psd-editor__shell, .cubeoffice-illustrator-preview, .vector-ribbon, .cube-ofd-host)
 	.als-ofs-editor-ui {
 	--als-ofs-ui-surface: var(--graphics-panel) !important;
 	--als-ofs-ui-surface-muted: var(--graphics-muted) !important;
@@ -768,15 +773,38 @@ button.unsaved-dialog__primary {
 	border-color: var(--graphics-border);
 }
 
-.desktop-titlebar__actions > .cubeoffice-desktop-history {
+.als-ofs-ui-ribbon-surface__tabs:has(> .cubeoffice-ribbon-quick-access) {
 	display: flex;
-	flex: none;
-	gap: 2px;
-	padding-inline-end: 5px;
-	border-inline-end: 1px solid var(--graphics-border, #c9cbd1);
+	align-items: stretch;
 }
 
-.desktop-titlebar__actions .cubeoffice-desktop-history button {
+.als-ofs-ui-ribbon-surface__tabs:has(> .cubeoffice-ribbon-quick-access) > .als-ofs-ui-ribbon-tabs,
+.als-ofs-ui-ribbon-surface__tabs:has(> .cubeoffice-ribbon-quick-access)
+	> #editor-ribbon-tabs
+	> .als-ofs-ui-ribbon-tabs {
+	order: -2;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.cubeoffice-ribbon-quick-access {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 2px;
+	padding-inline: 4px;
+	color: var(--als-ofs-ui-text);
+}
+
+.als-ofs-ui-ribbon-surface__tabs > .cubeoffice-ribbon-quick-access {
+	order: -1;
+}
+
+.cubeoffice-ribbon-quick-access .als-ofs-ui-quick-access-toolbar {
+	gap: 2px;
+}
+
+.cubeoffice-ribbon-quick-access button {
 	width: 26px;
 	min-width: 26px;
 	height: 26px;
@@ -785,26 +813,17 @@ button.unsaved-dialog__primary {
 	background: transparent;
 }
 
-.desktop-titlebar__actions .cubeoffice-desktop-history button:disabled {
-	opacity: 0.42;
-}
-
-.desktop-app[data-graphics-appearance="dark"]
-	.desktop-titlebar__actions
-	.cubeoffice-desktop-history
-	button {
-	color: var(--graphics-text);
-}
-
 .document-host[data-shared-history="true"]
 	:is(
 		.als-ofs-docx-office-editor__compact-history,
+		.als-ofs-docx-office-editor__compact-actions > button:has([data-icon-name="save"]),
 		.als-ofs-xlsx-compact-actions .als-ofs-ui-quick-access-toolbar,
 		.als-ofs-image-editor__compact-actions .als-ofs-ui-quick-access-toolbar,
 		.als-ofs-ui-markdown-editor__compact-actions .als-ofs-ui-quick-access-toolbar,
 		.cubexp-text-history,
 		.cube-notes__history,
-		.cube-notes__tray-history
+		.cube-notes__tray-history,
+		.cube-notes__header > .cube-notes__button:is([aria-label="Save"], [aria-label="保存"])
 	) {
 	display: none;
 }

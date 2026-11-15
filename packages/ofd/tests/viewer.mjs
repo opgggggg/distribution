@@ -84,6 +84,29 @@ test("theme changes preserve the loaded OFD document and viewer instance", async
 	assert.equal(viewer.getDocument(), document);
 });
 
+test("external toolbar controls use the viewer's page and search state", async (t) => {
+	const mounted = mountViewer(ofd("searchable"), { externalToolbar: true });
+	t.after(() => mounted.app.unmount());
+	await loaded(mounted);
+	const viewer = mounted.viewer.value;
+	assert.equal(
+		mounted.root.children[0].children.find((node) => node.props.role === "toolbar")?.props
+			.hidden,
+		true,
+	);
+	const controls = viewer.getControls();
+	assert.equal(controls.pages.length, 2);
+	controls.selectPage(1);
+	controls.setZoom(125);
+	controls.setQuery("searchable");
+	await tick();
+	assert.equal(viewer.getControls().zoom, 125);
+	assert.equal(viewer.getControls().matchCount, 2);
+	assert.equal(viewer.getCurrentPage(), 1);
+	controls.findNext();
+	assert.equal(viewer.getCurrentPage(), 0);
+});
+
 test("viewer drops stale loads, aborts prior fetches and uses custom export backend", async (t) => {
 	let release;
 	const delayed = new Promise((resolve) => {

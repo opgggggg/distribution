@@ -59,6 +59,25 @@ export function cubeOfficeGraphicsPlugin() {
 				],
 			};
 			const historyEditorPath = path.split("/als-office/packages/").at(-1);
+			if (historyEditorPath === "editor-ui/src/vue/components/UiRibbonTabs.vue") {
+				for (const [before, after] of [
+					[
+						'v-if="showsCollapseToggle"',
+						"v-if=\"resolvedMode !== 'desktop' && showsCollapseToggle\"",
+					],
+					[
+						'if (!showsCollapseToggle.value) emit("reselect", item);',
+						'if (resolvedMode.value !== "desktop") emit("reselect", item);',
+					],
+					[
+						':aria-expanded="item.id === modelValue ? !collapsed : undefined"',
+						":aria-expanded=\"resolvedMode !== 'desktop' && item.id === modelValue ? !collapsed : undefined\"",
+					],
+				]) {
+					source = replaceOnce(source, before, after);
+				}
+				return { code: source, map: null };
+			}
 			const historyEditor = historyEditors[historyEditorPath];
 			if (historyEditor) {
 				const [anchor, exposed, history] = historyEditor;
@@ -336,8 +355,8 @@ const appearanceOptions = computed<UiSelectOption[]>(() => [
 				`<script setup lang="ts">
 import { graphicsAppearance } from ${JSON.stringify(appearance)};
 import DesktopHistoryControls from ${JSON.stringify(desktopHistoryControls)};
-const showDesktopHistory = computed(() => Boolean(canSave.value && !openingShellVisible.value &&
-	editor.value?.role === "editor" && (editor.value.undo || editor.value.redo)));
+const showDesktopQuickAccess = computed(() => Boolean(canSave.value && !openingShellVisible.value &&
+	editor.value?.role === "editor"));
 import { canOutputDocument, graphicsExportLabel, rasterizePdfFirstPage } from ${JSON.stringify(output)};
 import { saveBlobToChosenPath } from ${JSON.stringify(download)};
 
@@ -377,19 +396,23 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 			);
 			source = replaceOnce(
 				source,
-				'<div class="desktop-titlebar__actions" data-no-drag>',
-				`<div class="desktop-titlebar__actions" data-no-drag>
-				<DesktopHistoryControls
-					v-if="showDesktopHistory && editor"
-					:editor="editor"
-					:busy="busy || transferBusy"
-					@command="runCurrentHistory"
-				/>`,
+				'class="document-host"',
+				`class="document-host" :data-shared-history="showDesktopQuickAccess ? 'true' : undefined"`,
 			);
 			source = replaceOnce(
 				source,
-				'class="document-host"',
-				`class="document-host" :data-shared-history="showDesktopHistory ? 'true' : undefined"`,
+				"<UiArtifactWorkspace\n",
+				`<DesktopHistoryControls
+					v-if="showDesktopQuickAccess && activeTab && editor"
+					:artifact-id="activeTab.id"
+					:editor="editor"
+					:busy="busy || transferBusy"
+					:save-disabled="Boolean(activeTab.document.path) && !isTabDirty(activeTab.id)"
+					@save="saveCurrent"
+					@command="runCurrentHistory"
+				/>
+				<UiArtifactWorkspace
+`,
 			);
 			source = replaceOnce(
 				source,

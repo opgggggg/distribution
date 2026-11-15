@@ -35,10 +35,30 @@ export type OfdConverter = (
 	to: ConversionFormat,
 	options: ConvertOptions,
 ) => Promise<ConversionResult>;
+export interface OfdViewerControls {
+	readonly hidden: boolean;
+	readonly pages: readonly { name: string }[];
+	readonly page: number;
+	readonly zoom: number;
+	readonly query: string;
+	readonly matchCount: number;
+	readonly outlines: readonly { label: string }[];
+	readonly exportFormats: readonly ConversionFormat[];
+	readonly exportFormat: ConversionFormat;
+	readonly exporting: boolean;
+	selectPage(index: number): void;
+	selectOutline(index: number): void;
+	setZoom(percent: number): void;
+	setQuery(value: string): void;
+	findNext(): void;
+	setExportFormat(format: ConversionFormat): void;
+	exportFiles(): Promise<void>;
+}
 export const OfdViewer = defineComponent({
 	name: "OfdViewer",
 	props: {
 		editorTheme: { type: String as PropType<"classic" | "panel">, default: "classic" },
+		externalToolbar: { type: Boolean, default: false },
 		source: {
 			type: [Blob, ArrayBuffer, Uint8Array, String] as PropType<ArtifactSource>,
 			required: true,
@@ -408,18 +428,50 @@ export const OfdViewer = defineComponent({
 				);
 		});
 
+		const toolbarHidden = computed(
+			() =>
+				model.value?.documents?.[current.value?.documentIndex ?? 0]?.view.hideToolbar ??
+				false,
+		);
+		function selectPage(index: number) {
+			if (Number.isInteger(index) && model.value?.pages[index]) page.value = index;
+		}
+		function selectOutline(index: number) {
+			const entry = outlineOptions.value[index];
+			if (entry) void dispatch(entry.actions, true, entry.documentIndex);
+		}
+		function getControls(): OfdViewerControls {
+			return {
+				hidden: toolbarHidden.value,
+				pages: model.value?.pages ?? [],
+				page: page.value,
+				zoom: zoom.value,
+				query: query.value,
+				matchCount: matches.value.length,
+				outlines: outlineOptions.value,
+				exportFormats: available.value,
+				exportFormat: target.value,
+				exporting: busy.value,
+				selectPage,
+				selectOutline,
+				setZoom: (value) => {
+					zoom.value = value;
+				},
+				setQuery: (value) => {
+					query.value = value;
+				},
+				findNext,
+				setExportFormat: (format) => {
+					target.value = format;
+				},
+				exportFiles,
+			};
+		}
 		expose({
+			getControls,
 			getPageCount: () => model.value?.pages.length ?? 0,
 			getCurrentPage: () => page.value,
-			goToPage: (index: number) => {
-				if (
-					model.value &&
-					Number.isInteger(index) &&
-					index >= 0 &&
-					index < model.value.pages.length
-				)
-					page.value = index;
-			},
+			goToPage: selectPage,
 			getDocument: () => model.value,
 			executeActions: dispatch,
 			getAttachments: () => model.value?.documents?.flatMap((doc) => doc.attachments) ?? [],
@@ -470,8 +522,10 @@ export const OfdViewer = defineComponent({
 						height: "100%",
 						minHeight: "360px",
 						fontFamily: "system-ui,sans-serif",
-						background: "#e8edf3",
-						color: "#172033",
+						background: props.externalToolbar
+							? "var(--graphics-stage, var(--als-ofs-ui-surface-muted, #e8edf3))"
+							: "#e8edf3",
+						color: props.externalToolbar ? "inherit" : "#172033",
 					},
 					"aria-label": "OfdDocument viewer",
 				},
@@ -480,12 +534,11 @@ export const OfdViewer = defineComponent({
 						"div",
 						{
 							role: "toolbar",
+							hidden: props.externalToolbar,
 							"aria-label": "Document controls",
 							style: {
-								display: model.value?.documents?.[current.value?.documentIndex ?? 0]
-									?.view.hideToolbar
-									? "none"
-									: "flex",
+								display:
+									props.externalToolbar || toolbarHidden.value ? "none" : "flex",
 								flexWrap: "wrap",
 								gap: props.editorTheme === "panel" ? "4px" : "8px",
 								alignItems: "center",
@@ -502,16 +555,12 @@ export const OfdViewer = defineComponent({
 											style: control,
 											"aria-label": "Document outline",
 											value: "",
-											onChange: (event: Event) => {
-												const index = Number(
-													(event.target as HTMLSelectElement).value,
-												);
-												void dispatch(
-													outlineOptions.value[index].actions,
-													true,
-													outlineOptions.value[index].documentIndex,
-												);
-											},
+											onChange: (event: Event) =>
+												selectOutline(
+													Number(
+														(event.target as HTMLSelectElement).value,
+													),
+												),
 										},
 										[
 											h("option", { value: "", disabled: true }, "Outline"),
@@ -521,7 +570,7 @@ export const OfdViewer = defineComponent({
 										],
 									)
 								: null,
-							button("Previous", () => page.value--, page.value <= 0),
+							button("Previous", () => selectPage(page.value - 1), page.value <= 0),
 							h(
 								"select",
 								{
@@ -537,7 +586,7 @@ export const OfdViewer = defineComponent({
 							),
 							button(
 								"Next",
-								() => page.value++,
+								() => selectPage(page.value + 1),
 								!model.value || page.value >= model.value.pages.length - 1,
 							),
 							h(
