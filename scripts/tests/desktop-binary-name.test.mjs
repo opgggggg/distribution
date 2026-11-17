@@ -26,11 +26,12 @@ for (const target of targets) {
 			),
 		);
 		assert.equal(config.mainBinaryName, "cubeoffice-app");
-		// The OFD sidecar ships with every build; the media pair is opt-in through
-		// CUBEOFFICE_BUNDLE_MEDIA and is deliberately not part of the default bundle.
+		// OFD ships on every host. macOS also builds the native PSD image sidecar.
+		// The media pair remains opt-in through CUBEOFFICE_BUNDLE_MEDIA.
 		assert.deepEqual(config.bundle.externalBin, [
 			"binaries/cubeoffice",
 			"binaries/cubeoffice-ofd-service",
+			...(process.platform === "darwin" ? ["binaries/cubeoffice-psd-images"] : []),
 		]);
 		assert.equal(config.identifier, "com.cubexp.office");
 	});
