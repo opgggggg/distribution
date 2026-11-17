@@ -124,6 +124,8 @@
 	min-width: 0;
 	min-height: 0;
 	overflow: auto;
+	overscroll-behavior: contain;
+	overflow-anchor: none;
 	background: var(--vector-stage);
 }
 .vector-pasteboard__content {
@@ -135,7 +137,7 @@
 	min-width: 100%;
 	min-height: 100%;
 	box-sizing: border-box;
-	padding: 26px 36px 44px;
+	padding: var(--vector-pan-y, 44px) var(--vector-pan-x, 36px);
 }
 .vector-artboard {
 	display: flex;
@@ -179,6 +181,22 @@
 }
 .vector-artboard__page[data-tool="select"] [data-vector-id] {
 	cursor: move;
+}
+.vector-pasteboard[data-hand="true"],
+.vector-pasteboard[data-hand="true"] .vector-artboard__page,
+.vector-pasteboard[data-hand="true"] .vector-artboard__page * {
+	cursor: grab;
+}
+.vector-pasteboard[data-panning="true"],
+.vector-pasteboard[data-panning="true"] .vector-artboard__page,
+.vector-pasteboard[data-panning="true"] .vector-artboard__page * {
+	cursor: grabbing;
+}
+.vector-context-host {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
 }
 .vector-selection {
 	stroke: var(--vector-outline);
@@ -320,17 +338,27 @@
 	padding: 2px;
 	min-width: 26px;
 }
-.vector-layer .vector-layer__name {
-	display: block;
-	overflow: hidden;
+.vector-layer--group {
+	font-weight: 600;
+}
+.vector-layer[data-group] .vector-layer__name span {
+	padding-left: 9px;
+}
+.vector-editor .vector-layer button.vector-layer__name {
+	justify-content: flex-start;
+	gap: 6px;
+	min-width: 0;
 	padding: 3px 4px;
-	text-overflow: ellipsis;
 	text-align: left;
 }
 .vector-layer__name svg {
-	vertical-align: middle;
-	margin-right: 3px;
+	flex: none;
 	color: var(--vector-secondary);
+}
+.vector-layer__name span {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 .vector-layer--background {
 	color: var(--vector-secondary);

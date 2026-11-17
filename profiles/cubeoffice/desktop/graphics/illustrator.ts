@@ -96,7 +96,13 @@ const plugin: ArtifactPlugin = {
 
 const editorManifest: ArtifactFormatManifest = {
 	...manifest,
-	capabilities: { edit: true, "undo-redo": true, "pdf-export": true },
+	capabilities: {
+		edit: true,
+		"ai-read": true,
+		"ai-write": true,
+		"undo-redo": true,
+		"pdf-export": true,
+	},
 };
 
 export const CUBEOFFICE_ILLUSTRATOR_CONTRIBUTION: UiArtifactFormatContribution = {

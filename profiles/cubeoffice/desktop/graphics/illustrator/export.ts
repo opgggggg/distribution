@@ -30,6 +30,7 @@ import {
 import { rasterizePdfFirstPage } from "../output";
 import { MAX_INPUT_BYTES, PROJECT_KEY } from "./import";
 import {
+	isObjectHidden,
 	parseVectorProject,
 	pathData,
 	type Artboard,
@@ -154,7 +155,7 @@ async function writePdf(
 			page.drawImage(image, { x: 0, y: 0, width: board.width, height: board.height });
 		}
 		for (const object of board.objects) {
-			if (object.hidden) continue;
+			if (isObjectHidden(board, object)) continue;
 			page.pushOperators(
 				pushGraphicsState(),
 				concatTransformationMatrix(1, 0, 0, -1, 0, board.height),
@@ -199,7 +200,7 @@ function writeSvg(board: Artboard): Blob {
 		? `<image width="${board.width}" height="${board.height}" href="data:image/png;base64,${board.background}"/>`
 		: "";
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${board.width}" height="${board.height}" viewBox="0 0 ${board.width} ${board.height}"><title>${xml(board.name)}</title>${background}${board.objects
-		.filter((object) => !object.hidden)
+		.filter((object) => !isObjectHidden(board, object))
 		.map(svgObject)
 		.join("")}</svg>`;
 	return new Blob([svg], { type: "image/svg+xml" });

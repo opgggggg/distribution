@@ -390,7 +390,14 @@ export async function openVectorProject(
 	if (embedded) {
 		if (!(embedded instanceof PDFHexString))
 			throw new Error("The CubeOffice vector project is invalid.");
-		return { project: parseVectorProject(embedded.decodeText()), native: true };
+		// PDFHexString.decodeText spreads all UTF-16 code points into a single
+		// function call. Use a streaming decoder for CubeOffice's UTF-16BE data.
+		const data = embedded.asBytes();
+		const serialized =
+			data[0] === 0xfe && data[1] === 0xff
+				? new TextDecoder("utf-16be").decode(data)
+				: embedded.decodeText();
+		return { project: parseVectorProject(serialized), native: true };
 	}
 	if (container.getPageCount() > MAX_BOARDS)
 		throw new Error(`This file has more than ${MAX_BOARDS} artboards.`);

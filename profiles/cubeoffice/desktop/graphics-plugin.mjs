@@ -365,8 +365,8 @@ import { graphicsAppearancePreference, setGraphicsAppearancePreference } from ${
 
 const i18n = useUiEditorI18n();
 const appearanceCopy = computed(() => i18n.value.locale === "zh-CN"
-	? { label: "外观", help: "设置 PSD 和 Illustrator 编辑器的外观。", system: "跟随系统", light: "浅色", dark: "深色" }
-	: { label: "Appearance", help: "Choose the appearance of the PSD and Illustrator editors.", system: "Follow System", light: "Light", dark: "Dark" });
+	? { label: "外观", help: "设置 CubeOffice 界面的外观。", system: "跟随系统", light: "浅色", dark: "深色" }
+	: { label: "Appearance", help: "Choose the appearance of CubeOffice.", system: "Follow System", light: "Light", dark: "Dark" });
 const appearanceOptions = computed<UiSelectOption[]>(() => [
 	{ value: "system", label: appearanceCopy.value.system },
 	{ value: "light", label: appearanceCopy.value.light },
@@ -447,7 +447,7 @@ async function exportGraphicsDocument(action: "pdf" | "png"): Promise<void> {
 				source,
 				'class="desktop-app"',
 				`class="desktop-app"
-				:data-graphics-appearance="document && ['psd', 'ai', 'ofd'].includes(document.format) ? graphicsAppearance : undefined"`,
+				:data-graphics-appearance="graphicsAppearance"`,
 			);
 			source = replaceOnce(
 				source,

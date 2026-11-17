@@ -33,12 +33,17 @@ export interface VectorText extends Artwork {
 	size: number;
 }
 export type VectorObject = VectorPath | VectorText;
+export interface VectorGroup {
+	name: string;
+	hidden: boolean;
+}
 export interface Artboard {
 	id: string;
 	name: string;
 	width: number;
 	height: number;
 	objects: VectorObject[];
+	groups?: Record<string, VectorGroup>;
 	/** PNG encoded as base64. Present only when the source page could not be reproduced as paths. */
 	background?: string;
 }
@@ -54,6 +59,10 @@ export const MAX_BOARDS = 100;
 export const MAX_OBJECTS = 10_000;
 export const MAX_COMMANDS = 100_000;
 export const MAX_PROJECT_BYTES = 16 * 1024 * 1024;
+
+export function isObjectHidden(board: Artboard | undefined, object: VectorObject): boolean {
+	return object.hidden || Boolean(object.groupId && board?.groups?.[object.groupId]?.hidden);
+}
 
 export function newArtboard(name: string, width = 800, height = 600): Artboard {
 	return { id: crypto.randomUUID(), name, width, height, objects: [] };
@@ -209,6 +218,19 @@ export function parseVectorProject(serialized: string): VectorProject {
 				(typeof board.background !== "string" || !PNG.test(board.background)))
 		)
 			throw invalid();
+		if (board.groups !== undefined) {
+			if (!isRecord(board.groups) || Object.keys(board.groups).length > MAX_OBJECTS)
+				throw invalid();
+			for (const [id, group] of Object.entries(board.groups)) {
+				if (
+					!/^[\w-]{1,80}$/.test(id) ||
+					!isRecord(group) ||
+					!validString(group.name, 128) ||
+					typeof group.hidden !== "boolean"
+				)
+					throw invalid();
+			}
+		}
 		objects += board.objects.length;
 		if (objects > MAX_OBJECTS) throw invalid();
 		for (const object of board.objects) {

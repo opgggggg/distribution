@@ -2,14 +2,18 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 import { artifactSourceToUint8Array, type ArtifactSource } from "@yaochn/als-office-editor-core";
 import {
+	UiContextMenu,
 	UiEditorFileSection,
 	UiIcon,
+	useUiContextMenuFocus,
 	useUiEditorPalette,
 	UiRibbonCommandButton,
 	UiRibbonGroup,
 	deliverUiEditorFile,
+	type UiMenuItem,
 } from "@yaochn/als-office-editor-ui/vue";
 import { graphicsAppearance } from "../appearance";
+import { applyIllustratorActions, illustratorActionManifest } from "./ai-actions";
 import { exportVectorProject } from "./export";
 import {
 	objectBounds,
@@ -27,6 +31,7 @@ import {
 	MAX_DIMENSION,
 	MAX_OBJECTS,
 	inverse,
+	isObjectHidden,
 	multiply,
 	newArtboard,
 	newPath,
@@ -80,7 +85,11 @@ const root = ref<HTMLElement>();
 const working = ref(false);
 const issue = ref("");
 const swatch = ref("#7854d8");
-let initialSizeObserver: ResizeObserver | undefined;
+let sizeObserver: ResizeObserver | undefined;
+const viewportSize = ref({ width: 0, height: 0 });
+const spacePan = ref(false);
+const panning = ref(false);
+const handActive = computed(() => spacePan.value || tool.value === "hand");
 
 const tools = [
 	{ id: "select", name: "Selection", key: "V", icon: "move" },
@@ -89,16 +98,78 @@ const tools = [
 	{ id: "rectangle", name: "Rectangle", key: "M", icon: "shape-rect" },
 	{ id: "ellipse", name: "Ellipse", key: "L", icon: "shape-ellipse" },
 	{ id: "text", name: "Type", key: "T", icon: "text" },
+	{ id: "hand", name: "Hand", key: "H", icon: "move" },
 ] as const;
 type Tool = (typeof tools)[number]["id"];
 const tool = ref<Tool>("select");
 const selectedTool = computed(() => tools.find((item) => item.id === tool.value)!);
 const board = computed(() => project.value?.artboards[currentIndex.value]);
+const collapsedGroups = shallowRef(new Set<string>());
+type LayerRow =
+	| { kind: "object"; id: string; object: VectorObject }
+	| { kind: "group"; id: string; name: string; hidden: boolean };
+const layerRows = computed<LayerRow[]>(() => {
+	const activeBoard = board.value;
+	if (!activeBoard) return [];
+	const rows: LayerRow[] = [];
+	const children = new Map<string, LayerRow[]>();
+	for (const object of [...activeBoard.objects].reverse()) {
+		const row: LayerRow = { kind: "object", id: object.id, object };
+		const id = object.groupId;
+		if (!id) {
+			rows.push(row);
+			continue;
+		}
+		const groupRows = children.get(id);
+		if (groupRows) {
+			groupRows.push(row);
+			continue;
+		}
+		children.set(id, [row]);
+		const group = activeBoard.groups?.[id];
+		rows.push({
+			kind: "group",
+			id,
+			name: group?.name ?? "Group",
+			hidden: group?.hidden ?? false,
+		});
+	}
+	return rows.flatMap((row) =>
+		row.kind === "group" && !collapsedGroups.value.has(row.id)
+			? [row, ...children.get(row.id)!]
+			: [row],
+	);
+});
+function toggleGroupExpansion(id: string) {
+	const next = new Set(collapsedGroups.value);
+	if (!next.delete(id)) next.add(id);
+	collapsedGroups.value = next;
+}
+function toggleGroupVisibility(id: string) {
+	const activeBoard = board.value;
+	if (!activeBoard || props.readonly) return;
+	const group = activeBoard.groups?.[id] ?? { name: "Group", hidden: false };
+	updateBoard({
+		...activeBoard,
+		groups: { ...activeBoard.groups, [id]: { ...group, hidden: !group.hidden } },
+	});
+	if (!group.hidden)
+		setSelection(picked.value.filter((object) => object.groupId !== id).map(({ id }) => id));
+}
+function selectGroup(id: string) {
+	setSelection(
+		selectableObjects()
+			.filter((object) => object.groupId === id)
+			.map(({ id }) => id),
+	);
+}
 const picked = computed(
 	() => board.value?.objects.filter((object) => selectedIds.value.has(object.id)) ?? [],
 );
 const selected = computed(() => (picked.value.length === 1 ? picked.value[0] : undefined));
-const editable = computed(() => picked.value.filter((object) => !object.locked && !object.hidden));
+const editable = computed(() =>
+	picked.value.filter((object) => !object.locked && !isObjectHidden(board.value, object)),
+);
 const draft = shallowRef<VectorObject>();
 const draftObjects = shallowRef<Map<string, VectorObject>>();
 const marquee = shallowRef<Bounds>();
@@ -123,9 +194,12 @@ function setSelection(ids: Iterable<string> = []) {
 	selectedIds.value = new Set(ids);
 }
 function groupMembers(object: VectorObject, individual = false): VectorObject[] {
-	return !individual && object.groupId && !object.hidden && !object.locked
+	return !individual && object.groupId && !isObjectHidden(board.value, object) && !object.locked
 		? board.value!.objects.filter(
-				(member) => member.groupId === object.groupId && !member.hidden && !member.locked,
+				(member) =>
+					member.groupId === object.groupId &&
+					!isObjectHidden(board.value, member) &&
+					!member.locked,
 			)
 		: [object];
 }
@@ -147,7 +221,7 @@ const nodes = computed(() =>
 	tool.value === "anchor" &&
 	selection.value?.kind === "path" &&
 	!selection.value.locked &&
-	!selection.value.hidden
+	!isObjectHidden(board.value, selection.value)
 		? pathNodes(selection.value)
 		: [],
 );
@@ -407,6 +481,108 @@ function changeBoard(patch: Partial<Artboard>) {
 function zoom(value: number) {
 	scale.value = Math.min(4, Math.max(0.05, value));
 }
+function artboardPage(index = currentIndex.value) {
+	return view.value?.querySelector<SVGSVGElement>(
+		`[data-artboard-index="${index}"] .vector-artboard__page`,
+	);
+}
+function centerBoard() {
+	void nextTick(() => {
+		const surface = view.value;
+		const page = artboardPage()?.getBoundingClientRect();
+		if (!surface || !page) return;
+		const frame = surface.getBoundingClientRect();
+		surface.scrollLeft += page.left + page.width / 2 - frame.left - surface.clientWidth / 2;
+		surface.scrollTop += page.top + page.height / 2 - frame.top - surface.clientHeight / 2;
+	});
+}
+function zoomAround(clientX: number, clientY: number, value: number) {
+	const surface = view.value;
+	if (!surface || drag || pan) return;
+	const frame = surface.getBoundingClientRect();
+	const x =
+		clientX >= frame.left && clientX < frame.right ? clientX : frame.left + frame.width / 2;
+	const y =
+		clientY >= frame.top && clientY < frame.bottom ? clientY : frame.top + frame.height / 2;
+	const page =
+		document.elementFromPoint(x, y)?.closest<SVGSVGElement>(".vector-artboard__page") ??
+		artboardPage();
+	if (!page || !surface.contains(page)) return;
+
+	const before = page.getBoundingClientRect();
+	const fractionX = (x - before.left) / before.width;
+	const fractionY = (y - before.top) / before.height;
+	const previous = scale.value;
+	zoom(value);
+	if (previous === scale.value) return;
+	void nextTick(() => {
+		if (!page.isConnected || surface !== view.value) return;
+		const after = page.getBoundingClientRect();
+		surface.scrollLeft += after.left + fractionX * after.width - x;
+		surface.scrollTop += after.top + fractionY * after.height - y;
+	});
+}
+function wheelZoom(event: WheelEvent) {
+	if (!event.ctrlKey && !event.metaKey) return;
+	event.preventDefault();
+	if (gestureZoomStart !== undefined || !event.deltaY) return;
+	zoomAround(event.clientX, event.clientY, scale.value * (event.deltaY < 0 ? 1.1 : 1 / 1.1));
+}
+let gestureZoomStart: number | undefined;
+function handlePinch(event: Event) {
+	const gesture = event as MouseEvent & { scale: number };
+	event.preventDefault();
+	if (event.type === "gestureend") gestureZoomStart = undefined;
+	else if (event.type === "gesturestart") gestureZoomStart = scale.value;
+	else if (gestureZoomStart !== undefined && Number.isFinite(gesture.scale) && gesture.scale > 0)
+		zoomAround(gesture.clientX, gesture.clientY, gestureZoomStart * gesture.scale);
+}
+
+let pan: { surface: HTMLElement; id: number; origin: Point; scroll: Point } | undefined;
+function startPan(event: PointerEvent) {
+	const surface = view.value;
+	if (!surface || !event.isPrimary || event.button !== 0 || event.ctrlKey || drag || pan) return;
+	if (!handActive.value) {
+		if (
+			event.target instanceof Element &&
+			!event.target.closest("button, .vector-artboard__page")
+		)
+			surface.focus({ preventScroll: true });
+		return;
+	}
+	event.preventDefault();
+	event.stopPropagation();
+	surface.focus({ preventScroll: true });
+	pan = {
+		surface,
+		id: event.pointerId,
+		origin: [event.clientX, event.clientY],
+		scroll: [surface.scrollLeft, surface.scrollTop],
+	};
+	panning.value = true;
+	surface.setPointerCapture(event.pointerId);
+}
+function movePan(event: PointerEvent) {
+	if (!pan || pan.id !== event.pointerId) return;
+	pan.surface.scrollLeft = pan.scroll[0] - (event.clientX - pan.origin[0]);
+	pan.surface.scrollTop = pan.scroll[1] - (event.clientY - pan.origin[1]);
+}
+function stopPan(event?: PointerEvent) {
+	if (!pan || (event && event.pointerId !== pan.id)) return;
+	const { surface, id } = pan;
+	pan = undefined;
+	panning.value = false;
+	if (surface.hasPointerCapture(id)) surface.releasePointerCapture(id);
+}
+function releaseSpace(event: KeyboardEvent) {
+	if (event.code === "Space") spacePan.value = false;
+}
+function resetNavigation() {
+	spacePan.value = false;
+	gestureZoomStart = undefined;
+	stopPan();
+}
+
 function fitBoard() {
 	if (!board.value || !view.value) return;
 	zoom(
@@ -416,7 +592,7 @@ function fitBoard() {
 			(view.value.clientHeight - 72) / board.value.height,
 		),
 	);
-	chooseBoard(currentIndex.value);
+	centerBoard();
 }
 
 type PointerEdit =
@@ -453,7 +629,7 @@ function cancelDrawing() {
 	dragSvg = undefined;
 	dragPointer = undefined;
 }
-function eventPoint(event: PointerEvent, svg: SVGSVGElement): Point {
+function eventPoint(event: MouseEvent, svg: SVGSVGElement): Point {
 	const transform = svg.getScreenCTM();
 	if (!transform) return [0, 0];
 	const at = new DOMPoint(event.clientX, event.clientY).matrixTransform(transform.inverse());
@@ -466,7 +642,14 @@ function capture(event: PointerEvent, svg: SVGSVGElement, edit: PointerEdit) {
 	svg.setPointerCapture(event.pointerId);
 }
 function pointerDown(event: PointerEvent, index: number) {
-	if (event.button !== 0 || !event.isPrimary || props.readonly) return;
+	if (
+		event.button !== 0 ||
+		event.ctrlKey ||
+		!event.isPrimary ||
+		handActive.value ||
+		props.readonly
+	)
+		return;
 	root.value?.focus({ preventScroll: true });
 	chooseBoard(index, false);
 	const svg = event.currentTarget as SVGSVGElement;
@@ -534,18 +717,15 @@ function pointerDown(event: PointerEvent, index: number) {
 		return;
 	}
 	const individual = event.altKey || tool.value === "anchor";
-	if (
-		event.shiftKey ||
-		individual ||
-		!groupMembers(object).every((member) => selectedIds.value.has(member.id))
-	)
+	if (event.shiftKey || individual || !selectedIds.value.has(object.id))
 		selectObject(object, event.shiftKey, individual);
 	if (!event.shiftKey && tool.value === "select" && editable.value.length)
 		capture(event, svg, { kind: "move", start, objects: editable.value });
 }
 function pointerMove(event: PointerEvent, index: number) {
 	const point = eventPoint(event, event.currentTarget as SVGSVGElement);
-	if (tool.value === "pen" && index === currentIndex.value && !drag) penHover.value = point;
+	if (tool.value === "pen" && index === currentIndex.value && !drag && !handActive.value)
+		penHover.value = point;
 	if (!drag || dragPointer !== event.pointerId) return;
 	const dx = point[0] - drag.start[0],
 		dy = point[1] - drag.start[1];
@@ -626,7 +806,7 @@ function pointerUp(event: PointerEvent) {
 		if (distance >= 2 && marquee.value && board.value) {
 			for (const object of board.value.objects) {
 				if (
-					!object.hidden &&
+					!isObjectHidden(board.value, object) &&
 					!object.locked &&
 					enclosed(objectBounds(object), marquee.value)
 				)
@@ -660,6 +840,174 @@ function finishPen(close = false) {
 	penHover.value = undefined;
 	penDrag.value = undefined;
 }
+const contextMenu = useUiContextMenuFocus();
+const contextMenuHost = ref<HTMLElement>();
+const contextItems = ref<UiMenuItem[]>([]);
+let contextBoardId: string | undefined;
+let contextObjectId: string | undefined;
+
+function objectsAtPoint(page: SVGSVGElement, sheet: Artboard, event: MouseEvent) {
+	const artwork = new Map(sheet.objects.map((object) => [object.id, object]));
+	const hits: VectorObject[] = [];
+	const point = new DOMPoint(event.clientX, event.clientY);
+	const elements = [...page.querySelectorAll<SVGGElement>(":scope > [data-vector-id]")];
+	for (let index = elements.length - 1; index >= 0 && hits.length < 12; index--) {
+		const group = elements[index];
+		const object = artwork.get(group.dataset.vectorId ?? "");
+		if (!object || isObjectHidden(sheet, object)) continue;
+		const graphic = group.firstElementChild;
+		if (graphic instanceof SVGPathElement && object.kind === "path") {
+			const transform = graphic.getScreenCTM();
+			if (!transform) continue;
+			const local = point.matrixTransform(transform.inverse());
+			const fillHit = object.fill && object.fillAlpha > 0 && graphic.isPointInFill(local);
+			const strokeHit =
+				object.stroke &&
+				object.strokeAlpha > 0 &&
+				object.strokeWidth > 0 &&
+				graphic.isPointInStroke(local);
+			if (fillHit || strokeHit) hits.push(object);
+		} else if (graphic && object.kind === "text" && object.fill && object.fillAlpha > 0) {
+			const bounds = graphic.getBoundingClientRect();
+			if (
+				point.x >= bounds.left &&
+				point.x <= bounds.right &&
+				point.y >= bounds.top &&
+				point.y <= bounds.bottom
+			)
+				hits.push(object);
+		}
+	}
+	return hits;
+}
+function showContext(items: UiMenuItem[], focus: HTMLElement, x: number, y: number) {
+	contextItems.value = items;
+	contextMenu.rememberReturnFocus(focus);
+	contextMenu.setActive(true);
+	void nextTick(() => {
+		contextMenuHost.value?.querySelector(".als-ofs-ui-context-menu__trigger")?.dispatchEvent(
+			new MouseEvent("contextmenu", {
+				bubbles: true,
+				cancelable: true,
+				button: 2,
+				clientX: x,
+				clientY: y,
+			}),
+		);
+	});
+}
+function showCanvasContext(index: number, objects: VectorObject[], x: number, y: number) {
+	if (!view.value) return;
+	chooseBoard(index, false);
+	contextBoardId = board.value?.id;
+	contextObjectId = undefined;
+	const items: UiMenuItem[] = objects.map((object) => ({
+		id: `object:${object.id}`,
+		label: object.name,
+		icon: object.locked ? "lock" : object.kind === "text" ? "text" : "shape",
+	}));
+	if (!items.length) items.push({ id: "empty", label: "No visible object here", disabled: true });
+	items.push(
+		{ id: "fit", label: "Fit on Screen", separatorBefore: true },
+		{ id: "actual", label: "100%" },
+		{ id: "center", label: "Center Canvas" },
+	);
+	showContext(items, view.value, x, y);
+}
+function canvasContext(event: MouseEvent, index = currentIndex.value) {
+	const sheet = project.value?.artboards[index];
+	if (!sheet) return;
+	const page = artboardPage(index);
+	const objects = page?.contains(event.target as Node) ? objectsAtPoint(page, sheet, event) : [];
+	showCanvasContext(index, objects, event.clientX, event.clientY);
+}
+function canvasContextKey(event: KeyboardEvent) {
+	if (event.target !== view.value && event.target !== root.value) return;
+	if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+	event.preventDefault();
+	const frame = view.value?.getBoundingClientRect();
+	if (frame)
+		showCanvasContext(
+			currentIndex.value,
+			[...picked.value].reverse(),
+			frame.left + frame.width / 2,
+			frame.top + frame.height / 2,
+		);
+}
+function layerContext(object: VectorObject, event: MouseEvent | KeyboardEvent) {
+	if (
+		event instanceof KeyboardEvent &&
+		event.key !== "ContextMenu" &&
+		!(event.shiftKey && event.key === "F10")
+	)
+		return;
+	event.preventDefault();
+	if (!selectedIds.value.has(object.id)) selectObject(object, false, true);
+	contextBoardId = board.value?.id;
+	contextObjectId = object.id;
+	const focus = event.currentTarget as HTMLElement;
+	const frame = focus.getBoundingClientRect();
+	const items: UiMenuItem[] = [
+		{
+			id: "duplicate",
+			label: "Duplicate",
+			icon: "copy",
+			disabled: props.readonly || !editable.value.length,
+		},
+		{
+			id: "visibility",
+			label: object.hidden ? "Show" : "Hide",
+			icon: object.hidden ? "eye" : "eye-off",
+			disabled: props.readonly,
+		},
+		{
+			id: "lock",
+			label: object.locked ? "Unlock" : "Lock",
+			icon: object.locked ? "unlock" : "lock",
+			disabled: props.readonly,
+		},
+		canUngroup.value
+			? { id: "ungroup", label: "Ungroup", icon: "group", disabled: props.readonly }
+			: { id: "group", label: "Group", icon: "group", disabled: !canGroup.value },
+		{
+			id: "delete",
+			label: "Delete",
+			icon: "trash",
+			disabled: props.readonly || !editable.value.length,
+			danger: true,
+			separatorBefore: true,
+		},
+	];
+	showContext(
+		items,
+		focus,
+		event instanceof MouseEvent ? event.clientX : frame.left + 28,
+		event instanceof MouseEvent ? event.clientY : frame.top + frame.height / 2,
+	);
+}
+function selectContext(item: UiMenuItem) {
+	if (contextBoardId !== board.value?.id) return;
+	if (item.id.startsWith("object:")) {
+		const object = board.value?.objects.find(({ id }) => id === item.id.slice(7));
+		if (object && !isObjectHidden(board.value, object)) selectObject(object, false, true);
+	} else if (item.id === "fit") fitBoard();
+	else if (item.id === "actual") {
+		zoom(1);
+		centerBoard();
+	} else if (item.id === "center") centerBoard();
+	else {
+		const object = board.value?.objects.find(({ id }) => id === contextObjectId);
+		if (!object) return;
+		if (item.id === "duplicate") duplicate();
+		else if (item.id === "group") groupSelection();
+		else if (item.id === "ungroup") ungroupSelection();
+		else if (item.id === "delete") erase();
+		else if (item.id === "visibility")
+			replaceObject({ ...object, hidden: !object.hidden }, true);
+		else if (item.id === "lock") replaceObject({ ...object, locked: !object.locked }, true);
+	}
+}
+
 function keyboard(event: KeyboardEvent) {
 	if (
 		event.defaultPrevented ||
@@ -667,6 +1015,21 @@ function keyboard(event: KeyboardEvent) {
 			event.target.closest("input, textarea, select, [contenteditable=true]"))
 	)
 		return;
+	if (
+		event.code === "Space" &&
+		!event.ctrlKey &&
+		!event.metaKey &&
+		!event.altKey &&
+		!contextMenu.active.value &&
+		(event.target === root.value ||
+			event.target === view.value ||
+			view.value?.matches(":hover"))
+	) {
+		event.preventDefault();
+		spacePan.value = true;
+		penHover.value = undefined;
+		return;
+	}
 	const key = event.key.toLowerCase();
 	if (
 		key === "enter" &&
@@ -674,6 +1037,10 @@ function keyboard(event: KeyboardEvent) {
 		event.target.closest(".vector-ribbon button")
 	)
 		return;
+	if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
+		canvasContextKey(event);
+		return;
+	}
 	const modified = event.ctrlKey || event.metaKey;
 	if (modified && key === "z") {
 		event.preventDefault();
@@ -689,6 +1056,9 @@ function keyboard(event: KeyboardEvent) {
 	} else if (modified && key === "d") {
 		event.preventDefault();
 		duplicate();
+	} else if (!modified && !event.altKey && (key === "h" || key === "v")) {
+		event.preventDefault();
+		selectTool(key === "h" ? "hand" : "select");
 	} else if (!modified && !event.altKey && !props.readonly) {
 		const next = tools.find((item) => item.key.toLowerCase() === key);
 		if (next) {
@@ -704,7 +1074,7 @@ function keyboard(event: KeyboardEvent) {
 			event.preventDefault();
 			erase();
 		} else if (
-			event.target === root.value &&
+			(event.target === root.value || event.target === view.value) &&
 			editable.value.length &&
 			key.startsWith("arrow")
 		) {
@@ -724,6 +1094,8 @@ function keyboard(event: KeyboardEvent) {
 const ready = Promise.withResolvers<void>();
 void ready.promise.catch(() => {});
 onMounted(async () => {
+	window.addEventListener("keyup", releaseSpace);
+	window.addEventListener("blur", resetNavigation);
 	try {
 		const loaded = await openVectorProject(
 			await artifactSourceToUint8Array(props.source),
@@ -737,12 +1109,21 @@ onMounted(async () => {
 		await nextTick();
 		const canvas = view.value;
 		if (canvas) {
-			initialSizeObserver = new ResizeObserver(() => {
-				if (canvas.clientWidth <= 72 || canvas.clientHeight <= 72) return;
-				initialSizeObserver?.disconnect();
-				fitBoard();
+			let fitted = false;
+			sizeObserver = new ResizeObserver(() => {
+				const width = canvas.clientWidth;
+				const height = canvas.clientHeight;
+				if (!width || !height) {
+					resetNavigation();
+					return;
+				}
+				viewportSize.value = { width, height };
+				if (!fitted && width > 72 && height > 72) {
+					fitted = true;
+					fitBoard();
+				}
 			});
-			initialSizeObserver.observe(canvas);
+			sizeObserver.observe(canvas);
 		}
 	} catch (cause) {
 		ready.reject(cause);
@@ -754,7 +1135,10 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => {
 	controller.abort();
-	initialSizeObserver?.disconnect();
+	sizeObserver?.disconnect();
+	window.removeEventListener("keyup", releaseSpace);
+	window.removeEventListener("blur", resetNavigation);
+	resetNavigation();
 });
 const isDirty = () => project.value !== original.value;
 const subscribe = (callback: () => void) => {
@@ -829,7 +1213,11 @@ async function output(format: string, saveAs = false) {
 	}
 }
 function selectableObjects() {
-	return board.value?.objects.filter((object) => !object.locked && !object.hidden) ?? [];
+	return (
+		board.value?.objects.filter(
+			(object) => !object.locked && !isObjectHidden(board.value, object),
+		) ?? []
+	);
 }
 
 async function openFromRibbon(files: File[]) {
@@ -923,7 +1311,7 @@ const illustratorActions: Record<IllustratorCommand, () => void> = {
 	zoomOut: () => zoom(scale.value / 1.2),
 	actualSize: () => {
 		zoom(1);
-		chooseBoard(currentIndex.value);
+		centerBoard();
 	},
 	fitArtboard: fitBoard,
 	layers: () => toggleStructure("layers"),
@@ -937,7 +1325,24 @@ function runIllustratorCommand(command: IllustratorCommand) {
 	if (getIllustratorMenuState()?.enabled[command]) illustratorActions[command]();
 }
 
+function executeCommands(
+	commands: readonly unknown[],
+	options: { baseRevision?: number | string } = {},
+) {
+	const current = project.value;
+	if (!current) throw new Error("The Illustrator document is still loading.");
+	if (options.baseRevision !== undefined && options.baseRevision !== revision.value)
+		throw new Error("The Illustrator document changed. Read the current revision and retry.");
+
+	const result = applyIllustratorActions(current, commands, Boolean(props.readonly));
+	const wrote = result.project !== current;
+	if (wrote) commit(result.project);
+	return { revision: revision.value, wrote, noop: !wrote, values: result.values };
+}
+
 defineExpose({
+	getCommandManifest: () => illustratorActionManifest(Boolean(props.readonly)),
+	executeCommands,
 	getIllustratorMenuState,
 	getHistoryState: () => ({
 		canUndo: undoStack.value.length > 0,
@@ -1040,6 +1445,16 @@ defineExpose({
 				><button type="button" @click="issue = ''">Close</button>
 			</div>
 			<div class="vector-workspace" :data-inspector="showProperties || showStructure">
+				<div ref="contextMenuHost" class="vector-context-host">
+					<UiContextMenu
+						:active="contextMenu.active.value"
+						aria-label="Illustrator context menu"
+						:restore-focus="false"
+						:items="contextItems"
+						@select="selectContext"
+						@update:active="contextMenu.setActive"
+					/>
+				</div>
 				<div
 					class="vector-tools"
 					role="toolbar"
@@ -1055,10 +1470,26 @@ defineExpose({
 						:title="`${entry.name} (${entry.key})`"
 						:aria-keyshortcuts="entry.key"
 						:aria-pressed="tool === entry.id"
-						:disabled="readonly"
+						:disabled="readonly && entry.id !== 'hand' && entry.id !== 'select'"
 						@click="selectTool(entry.id)"
 					>
-						<UiIcon v-if="entry.id !== 'pen'" :name="entry.icon" :size="18" />
+						<svg
+							v-if="entry.id === 'hand'"
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path
+								d="M8 13V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-2a5 5 0 0 1-4-2l-4-5a1.6 1.6 0 0 1 2.4-2.1L8 13Z"
+							/>
+						</svg>
+						<UiIcon v-else-if="entry.id !== 'pen'" :name="entry.icon" :size="18" />
 						<svg
 							v-else
 							width="18"
@@ -1085,7 +1516,29 @@ defineExpose({
 						/>
 					</label>
 				</div>
-				<main ref="view" class="vector-pasteboard" aria-label="Artboard canvas">
+				<main
+					ref="view"
+					class="vector-pasteboard"
+					tabindex="0"
+					aria-label="Artboard canvas"
+					aria-keyshortcuts="Space Shift+F10"
+					:data-hand="handActive"
+					:data-panning="panning"
+					:style="{
+						'--vector-pan-x': `${Math.max(36, viewportSize.width - 40)}px`,
+						'--vector-pan-y': `${Math.max(44, viewportSize.height - 40)}px`,
+					}"
+					@wheel="wheelZoom"
+					@gesturestart="handlePinch"
+					@gesturechange="handlePinch"
+					@gestureend="handlePinch"
+					@pointerdown.capture="startPan"
+					@pointermove="movePan"
+					@pointerup="stopPan"
+					@pointercancel="stopPan"
+					@lostpointercapture="stopPan"
+					@contextmenu.prevent="canvasContext($event)"
+				>
 					<div class="vector-pasteboard__content">
 						<section
 							v-for="(sheet, index) in project.artboards"
@@ -1109,6 +1562,7 @@ defineExpose({
 								:height="sheet.height * scale"
 								:aria-label="sheet.name"
 								@pointerdown="pointerDown($event, index)"
+								@contextmenu.stop.prevent="canvasContext($event, index)"
 								@pointermove="pointerMove($event, index)"
 								@pointerup="pointerUp"
 								@pointercancel="cancelDrawing"
@@ -1123,7 +1577,9 @@ defineExpose({
 									preserveAspectRatio="none"
 								/>
 								<IllustratorArtwork
-									v-for="object in sheet.objects"
+									v-for="object in sheet.objects.filter(
+										(item) => !isObjectHidden(sheet, item),
+									)"
 									:key="object.id"
 									:object="displayObject(object)"
 								/>
@@ -1542,53 +1998,99 @@ defineExpose({
 							class="vector-panel-list"
 							aria-label="Object layers"
 						>
-							<div
-								v-for="object in [...board.objects].reverse()"
-								:key="object.id"
-								class="vector-layer"
-								:data-selected="selectedIds.has(object.id)"
-								:data-group="object.groupId"
-							>
-								<button
-									type="button"
-									:disabled="readonly"
-									:aria-label="`${object.hidden ? 'Show' : 'Hide'} ${object.name}`"
-									@click="
-										replaceObject({ ...object, hidden: !object.hidden }, true)
-									"
+							<template v-for="row in layerRows" :key="row.id">
+								<div
+									v-if="row.kind === 'group'"
+									class="vector-layer vector-layer--group"
 								>
-									<UiIcon :name="object.hidden ? 'eye-off' : 'eye'" :size="15" />
-								</button>
-								<button
-									type="button"
-									class="vector-layer__name"
-									:title="object.name"
-									:aria-pressed="selectedIds.has(object.id)"
-									@click="selectObject(object, $event.shiftKey, $event.altKey)"
+									<button
+										type="button"
+										:disabled="readonly"
+										:aria-label="`${row.hidden ? 'Show group' : 'Hide group'} ${row.name}`"
+										@click="toggleGroupVisibility(row.id)"
+									>
+										<UiIcon :name="row.hidden ? 'eye-off' : 'eye'" :size="15" />
+									</button>
+									<button
+										type="button"
+										class="vector-layer__name"
+										:title="row.name"
+										@click="selectGroup(row.id)"
+									>
+										<UiIcon name="group" :size="15" />
+										<span>{{ row.name }}</span>
+									</button>
+									<button
+										type="button"
+										:aria-expanded="!collapsedGroups.has(row.id)"
+										:aria-label="`${collapsedGroups.has(row.id) ? 'Expand' : 'Collapse'} ${row.name}`"
+										@click="toggleGroupExpansion(row.id)"
+									>
+										<UiIcon
+											:name="
+												collapsedGroups.has(row.id)
+													? 'chevron-right'
+													: 'chevron-down'
+											"
+											:size="15"
+										/>
+									</button>
+								</div>
+								<div
+									v-else
+									class="vector-layer"
+									:data-selected="selectedIds.has(row.object.id)"
+									:data-group="row.object.groupId"
 								>
-									<UiIcon
-										:name="
-											object.groupId
-												? 'group'
-												: object.kind === 'text'
-													? 'text'
-													: 'shape'
+									<button
+										type="button"
+										:disabled="readonly"
+										:aria-label="`${row.object.hidden ? 'Show' : 'Hide'} ${row.object.name}`"
+										@click="
+											replaceObject(
+												{ ...row.object, hidden: !row.object.hidden },
+												true,
+											)
 										"
-										:size="15"
-									/>
-									{{ object.name }}
-								</button>
-								<button
-									type="button"
-									:disabled="readonly"
-									:aria-label="`${object.locked ? 'Unlock' : 'Lock'} ${object.name}`"
-									@click="
-										replaceObject({ ...object, locked: !object.locked }, true)
-									"
-								>
-									<UiIcon :name="object.locked ? 'lock' : 'unlock'" :size="15" />
-								</button>
-							</div>
+									>
+										<UiIcon
+											:name="row.object.hidden ? 'eye-off' : 'eye'"
+											:size="15"
+										/>
+									</button>
+									<button
+										type="button"
+										class="vector-layer__name"
+										:title="row.object.name"
+										:aria-pressed="selectedIds.has(row.object.id)"
+										@click="selectObject(row.object, $event.shiftKey, true)"
+										@contextmenu.prevent="layerContext(row.object, $event)"
+										@keydown="layerContext(row.object, $event)"
+									>
+										<UiIcon
+											:name="row.object.kind === 'text' ? 'text' : 'shape'"
+											:size="15"
+										/>
+										<span>{{ row.object.name }}</span>
+									</button>
+									<button
+										type="button"
+										:disabled="readonly"
+										:aria-label="`${row.object.locked ? 'Unlock' : 'Lock'} ${row.object.name}`"
+										@click="
+											replaceObject(
+												{ ...row.object, locked: !row.object.locked },
+												true,
+											)
+										"
+									>
+										<UiIcon
+											:name="row.object.locked ? 'lock' : 'unlock'"
+											:size="15"
+										/>
+									</button>
+								</div>
+							</template>
 							<div
 								v-if="board.background"
 								class="vector-layer vector-layer--background"

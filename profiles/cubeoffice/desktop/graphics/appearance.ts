@@ -1,4 +1,4 @@
-import { computed, readonly, ref } from "vue";
+import { computed, readonly, ref, watch } from "vue";
 
 type GraphicsAppearance = "light" | "dark";
 type AppearancePreference = GraphicsAppearance | "system";
@@ -31,6 +31,14 @@ globalThis.addEventListener?.("storage", (event) => {
 export const graphicsAppearancePreference = readonly(preference);
 export const graphicsAppearance = computed<GraphicsAppearance>(() =>
 	preference.value === "system" ? (systemDark.value ? "dark" : "light") : preference.value,
+);
+
+watch(
+	graphicsAppearance,
+	(value) => {
+		globalThis.document?.documentElement.setAttribute("data-cubeoffice-appearance", value);
+	},
+	{ immediate: true, flush: "sync" },
 );
 
 export function setGraphicsAppearancePreference(value: string): void {

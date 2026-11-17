@@ -141,7 +141,7 @@
 .document-visual__kicker,
 .ai-connect__app-copy small[data-state="connected"],
 .ai-connect__facts dd,
-.ai-connect__app-action {
+.ai-connect__secondary.ai-connect__app-action:not(:disabled) {
 	color: var(--cubeoffice-strong) !important;
 }
 
@@ -184,8 +184,9 @@
 	background: var(--cubeoffice-surface) !important;
 }
 
-.ai-connect__primary {
+.ai-connect__primary:not(:disabled) {
 	border-color: var(--cubeoffice-strong) !important;
+	color: #fff;
 	background: linear-gradient(var(--cubeoffice-primary), var(--cubeoffice-strong)) !important;
 }
 
@@ -549,8 +550,9 @@ button.unsaved-dialog__primary {
 	background: var(--als-ofs-ui-selection-indicator);
 }
 
-/* One graphics appearance, shared by the desktop chrome and both image surfaces. */
-.desktop-app[data-graphics-appearance="light"] {
+/* The desktop chrome, editors and their portalled controls share the appearance. */
+:root[data-cubeoffice-appearance="light"] {
+	color-scheme: light;
 	--graphics-panel: #ffffff;
 	--graphics-muted: #f5f4f8;
 	--graphics-stage: #eae8f1;
@@ -561,7 +563,8 @@ button.unsaved-dialog__primary {
 	--graphics-selected: var(--cubeoffice-soft);
 }
 
-.desktop-app[data-graphics-appearance="dark"] {
+:root[data-cubeoffice-appearance="dark"] {
+	color-scheme: dark;
 	--graphics-panel: #24242e;
 	--graphics-muted: #2c2b38;
 	--graphics-stage: #191a20;
@@ -572,6 +575,258 @@ button.unsaved-dialog__primary {
 	--graphics-selected: #403254;
 	--graphics-hover: #353340;
 	--graphics-disabled: #8d879b;
+}
+
+/* Menus and dialogs render outside the desktop-app element. */
+:root[data-cubeoffice-appearance="dark"]
+	:is(.als-ofs-editor-ui, .als-ofs-editor-ui-popover, .desktop-app) {
+	--als-ofs-ui-surface: var(--graphics-panel) !important;
+	--als-ofs-ui-surface-muted: var(--graphics-muted) !important;
+	--als-ofs-ui-surface-subtle: var(--graphics-muted) !important;
+	--als-ofs-ui-surface-hover: var(--graphics-hover) !important;
+	--als-ofs-ui-surface-selected: var(--graphics-selected) !important;
+	--als-ofs-ui-border: var(--graphics-border) !important;
+	--als-ofs-ui-border-strong: #625a75 !important;
+	--als-ofs-ui-text: var(--graphics-text) !important;
+	--als-ofs-ui-text-muted: var(--graphics-secondary) !important;
+	--als-ofs-ui-text-faint: var(--graphics-secondary) !important;
+	--als-ofs-ui-disabled: var(--graphics-disabled) !important;
+	--als-ofs-ui-accent-soft: var(--graphics-selected) !important;
+	--als-ofs-ui-focus: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"] {
+	color: var(--graphics-text);
+	background:
+		radial-gradient(circle at 12% 18%, rgb(109 40 217 / 18%), transparent 32%),
+		var(--graphics-stage) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.desktop-recent__list,
+		.desktop-recent__filters,
+		.desktop-recent__empty,
+		.desktop-welcome__secondary,
+		.desktop-new__menu,
+		.cli-activity,
+		.als-ofs-ui-ai-activity
+	) {
+	background: var(--graphics-panel);
+	border-color: var(--graphics-border) !important;
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.desktop-recent__name, .desktop-recent__header strong, .desktop-new__menu button) {
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.desktop-welcome p,
+		.desktop-welcome__hero small,
+		.desktop-recent__filters button,
+		.desktop-recent__header small,
+		.desktop-recent__columns,
+		.desktop-recent__location,
+		.desktop-recent__opened,
+		.desktop-recent__size,
+		.desktop-recent__forget
+	) {
+	color: var(--graphics-secondary);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.desktop-recent__filters button[data-selected="true"],
+		.desktop-recent__filters button:hover,
+		.desktop-recent__open:hover:not(:disabled),
+		.desktop-new__menu button:hover,
+		.desktop-welcome__secondary:hover:not(:disabled)
+	) {
+	color: var(--graphics-text) !important;
+	background: var(--graphics-hover) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.desktop-new__kind,
+		.desktop-recent__kind,
+		.desktop-welcome__secondary,
+		.desktop-welcome__eyebrow,
+		.desktop-recent__group,
+		.als-ofs-ui-ai-activity__tabs button[data-active="true"]
+	) {
+	color: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.desktop-new__kind,
+		.desktop-recent__kind,
+		.als-ofs-ui-ai-activity__tabs button[data-active="true"]
+	) {
+	background: var(--graphics-selected) !important;
+	border-color: var(--graphics-border) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"] .desktop-recent li {
+	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.als-ofs-ui-ai-activity__header,
+		.als-ofs-ui-ai-activity__controls,
+		.als-ofs-ui-ai-activity__row,
+		.als-ofs-ui-ai-activity__tabs,
+		.agent-link
+	) {
+	border-color: var(--graphics-border);
+	background: var(--graphics-panel);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.als-ofs-ui-ai-activity__close,
+		.als-ofs-ui-ai-activity__title,
+		.als-ofs-ui-ai-activity__empty,
+		.als-ofs-ui-ai-activity__meta,
+		.als-ofs-ui-ai-activity__tabs button,
+		.agent-link__text small
+	) {
+	color: var(--graphics-secondary);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.als-ofs-ui-ai-activity__operation, .als-ofs-ui-ai-activity__controls button) {
+	background: var(--graphics-muted);
+	color: var(--graphics-text);
+	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .cli-activity {
+	--ai-connect-warning: #f0c676;
+	--ai-connect-error: #ffadb4;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.ai-connect__app, .ai-connect__detail, .ai-connect__empty, .agent-link__theirs) {
+	background: var(--graphics-muted);
+	border-color: var(--graphics-border);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(.ai-connect__intro h3, .ai-connect__detail h3, .ai-connect__app-copy strong) {
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.ai-connect__intro p,
+		.ai-connect__detail > p,
+		.ai-connect__app-copy small,
+		.ai-connect__empty small,
+		.ai-connect__loading,
+		.ai-connect__permissions,
+		.ai-connect__facts dt
+	) {
+	color: var(--graphics-secondary);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__permission-note {
+	background: var(--graphics-panel);
+}
+
+.desktop-app[data-graphics-appearance="dark"] :is(.ai-connect__facts, .ai-connect__facts > div) {
+	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__permissions li::before,
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.ai-connect__mark,
+		.ai-connect__empty-icon,
+		.ai-connect__back,
+		.ai-connect__facts dd,
+		.ai-connect__app-copy small[data-state="connected"],
+		.ai-connect__secondary.ai-connect__app-action:not(:disabled)
+	) {
+	color: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__permissions li::before,
+.desktop-app[data-graphics-appearance="dark"] :is(.ai-connect__mark, .ai-connect__empty-icon) {
+	background: var(--graphics-selected) !important;
+	border-color: var(--graphics-border);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__secondary {
+	border-color: var(--als-ofs-ui-border-strong);
+	background: var(--graphics-panel);
+	color: var(--graphics-text);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__secondary:hover:not(:disabled) {
+	background: var(--graphics-hover) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.ai-connect
+	:is(.ai-connect__primary, .ai-connect__secondary, .ai-connect__danger):disabled {
+	border-color: var(--graphics-border);
+	background: var(--graphics-panel);
+	color: var(--graphics-disabled);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect button:focus-visible {
+	outline-color: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__spinner {
+	border-color: var(--graphics-border) !important;
+	border-top-color: var(--graphics-accent) !important;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.als-ofs-ui-ai-activity__header small[data-tone="warn"],
+		.ai-connect__app-copy small[data-state="needs-attention"],
+		.ai-connect__warning
+	) {
+	color: var(--ai-connect-warning);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__warning {
+	background: #473820;
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__notice {
+	color: #a6e4c1;
+	background: #243d35;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	:is(
+		.als-ofs-ui-ai-activity__header small[data-tone="error"],
+		.ai-connect__detail > .ai-connect__error,
+		.ai-connect__error,
+		.ai-connect__danger-link
+	) {
+	color: var(--ai-connect-error);
+}
+
+.desktop-app[data-graphics-appearance="dark"] .ai-connect__error {
+	background: #4a2b38;
+}
+
+.desktop-app[data-graphics-appearance="dark"]
+	.als-ofs-ui-ai-activity__header
+	small[data-tone="live"] {
+	color: #a6e4c1;
 }
 
 .desktop-app[data-graphics-appearance]
